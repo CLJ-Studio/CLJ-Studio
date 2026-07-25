@@ -9,11 +9,13 @@ class BotonCategoriaMarketplace extends StatelessWidget {
     required this.categoria,
     required this.seleccionado,
     required this.alPresionar,
+    this.compactProgress = 0,
     super.key,
   });
   final CategoriaMarketplace categoria;
   final bool seleccionado;
   final VoidCallback alPresionar;
+  final double compactProgress;
 
   @override
   Widget build(BuildContext context) => AnimatedCategoryChip(
@@ -25,5 +27,6 @@ class BotonCategoriaMarketplace extends StatelessWidget {
     unselectedBackgroundColor: const Color(0xFFF2F2F2),
     selectedForegroundColor: const Color(0xFF55785A),
     unselectedForegroundColor: const Color(0xFF4A4B4D),
+    compactProgress: compactProgress,
   );
 }

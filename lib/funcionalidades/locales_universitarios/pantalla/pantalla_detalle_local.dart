@@ -18,7 +18,7 @@ class PantallaDetalleLocal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Detalle del local')),
+    appBar: AppBar(title: Text(local.nombre)),
     body: SingleChildScrollView(
       child: ContenidoCentrado(
         anchoMaximo: 900,
@@ -36,6 +36,11 @@ class PantallaDetalleLocal extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${productos.length} ${productos.length == 1 ? 'producto' : 'productos'} para elegir',
+                    style: const TextStyle(color: Color(0xFF858585)),
                   ),
                   const SizedBox(height: 12),
                   if (productos.isEmpty)

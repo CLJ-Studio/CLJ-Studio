@@ -69,6 +69,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                             'UPSA Eat',
                             style: TextStyle(
                               color: Color(0xFF181818),
+                              fontFamily: 'Metropolis',
                               fontSize: 21,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -0.7,
@@ -92,8 +93,8 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                                 FormularioCorreoUpsa(
                                   alCambiar:
                                       widget.controlador.actualizarCodigo,
-                                  correo: estado.correo,
                                   error: estado.error,
+                                  esValido: estado.esValido,
                                 ),
                                 const SizedBox(height: 14),
                                 BotonContinuarGoogle(
@@ -134,12 +135,16 @@ class _BuhosAnimados extends StatelessWidget {
   Widget build(BuildContext context) {
     final ancho = (anchoPantalla * .74).clamp(390.0, 760.0);
     return Positioned(
+      // Posición vertical: aumenta el valor para bajar y redúcelo para subir.
       top: (altoPantalla * .12).clamp(70.0, 150.0),
-      right: anchoPantalla < 600 ? -110 : -65,
+      // Posición horizontal: aumenta `right` para mover a la izquierda.
+      // El primer valor es para móvil y el segundo para pantallas grandes.
+      right: anchoPantalla < 600 ? -65 : -20,
       child: IgnorePointer(
         child: ExcludeSemantics(
           child: RepaintBoundary(
             child: SizedBox(
+              // Tamaño: `width` controla el ancho y `.56` la proporción de alto.
               width: ancho,
               height: ancho * .56,
               child: Lottie.asset(

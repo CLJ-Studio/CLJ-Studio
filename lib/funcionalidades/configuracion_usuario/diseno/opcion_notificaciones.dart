@@ -10,6 +10,10 @@ class OpcionNotificaciones extends StatelessWidget {
   final ValueChanged<bool> alCambiar;
   @override
   Widget build(BuildContext context) => SwitchListTile(
+    activeThumbColor: Colors.white,
+    activeTrackColor: const Color(0xFF5F9368),
+    inactiveThumbColor: Colors.white,
+    inactiveTrackColor: const Color(0xFFD2D5D2),
     secondary: const Icon(Icons.notifications_outlined),
     title: const Text('Notificaciones'),
     subtitle: const Text('Pedidos y novedades'),

@@ -10,7 +10,7 @@ abstract final class ConfiguracionTema {
 
   static ThemeData get temaClaro => ThemeData(
     useMaterial3: true,
-    fontFamily: 'Metropolis',
+    fontFamily: 'Nunito',
     scaffoldBackgroundColor: fondo,
     colorScheme: ColorScheme.fromSeed(
       seedColor: naranja,
@@ -77,7 +77,7 @@ abstract final class ConfiguracionTema {
       centerTitle: true,
       titleTextStyle: TextStyle(
         color: texto,
-        fontFamily: 'Metropolis',
+        fontFamily: 'Nunito',
         fontSize: 17,
         fontWeight: FontWeight.w700,
       ),

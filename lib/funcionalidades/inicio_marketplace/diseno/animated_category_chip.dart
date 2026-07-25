@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 /// Chip de categoría con una microinteracción corta y controlada.
 class AnimatedCategoryChip extends StatefulWidget {
@@ -11,6 +12,7 @@ class AnimatedCategoryChip extends StatefulWidget {
     required this.unselectedBackgroundColor,
     required this.selectedForegroundColor,
     required this.unselectedForegroundColor,
+    this.compactProgress = 0,
     super.key,
   });
 
@@ -22,6 +24,7 @@ class AnimatedCategoryChip extends StatefulWidget {
   final Color unselectedBackgroundColor;
   final Color selectedForegroundColor;
   final Color unselectedForegroundColor;
+  final double compactProgress;
 
   @override
   State<AnimatedCategoryChip> createState() => _AnimatedCategoryChipState();
@@ -104,6 +107,7 @@ class _AnimatedCategoryChipState extends State<AnimatedCategoryChip>
     final frente = widget.isSelected
         ? widget.selectedForegroundColor
         : widget.unselectedForegroundColor;
+    final progreso = widget.compactProgress.clamp(0.0, 1.0);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -122,8 +126,13 @@ class _AnimatedCategoryChipState extends State<AnimatedCategoryChip>
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
-              constraints: const BoxConstraints(minHeight: 48),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              constraints: BoxConstraints(
+                minHeight: lerpDouble(48, 40, progreso)!,
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: lerpDouble(12, 9, progreso)!,
+                vertical: lerpDouble(9, 6, progreso)!,
+              ),
               decoration: BoxDecoration(
                 color: fondo,
                 borderRadius: BorderRadius.circular(999),
@@ -134,16 +143,20 @@ class _AnimatedCategoryChipState extends State<AnimatedCategoryChip>
                   TweenAnimationBuilder<Color?>(
                     tween: ColorTween(end: frente),
                     duration: const Duration(milliseconds: 220),
-                    builder: (_, color, _) =>
-                        Icon(widget.icon, size: 18, color: color),
+                    builder: (_, color, _) => Icon(
+                      widget.icon,
+                      size: lerpDouble(18, 16, progreso),
+                      color: color,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: lerpDouble(8, 6, progreso)),
                   AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 220),
                     curve: Curves.easeOutCubic,
                     style: TextStyle(
                       color: frente,
-                      fontFamily: 'Metropolis',
+                      fontFamily: 'Nunito',
+                      fontSize: lerpDouble(14, 12.5, progreso),
                       fontWeight: FontWeight.w600,
                     ),
                     child: Text(widget.label),

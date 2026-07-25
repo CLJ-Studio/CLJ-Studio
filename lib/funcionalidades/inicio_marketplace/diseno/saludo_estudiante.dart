@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Saludo compacto del estudiante simulado.
+/// Marca compacta que encabeza la pantalla principal.
 class SaludoEstudiante extends StatelessWidget {
   const SaludoEstudiante({required this.nombre, super.key});
   final String nombre;
@@ -10,10 +10,14 @@ class SaludoEstudiante extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-        'Hola, $nombre 👋',
-        style: Theme.of(
-          context,
-        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+        'UPSA Net',
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          color: const Color(0xFF181818),
+          fontFamily: 'Nunito',
+          fontSize: 32,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -1,
+        ),
       ),
       const Text(
         '¿Que necesitas hoy en el campus?',

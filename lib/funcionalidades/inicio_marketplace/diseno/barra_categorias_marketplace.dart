@@ -9,15 +9,17 @@ class BarraCategoriasMarketplace extends StatelessWidget {
     required this.categorias,
     required this.categoriaId,
     required this.alSeleccionar,
+    this.compactProgress = 0,
     super.key,
   });
   final List<CategoriaMarketplace> categorias;
   final String categoriaId;
   final ValueChanged<String> alSeleccionar;
+  final double compactProgress;
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 54,
+    height: 54 - (10 * compactProgress),
     child: ListView.separated(
       scrollDirection: Axis.horizontal,
       itemCount: categorias.length,
@@ -28,6 +30,8 @@ class BarraCategoriasMarketplace extends StatelessWidget {
           categoria: categoria,
           seleccionado: categoria.id == categoriaId,
           alPresionar: () => alSeleccionar(categoria.id),
+          compactProgress: compactProgress,
+          key: ValueKey(categoria.id),
         );
       },
     ),

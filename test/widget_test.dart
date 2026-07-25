@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 import 'package:upsa_eat/arbol_aplicacion/arbol_aplicacion.dart';
 
 void main() {
@@ -7,6 +8,6 @@ void main() {
 
     expect(find.text('UPSA Eat'), findsOneWidget);
     expect(find.text('Continuar con Google'), findsOneWidget);
-    expect(find.text('@estudiantes.upsa.edu.bo'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
   });
 }

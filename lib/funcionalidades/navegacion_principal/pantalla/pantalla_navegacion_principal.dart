@@ -173,7 +173,7 @@ class _DestinoBarra extends StatelessWidget {
             duration: const Duration(milliseconds: 220),
             style: TextStyle(
               color: color,
-              fontFamily: 'Metropolis',
+              fontFamily: 'Nunito',
               fontSize: 11,
               fontWeight: activo ? FontWeight.w700 : FontWeight.w500,
             ),
