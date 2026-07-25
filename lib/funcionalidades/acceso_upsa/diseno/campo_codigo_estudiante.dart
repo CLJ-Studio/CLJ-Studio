@@ -20,7 +20,7 @@ class CampoCodigoEstudiante extends StatelessWidget {
       keyboardType: TextInputType.number,
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(11),
+        LengthLimitingTextInputFormatter(10),
       ],
       decoration: InputDecoration(
         labelText: 'Código de estudiante',

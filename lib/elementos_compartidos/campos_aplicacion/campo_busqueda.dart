@@ -36,10 +36,6 @@ class CampoBusqueda extends StatelessWidget {
             Icons.search_rounded,
             size: lerpDouble(24, 21, compactProgress),
           ),
-          suffixIcon: Icon(
-            Icons.tune_rounded,
-            size: lerpDouble(24, 21, compactProgress),
-          ),
           border: borde,
           enabledBorder: borde,
         ),

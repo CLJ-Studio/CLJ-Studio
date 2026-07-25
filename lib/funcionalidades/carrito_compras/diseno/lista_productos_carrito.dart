@@ -10,18 +10,42 @@ class ListaProductosCarrito extends StatelessWidget {
   Widget build(BuildContext context) {
     if (controlador.elementos.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.all(32),
-        child: Center(child: Text('Tu carrito esta vacio.')),
+        padding: EdgeInsets.symmetric(vertical: 48),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                Icons.shopping_bag_outlined,
+                size: 44,
+                color: Color(0xFFA5AAA7),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Tu carrito está vacío',
+                style: TextStyle(
+                  color: Color(0xFF777C79),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
     return Column(
       children: List.generate(
         controlador.elementos.length,
-        (indice) => TarjetaProductoCarrito(
-          elemento: controlador.elementos[indice],
-          alAumentar: () => controlador.aumentar(indice),
-          alDisminuir: () => controlador.disminuir(indice),
-          alEliminar: () => controlador.eliminar(indice),
+        (indice) => Column(
+          children: [
+            TarjetaProductoCarrito(
+              elemento: controlador.elementos[indice],
+              alAumentar: () => controlador.aumentar(indice),
+              alDisminuir: () => controlador.disminuir(indice),
+              alEliminar: () => controlador.eliminar(indice),
+            ),
+            if (indice < controlador.elementos.length - 1)
+              const Divider(height: 18, color: Color(0xFFEEF0EE)),
+          ],
         ),
       ),
     );

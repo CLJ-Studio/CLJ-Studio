@@ -17,9 +17,6 @@ class SelectorCategoriaPublicacion extends StatelessWidget {
       'Comida',
       'Tecnologia',
       'Servicios',
-      'Papeleria',
-      'Libros',
-      'Otros',
     ].map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
     onChanged: (nuevo) {
       if (nuevo != null) alCambiar(nuevo);

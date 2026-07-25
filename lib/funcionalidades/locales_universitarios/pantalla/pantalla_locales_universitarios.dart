@@ -8,11 +8,19 @@ import 'pantalla_detalle_local.dart';
 import '../diseno/buscador_locales.dart';
 import '../diseno/encabezado_locales.dart';
 import '../diseno/filtros_locales.dart';
+import '../diseno/invitacion_abrir_local.dart';
 import '../diseno/lista_locales.dart';
 
 /// Catálogo completo con búsqueda y filtros de categoría.
 class PantallaLocalesUniversitarios extends StatefulWidget {
-  const PantallaLocalesUniversitarios({super.key});
+  const PantallaLocalesUniversitarios({
+    required this.alCrearLocal,
+    required this.yaTieneLocal,
+    super.key,
+  });
+
+  final VoidCallback alCrearLocal;
+  final bool yaTieneLocal;
 
   @override
   State<PantallaLocalesUniversitarios> createState() =>
@@ -52,6 +60,13 @@ class _PantallaLocalesUniversitariosState
               alSeleccionar: controlador.seleccionarCategoria,
             ),
             const SizedBox(height: 20),
+            if (controlador.estado.categoriaId == 'comida') ...[
+              InvitacionAbrirLocal(
+                alPresionar: widget.alCrearLocal,
+                yaTieneLocal: widget.yaTieneLocal,
+              ),
+              const SizedBox(height: 24),
+            ],
             ListaLocales(
               locales: controlador.estado.locales,
               construirDetalle: (_, local) => PantallaDetalleLocal(

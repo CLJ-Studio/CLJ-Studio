@@ -15,19 +15,31 @@ class SelectorCantidadProducto extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      IconButton.filledTonal(
+      IconButton(
         onPressed: alDisminuir,
+        constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+        padding: EdgeInsets.zero,
+        style: IconButton.styleFrom(
+          backgroundColor: const Color(0xFFF0F3F0),
+          foregroundColor: const Color(0xFF5C8A63),
+        ),
         icon: const Icon(Icons.remove, size: 18),
       ),
       Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Text(
           '$cantidad',
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
-      IconButton.filledTonal(
+      IconButton(
         onPressed: alAumentar,
+        constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+        padding: EdgeInsets.zero,
+        style: IconButton.styleFrom(
+          backgroundColor: const Color(0xFF5C8A63),
+          foregroundColor: Colors.white,
+        ),
         icon: const Icon(Icons.add, size: 18),
       ),
     ],

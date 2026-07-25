@@ -16,16 +16,16 @@ class ControladorAccesoUpsa extends ChangeNotifier {
     return '$codigo$dominio';
   }
 
-  /// Acepta exactamente once dígitos; el campo impide letras y exceso de texto.
+  /// Acepta exactamente diez dígitos; el campo impide letras y exceso de texto.
   void actualizarCodigo(String valor) {
     final digitos = valor.replaceAll(RegExp(r'\D'), '');
     final codigo = construirCodigoInstitucional(digitos);
     String? error;
-    final formatoValido = RegExp(r'^\d{11}$').hasMatch(digitos);
+    final formatoValido = RegExp(r'^\d{10}$').hasMatch(digitos);
     if (digitos.isEmpty) {
-      error = 'Ingresa los 11 dígitos de tu código.';
+      error = 'Ingresa los 10 dígitos de tu código.';
     } else if (!formatoValido) {
-      error = 'El código debe tener exactamente 11 dígitos.';
+      error = 'El código debe tener exactamente 10 dígitos.';
     }
     estado = EstadoAccesoUpsa(
       codigo: formatoValido ? codigo : '',
