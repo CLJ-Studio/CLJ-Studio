@@ -1,0 +1,4 @@
+# Netlify: toda ruta se sirve con index.html.
+# Sin esto, recargar la pagina en una ruta interna devuelve 404, porque
+# Netlify busca un archivo que no existe: el enrutado ocurre en el cliente.
+/*  /index.html  200
