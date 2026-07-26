@@ -12,36 +12,42 @@ class SelectorCantidadProducto extends StatelessWidget {
   final VoidCallback alDisminuir;
   final VoidCallback alAumentar;
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      IconButton(
-        onPressed: alDisminuir,
-        constraints: const BoxConstraints.tightFor(width: 30, height: 30),
-        padding: EdgeInsets.zero,
-        style: IconButton.styleFrom(
-          backgroundColor: const Color(0xFFF0F3F0),
-          foregroundColor: const Color(0xFF5C8A63),
+  Widget build(BuildContext context) => Container(
+    width: 58,
+    height: 76,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(color: const Color(0xFFE5E8E5)),
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        InkWell(
+          onTap: alAumentar,
+          child: const SizedBox(
+            width: 38,
+            height: 20,
+            child: Icon(Icons.add_rounded, size: 16, color: Color(0xFF5C8A63)),
+          ),
         ),
-        icon: const Icon(Icons.remove, size: 18),
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Text(
+        Text(
           '$cantidad',
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
         ),
-      ),
-      IconButton(
-        onPressed: alAumentar,
-        constraints: const BoxConstraints.tightFor(width: 30, height: 30),
-        padding: EdgeInsets.zero,
-        style: IconButton.styleFrom(
-          backgroundColor: const Color(0xFF5C8A63),
-          foregroundColor: Colors.white,
+        InkWell(
+          onTap: alDisminuir,
+          child: const SizedBox(
+            width: 38,
+            height: 20,
+            child: Icon(
+              Icons.remove_rounded,
+              size: 16,
+              color: Color(0xFF5C8A63),
+            ),
+          ),
         ),
-        icon: const Icon(Icons.add, size: 18),
-      ),
-    ],
+      ],
+    ),
   );
 }

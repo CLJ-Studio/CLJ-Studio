@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../logica/controlador_mis_publicaciones.dart';
 import '../logica/controlador_publicacion.dart';
 import 'boton_confirmar_publicacion.dart';
 import 'campo_descripcion_publicacion.dart';
@@ -19,10 +20,34 @@ class FormularioPublicacion extends StatefulWidget {
 
 class _FormularioPublicacionState extends State<FormularioPublicacion> {
   final llave = GlobalKey<FormState>();
+  final nombre = TextEditingController();
+  final descripcion = TextEditingController();
+  final precio = TextEditingController();
+
+  @override
+  void dispose() {
+    nombre.dispose();
+    descripcion.dispose();
+    precio.dispose();
+    super.dispose();
+  }
+
   void publicar() {
     if (llave.currentState?.validate() ?? false) {
+      ControladorMisPublicaciones.instancia.publicar(
+        tipo: widget.controlador.tipo,
+        nombre: nombre.text,
+        descripcion: descripcion.text,
+        categoria: widget.controlador.categoria,
+        precio: double.parse(precio.text),
+      );
+      nombre.clear();
+      descripcion.clear();
+      precio.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Publicacion simulada correctamente.')),
+        const SnackBar(
+          content: Text('Publicación guardada en Mis publicaciones.'),
+        ),
       );
     }
   }
@@ -40,16 +65,16 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
             alCambiar: widget.controlador.seleccionarTipo,
           ),
           const SizedBox(height: 18),
-          const CampoNombrePublicacion(),
+          CampoNombrePublicacion(controlador: nombre),
           const SizedBox(height: 14),
-          const CampoDescripcionPublicacion(),
+          CampoDescripcionPublicacion(controlador: descripcion),
           const SizedBox(height: 14),
           SelectorCategoriaPublicacion(
             valor: widget.controlador.categoria,
             alCambiar: widget.controlador.seleccionarCategoria,
           ),
           const SizedBox(height: 14),
-          const CampoPrecioPublicacion(),
+          CampoPrecioPublicacion(controlador: precio),
           const SizedBox(height: 14),
           const SelectorImagenesPublicacion(),
           const SizedBox(height: 22),

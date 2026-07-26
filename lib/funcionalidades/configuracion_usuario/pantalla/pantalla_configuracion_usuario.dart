@@ -6,6 +6,8 @@ import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado
 import '../diseno/boton_cerrar_sesion.dart';
 import '../diseno/opcion_ayuda.dart';
 import '../diseno/opcion_cuenta_institucional.dart';
+import '../diseno/opcion_favoritos.dart';
+import '../diseno/opcion_mis_publicaciones.dart';
 import '../diseno/opcion_notificaciones.dart';
 import '../diseno/opcion_privacidad.dart';
 import '../diseno/opcion_tema_aplicacion.dart';
@@ -54,6 +56,10 @@ class _PantallaConfiguracionUsuarioState
             _PanelConfiguracion(
               titulo: 'Ajustes',
               children: [
+                const OpcionFavoritos(),
+                const Divider(height: 1, indent: 58, endIndent: 18),
+                const OpcionMisPublicaciones(),
+                const Divider(height: 1, indent: 58, endIndent: 18),
                 OpcionNotificaciones(
                   valor: controlador.notificaciones,
                   alCambiar: controlador.cambiarNotificaciones,

@@ -14,7 +14,6 @@ class SelectorCategoriaPublicacion extends StatelessWidget {
     initialValue: valor,
     decoration: const InputDecoration(labelText: 'Categoria'),
     items: const [
-      'Comida',
       'Tecnologia',
       'Servicios',
     ].map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),

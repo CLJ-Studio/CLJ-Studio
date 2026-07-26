@@ -4,7 +4,7 @@ class BorradorPublicacion {
     this.tipo = 'Producto',
     this.nombre = '',
     this.descripcion = '',
-    this.categoria = 'Comida',
+    this.categoria = 'Tecnologia',
     this.precio = 0,
   });
   final String tipo;

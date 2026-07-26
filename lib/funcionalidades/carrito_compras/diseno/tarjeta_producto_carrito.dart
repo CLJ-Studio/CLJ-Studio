@@ -17,83 +17,86 @@ class TarjetaProductoCarrito extends StatelessWidget {
   final VoidCallback alEliminar;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
+    padding: const EdgeInsets.symmetric(vertical: 14),
     child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 86,
-          height: 86,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF2F4F1),
-            borderRadius: BorderRadius.circular(16),
-          ),
+        SizedBox(
+          width: 82,
+          height: 100,
           child: Center(
-            child: Text(
-              elemento.producto.emoji,
-              style: const TextStyle(fontSize: 38),
+            child: Container(
+              width: 72,
+              height: 82,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF4F6F3),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                elemento.producto.emoji,
+                style: const TextStyle(fontSize: 40),
+              ),
             ),
           ),
         ),
-        const SizedBox(width: 15),
+        const SizedBox(width: 18),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      elemento.producto.nombre,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF202221),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Eliminar',
-                    onPressed: alEliminar,
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      color: Color(0xFF929793),
-                      size: 20,
-                    ),
-                  ),
-                ],
-              ),
               Text(
                 'Bs ${elemento.producto.precio.toStringAsFixed(2)}',
                 style: const TextStyle(
-                  color: Color(0xFF3D6F4A),
-                  fontSize: 17,
+                  color: Color(0xFF202321),
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
                 ),
               ),
+              const SizedBox(height: 7),
+              Text(
+                elemento.producto.nombre,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF343835),
+                ),
+              ),
               const SizedBox(height: 5),
-              Row(
-                children: [
-                  SelectorCantidadProducto(
-                    cantidad: elemento.cantidad,
-                    alDisminuir: alDisminuir,
-                    alAumentar: alAumentar,
-                  ),
-                  const Spacer(),
-                  Text(
-                    'Bs ${(elemento.producto.precio * elemento.cantidad).toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: Color(0xFF747A76),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+              Text(
+                elemento.producto.descripcion,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFFA0A5A1),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          children: [
+            SelectorCantidadProducto(
+              cantidad: elemento.cantidad,
+              alDisminuir: alDisminuir,
+              alAumentar: alAumentar,
+            ),
+            IconButton(
+              tooltip: 'Eliminar producto',
+              onPressed: alEliminar,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(
+                Icons.delete_outline_rounded,
+                size: 20,
+                color: Color(0xFFA0A5A1),
+              ),
+            ),
+          ],
         ),
       ],
     ),

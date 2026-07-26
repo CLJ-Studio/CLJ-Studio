@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 
 /// Cuadrícula responsiva de productos inspirada en un catálogo de mercado.
@@ -9,27 +10,30 @@ class ListaProductosLocal extends StatelessWidget {
   final List<ProductoMarketplace> productos;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, restricciones) {
-      final columnas = restricciones.maxWidth >= 840
-          ? 4
-          : restricciones.maxWidth >= 560
-          ? 3
-          : 2;
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: productos.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: columnas,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          mainAxisExtent: columnas == 2 ? 282 : 292,
-        ),
-        itemBuilder: (_, indice) =>
-            _TarjetaProducto(producto: productos[indice]),
-      );
-    },
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: ControladorFavoritos.instancia,
+    builder: (context, _) => LayoutBuilder(
+      builder: (context, restricciones) {
+        final columnas = restricciones.maxWidth >= 840
+            ? 4
+            : restricciones.maxWidth >= 560
+            ? 3
+            : 2;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: productos.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columnas,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: columnas == 2 ? 282 : 292,
+          ),
+          itemBuilder: (_, indice) =>
+              _TarjetaProducto(producto: productos[indice]),
+        );
+      },
+    ),
   );
 }
 
@@ -43,7 +47,8 @@ class _TarjetaProducto extends StatefulWidget {
 }
 
 class _TarjetaProductoState extends State<_TarjetaProducto> {
-  bool _favorito = false;
+  bool get _favorito =>
+      ControladorFavoritos.instancia.contiene(widget.producto);
 
   String? get _imagen => switch (widget.producto.id) {
     'cafe' => 'assets/images/real/coffee2.jpg',
@@ -114,7 +119,9 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                         backgroundColor: Colors.white,
                         foregroundColor: const Color(0xFF739376),
                       ),
-                      onPressed: () => setState(() => _favorito = !_favorito),
+                      onPressed: () => ControladorFavoritos.instancia.alternar(
+                        widget.producto,
+                      ),
                       icon: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 180),
                         child: Icon(

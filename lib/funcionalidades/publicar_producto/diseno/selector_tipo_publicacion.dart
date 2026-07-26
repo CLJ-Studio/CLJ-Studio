@@ -19,11 +19,6 @@ class SelectorTipoPublicacion extends StatelessWidget {
         icon: Icon(Icons.inventory_2_outlined),
       ),
       ButtonSegment(
-        value: 'Comida',
-        label: Text('Comida'),
-        icon: Icon(Icons.restaurant_outlined),
-      ),
-      ButtonSegment(
         value: 'Servicio',
         label: Text('Servicio'),
         icon: Icon(Icons.handyman_outlined),

@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 
 /// Nombre obligatorio del producto o servicio.
 class CampoNombrePublicacion extends StatelessWidget {
-  const CampoNombrePublicacion({super.key});
+  const CampoNombrePublicacion({required this.controlador, super.key});
+
+  final TextEditingController controlador;
+
   @override
   Widget build(BuildContext context) => TextFormField(
+    controller: controlador,
     decoration: const InputDecoration(
       labelText: 'Nombre',
       prefixIcon: Icon(Icons.sell_outlined),

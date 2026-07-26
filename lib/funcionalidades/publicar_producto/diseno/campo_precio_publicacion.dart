@@ -3,9 +3,13 @@ import 'package:flutter/services.dart';
 
 /// Precio numérico con validación visual básica.
 class CampoPrecioPublicacion extends StatelessWidget {
-  const CampoPrecioPublicacion({super.key});
+  const CampoPrecioPublicacion({required this.controlador, super.key});
+
+  final TextEditingController controlador;
+
   @override
   Widget build(BuildContext context) => TextFormField(
+    controller: controlador,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
     inputFormatters: [
       FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
