@@ -1,0 +1,31 @@
+# Despliegue automatico en Netlify.
+#
+# Netlify no trae Flutter instalado, asi que el build lo clona antes de
+# compilar. La primera vez tarda unos minutos; despues queda en cache.
+#
+# `base` hace que todo corra dentro de Frontend/, y `publish` es relativo
+# a esa carpeta.
+
+[build]
+  base = "Frontend"
+  publish = "build/web"
+  command = """
+    if [ -d flutter ]; then
+      cd flutter && git pull && cd ..;
+    else
+      git clone https://github.com/flutter/flutter.git -b stable --depth 1;
+    fi
+    flutter/bin/flutter config --enable-web
+    flutter/bin/flutter build web --release
+  """
+
+[build.environment]
+  # Flutter necesita saber donde escribir su cache durante el build.
+  PUB_CACHE = "/opt/build/cache/.pub-cache"
+
+# Respaldo del archivo web/_redirects, por si el build no lo copiara:
+# sin esto, recargar una ruta interna devuelve 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

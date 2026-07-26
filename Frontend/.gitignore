@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# SDK que Netlify clona durante el build (ver netlify.toml)
+/flutter/
+
 # Symbolication related
 app.*.symbols
 
