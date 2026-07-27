@@ -118,9 +118,12 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           SesionUsuario.instancia.cargar();
           ControladorFavoritos.instancia.cargar();
           ControladorNotificaciones.instancia.cargar();
-          // Si ya concedio el permiso antes, se resuscribe en silencio: el
-          // endpoint del navegador puede rotar y quedaria sin recibir push.
-          if (ServicioPush.yaConcedido) ServicioPush.activar();
+          // Solo si el dispositivo YA esta suscrito: refresca la fila por si
+          // el endpoint roto. Comprobar unicamente el permiso reactivaria
+          // los avisos de quien los apago a proposito.
+          ServicioPush.estaActivo().then((activo) {
+            if (activo) ServicioPush.activar();
+          });
           return const ArbolNavegacionPrincipal();
         }
         return ArbolOnboarding(

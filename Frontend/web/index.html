@@ -92,32 +92,70 @@
     /*
      * Puente para las notificaciones push.
      *
-     * La suscripción vive aquí y no en Dart porque PushManager espera la
-     * clave VAPID como Uint8Array en base64url, una conversión que en JS
-     * es directa y desde Dart obligaría a marshalar tipos binarios.
-     * Devuelve la suscripción como texto JSON, que Dart sí maneja bien.
+     * Vive aquí y no en Dart porque PushManager espera la clave VAPID como
+     * Uint8Array en base64url, una conversión que en JS es directa y desde
+     * Dart obligaría a marshalar tipos binarios.
      */
-    window.suscribirPush = async (clavePublica) => {
-      const registro = await navigator.serviceWorker.ready;
+    (() => {
+      /*
+       * Ámbito propio para el service worker de push.
+       *
+       * Registrarlo en la raíz desplazaría al que genera Flutter, que es el
+       * que da el modo sin conexión de la PWA: dos service workers no pueden
+       * controlar el mismo ámbito. Un ámbito aparte los deja convivir; para
+       * recibir push no hace falta controlar la página.
+       */
+      const AMBITO = 'push/';
 
-      const suscripcionPrevia = await registro.pushManager.getSubscription();
-      if (suscripcionPrevia) return JSON.stringify(suscripcionPrevia);
+      const registroPush = () =>
+        navigator.serviceWorker.register('push_sw.js', { scope: AMBITO });
 
-      const base64 = (clavePublica + '='.repeat((4 - clavePublica.length % 4) % 4))
-        .replace(/-/g, '+')
-        .replace(/_/g, '/');
-      const crudo = atob(base64);
-      const bytes = new Uint8Array(crudo.length);
-      for (let i = 0; i < crudo.length; i++) bytes[i] = crudo.charCodeAt(i);
+      window.suscribirPush = async (clavePublica) => {
+        const registro = await registroPush();
 
-      const suscripcion = await registro.pushManager.subscribe({
-        // Obligatorio en Chrome: prohíbe enviar push silenciosos.
-        userVisibleOnly: true,
-        applicationServerKey: bytes,
-      });
+        const previa = await registro.pushManager.getSubscription();
+        if (previa) return JSON.stringify(previa);
 
-      return JSON.stringify(suscripcion);
-    };
+        const base64 = (clavePublica + '='.repeat((4 - clavePublica.length % 4) % 4))
+          .replace(/-/g, '+')
+          .replace(/_/g, '/');
+        const crudo = atob(base64);
+        const bytes = new Uint8Array(crudo.length);
+        for (let i = 0; i < crudo.length; i++) bytes[i] = crudo.charCodeAt(i);
+
+        const suscripcion = await registro.pushManager.subscribe({
+          // Obligatorio en Chrome: prohíbe enviar push silenciosos.
+          userVisibleOnly: true,
+          applicationServerKey: bytes,
+        });
+
+        return JSON.stringify(suscripcion);
+      };
+
+      /* Endpoint actual, o cadena vacía si el dispositivo no está suscrito. */
+      window.estadoPush = async () => {
+        const registro = await navigator.serviceWorker.getRegistration(AMBITO);
+        if (!registro) return '';
+        const suscripcion = await registro.pushManager.getSubscription();
+        return suscripcion ? suscripcion.endpoint : '';
+      };
+
+      /*
+       * Cancela la suscripción y devuelve el endpoint que tenía, para que
+       * el servidor pueda olvidar el dispositivo. El permiso del navegador
+       * sigue concedido: volver a activar no vuelve a preguntar.
+       */
+      window.desuscribirPush = async () => {
+        const registro = await navigator.serviceWorker.getRegistration(AMBITO);
+        if (!registro) return '';
+        const suscripcion = await registro.pushManager.getSubscription();
+        if (!suscripcion) return '';
+
+        const endpoint = suscripcion.endpoint;
+        await suscripcion.unsubscribe();
+        return endpoint;
+      };
+    })();
   </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.

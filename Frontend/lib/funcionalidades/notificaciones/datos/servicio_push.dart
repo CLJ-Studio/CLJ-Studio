@@ -12,9 +12,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 const _clavePublicaVapid =
     'BBZ6ZrJPvdu1JDPkk9LSHQZvuYwJDpwdOfkKDNK78Z5trgP1QfqlkO5X03durNEaGxOKuqIM3AvyhVNsPnpgv54';
 
-@JS('navigator.serviceWorker.register')
-external JSPromise<JSAny?> _registrarSw(String ruta);
-
 @JS('Notification.permission')
 external String get _permisoActual;
 
@@ -24,7 +21,13 @@ external JSPromise<JSAny?> _pedirPermiso();
 @JS('window.suscribirPush')
 external JSPromise<JSAny?> _suscribirPush(String clave);
 
-/// Registra el dispositivo para recibir notificaciones con la app cerrada.
+@JS('window.estadoPush')
+external JSPromise<JSAny?> _estadoPush();
+
+@JS('window.desuscribirPush')
+external JSPromise<JSAny?> _desuscribirPush();
+
+/// Registra o retira el dispositivo de las notificaciones con la app cerrada.
 ///
 /// Solo aplica a Flutter Web. En iOS, Safari unicamente entrega push si el
 /// usuario agrego la PWA a su pantalla de inicio (iOS 16.4+); en Android y
@@ -32,11 +35,23 @@ external JSPromise<JSAny?> _suscribirPush(String clave);
 abstract final class ServicioPush {
   static bool get soportado => kIsWeb;
 
-  /// Ya concedido en una visita anterior: permite resuscribir en silencio,
-  /// sin volver a mostrar el dialogo del navegador.
+  /// Permiso concedido en esta u otra visita. No implica estar suscrito:
+  /// el usuario pudo apagar el interruptor conservando el permiso.
   static bool get yaConcedido => kIsWeb && _permisoActual == 'granted';
 
   static bool get denegado => kIsWeb && _permisoActual == 'denied';
+
+  /// Si este dispositivo esta recibiendo push ahora mismo. Es lo que refleja
+  /// el interruptor: el permiso por si solo no basta.
+  static Future<bool> estaActivo() async {
+    if (!kIsWeb || !yaConcedido) return false;
+    try {
+      final endpoint = ((await _estadoPush().toDart) as JSString?)?.toDart;
+      return endpoint != null && endpoint.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
 
   /// Pide permiso (si hace falta), se suscribe y guarda la suscripcion.
   /// Devuelve true si el dispositivo quedo registrado.
@@ -44,8 +59,6 @@ abstract final class ServicioPush {
     if (!kIsWeb) return false;
 
     try {
-      await _registrarSw('push_sw.js').toDart;
-
       if (_permisoActual != 'granted') {
         final respuesta = await _pedirPermiso().toDart;
         if ((respuesta as JSString?)?.toDart != 'granted') return false;
@@ -67,6 +80,32 @@ abstract final class ServicioPush {
         'auth': claves['auth'],
       }, onConflict: 'endpoint');
 
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Deja de recibir push en este dispositivo.
+  ///
+  /// El permiso del navegador NO se revoca (ninguna API lo permite), pero sin
+  /// suscripcion el servidor no tiene por donde enviar nada. Reactivar luego
+  /// es inmediato: al seguir concedido el permiso, no se vuelve a preguntar.
+  static Future<bool> desactivar() async {
+    if (!kIsWeb) return false;
+
+    try {
+      final crudo = await _desuscribirPush().toDart;
+      final endpoint = (crudo as JSString?)?.toDart;
+
+      // Se borra la fila aunque el navegador ya no tuviera suscripcion:
+      // deja de intentarse el envio contra un endpoint muerto.
+      if (endpoint != null && endpoint.isNotEmpty) {
+        await Supabase.instance.client
+            .from('push_subscriptions')
+            .delete()
+            .eq('endpoint', endpoint);
+      }
       return true;
     } catch (_) {
       return false;

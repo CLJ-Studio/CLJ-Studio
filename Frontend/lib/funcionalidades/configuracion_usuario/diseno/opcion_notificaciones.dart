@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../notificaciones/datos/servicio_push.dart';
 
-/// Activa las notificaciones del sistema (suenan con la app cerrada).
+/// Enciende y apaga las notificaciones del sistema en este dispositivo.
 ///
-/// Antes era un interruptor decorativo. Ahora pide el permiso real del
-/// navegador y registra el dispositivo para Web Push.
+/// Apagar no revoca el permiso del navegador (ninguna API lo permite): lo
+/// que hace es cancelar la suscripcion, con lo que el servidor se queda sin
+/// via para enviar. Volver a encender es inmediato, sin dialogo, porque el
+/// permiso sigue concedido.
 class OpcionNotificaciones extends StatefulWidget {
   const OpcionNotificaciones({super.key});
 
@@ -14,34 +16,39 @@ class OpcionNotificaciones extends StatefulWidget {
 }
 
 class _OpcionNotificacionesState extends State<OpcionNotificaciones> {
-  late bool _activas = ServicioPush.yaConcedido;
+  bool _activas = false;
   bool _trabajando = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _sincronizar();
+  }
+
+  /// El interruptor refleja si hay suscripcion viva, no solo el permiso.
+  Future<void> _sincronizar() async {
+    final activo = await ServicioPush.estaActivo();
+    if (mounted) setState(() => _activas = activo);
+  }
+
   Future<void> _cambiar(bool valor) async {
-    // El permiso del navegador no se puede revocar por codigo: desactivar
-    // se hace desde los ajustes del sitio. Se explica en vez de fingirlo.
-    if (!valor) {
-      _avisar(
-        'Para desactivarlas, quita el permiso de notificaciones en los '
-        'ajustes de tu navegador.',
-      );
-      return;
-    }
-
     setState(() => _trabajando = true);
-    final listo = await ServicioPush.activar();
-    if (!mounted) return;
 
+    final listo = valor
+        ? await ServicioPush.activar()
+        : await ServicioPush.desactivar();
+
+    if (!mounted) return;
     setState(() {
-      _activas = listo;
+      _activas = valor ? listo : !listo;
       _trabajando = false;
     });
 
-    if (!listo) {
+    if (valor && !listo) {
       _avisar(
         ServicioPush.denegado
             ? 'Bloqueaste las notificaciones. Habilítalas en los ajustes '
-                  'del navegador.'
+                  'del navegador para poder activarlas.'
             : 'No se pudieron activar en este dispositivo.',
       );
     }
