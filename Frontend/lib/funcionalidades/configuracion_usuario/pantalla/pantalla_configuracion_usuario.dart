@@ -77,10 +77,7 @@ class _PantallaConfiguracionUsuarioState
                 const Divider(height: 1, indent: 58, endIndent: 18),
                 const OpcionMisPublicaciones(),
                 const Divider(height: 1, indent: 58, endIndent: 18),
-                OpcionNotificaciones(
-                  valor: controlador.notificaciones,
-                  alCambiar: controlador.cambiarNotificaciones,
-                ),
+                const OpcionNotificaciones(),
                 const Divider(height: 1, indent: 58, endIndent: 18),
                 OpcionTemaAplicacion(
                   valor: controlador.temaOscuro,

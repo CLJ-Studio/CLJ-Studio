@@ -88,6 +88,37 @@
       });
     })();
   </script>
+  <script>
+    /*
+     * Puente para las notificaciones push.
+     *
+     * La suscripción vive aquí y no en Dart porque PushManager espera la
+     * clave VAPID como Uint8Array en base64url, una conversión que en JS
+     * es directa y desde Dart obligaría a marshalar tipos binarios.
+     * Devuelve la suscripción como texto JSON, que Dart sí maneja bien.
+     */
+    window.suscribirPush = async (clavePublica) => {
+      const registro = await navigator.serviceWorker.ready;
+
+      const suscripcionPrevia = await registro.pushManager.getSubscription();
+      if (suscripcionPrevia) return JSON.stringify(suscripcionPrevia);
+
+      const base64 = (clavePublica + '='.repeat((4 - clavePublica.length % 4) % 4))
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+      const crudo = atob(base64);
+      const bytes = new Uint8Array(crudo.length);
+      for (let i = 0; i < crudo.length; i++) bytes[i] = crudo.charCodeAt(i);
+
+      const suscripcion = await registro.pushManager.subscribe({
+        // Obligatorio en Chrome: prohíbe enviar push silenciosos.
+        userVisibleOnly: true,
+        applicationServerKey: bytes,
+      });
+
+      return JSON.stringify(suscripcion);
+    };
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

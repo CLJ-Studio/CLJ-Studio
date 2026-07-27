@@ -13,6 +13,7 @@
   "type": "commonjs",
   "devDependencies": {
     "pgsql-parser": "^18.1.1",
-    "supabase": "^2.109.1"
+    "supabase": "^2.109.1",
+    "web-push": "^3.6.7"
   }
 }
