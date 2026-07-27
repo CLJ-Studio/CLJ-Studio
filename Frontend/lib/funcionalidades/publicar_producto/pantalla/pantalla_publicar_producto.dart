@@ -85,7 +85,7 @@ class _AvisoDestino extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
     decoration: BoxDecoration(
-      color: const Color(0xFFE7F2E8),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
       borderRadius: BorderRadius.circular(18),
     ),
     child: Row(

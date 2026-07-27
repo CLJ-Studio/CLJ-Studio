@@ -44,8 +44,8 @@ class CampoCodigoEstudiante extends StatelessWidget {
           decoration: InputDecoration(
             labelText: 'Número de registro',
             prefixText: 'a',
-            prefixStyle: const TextStyle(
-              color: Color(0xFF292A29),
+            prefixStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w800,
             ),
@@ -77,7 +77,6 @@ class CampoCodigoEstudiante extends StatelessWidget {
           child: Text(
             '@estudiantes.upsa.edu.bo',
             style: TextStyle(
-              color: Color(0xFF9A9A9A),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),

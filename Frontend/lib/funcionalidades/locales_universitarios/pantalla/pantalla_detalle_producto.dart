@@ -218,7 +218,7 @@ class _Galeria extends StatelessWidget {
     if (fotos.isEmpty) {
       return Container(
         height: 320,
-        color: const Color(0xFFF1F6F0),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
         alignment: Alignment.center,
         child: Text(emoji, style: const TextStyle(fontSize: 110)),
       );
@@ -237,7 +237,7 @@ class _Galeria extends StatelessWidget {
               fotos[i],
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => ColoredBox(
-                color: const Color(0xFFF1F6F0),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
                 child: Center(
                   child: Text(emoji, style: const TextStyle(fontSize: 90)),
                 ),
@@ -282,8 +282,8 @@ class _Vendedor extends StatelessWidget {
         width: 44,
         height: 44,
         clipBehavior: Clip.antiAlias,
-        decoration: const BoxDecoration(
-          color: Color(0xFFE7F2E8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
           shape: BoxShape.circle,
         ),
         child: switch (local.vendedorAvatarUrl) {

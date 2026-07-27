@@ -111,10 +111,10 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
                       Expanded(
                         child: Text(
                           local.nombre,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFF252825),
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),

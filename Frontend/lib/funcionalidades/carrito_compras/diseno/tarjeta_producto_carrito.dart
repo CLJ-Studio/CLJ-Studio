@@ -30,7 +30,7 @@ class TarjetaProductoCarrito extends StatelessWidget {
               height: 82,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: const Color(0xFFF4F6F3),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Text(

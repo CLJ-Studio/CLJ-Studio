@@ -92,7 +92,7 @@ class _PantallaContactandoVendedorState
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                             fontWeight: FontWeight.w900,
-                            color: const Color(0xFF252825),
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                     ),
                     const SizedBox(height: 12),
@@ -152,7 +152,7 @@ class _IndicadorEspera extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
     decoration: BoxDecoration(
-      color: const Color(0xFFE5F0E6),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
       borderRadius: BorderRadius.circular(22),
     ),
     child: const Row(
@@ -191,13 +191,13 @@ class _CuentaRegresiva extends StatelessWidget {
     if (restante.isNegative) {
       return const Text(
         'El tiempo de respuesta terminó.',
-        style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+        style: TextStyle(fontSize: 12),
       );
     }
 
     return Text(
       'El vendedor tiene ${restante.inMinutes + 1} min para responder.',
-      style: const TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+      style: const TextStyle(fontSize: 12),
     );
   }
 }

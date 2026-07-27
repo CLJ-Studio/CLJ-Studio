@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../modelos/carrera_upsa.dart';
 
 const _verde = Color(0xFF5C8A63);
-const _verdeSuave = Color(0xFFE7F2E8);
 const _grisTexto = Color(0xFF7C827E);
 
 /// Campo que abre una hoja deslizable con todas las carreras.
@@ -89,7 +88,7 @@ class SelectorCarrera extends StatelessWidget {
           style: TextStyle(
             fontSize: 15,
             fontWeight: carrera == null ? FontWeight.w500 : FontWeight.w700,
-            color: carrera == null ? _grisTexto : const Color(0xFF292A29),
+            color: carrera == null ? _grisTexto : Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ),
@@ -126,14 +125,14 @@ class _HojaCarreras extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(24, 18, 24, 6),
             child: SizedBox(
               width: double.infinity,
               child: Text(
                 'Selecciona tu carrera',
                 style: TextStyle(
-                  color: Color(0xFF252825),
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 21,
                   fontWeight: FontWeight.w900,
                 ),
@@ -184,7 +183,7 @@ class _FilaCarrera extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 6),
     child: Material(
-      color: seleccionada ? _verdeSuave : Colors.transparent,
+      color: seleccionada ? Theme.of(context).colorScheme.primary.withValues(alpha: .12) : Colors.transparent,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: () => Navigator.of(context).pop(carrera.id),
@@ -199,7 +198,7 @@ class _FilaCarrera extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     height: 1.3,
-                    color: seleccionada ? _verde : const Color(0xFF292A29),
+                    color: seleccionada ? _verde : Theme.of(context).colorScheme.onSurface,
                     fontWeight: seleccionada
                         ? FontWeight.w800
                         : FontWeight.w600,

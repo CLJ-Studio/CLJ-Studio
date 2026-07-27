@@ -215,7 +215,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEAF2EA),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -263,8 +263,8 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                       Expanded(
                         child: Text(
                           'Bs ${widget.producto.precio.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            color: Color(0xFF202220),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
                           ),
@@ -307,7 +307,7 @@ class _FondoEmoji extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: const Color(0xFFF1F6F0),
+    color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
     child: Center(child: Text(emoji, style: const TextStyle(fontSize: 68))),
   );
 }

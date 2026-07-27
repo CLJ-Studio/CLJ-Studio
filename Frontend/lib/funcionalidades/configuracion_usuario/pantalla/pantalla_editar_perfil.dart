@@ -26,6 +26,10 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
   List<CarreraUpsa> _carreras = const [];
   String? _carreraId;
   String? _avatarPath;
+
+  /// Foto ya guardada: sirve para no reescribirla si no cambio.
+  String? _avatarOriginal;
+
   bool _cargando = true;
   bool _guardando = false;
   bool _subiendoFoto = false;
@@ -67,8 +71,14 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
     try {
       _carreras = await _repositorioCarreras.cargarCarreras();
 
+      // Se asegura el perfil antes de leerlo: si no habia cargado, los
+      // campos quedaban vacios y al guardar se escribia ese vacio encima.
+      // Asi se perdia la foto al reiniciar sesion.
+      await SesionUsuario.instancia.cargar();
+
       final perfil = SesionUsuario.instancia.perfil;
       _avatarPath = perfil?.avatarPath;
+      _avatarOriginal = perfil?.avatarPath;
       if (perfil != null) {
         // El WhatsApp se guarda con el 591 delante; el campo muestra solo
         // los 8 digitos locales, igual que en el onboarding.
@@ -112,10 +122,14 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
 
       // La foto es la unica columna del perfil con escritura directa:
       // es una ruta del bucket, sin nada que validar en el servidor.
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'avatar_path': _avatarPath})
-          .eq('id', Supabase.instance.client.auth.currentUser!.id);
+      // Solo se escribe si cambio: hacerlo siempre arriesga sobrescribir
+      // la guardada con un valor a medio cargar.
+      if (_avatarPath != _avatarOriginal) {
+        await Supabase.instance.client
+            .from('profiles')
+            .update({'avatar_path': _avatarPath})
+            .eq('id', Supabase.instance.client.auth.currentUser!.id);
+      }
       // Refresca la copia compartida para que el resto de la app la vea.
       await SesionUsuario.instancia.cargar(forzar: true);
       if (mounted) Navigator.of(context).pop();
@@ -174,12 +188,12 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(8),
                       ],
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'WhatsApp',
                         hintText: '70012345',
                         prefixText: '+591 ',
                         prefixStyle: TextStyle(
-                          color: Color(0xFF292A29),
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                         ),
@@ -190,7 +204,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                     const Text(
                       'Solo se comparte con la otra parte después de aceptar '
                       'un pedido.',
-                      style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+                      style: TextStyle(fontSize: 12),
                     ),
                     const SizedBox(height: 22),
                     const _InterruptorCampus(),
@@ -247,7 +261,7 @@ class _DatosInstitucionales extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F6F5),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -263,10 +277,10 @@ class _DatosInstitucionales extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 perfil.nombre,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
-                  color: Color(0xFF252825),
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -280,7 +294,7 @@ class _DatosInstitucionales extends StatelessWidget {
           const Text(
             'Estos datos vienen de tu cuenta institucional y no se pueden '
             'cambiar.',
-            style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+            style: TextStyle(fontSize: 12),
           ),
         ],
       ),
@@ -367,8 +381,8 @@ class _SelectorFotoPerfil extends StatelessWidget {
             width: 104,
             height: 104,
             clipBehavior: Clip.antiAlias,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE7F0E7),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
               shape: BoxShape.circle,
             ),
             child: subiendo
@@ -413,7 +427,7 @@ class _SelectorFotoPerfil extends StatelessWidget {
           onPressed: alQuitar,
           child: const Text(
             'Quitar foto',
-            style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+            style: TextStyle(fontSize: 12),
           ),
         ),
     ],

@@ -36,7 +36,7 @@ enum EstadoPedido {
 
   Color get fondo => switch (this) {
     EstadoPedido.solicitado => const Color(0xFFFDF3E2),
-    EstadoPedido.aceptado => const Color(0xFFE7F2E8),
+    EstadoPedido.aceptado => const Color(0xFFE7F0E7),
     EstadoPedido.entregado => const Color(0xFFE6F0F5),
     _ => const Color(0xFFF0F1F0),
   };

@@ -131,7 +131,7 @@ class _EditorNegocioState extends State<EditorNegocio> {
         const SizedBox(height: 6),
         const Text(
           'Así te ven los estudiantes en el catálogo.',
-          style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+          style: TextStyle(fontSize: 12),
         ),
         const SizedBox(height: 16),
         _Logo(
@@ -244,7 +244,7 @@ class _Logo extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 24),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F6F0),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
           borderRadius: BorderRadius.circular(18),
         ),
         child: Column(

@@ -16,9 +16,9 @@ class SelectorCantidadProducto extends StatelessWidget {
     width: 58,
     height: 76,
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: const Color(0xFFE5E8E5)),
+      border: Border.all(color: Theme.of(context).dividerColor),
     ),
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,

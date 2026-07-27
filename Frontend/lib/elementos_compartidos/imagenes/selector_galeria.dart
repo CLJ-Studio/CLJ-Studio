@@ -91,14 +91,14 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
           const Spacer(),
           Text(
             '${widget.rutas.length}/${widget.maximo}',
-            style: const TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
         ],
       ),
       const SizedBox(height: 4),
       const Text(
         'La primera es la portada.',
-        style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+        style: TextStyle(fontSize: 12),
       ),
       const SizedBox(height: 10),
       Wrap(
@@ -224,7 +224,7 @@ class _BotonAgregar extends StatelessWidget {
       width: 92,
       height: 92,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F6F0),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
         border: Border.all(color: const Color(0xFFC9CEC9)),
         borderRadius: BorderRadius.circular(14),
       ),

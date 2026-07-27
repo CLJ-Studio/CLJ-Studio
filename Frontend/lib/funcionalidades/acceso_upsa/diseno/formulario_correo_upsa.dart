@@ -65,7 +65,7 @@ class FormularioCorreoUpsa extends StatelessWidget {
                 ? Theme.of(context).colorScheme.error
                 : esValido
                 ? const Color(0xFF5C8A63)
-                : const Color(0xFF9A9A9A),
+                : Theme.of(context).textTheme.bodyMedium?.color,
             fontSize: 12,
           ),
         ),

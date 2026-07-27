@@ -122,8 +122,8 @@ class _PanelConfiguracion extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               titulo,
-              style: const TextStyle(
-                color: Color(0xFF1E1F1E),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
               ),

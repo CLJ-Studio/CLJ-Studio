@@ -44,7 +44,7 @@ class ListaProductosCarrito extends StatelessWidget {
               alEliminar: () => controlador.eliminar(indice),
             ),
             if (indice < controlador.elementos.length - 1)
-              const Divider(height: 18, color: Color(0xFFEEF0EE)),
+              Divider(height: 18, color: Theme.of(context).dividerColor),
           ],
         ),
       ),

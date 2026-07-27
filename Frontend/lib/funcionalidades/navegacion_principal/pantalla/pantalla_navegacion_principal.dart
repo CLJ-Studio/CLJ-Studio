@@ -145,15 +145,19 @@ class _BarraLigera extends StatelessWidget {
         builder: (context, restricciones) {
           final items = destinos;
           final anchoItem = restricciones.maxWidth / items.length;
+          // Un unico margen para los cuatro lados. Antes iban por separado
+          // (4 a los costados, 5 arriba, alto fijo) y la capsula quedaba
+          // descuadrada respecto al icono.
+          const margen = 5.0;
           return Stack(
             children: [
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 360),
                 curve: Curves.easeOutBack,
-                left: indice * anchoItem + 4,
-                top: 5,
-                width: anchoItem - 8,
-                height: 64,
+                left: indice * anchoItem + margen,
+                top: margen,
+                width: anchoItem - margen * 2,
+                height: restricciones.maxHeight - margen * 2,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: tema.colorScheme.primary.withValues(alpha: .18),

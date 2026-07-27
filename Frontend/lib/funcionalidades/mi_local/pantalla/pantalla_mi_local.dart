@@ -137,7 +137,7 @@ class _Encabezado extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      color: const Color(0xFFEAF3E9),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
       borderRadius: BorderRadius.circular(30),
     ),
     child: Row(
@@ -247,7 +247,7 @@ class _FilaProducto extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8E8E8),
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(
@@ -355,8 +355,8 @@ class _Miniatura extends StatelessWidget {
     width: 46,
     height: 46,
     clipBehavior: Clip.antiAlias,
-    decoration: const BoxDecoration(
-      color: Color(0xFFE7F2E8),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
       shape: BoxShape.circle,
     ),
     child: switch (producto.imagenUrl) {
@@ -384,7 +384,7 @@ class _InventarioVacio extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.symmetric(vertical: 54),
     decoration: BoxDecoration(
-      color: const Color(0xFFF5F6F5),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(26),
     ),
     child: const Column(

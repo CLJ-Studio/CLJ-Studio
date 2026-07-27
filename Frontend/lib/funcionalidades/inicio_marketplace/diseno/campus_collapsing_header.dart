@@ -77,11 +77,16 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    final tema = Theme.of(context);
     final progress = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
     final saludoOpacity = (1 - progress * 1.35).clamp(0.0, 1.0);
+    // Al compactarse se vuelve opaco para separarse del contenido. Fijo en
+    // blanco, en oscuro aparecia una franja clara al bajar.
     final fondo = Color.lerp(
-      Theme.of(context).scaffoldBackgroundColor,
-      Colors.white.withValues(alpha: .98),
+      tema.scaffoldBackgroundColor,
+      tema.brightness == Brightness.dark
+          ? tema.colorScheme.surface
+          : Colors.white.withValues(alpha: .98),
       progress,
     );
 
@@ -93,7 +98,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
             bottom: BorderSide(
               color: Color.lerp(
                 Colors.transparent,
-                const Color(0xFFE9ECE8),
+                tema.dividerColor,
                 progress,
               )!,
             ),

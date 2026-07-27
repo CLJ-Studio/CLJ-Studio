@@ -56,14 +56,14 @@ class PantallaOnboarding extends StatelessWidget {
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(8),
                     ],
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'WhatsApp',
                       hintText: '70012345',
                       // Bolivia: el backend antepone el 591 al guardar, para
                       // que el enlace wa.me funcione.
                       prefixText: '+591 ',
                       prefixStyle: TextStyle(
-                        color: Color(0xFF292A29),
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
@@ -74,7 +74,7 @@ class PantallaOnboarding extends StatelessWidget {
                   const Text(
                     'Solo se comparte con la otra parte después de aceptar '
                     'un pedido.',
-                    style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+                    style: TextStyle(fontSize: 12),
                   ),
                   if (controlador.errorServidor != null) ...[
                     const SizedBox(height: 12),
@@ -122,7 +122,6 @@ class PantallaOnboarding extends StatelessWidget {
                       controlador.borrador.error!,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Color(0xFF9A9A9A),
                         fontSize: 12,
                       ),
                     ),
@@ -176,10 +175,10 @@ class _CampoNombre extends StatelessWidget {
           ),
           child: Text(
             controlador.borrador.nombreCompleto,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF292A29),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
@@ -187,7 +186,7 @@ class _CampoNombre extends StatelessWidget {
           padding: EdgeInsets.only(left: 20, top: 6),
           child: Text(
             'Tomado de tu cuenta institucional.',
-            style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+            style: TextStyle(fontSize: 12),
           ),
         ),
       ],

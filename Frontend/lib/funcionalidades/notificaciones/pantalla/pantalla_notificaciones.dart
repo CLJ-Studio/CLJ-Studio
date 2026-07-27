@@ -143,7 +143,7 @@ class _Fila extends StatelessWidget {
         ),
         trailing: Text(
           hace,
-          style: const TextStyle(color: Color(0xFF9A9A9A), fontSize: 11),
+          style: const TextStyle(fontSize: 11),
         ),
       ),
     ),

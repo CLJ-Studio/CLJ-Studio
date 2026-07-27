@@ -136,7 +136,7 @@ class _TarjetaPublicacion extends StatelessWidget {
       children: [
         ListTile(
           leading: CircleAvatar(
-            backgroundColor: const Color(0xFFE7F2E8),
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
             child: Text(
               publicacion.emoji,
               style: const TextStyle(fontSize: 20),

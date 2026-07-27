@@ -183,27 +183,27 @@ class _FormasDecorativas extends StatelessWidget {
         Positioned(
           top: 150,
           right: -28,
-          child: Transform.rotate(angle: .24, child: _forma(105, 92)),
+          child: Transform.rotate(angle: .24, child: _forma(context, 105, 92)),
         ),
         Positioned(
           top: 290,
           left: -36,
-          child: Transform.rotate(angle: -.22, child: _forma(112, 94)),
+          child: Transform.rotate(angle: -.22, child: _forma(context, 112, 94)),
         ),
         Positioned(
           top: 355,
           right: -20,
-          child: Transform.rotate(angle: .3, child: _forma(92, 82)),
+          child: Transform.rotate(angle: .3, child: _forma(context, 92, 82)),
         ),
       ],
     ),
   );
 
-  Widget _forma(double ancho, double alto) => Container(
+  Widget _forma(BuildContext context, double ancho, double alto) => Container(
     width: ancho,
     height: alto,
     decoration: BoxDecoration(
-      color: const Color(0xFFF1F6F0),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
       borderRadius: BorderRadius.circular(24),
     ),
   );

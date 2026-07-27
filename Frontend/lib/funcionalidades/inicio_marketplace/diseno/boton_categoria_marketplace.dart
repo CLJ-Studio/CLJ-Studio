@@ -18,15 +18,29 @@ class BotonCategoriaMarketplace extends StatelessWidget {
   final double compactProgress;
 
   @override
-  Widget build(BuildContext context) => AnimatedCategoryChip(
-    label: categoria.nombre,
-    icon: categoria.icono,
-    isSelected: seleccionado,
-    onTap: alPresionar,
-    selectedBackgroundColor: const Color(0xFFDDECDD),
-    unselectedBackgroundColor: const Color(0xFFF2F2F2),
-    selectedForegroundColor: const Color(0xFF55785A),
-    unselectedForegroundColor: const Color(0xFF4A4B4D),
-    compactProgress: compactProgress,
-  );
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final esOscuro = tema.brightness == Brightness.dark;
+
+    // Los colores se calculan aqui y se le pasan al chip de Lucas tal cual:
+    // su animacion queda intacta y aun asi responde al tema.
+    return AnimatedCategoryChip(
+      label: categoria.nombre,
+      icon: categoria.icono,
+      isSelected: seleccionado,
+      onTap: alPresionar,
+      selectedBackgroundColor: esOscuro
+          ? const Color(0xFF2E4636)
+          : const Color(0xFFDDECDD),
+      unselectedBackgroundColor: esOscuro
+          ? tema.colorScheme.surfaceContainerHighest
+          : const Color(0xFFF2F2F2),
+      selectedForegroundColor: esOscuro
+          ? const Color(0xFFAFD6B6)
+          : const Color(0xFF55785A),
+      unselectedForegroundColor:
+          tema.textTheme.bodyLarge?.color ?? const Color(0xFF4A4B4D),
+      compactProgress: compactProgress,
+    );
+  }
 }

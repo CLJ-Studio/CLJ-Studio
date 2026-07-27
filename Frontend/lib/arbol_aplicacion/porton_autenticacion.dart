@@ -161,7 +161,6 @@ class _PantallaErrorSesion extends StatelessWidget {
               const Icon(
                 Icons.cloud_off_rounded,
                 size: 54,
-                color: Color(0xFF9A9A9A),
               ),
               const SizedBox(height: 18),
               Text(

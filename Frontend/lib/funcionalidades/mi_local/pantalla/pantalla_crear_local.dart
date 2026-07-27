@@ -377,7 +377,7 @@ class _FichaCategoria extends StatelessWidget {
               style: TextStyle(
                 color: activa
                     ? const Color(0xFF5C8A63)
-                    : const Color(0xFF292A29),
+                    : Theme.of(context).colorScheme.onSurface,
                 fontWeight: activa ? FontWeight.w800 : FontWeight.w600,
               ),
             ),
@@ -495,7 +495,7 @@ class _BurbujaPregunta extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: const Color(0xFFE8ECE8)),
+          border: Border.all(color: Theme.of(context).dividerColor),
           boxShadow: const [
             BoxShadow(
               color: Color(0x0A000000),
@@ -509,7 +509,7 @@ class _BurbujaPregunta extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 22,
-              backgroundColor: const Color(0xFFE7F2E8),
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
               foregroundColor: const Color(0xFF5C8A63),
               child: Icon(icono, size: 22),
             ),

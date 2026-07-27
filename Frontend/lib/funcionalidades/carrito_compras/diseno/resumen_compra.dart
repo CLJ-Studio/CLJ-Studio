@@ -35,7 +35,7 @@ class ResumenCompra extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     decoration: BoxDecoration(
-      color: const Color(0xFFF6F7F8),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(18),
     ),
     child: Padding(
@@ -45,7 +45,7 @@ class ResumenCompra extends StatelessWidget {
           fila('Importe', 'Bs ${subtotal.toStringAsFixed(2)}'),
           fila('Costo de entrega', 'Bs ${entrega.toStringAsFixed(2)}'),
           fila('Método de pago', 'Al recoger'),
-          const Divider(color: Color(0xFFE2E5E3)),
+          Divider(color: Theme.of(context).dividerColor),
           fila('Total', 'Bs ${total.toStringAsFixed(2)}', fuerte: true),
         ],
       ),

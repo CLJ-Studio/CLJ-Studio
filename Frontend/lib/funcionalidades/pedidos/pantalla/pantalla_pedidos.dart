@@ -85,7 +85,7 @@ class _PantallaPedidosState extends State<PantallaPedidos>
           TabBar(
             controller: _pestanas,
             labelColor: const Color(0xFF55785A),
-            unselectedLabelColor: const Color(0xFF9A9A9A),
+            unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
             indicatorColor: const Color(0xFF5C8A63),
             labelStyle: const TextStyle(fontWeight: FontWeight.w900),
             tabs: [

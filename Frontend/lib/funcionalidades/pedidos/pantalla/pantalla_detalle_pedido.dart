@@ -288,7 +288,7 @@ class _Items extends StatelessWidget {
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFECEFED)),
+      border: Border.all(color: Theme.of(context).dividerColor),
     ),
     child: Column(
       children: [
@@ -353,14 +353,14 @@ class _Totales extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(
-      color: const Color(0xFFF6F7F8),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(18),
     ),
     child: Column(
       children: [
         _fila('Importe', pedido.subtotal),
         _fila('Costo de entrega', pedido.costoEntrega),
-        const Divider(color: Color(0xFFE2E5E3)),
+        Divider(color: Theme.of(context).dividerColor),
         _fila('Total', pedido.total, fuerte: true),
         const SizedBox(height: 6),
         const Row(
@@ -401,7 +401,7 @@ class _Dato extends StatelessWidget {
           children: [
             Text(
               titulo,
-              style: const TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+              style: const TextStyle(fontSize: 12),
             ),
             Text(valor, style: const TextStyle(fontWeight: FontWeight.w700)),
           ],

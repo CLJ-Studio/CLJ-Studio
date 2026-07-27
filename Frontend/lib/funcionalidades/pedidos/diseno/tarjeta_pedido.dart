@@ -31,7 +31,7 @@ class TarjetaPedido extends StatelessWidget {
         onTap: alAbrir,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFECEFED)),
+            border: Border.all(color: Theme.of(context).dividerColor),
             borderRadius: BorderRadius.circular(22),
           ),
           child: Padding(
@@ -58,10 +58,10 @@ class TarjetaPedido extends StatelessWidget {
                                 : pedido.nombreLocal,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFF252825),
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           Text(
@@ -95,10 +95,10 @@ class TarjetaPedido extends StatelessWidget {
                     const SizedBox(width: 10),
                     Text(
                       'Bs ${pedido.total.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF202220),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],

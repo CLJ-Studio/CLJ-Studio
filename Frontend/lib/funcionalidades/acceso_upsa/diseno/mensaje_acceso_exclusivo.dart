@@ -10,7 +10,7 @@ class MensajeAccesoExclusivo extends StatelessWidget {
       'Al continuar aceptas los términos y la política de privacidad. '
       'Acceso exclusivo para estudiantes UPSA.',
       textAlign: TextAlign.center,
-      style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 11, height: 1.45),
+      style: TextStyle(fontSize: 11, height: 1.45),
     );
   }
 }

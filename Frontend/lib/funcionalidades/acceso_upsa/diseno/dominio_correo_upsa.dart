@@ -9,7 +9,7 @@ class DominioCorreoUpsa extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F2EE),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
         borderRadius: BorderRadius.circular(14),
       ),
       child: const Text(

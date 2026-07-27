@@ -147,7 +147,9 @@ class _Contacto extends StatelessWidget {
               shape: const StadiumBorder(),
             ),
             icon: const Icon(Icons.chat_rounded),
-            label: const Text('WhatsApp 67972211'),
+            // El numero no se muestra: quedaria expuesto a cualquiera. El
+            // enlace igual abre el chat correcto.
+            label: const Text('Contactar a soporte'),
           ),
         ),
       ],

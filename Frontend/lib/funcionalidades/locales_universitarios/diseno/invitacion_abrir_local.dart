@@ -18,7 +18,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
     child: Ink(
       height: 180,
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F2E5),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Stack(
