@@ -59,7 +59,7 @@ class FormularioCorreoUpsa extends StatelessWidget {
           pista ??
               (esValido
                   ? 'Te llevaremos directo a esta cuenta.'
-                  : 'Opcional: escribe tu código para entrar más rápido.'),
+                  : 'Opcional: escribe tu registro para entrar más rápido.'),
           style: TextStyle(
             color: pista != null
                 ? Theme.of(context).colorScheme.error

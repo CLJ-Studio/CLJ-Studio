@@ -42,8 +42,7 @@ class CampoCodigoEstudiante extends StatelessWidget {
             letterSpacing: .5,
           ),
           decoration: InputDecoration(
-            labelText: 'Código de estudiante',
-            hintText: '2023115833',
+            labelText: 'Número de registro',
             prefixText: 'a',
             prefixStyle: const TextStyle(
               color: Color(0xFF292A29),
