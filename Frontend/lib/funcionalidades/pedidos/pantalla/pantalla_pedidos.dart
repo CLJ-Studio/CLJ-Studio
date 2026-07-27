@@ -84,9 +84,9 @@ class _PantallaPedidosState extends State<PantallaPedidos>
           const SizedBox(height: 12),
           TabBar(
             controller: _pestanas,
-            labelColor: const Color(0xFF55785A),
+            labelColor: Theme.of(context).colorScheme.primary,
             unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
-            indicatorColor: const Color(0xFF5C8A63),
+            indicatorColor: Theme.of(context).colorScheme.primary,
             labelStyle: const TextStyle(fontWeight: FontWeight.w900),
             tabs: [
               const Tab(text: 'Mis compras'),

@@ -16,9 +16,9 @@ class OpcionFavoritos extends StatelessWidget {
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute<void>(builder: (_) => const PantallaFavoritos()),
         ),
-        leading: const Icon(
+        leading: Icon(
           Icons.favorite_border_rounded,
-          color: Color(0xFF5C8A63),
+          color: Theme.of(context).colorScheme.primary,
         ),
         title: const Text('Favoritos'),
         subtitle: Text(
@@ -38,8 +38,8 @@ class OpcionFavoritos extends StatelessWidget {
                 ),
                 child: Text(
                   '${controlador.cantidad}',
-                  style: const TextStyle(
-                    color: Color(0xFF5C8A63),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w900,
                   ),
                 ),

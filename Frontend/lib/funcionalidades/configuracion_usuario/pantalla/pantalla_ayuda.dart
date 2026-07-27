@@ -12,7 +12,7 @@ class PantallaAyuda extends StatelessWidget {
   Future<void> _abrirWhatsapp(BuildContext context) async {
     final url = Uri.parse(
       'https://wa.me/$_whatsappSoporte'
-      '?text=${Uri.encodeComponent('Hola, necesito ayuda con UPSA Net.')}',
+      '?text=${Uri.encodeComponent('Hola, necesito ayuda con UPSA Eat.')}',
     );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication) &&
         context.mounted) {

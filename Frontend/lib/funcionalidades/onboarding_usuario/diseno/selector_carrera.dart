@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../modelos/carrera_upsa.dart';
 
-const _verde = Color(0xFF5C8A63);
-const _grisTexto = Color(0xFF7C827E);
 
 /// Campo que abre una hoja deslizable con todas las carreras.
 ///
@@ -88,7 +86,7 @@ class SelectorCarrera extends StatelessWidget {
           style: TextStyle(
             fontSize: 15,
             fontWeight: carrera == null ? FontWeight.w500 : FontWeight.w700,
-            color: carrera == null ? _grisTexto : Theme.of(context).colorScheme.onSurface,
+            color: carrera == null ? Theme.of(context).textTheme.bodyMedium?.color : Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ),
@@ -150,8 +148,8 @@ class _HojaCarreras extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
                     child: Text(
                       entrada.key.toUpperCase(),
-                      style: const TextStyle(
-                        color: _grisTexto,
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                         letterSpacing: .6,
@@ -198,7 +196,7 @@ class _FilaCarrera extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     height: 1.3,
-                    color: seleccionada ? _verde : Theme.of(context).colorScheme.onSurface,
+                    color: seleccionada ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
                     fontWeight: seleccionada
                         ? FontWeight.w800
                         : FontWeight.w600,
@@ -206,9 +204,9 @@ class _FilaCarrera extends StatelessWidget {
                 ),
               ),
               if (seleccionada)
-                const Icon(
+                Icon(
                   Icons.check_circle_rounded,
-                  color: _verde,
+                  color: Theme.of(context).colorScheme.primary,
                   size: 21,
                 ),
             ],

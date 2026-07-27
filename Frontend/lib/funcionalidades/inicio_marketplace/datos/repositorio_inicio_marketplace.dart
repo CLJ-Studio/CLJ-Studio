@@ -47,25 +47,35 @@ class RepositorioInicioMarketplace {
   /// El inicio muestra publicaciones y no locales: con locales, quien
   /// publicaba tres cosas seguia viendo una sola tarjeta y parecia que las
   /// anteriores se habian borrado.
+  /// El vendedor se toma de `locales_publicos` y no del join con `stores`.
+  /// Unir `profiles` desde la tabla devuelve vacio para todos menos uno: su
+  /// RLS solo deja leer el perfil propio. Por eso el detalle mostraba el
+  /// nombre del negocio con un "Por" sin nadie detras.
   Future<List<ProductoMarketplace>> obtenerPublicaciones() async {
-    final filas = await _cliente
-        .from('products')
-        .select('''
-          id, store_id, name, description, price, emoji, stock, kind,
-          image_path, is_available, product_images(storage_path, position),
-          stores!inner(
-            id, name, description, category_id, emoji, color_hex,
-            estimated_time, delivery_cost, is_open, rating_average,
-            is_personal, logo_path, is_active, categories(name)
-          )
-        ''')
-        .eq('is_available', true)
-        .eq('stores.is_active', true)
-        // Lo mas reciente o relanzado encabeza el feed.
-        .order('bumped_at', ascending: false)
-        .limit(120);
+    final (locales, filas) = await (
+      obtenerLocales(),
+      _cliente
+          .from('products')
+          .select(camposProducto)
+          .eq('is_available', true)
+          // Lo mas reciente o relanzado encabeza el feed.
+          .order('bumped_at', ascending: false)
+          .limit(120),
+    ).wait;
 
-    return filas.map(ProductoMarketplace.desdeMapa).toList();
+    final porId = {for (final local in locales) local.id: local};
+
+    return filas
+        .map(
+          (fila) => ProductoMarketplace.desdeMapa(
+            fila,
+            local: porId[fila['store_id'] as String],
+          ),
+        )
+        // Sin local es que su vendedor esta inactivo: la vista ya los excluye,
+        // y antes ese filtro lo hacia el `stores.is_active` del join.
+        .where((publicacion) => publicacion.local != null)
+        .toList();
   }
 
   Future<List<ProductoMarketplace>> obtenerProductos(String localId) async {

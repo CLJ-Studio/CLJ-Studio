@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'arbol_aplicacion/arbol_aplicacion.dart';
 import 'configuracion_aplicacion/configuracion_supabase.dart';
 
-/// Punto de entrada de UPSA Net.
+/// Punto de entrada de UPSA Eat.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

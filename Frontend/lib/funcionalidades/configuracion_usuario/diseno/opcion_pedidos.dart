@@ -11,7 +11,7 @@ class OpcionPedidos extends StatelessWidget {
     onTap: () => Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const PantallaPedidosCompleta()),
     ),
-    leading: const Icon(Icons.receipt_long_outlined, color: Color(0xFF5C8A63)),
+    leading: Icon(Icons.receipt_long_outlined, color: Theme.of(context).colorScheme.primary),
     title: const Text('Pedidos'),
     subtitle: const Text('Tus compras y ventas'),
     trailing: const Icon(Icons.chevron_right_rounded),

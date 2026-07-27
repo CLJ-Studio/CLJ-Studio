@@ -125,7 +125,7 @@ class _PantallaContactandoVendedorState
                     TextButton.icon(
                       onPressed: _volver,
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF55785A),
+                        foregroundColor: Theme.of(context).colorScheme.primary,
                       ),
                       icon: const Icon(Icons.explore_outlined, size: 18),
                       label: const Text(
@@ -155,7 +155,7 @@ class _IndicadorEspera extends StatelessWidget {
       color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
       borderRadius: BorderRadius.circular(22),
     ),
-    child: const Row(
+    child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
@@ -163,7 +163,7 @@ class _IndicadorEspera extends StatelessWidget {
           height: 17,
           child: CircularProgressIndicator(
             strokeWidth: 2.4,
-            color: Color(0xFF5C8A63),
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
         SizedBox(width: 10),

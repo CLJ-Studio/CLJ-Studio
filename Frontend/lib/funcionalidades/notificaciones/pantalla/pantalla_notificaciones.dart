@@ -56,10 +56,10 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
               ? const SizedBox.shrink()
               : TextButton(
                   onPressed: controlador.marcarTodasLeidas,
-                  child: const Text(
+                  child: Text(
                     'Marcar leídas',
                     style: TextStyle(
-                      color: Color(0xFF5C8A63),
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -125,7 +125,7 @@ class _Fila extends StatelessWidget {
       child: ListTile(
         onTap: alTocar,
         leading: CircleAvatar(
-          foregroundColor: const Color(0xFF5C8A63),
+          foregroundColor: Theme.of(context).colorScheme.primary,
           child: Icon(notificacion.icono, size: 21),
         ),
         title: Text(
@@ -163,10 +163,10 @@ class _SinNotificaciones extends StatelessWidget {
           CircleAvatar(
             radius: 44,
             backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-            child: const Icon(
+            child: Icon(
               Icons.notifications_none_rounded,
               size: 42,
-              color: Color(0xFF6F9A76),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(height: 18),

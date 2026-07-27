@@ -12,7 +12,7 @@ class EncabezadoAccesoUpsa extends StatelessWidget {
           'Tu campus.\nTodo más cerca.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: const Color(0xFF181818),
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 32,
             height: 1.08,
             fontWeight: FontWeight.w900,

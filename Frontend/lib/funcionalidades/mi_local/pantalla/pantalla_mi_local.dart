@@ -95,7 +95,7 @@ class PantallaMiLocal extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: () => _agregar(context),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF5C8A63),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
                   icon: const Icon(Icons.add_rounded),
                   label: const Text('Producto'),
@@ -250,12 +250,12 @@ class _FilaProducto extends StatelessWidget {
                             color: Theme.of(context).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Oculta',
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFF7C827E),
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
                             ),
                           ),
                         ),
@@ -277,7 +277,7 @@ class _FilaProducto extends StatelessWidget {
             IconButton(
               onPressed: alSumar,
               icon: const Icon(Icons.add_circle_rounded),
-              color: const Color(0xFF5C8A63),
+              color: Theme.of(context).colorScheme.primary,
             ),
             // Las acciones menos frecuentes van en un menu para no llenar
             // la fila de botones.

@@ -45,9 +45,9 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
-            const Text(
+            Text(
               'Comparte productos o servicios con la comunidad UPSA.',
-              style: TextStyle(color: Colors.black54),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
             ),
             const SizedBox(height: 24),
             if (widget.miLocal.cargando)
@@ -90,10 +90,10 @@ class _AvisoDestino extends StatelessWidget {
     ),
     child: Row(
       children: [
-        const Icon(
+        Icon(
           Icons.storefront_rounded,
           size: 19,
-          color: Color(0xFF5C8A63),
+          color: Theme.of(context).colorScheme.primary,
         ),
         const SizedBox(width: 10),
         Expanded(

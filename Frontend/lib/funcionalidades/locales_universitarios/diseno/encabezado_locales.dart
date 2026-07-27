@@ -14,9 +14,9 @@ class EncabezadoLocales extends StatelessWidget {
           context,
         ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
       ),
-      const Text(
+      Text(
         'Encuentra opciones creadas para la vida universitaria.',
-        style: TextStyle(color: Colors.black54),
+        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
       ),
     ],
   );

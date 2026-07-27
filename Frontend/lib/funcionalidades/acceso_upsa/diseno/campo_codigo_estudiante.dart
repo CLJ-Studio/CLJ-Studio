@@ -22,7 +22,7 @@ class CampoCodigoEstudiante extends StatelessWidget {
     final colorBorde = hayError
         ? Theme.of(context).colorScheme.error
         : esValido
-        ? const Color(0xFF5C8A63)
+        ? Theme.of(context).colorScheme.primary
         : const Color(0xFFB8BDB8);
 
     return Column(
@@ -51,9 +51,9 @@ class CampoCodigoEstudiante extends StatelessWidget {
             ),
             prefixIcon: const Icon(Icons.badge_outlined),
             suffixIcon: esValido
-                ? const Icon(
+                ? Icon(
                     Icons.check_circle_rounded,
-                    color: Color(0xFF5C8A63),
+                    color: Theme.of(context).colorScheme.primary,
                   )
                 : null,
             enabledBorder: OutlineInputBorder(

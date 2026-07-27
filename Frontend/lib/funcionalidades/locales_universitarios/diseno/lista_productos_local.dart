@@ -130,7 +130,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
             FilledButton(
               onPressed: () => Navigator.of(contexto).pop(true),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF55785A),
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
               child: const Text('Vaciar y agregar'),
             ),
@@ -184,7 +184,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                       visualDensity: VisualDensity.compact,
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF739376),
+                        foregroundColor: Theme.of(context).colorScheme.primary,
                       ),
                       onPressed: () => ControladorFavoritos.instancia.alternar(
                         widget.producto,
@@ -220,8 +220,8 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                     ),
                     child: Text(
                       _cantidad(widget.producto),
-                      style: const TextStyle(
-                        color: Color(0xFF739376),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                       ),
@@ -239,12 +239,12 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                     ),
                   ),
                   const SizedBox(height: 3),
-                  const Row(
+                  Row(
                     children: [
                       Icon(
                         Icons.schedule_rounded,
                         size: 12,
-                        color: Color(0xFF739376),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       SizedBox(width: 3),
                       Text(
@@ -273,7 +273,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                       IconButton.filled(
                         visualDensity: VisualDensity.compact,
                         style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFF55785A),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                         ),
                         onPressed: _agregar,
@@ -290,12 +290,13 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
     ),
   );
 
+  /// Antes se buscaba un "500 ml" dentro de la descripcion y, al no
+  /// encontrarlo, siempre caia en "1 unidad": el inventario decia 30 y la
+  /// tarjeta seguia diciendo 1. Ahora se lee el stock.
   String _cantidad(ProductoMarketplace producto) {
-    final coincidencia = RegExp(
-      r'\d+\s*(?:ml|hojas)',
-      caseSensitive: false,
-    ).firstMatch(producto.descripcion);
-    return coincidencia?.group(0) ?? '1 unidad';
+    if (producto.esServicio) return 'Servicio';
+    if (producto.stock <= 0) return 'Agotado';
+    return producto.stock == 1 ? '1 unidad' : '${producto.stock} unidades';
   }
 }
 

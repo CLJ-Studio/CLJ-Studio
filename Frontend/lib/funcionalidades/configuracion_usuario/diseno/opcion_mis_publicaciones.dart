@@ -13,7 +13,7 @@ class OpcionMisPublicaciones extends StatelessWidget {
         builder: (_) => const PantallaMisPublicaciones(),
       ),
     ),
-    leading: const Icon(Icons.grid_on_rounded, color: Color(0xFF5C8A63)),
+    leading: Icon(Icons.grid_on_rounded, color: Theme.of(context).colorScheme.primary),
     title: const Text('Mis publicaciones'),
     subtitle: const Text('Lo que ofreces en tu local'),
     trailing: const Icon(Icons.chevron_right_rounded),

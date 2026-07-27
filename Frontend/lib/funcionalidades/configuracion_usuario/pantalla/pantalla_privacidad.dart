@@ -140,7 +140,7 @@ class _Intro extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const Text(
-          'UPSA Net conecta a la comunidad de la universidad para comprar '
+          'UPSA Eat conecta a la comunidad de la universidad para comprar '
           'y vender dentro del campus. Aquí explicamos, sin rodeos, qué '
           'hacemos con tu información.',
           style: TextStyle(height: 1.45),

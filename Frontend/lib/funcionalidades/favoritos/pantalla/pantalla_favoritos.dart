@@ -60,10 +60,10 @@ class _FavoritosVacios extends StatelessWidget {
           CircleAvatar(
             radius: 48,
             backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-            child: const Icon(
+            child: Icon(
               Icons.favorite_border_rounded,
               size: 48,
-              color: Color(0xFF6F9A76),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(height: 20),

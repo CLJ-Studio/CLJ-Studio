@@ -62,7 +62,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
             FilledButton(
               onPressed: () => Navigator.of(contexto).pop(true),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF55785A),
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
               child: const Text('Vaciar y agregar'),
             ),
@@ -102,7 +102,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                 _favorito
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                color: const Color(0xFF739376),
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -135,8 +135,8 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                       const SizedBox(height: 8),
                       Text(
                         'Bs ${widget.producto.precio.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: Color(0xFF4F7956),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
                           fontSize: 26,
                           fontWeight: FontWeight.w900,
                         ),
@@ -150,7 +150,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                             : 'Agotado',
                         style: TextStyle(
                           color: widget.producto.hayExistencias
-                              ? const Color(0xFF7C827E)
+                              ? Theme.of(context).textTheme.bodyMedium?.color
                               : const Color(0xFFB3453B),
                           fontWeight: FontWeight.w700,
                         ),
@@ -159,8 +159,8 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                         const SizedBox(height: 18),
                         Text(
                           widget.producto.descripcion,
-                          style: const TextStyle(
-                            color: Color(0xFF555B57),
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
                             height: 1.5,
                           ),
                         ),
@@ -175,7 +175,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                               ? _agregar
                               : null,
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF5C8A63),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
                             shape: const StadiumBorder(),
                           ),
                           icon: const Icon(Icons.add_shopping_cart_rounded),
@@ -275,6 +275,14 @@ class _Vendedor extends StatelessWidget {
 
   final LocalUniversitario local;
 
+  /// Quien vende siempre tiene nombre y cara. Si es un negocio manda la
+  /// marca y debajo va la persona detras; si vende por su cuenta manda su
+  /// nombre y no hace falta segunda linea.
+  String? get _subtitulo {
+    if (local.esPersonal) return 'Vende por su cuenta';
+    return local.vendedorNombre.isEmpty ? null : 'Por ${local.vendedorNombre}';
+  }
+
   @override
   Widget build(BuildContext context) => Row(
     children: [
@@ -311,16 +319,17 @@ class _Vendedor extends StatelessWidget {
               local.esPersonal ? local.vendedorNombre : local.nombre,
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
-            const SizedBox(height: 2),
-            Text(
-              local.esPersonal
-                  ? 'Vende por su cuenta'
-                  : 'Por ${local.vendedorNombre}',
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-                fontSize: 12,
+            // Sin nombre no se pinta un "Por" colgando de la nada.
+            if (_subtitulo case final String texto) ...[
+              const SizedBox(height: 2),
+              Text(
+                texto,
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  fontSize: 12,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

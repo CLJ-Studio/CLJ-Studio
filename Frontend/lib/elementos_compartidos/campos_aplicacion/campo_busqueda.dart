@@ -5,7 +5,7 @@ import 'dart:ui';
 class CampoBusqueda extends StatelessWidget {
   const CampoBusqueda({
     required this.alCambiar,
-    this.texto = 'Buscar en UPSA Net',
+    this.texto = 'Buscar en UPSA Eat',
     this.compactProgress = 0,
     super.key,
   });

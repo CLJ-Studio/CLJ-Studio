@@ -134,7 +134,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                         ),
                         decoration: BoxDecoration(
                           color: indice <= _pagina
-                              ? const Color(0xFF6F9A76)
+                              ? Theme.of(context).colorScheme.primary
                               : const Color(0xFFDDE3DD),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -277,7 +277,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                                             : Colors.white,
                                         border: Border.all(
                                           color: _logo == logo
-                                              ? const Color(0xFF6F9A76)
+                                              ? Theme.of(context).colorScheme.primary
                                               : Theme.of(context).colorScheme.surfaceContainerHighest,
                                           width: _logo == logo ? 2 : 1,
                                         ),
@@ -304,7 +304,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                   child: FilledButton(
                     onPressed: _guardando ? null : _continuar,
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF5C8A63),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       padding: const EdgeInsets.symmetric(vertical: 17),
                     ),
                     child: _guardando
@@ -356,7 +356,7 @@ class _FichaCategoria extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
           border: Border.all(
-            color: activa ? const Color(0xFF6F9A76) : Theme.of(context).colorScheme.surfaceContainerHighest,
+            color: activa ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceContainerHighest,
             width: activa ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(20),
@@ -368,15 +368,15 @@ class _FichaCategoria extends StatelessWidget {
               categoria.icono,
               size: 19,
               color: activa
-                  ? const Color(0xFF5C8A63)
-                  : const Color(0xFF7C827E),
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).textTheme.bodyMedium?.color,
             ),
             const SizedBox(width: 8),
             Text(
               categoria.nombre,
               style: TextStyle(
                 color: activa
-                    ? const Color(0xFF5C8A63)
+                    ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.onSurface,
                 fontWeight: activa ? FontWeight.w800 : FontWeight.w600,
               ),
@@ -510,7 +510,7 @@ class _BurbujaPregunta extends StatelessWidget {
             CircleAvatar(
               radius: 22,
               backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-              foregroundColor: const Color(0xFF5C8A63),
+              foregroundColor: Theme.of(context).colorScheme.primary,
               child: Icon(icono, size: 22),
             ),
             const SizedBox(height: 16),
@@ -523,7 +523,7 @@ class _BurbujaPregunta extends StatelessWidget {
             const SizedBox(height: 7),
             Text(
               descripcion,
-              style: const TextStyle(color: Color(0xFF7C827E), height: 1.4),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, height: 1.4),
             ),
             const SizedBox(height: 22),
             child,
@@ -579,8 +579,8 @@ class _LogoSubido extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: subiendo ? null : alElegir,
       style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF55785A),
-        side: const BorderSide(color: Color(0xFF6F9D76), width: 1.4),
+        foregroundColor: Theme.of(context).colorScheme.primary,
+        side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.4),
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
       ),

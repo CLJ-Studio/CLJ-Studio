@@ -10,14 +10,14 @@ class ResumenCompra extends StatelessWidget {
   final double subtotal;
   final double entrega;
   final double total;
-  Widget fila(String etiqueta, String valor, {bool fuerte = false}) => Padding(
+  Widget fila(BuildContext context, String etiqueta, String valor, {bool fuerte = false}) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 5),
     child: Row(
       children: [
         Text(
           etiqueta,
           style: TextStyle(
-            color: fuerte ? const Color(0xFF202221) : const Color(0xFF7C827E),
+            color: fuerte ? Theme.of(context).colorScheme.onSurface : Theme.of(context).textTheme.bodyMedium?.color,
             fontWeight: fuerte ? FontWeight.w800 : FontWeight.normal,
           ),
         ),
@@ -25,7 +25,7 @@ class ResumenCompra extends StatelessWidget {
         Text(
           valor,
           style: TextStyle(
-            color: const Color(0xFF202221),
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: fuerte ? FontWeight.w900 : FontWeight.normal,
           ),
         ),
@@ -42,11 +42,11 @@ class ResumenCompra extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       child: Column(
         children: [
-          fila('Importe', 'Bs ${subtotal.toStringAsFixed(2)}'),
-          fila('Costo de entrega', 'Bs ${entrega.toStringAsFixed(2)}'),
-          fila('Método de pago', 'Al recoger'),
+          fila(context, 'Importe', 'Bs ${subtotal.toStringAsFixed(2)}'),
+          fila(context, 'Costo de entrega', 'Bs ${entrega.toStringAsFixed(2)}'),
+          fila(context, 'Método de pago', 'Al recoger'),
           Divider(color: Theme.of(context).dividerColor),
-          fila('Total', 'Bs ${total.toStringAsFixed(2)}', fuerte: true),
+          fila(context, 'Total', 'Bs ${total.toStringAsFixed(2)}', fuerte: true),
         ],
       ),
     ),

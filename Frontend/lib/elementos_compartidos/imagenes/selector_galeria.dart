@@ -81,10 +81,10 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
     children: [
       Row(
         children: [
-          const Text(
+          Text(
             'Fotos',
             style: TextStyle(
-              color: Color(0xFF7C827E),
+              color: Theme.of(context).textTheme.bodyMedium?.color,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -152,7 +152,7 @@ class _Miniatura extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF5C8A63),
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -235,9 +235,9 @@ class _BotonAgregar extends StatelessWidget {
                 height: 22,
                 child: CircularProgressIndicator(strokeWidth: 2.2),
               )
-            : const Icon(
+            : Icon(
                 Icons.add_photo_alternate_outlined,
-                color: Color(0xFF7C827E),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
       ),
     ),

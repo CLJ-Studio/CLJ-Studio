@@ -10,7 +10,7 @@ class BotonConfirmarPublicacion extends StatelessWidget {
     child: FilledButton.icon(
       onPressed: alPresionar,
       style: FilledButton.styleFrom(
-        backgroundColor: const Color(0xFF5C8A63),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 17),
       ),

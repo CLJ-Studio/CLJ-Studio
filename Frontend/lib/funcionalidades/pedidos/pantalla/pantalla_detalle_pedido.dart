@@ -139,7 +139,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
               ? null
               : () => _ejecutar(() => _repositorio.aceptar(pedido.id)),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF5C8A63),
+            backgroundColor: Theme.of(context).colorScheme.primary,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: const StadiumBorder(),
           ),
@@ -263,8 +263,8 @@ class _Encabezado extends StatelessWidget {
                   soyVendedor
                       ? 'Pedido de ${pedido.nombreComprador}'
                       : 'Vendedor: ${pedido.nombreVendedor}',
-                  style: const TextStyle(
-                    color: Color(0xFF7C827E),
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                     fontSize: 13,
                   ),
                 ),
@@ -307,7 +307,7 @@ class _Items extends StatelessWidget {
                 ),
                 Text(
                   '×${item.cantidad}',
-                  style: const TextStyle(color: Color(0xFF7C827E)),
+                  style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -327,14 +327,14 @@ class _Totales extends StatelessWidget {
 
   final Pedido pedido;
 
-  Widget _fila(String etiqueta, double valor, {bool fuerte = false}) => Padding(
+  Widget _fila(BuildContext context, String etiqueta, double valor, {bool fuerte = false}) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
       children: [
         Text(
           etiqueta,
           style: TextStyle(
-            color: fuerte ? const Color(0xFF202221) : const Color(0xFF7C827E),
+            color: fuerte ? Theme.of(context).colorScheme.onSurface : Theme.of(context).textTheme.bodyMedium?.color,
             fontWeight: fuerte ? FontWeight.w800 : FontWeight.normal,
           ),
         ),
@@ -358,18 +358,18 @@ class _Totales extends StatelessWidget {
     ),
     child: Column(
       children: [
-        _fila('Importe', pedido.subtotal),
-        _fila('Costo de entrega', pedido.costoEntrega),
+        _fila(context, 'Importe', pedido.subtotal),
+        _fila(context, 'Costo de entrega', pedido.costoEntrega),
         Divider(color: Theme.of(context).dividerColor),
-        _fila('Total', pedido.total, fuerte: true),
+        _fila(context, 'Total', pedido.total, fuerte: true),
         const SizedBox(height: 6),
-        const Row(
+        Row(
           children: [
-            Icon(Icons.payments_outlined, size: 15, color: Color(0xFF7C827E)),
+            Icon(Icons.payments_outlined, size: 15, color: Theme.of(context).textTheme.bodyMedium?.color),
             SizedBox(width: 6),
             Text(
               'Pago coordinado entre ustedes',
-              style: TextStyle(color: Color(0xFF7C827E), fontSize: 12),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12),
             ),
           ],
         ),
@@ -393,7 +393,7 @@ class _Dato extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Icon(icono, size: 19, color: const Color(0xFF7C827E)),
+      Icon(icono, size: 19, color: Theme.of(context).textTheme.bodyMedium?.color),
       const SizedBox(width: 10),
       Expanded(
         child: Column(

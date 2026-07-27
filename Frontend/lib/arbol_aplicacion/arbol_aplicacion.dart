@@ -26,7 +26,7 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: tema,
     builder: (context, _) => MaterialApp(
-      title: 'UPSA Net',
+      title: 'UPSA Eat',
       debugShowCheckedModeBanner: false,
       theme: ConfiguracionTema.temaClaro,
       darkTheme: ConfiguracionTema.temaOscuro,

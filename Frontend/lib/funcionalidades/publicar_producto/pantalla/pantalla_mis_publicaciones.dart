@@ -84,9 +84,9 @@ class _Resumen extends StatelessWidget {
     ),
     child: Row(
       children: [
-        const CircleAvatar(
+        CircleAvatar(
           radius: 29,
-          child: Icon(Icons.person_rounded, color: Color(0xFF5C8A63)),
+          child: Icon(Icons.person_rounded, color: Theme.of(context).colorScheme.primary),
         ),
         const SizedBox(width: 15),
         const Expanded(
@@ -106,8 +106,8 @@ class _Resumen extends StatelessWidget {
         ),
         Text(
           '$cantidad',
-          style: const TextStyle(
-            color: Color(0xFF5C8A63),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
             fontSize: 26,
             fontWeight: FontWeight.w900,
           ),
@@ -188,8 +188,8 @@ class _TarjetaPublicacion extends StatelessWidget {
             children: [
               Text(
                 'Bs ${publicacion.precio.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Color(0xFF4F7956),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
                 ),
@@ -198,8 +198,8 @@ class _TarjetaPublicacion extends StatelessWidget {
                 const SizedBox(height: 7),
                 Text(
                   publicacion.descripcion,
-                  style: const TextStyle(
-                    color: Color(0xFF555B57),
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                     height: 1.4,
                   ),
                 ),
@@ -224,10 +224,10 @@ class _EstadoVacio extends StatelessWidget {
           CircleAvatar(
             radius: 48,
             backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-            child: const Icon(
+            child: Icon(
               Icons.grid_on_rounded,
               size: 46,
-              color: Color(0xFF6F9A76),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(height: 20),

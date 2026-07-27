@@ -226,7 +226,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                       child: FilledButton(
                         onPressed: _guardando ? null : _guardar,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF5C8A63),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           shape: const StadiumBorder(),
                         ),
                         child: _guardando
@@ -269,10 +269,10 @@ class _DatosInstitucionales extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.verified_rounded,
                 size: 18,
-                color: Color(0xFF5C8A63),
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 8),
               Text(
@@ -288,7 +288,7 @@ class _DatosInstitucionales extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             perfil.correo,
-            style: const TextStyle(color: Color(0xFF7C827E), fontSize: 13),
+            style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 13),
           ),
           const SizedBox(height: 10),
           const Text(
@@ -339,10 +339,10 @@ class _InterruptorCampusState extends State<_InterruptorCampus> {
     value: _enCampus,
     onChanged: _guardando ? null : _cambiar,
     contentPadding: EdgeInsets.zero,
-    activeThumbColor: const Color(0xFF5C8A63),
-    secondary: const Icon(
+    activeThumbColor: Theme.of(context).colorScheme.primary,
+    secondary: Icon(
       Icons.location_on_outlined,
-      color: Color(0xFF5C8A63),
+      color: Theme.of(context).colorScheme.primary,
     ),
     title: const Text(
       'Estoy en el campus',
@@ -405,7 +405,7 @@ class _SelectorFotoPerfil extends StatelessWidget {
                   },
           ),
           Material(
-            color: const Color(0xFF5C8A63),
+            color: Theme.of(context).colorScheme.primary,
             shape: const CircleBorder(),
             child: InkWell(
               onTap: subiendo ? null : alElegir,
@@ -442,8 +442,8 @@ class _InicialGrande extends StatelessWidget {
   Widget build(BuildContext context) => Center(
     child: Text(
       inicial,
-      style: const TextStyle(
-        color: Color(0xFF55785A),
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.primary,
         fontSize: 38,
         fontWeight: FontWeight.w900,
       ),

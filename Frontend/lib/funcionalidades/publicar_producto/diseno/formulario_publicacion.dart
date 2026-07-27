@@ -82,7 +82,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
           FilledButton(
             onPressed: () => Navigator.of(contexto).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5C8A63),
+              backgroundColor: Theme.of(context).colorScheme.primary,
             ),
             child: const Text('Continuar'),
           ),

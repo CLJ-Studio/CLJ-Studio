@@ -25,10 +25,10 @@ class SelectorCantidadProducto extends StatelessWidget {
       children: [
         InkWell(
           onTap: alAumentar,
-          child: const SizedBox(
+          child: SizedBox(
             width: 38,
             height: 20,
-            child: Icon(Icons.add_rounded, size: 16, color: Color(0xFF5C8A63)),
+            child: Icon(Icons.add_rounded, size: 16, color: Theme.of(context).colorScheme.primary),
           ),
         ),
         Text(
@@ -37,13 +37,13 @@ class SelectorCantidadProducto extends StatelessWidget {
         ),
         InkWell(
           onTap: alDisminuir,
-          child: const SizedBox(
+          child: SizedBox(
             width: 38,
             height: 20,
             child: Icon(
               Icons.remove_rounded,
               size: 16,
-              color: Color(0xFF5C8A63),
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ),

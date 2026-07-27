@@ -10,18 +10,19 @@ class SaludoEstudiante extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-        'UPSA Net',
+        'UPSA Eat',
         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-          color: const Color(0xFF181818),
+          // Iba en negro fijo: en oscuro el titulo desaparecia del todo.
+          color: Theme.of(context).colorScheme.onSurface,
           fontFamily: 'Nunito',
           fontSize: 32,
           fontWeight: FontWeight.w900,
           letterSpacing: -1,
         ),
       ),
-      const Text(
+      Text(
         '¿Que necesitas hoy en el campus?',
-        style: TextStyle(color: Colors.black54),
+        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
       ),
     ],
   );
