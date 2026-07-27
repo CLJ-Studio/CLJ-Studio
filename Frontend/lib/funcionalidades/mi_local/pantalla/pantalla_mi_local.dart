@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import '../logica/controlador_mi_local.dart';
 
 /// Panel básico para administrar el inventario del local creado.
@@ -31,6 +32,8 @@ class PantallaMiLocal extends StatelessWidget {
     final precio = TextEditingController();
     final cantidad = TextEditingController(text: '1');
     var emoji = _emojis.first;
+    String? fotoPath;
+    var subiendoFoto = false;
 
     final resultado = await showDialog<bool>(
       context: context,
@@ -68,6 +71,52 @@ class PantallaMiLocal extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: subiendoFoto
+                            ? null
+                            : () async {
+                                actualizar(() => subiendoFoto = true);
+                                try {
+                                  fotoPath =
+                                      await ServicioImagenes.elegirYSubir(
+                                        etiqueta: 'producto',
+                                      );
+                                } catch (_) {
+                                  fotoPath = null;
+                                } finally {
+                                  actualizar(() => subiendoFoto = false);
+                                }
+                              },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF55785A),
+                          side: const BorderSide(color: Color(0xFF6F9D76)),
+                          shape: const StadiumBorder(),
+                        ),
+                        icon: subiendoFoto
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.add_photo_alternate_outlined,
+                                size: 18,
+                              ),
+                        label: Text(
+                          subiendoFoto
+                              ? 'Subiendo...'
+                              : fotoPath == null
+                              ? 'Foto (opcional)'
+                              : 'Foto lista ✓',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
                   const Text(
                     'Icono',
                     style: TextStyle(
@@ -135,6 +184,7 @@ class PantallaMiLocal extends StatelessWidget {
         precio: montoValido,
         cantidad: int.tryParse(cantidad.text) ?? 0,
         emoji: emoji,
+        imagePath: fotoPath,
       );
     }
     nombre.dispose();

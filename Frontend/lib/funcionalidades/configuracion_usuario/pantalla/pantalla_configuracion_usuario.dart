@@ -9,6 +9,7 @@ import '../diseno/opcion_cuenta_institucional.dart';
 import '../diseno/opcion_favoritos.dart';
 import '../diseno/opcion_mis_publicaciones.dart';
 import '../diseno/opcion_notificaciones.dart';
+import '../diseno/opcion_pedidos.dart';
 import '../diseno/opcion_privacidad.dart';
 import '../diseno/opcion_tema_aplicacion.dart';
 import '../diseno/tarjeta_perfil_usuario.dart';
@@ -70,6 +71,8 @@ class _PantallaConfiguracionUsuarioState
             _PanelConfiguracion(
               titulo: 'Ajustes',
               children: [
+                const OpcionPedidos(),
+                const Divider(height: 1, indent: 58, endIndent: 18),
                 const OpcionFavoritos(),
                 const Divider(height: 1, indent: 58, endIndent: 18),
                 const OpcionMisPublicaciones(),

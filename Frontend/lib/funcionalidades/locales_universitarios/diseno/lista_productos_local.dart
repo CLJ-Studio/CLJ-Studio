@@ -142,19 +142,20 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(10, 12, 10, 2),
-                    // El emoji es la imagen del producto hasta que se
-                    // conecte Supabase Storage (ver product_images).
+                    // Foto real si el vendedor subio una; emoji si no.
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(17),
-                      child: ColoredBox(
-                        color: const Color(0xFFF1F6F0),
-                        child: Center(
-                          child: Text(
-                            widget.producto.emoji,
-                            style: const TextStyle(fontSize: 68),
+                      child: switch (widget.producto.imagenUrl) {
+                        final String url => Image.network(
+                          url,
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.low,
+                          errorBuilder: (_, _, _) => _FondoEmoji(
+                            emoji: widget.producto.emoji,
                           ),
                         ),
-                      ),
+                        _ => _FondoEmoji(emoji: widget.producto.emoji),
+                      },
                     ),
                   ),
                   Positioned(
@@ -277,4 +278,17 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
     ).firstMatch(producto.descripcion);
     return coincidencia?.group(0) ?? '1 unidad';
   }
+}
+
+/// Respaldo visual cuando el producto no tiene foto (o esta fallo al cargar).
+class _FondoEmoji extends StatelessWidget {
+  const _FondoEmoji({required this.emoji});
+
+  final String emoji;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: const Color(0xFFF1F6F0),
+    child: Center(child: Text(emoji, style: const TextStyle(fontSize: 68))),
+  );
 }

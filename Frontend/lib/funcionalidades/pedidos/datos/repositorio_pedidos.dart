@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../modelos/pedido.dart';
@@ -104,9 +106,49 @@ class RepositorioPedidos {
 
   /// Emite el pedido cada vez que cambia en el servidor. Lo usa la pantalla
   /// de espera para reaccionar en cuanto el vendedor acepta o rechaza.
-  Stream<Pedido?> escuchar(String pedidoId) => _cliente
-      .from('orders')
-      .stream(primaryKey: ['id'])
-      .eq('id', pedidoId)
-      .asyncMap((_) => obtener(pedidoId));
+  ///
+  /// Combina Realtime (websocket) con un sondeo periodico de respaldo:
+  /// si el websocket falla o se corta (redes de campus, proxies, la pestana
+  /// suspendida), la pantalla sigue actualizandose igual en vez de quedarse
+  /// esperando un evento que nunca llega. Los errores del canal se tragan
+  /// a proposito: el sondeo es la garantia de progreso.
+  Stream<Pedido?> escuchar(String pedidoId) {
+    late final StreamController<Pedido?> controlador;
+    StreamSubscription<dynamic>? tiempoReal;
+    Timer? sondeo;
+
+    Future<void> emitir() async {
+      if (controlador.isClosed) return;
+      try {
+        controlador.add(await obtener(pedidoId));
+      } catch (_) {
+        // Fallo puntual de red: el siguiente sondeo lo reintenta.
+      }
+    }
+
+    controlador = StreamController<Pedido?>(
+      onListen: () {
+        emitir();
+        sondeo = Timer.periodic(
+          const Duration(seconds: 8),
+          (_) => emitir(),
+        );
+        try {
+          tiempoReal = _cliente
+              .from('orders')
+              .stream(primaryKey: ['id'])
+              .eq('id', pedidoId)
+              .listen((_) => emitir(), onError: (_) {});
+        } catch (_) {
+          // Sin websocket queda el sondeo.
+        }
+      },
+      onCancel: () {
+        sondeo?.cancel();
+        tiempoReal?.cancel();
+      },
+    );
+
+    return controlador.stream;
+  }
 }

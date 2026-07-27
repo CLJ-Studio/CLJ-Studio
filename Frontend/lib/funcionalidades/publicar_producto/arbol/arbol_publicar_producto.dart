@@ -5,18 +5,11 @@ import '../pantalla/pantalla_publicar_producto.dart';
 
 /// Ensambla el flujo de publicación sobre el local del estudiante.
 class ArbolPublicarProducto extends StatelessWidget {
-  const ArbolPublicarProducto({
-    required this.miLocal,
-    required this.alCrearLocal,
-    super.key,
-  });
+  const ArbolPublicarProducto({required this.miLocal, super.key});
 
   final ControladorMiLocal miLocal;
-  final VoidCallback alCrearLocal;
 
   @override
-  Widget build(BuildContext context) => PantallaPublicarProducto(
-    miLocal: miLocal,
-    alCrearLocal: alCrearLocal,
-  );
+  Widget build(BuildContext context) =>
+      PantallaPublicarProducto(miLocal: miLocal);
 }

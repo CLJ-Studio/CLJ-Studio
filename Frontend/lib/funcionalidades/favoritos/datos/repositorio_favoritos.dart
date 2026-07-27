@@ -20,10 +20,11 @@ class RepositorioFavoritos {
         .select('''
           products(
             id, store_id, name, description, price, emoji, stock, kind,
+            image_path,
             stores(
               id, name, description, category_id, emoji, color_hex,
               estimated_time, delivery_cost, is_open, rating_average,
-              categories(name)
+              is_personal, logo_path, categories(name)
             )
           )
         ''')

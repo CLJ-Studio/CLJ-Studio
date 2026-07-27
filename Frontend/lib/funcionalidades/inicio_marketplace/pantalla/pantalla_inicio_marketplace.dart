@@ -5,6 +5,7 @@ import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart'
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_local.dart';
+import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../diseno/campus_collapsing_header.dart';
 import '../diseno/seccion_locales_universitarios.dart';
 import '../logica/controlador_inicio_marketplace.dart';
@@ -32,6 +33,11 @@ class PantallaInicioMarketplace extends StatelessWidget {
             alSeleccionarCategoria: controlador.seleccionarCategoria,
             alAbrirCarrito: () =>
                 Navigator.of(context).pushNamed(ConfiguracionRutas.carrito),
+            alAbrirPedidos: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const PantallaPedidosCompleta(),
+              ),
+            ),
           ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(18, 28, 18, 120),

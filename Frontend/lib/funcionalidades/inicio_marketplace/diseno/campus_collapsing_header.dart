@@ -17,6 +17,7 @@ class CampusCollapsingHeader extends StatelessWidget {
     required this.alBuscar,
     required this.alSeleccionarCategoria,
     required this.alAbrirCarrito,
+    required this.alAbrirPedidos,
     super.key,
   });
 
@@ -26,6 +27,7 @@ class CampusCollapsingHeader extends StatelessWidget {
   final ValueChanged<String> alBuscar;
   final ValueChanged<String> alSeleccionarCategoria;
   final VoidCallback alAbrirCarrito;
+  final VoidCallback alAbrirPedidos;
 
   @override
   Widget build(BuildContext context) => SliverPersistentHeader(
@@ -37,6 +39,7 @@ class CampusCollapsingHeader extends StatelessWidget {
       alBuscar: alBuscar,
       alSeleccionarCategoria: alSeleccionarCategoria,
       alAbrirCarrito: alAbrirCarrito,
+      alAbrirPedidos: alAbrirPedidos,
     ),
   );
 }
@@ -50,6 +53,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.alBuscar,
     required this.alSeleccionarCategoria,
     required this.alAbrirCarrito,
+    required this.alAbrirPedidos,
   });
 
   final String nombre;
@@ -58,6 +62,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   final ValueChanged<String> alBuscar;
   final ValueChanged<String> alSeleccionarCategoria;
   final VoidCallback alAbrirCarrito;
+  final VoidCallback alAbrirPedidos;
 
   @override
   double get maxExtent => 230;
@@ -113,20 +118,30 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                       ),
                     ),
                   ),
-                  // El carrito permanece en el extremo derecho en ambos estados.
+                  // Pedidos y carrito quedan a la derecha en ambos estados.
                   Positioned(
                     right: 0,
                     top: lerpDouble(20, 5, progress)!,
                     child: Transform.scale(
                       scale: lerpDouble(1, .92, progress)!,
                       alignment: Alignment.topRight,
-                      child: BotonCarritoCompras(alPresionar: alAbrirCarrito),
+                      child: Row(
+                        children: [
+                          IconButton.filledTonal(
+                            tooltip: 'Mis pedidos',
+                            onPressed: alAbrirPedidos,
+                            icon: const Icon(Icons.receipt_long_outlined),
+                          ),
+                          const SizedBox(width: 8),
+                          BotonCarritoCompras(alPresionar: alAbrirCarrito),
+                        ],
+                      ),
                     ),
                   ),
-                  // El buscador sube y deja espacio al carrito al compactarse.
+                  // El buscador sube y deja espacio a los botones al compactarse.
                   Positioned(
                     left: 0,
-                    right: lerpDouble(0, 58, progress)!,
+                    right: lerpDouble(0, 108, progress)!,
                     top: lerpDouble(88, 3, progress)!,
                     child: BarraBusquedaMarketplace(
                       alCambiar: alBuscar,

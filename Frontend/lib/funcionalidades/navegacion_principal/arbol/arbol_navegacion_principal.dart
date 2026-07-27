@@ -6,7 +6,6 @@ import '../../locales_universitarios/arbol/arbol_locales_universitarios.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
 import '../../mi_local/pantalla/pantalla_mi_local.dart';
-import '../../pedidos/arbol/arbol_pedidos.dart';
 import '../../publicar_producto/arbol/arbol_publicar_producto.dart';
 import '../logica/controlador_navegacion_principal.dart';
 import '../pantalla/pantalla_navegacion_principal.dart';
@@ -56,13 +55,11 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
         const ArbolInicioMarketplace(),
         ArbolLocalesUniversitarios(
           alCrearLocal: _abrirCreacion,
-          yaTieneLocal: miLocal.tieneLocal,
+          // Un espacio personal no cuenta: la invitacion a abrir un local
+          // formal debe seguir visible para el vendedor casual.
+          yaTieneLocal: miLocal.tieneLocalFormal,
         ),
-        ArbolPublicarProducto(
-          miLocal: miLocal,
-          alCrearLocal: _abrirCreacion,
-        ),
-        const ArbolPedidos(),
+        ArbolPublicarProducto(miLocal: miLocal),
         if (miLocal.tieneLocal) PantallaMiLocal(controlador: miLocal),
         const ArbolConfiguracionUsuario(),
       ];

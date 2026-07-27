@@ -1,18 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 
-/// Hero visual del detalle del local.
+/// Hero visual del detalle del local: su logo real o un lienzo con su emoji.
 class EncabezadoDetalleLocal extends StatelessWidget {
   const EncabezadoDetalleLocal({required this.local, super.key});
   final LocalUniversitario local;
-
-  String get _imagen => switch (local.id) {
-    'cafeteria' => 'assets/images/real/coffee3.jpg',
-    'snack' => 'assets/images/real/hamburger2.jpg',
-    'tech' => 'assets/images/real/western2.jpg',
-    'libreria' => 'assets/images/real/bakery.jpg',
-    _ => 'assets/images/real/breakfast.jpg',
-  };
 
   @override
   Widget build(BuildContext context) => Column(
@@ -20,15 +12,15 @@ class EncabezadoDetalleLocal extends StatelessWidget {
       SizedBox(
         height: 210,
         width: double.infinity,
-        child: Image.asset(
-          _imagen,
-          fit: BoxFit.cover,
-          cacheWidth: 1400,
-          filterQuality: FilterQuality.low,
-          errorBuilder: (_, _, _) => Center(
-            child: Text(local.emoji, style: const TextStyle(fontSize: 90)),
+        child: switch (local.logoUrl) {
+          final String url => Image.network(
+            url,
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.low,
+            errorBuilder: (_, _, _) => _LienzoEmoji(local: local),
           ),
-        ),
+          _ => _LienzoEmoji(local: local),
+        },
       ),
       Padding(
         padding: const EdgeInsets.all(20),
@@ -45,11 +37,27 @@ class EncabezadoDetalleLocal extends StatelessWidget {
             Text(local.descripcion),
             const SizedBox(height: 10),
             Text(
-              '⭐ ${local.calificacion}  ·  ${local.tiempoEstimado}  ·  Entrega Bs ${local.costoEntrega.toStringAsFixed(0)}',
+              local.esPersonal
+                  ? '⭐ ${local.calificacion}  ·  Vendedor independiente'
+                  : '⭐ ${local.calificacion}  ·  ${local.tiempoEstimado}  ·  Entrega Bs ${local.costoEntrega.toStringAsFixed(0)}',
             ),
           ],
         ),
       ),
     ],
+  );
+}
+
+/// Portada de respaldo con el color e icono del propio local.
+class _LienzoEmoji extends StatelessWidget {
+  const _LienzoEmoji({required this.local});
+  final LocalUniversitario local;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: Color(local.colorHexadecimal),
+    child: Center(
+      child: Text(local.emoji, style: const TextStyle(fontSize: 90)),
+    ),
   );
 }

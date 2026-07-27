@@ -32,7 +32,7 @@ class RepositorioInicioMarketplace {
         .select(
           'id, name, description, category_id, emoji, color_hex, '
           'estimated_time, delivery_cost, is_open, rating_average, '
-          'categories(name)',
+          'is_personal, logo_path, categories(name)',
         )
         // Los abiertos primero; dentro de cada grupo, los mejor calificados.
         .order('is_open', ascending: false)
@@ -44,7 +44,10 @@ class RepositorioInicioMarketplace {
   Future<List<ProductoMarketplace>> obtenerProductos(String localId) async {
     final filas = await _cliente
         .from('products')
-        .select('id, store_id, name, description, price, emoji, stock, kind')
+        .select(
+          'id, store_id, name, description, price, emoji, stock, kind, '
+          'image_path',
+        )
         .eq('store_id', localId)
         .eq('is_available', true)
         .order('created_at');

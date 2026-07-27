@@ -159,15 +159,30 @@ class _TarjetaPublicacion extends StatelessWidget {
           height: 190,
           width: double.infinity,
           margin: const EdgeInsets.symmetric(horizontal: 14),
-          alignment: Alignment.center,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: const Color(0xFFF0F5EF),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text(
-            publicacion.emoji,
-            style: const TextStyle(fontSize: 76),
-          ),
+          child: switch (publicacion.imagenUrl) {
+            final String url => Image.network(
+              url,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.low,
+              errorBuilder: (_, _, _) => Center(
+                child: Text(
+                  publicacion.emoji,
+                  style: const TextStyle(fontSize: 76),
+                ),
+              ),
+            ),
+            _ => Center(
+              child: Text(
+                publicacion.emoji,
+                style: const TextStyle(fontSize: 76),
+              ),
+            ),
+          },
         ),
         Padding(
           padding: const EdgeInsets.all(18),

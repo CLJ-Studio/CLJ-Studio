@@ -1,3 +1,4 @@
+import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import 'local_universitario.dart';
 
 /// Producto ofrecido por un local universitario.
@@ -12,6 +13,7 @@ class ProductoMarketplace {
     this.stock = 0,
     this.esServicio = false,
     this.local,
+    this.imagePath,
   });
 
   /// Mapea una fila de `products`. Si la consulta unio `stores`, el local
@@ -29,8 +31,22 @@ class ProductoMarketplace {
       stock: (fila['stock'] as num?)?.toInt() ?? 0,
       esServicio: (fila['kind'] as String?) == 'servicio',
       local: tienda == null ? null : LocalUniversitario.desdeMapa(tienda),
+      imagePath: fila['image_path'] as String?,
     );
   }
+
+  ProductoMarketplace copiarCon({int? stock}) => ProductoMarketplace(
+    id: id,
+    localId: localId,
+    nombre: nombre,
+    descripcion: descripcion,
+    precio: precio,
+    emoji: emoji,
+    stock: stock ?? this.stock,
+    esServicio: esServicio,
+    local: local,
+    imagePath: imagePath,
+  );
 
   final String id;
   final String localId;
@@ -43,6 +59,11 @@ class ProductoMarketplace {
 
   /// Presente solo si la consulta unio `stores`.
   final LocalUniversitario? local;
+
+  /// Foto real subida por el vendedor; si falta, la tarjeta usa el emoji.
+  final String? imagePath;
+
+  String? get imagenUrl => ServicioImagenes.urlPublica(imagePath);
 
   /// Los servicios no llevan inventario: siempre se pueden solicitar.
   bool get hayExistencias => esServicio || stock > 0;

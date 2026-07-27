@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 import '../logica/controlador_mi_local.dart';
@@ -29,6 +30,8 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
   var _pagina = 0;
   var _logo = '🍽️';
   String? _categoriaId;
+  String? _logoPath;
+  bool _subiendoLogo = false;
   bool _guardando = false;
 
   // 'todas' es un filtro de interfaz: un local real no puede pertenecer ahi.
@@ -83,6 +86,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
         nuevaDescripcion: _descripcion.text,
         nuevoLogo: _logo,
         categoriaId: _categoriaId!,
+        logoPath: _logoPath,
       );
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -218,38 +222,78 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                         icono: Icons.auto_awesome_rounded,
                         titulo: 'Elige tu logo',
                         descripcion:
-                            'Selecciona la identidad que representará tu local.',
-                        child: Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
+                            'Selecciona un icono o sube tu propia imagen.',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            for (final logo in _logos)
-                              InkWell(
-                                onTap: () => setState(() => _logo = logo),
-                                borderRadius: BorderRadius.circular(22),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 180),
-                                  width: 68,
-                                  height: 68,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: _logo == logo
-                                        ? const Color(0xFFE1F0E3)
-                                        : Colors.white,
-                                    border: Border.all(
-                                      color: _logo == logo
-                                          ? const Color(0xFF6F9A76)
-                                          : const Color(0xFFE3E7E3),
-                                      width: _logo == logo ? 2 : 1,
-                                    ),
+                            _LogoSubido(
+                              logoUrl: ServicioImagenes.urlPublica(_logoPath),
+                              subiendo: _subiendoLogo,
+                              alElegir: () async {
+                                setState(() => _subiendoLogo = true);
+                                try {
+                                  final ruta =
+                                      await ServicioImagenes.elegirYSubir(
+                                        etiqueta: 'logo',
+                                      );
+                                  if (ruta != null) {
+                                    setState(() => _logoPath = ruta);
+                                  }
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'No se pudo subir el logo.',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } finally {
+                                  setState(() => _subiendoLogo = false);
+                                }
+                              },
+                              alQuitar: () =>
+                                  setState(() => _logoPath = null),
+                            ),
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: [
+                                for (final logo in _logos)
+                                  InkWell(
+                                    onTap: () => setState(() => _logo = logo),
                                     borderRadius: BorderRadius.circular(22),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 180,
+                                      ),
+                                      width: 68,
+                                      height: 68,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: _logo == logo
+                                            ? const Color(0xFFE1F0E3)
+                                            : Colors.white,
+                                        border: Border.all(
+                                          color: _logo == logo
+                                              ? const Color(0xFF6F9A76)
+                                              : const Color(0xFFE3E7E3),
+                                          width: _logo == logo ? 2 : 1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          22,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        logo,
+                                        style: const TextStyle(fontSize: 32),
+                                      ),
+                                    ),
                                   ),
-                                  child: Text(
-                                    logo,
-                                    style: const TextStyle(fontSize: 32),
-                                  ),
-                                ),
-                              ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -489,4 +533,66 @@ class _BurbujaPregunta extends StatelessWidget {
       ),
     ],
   );
+}
+
+/// Logo propio subido por el dueno; reemplaza al emoji como portada.
+class _LogoSubido extends StatelessWidget {
+  const _LogoSubido({
+    required this.logoUrl,
+    required this.subiendo,
+    required this.alElegir,
+    required this.alQuitar,
+  });
+
+  final String? logoUrl;
+  final bool subiendo;
+  final VoidCallback alElegir;
+  final VoidCallback alQuitar;
+
+  @override
+  Widget build(BuildContext context) {
+    if (logoUrl != null) {
+      return Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Image.network(
+              logoUrl!,
+              width: double.infinity,
+              height: 130,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            top: 6,
+            right: 6,
+            child: IconButton.filled(
+              tooltip: 'Quitar imagen',
+              style: IconButton.styleFrom(backgroundColor: Colors.black54),
+              onPressed: alQuitar,
+              icon: const Icon(Icons.close_rounded, size: 16),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return OutlinedButton.icon(
+      onPressed: subiendo ? null : alElegir,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: const Color(0xFF55785A),
+        side: const BorderSide(color: Color(0xFF6F9D76), width: 1.4),
+        shape: const StadiumBorder(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+      ),
+      icon: subiendo
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.add_photo_alternate_outlined, size: 19),
+      label: Text(subiendo ? 'Subiendo...' : 'Subir imagen de portada'),
+    );
+  }
 }

@@ -1,3 +1,5 @@
+import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
+
 /// Local tipado, independiente de la fuente que entregue sus datos.
 class LocalUniversitario {
   const LocalUniversitario({
@@ -12,6 +14,8 @@ class LocalUniversitario {
     required this.costoEntrega,
     required this.emoji,
     required this.colorHexadecimal,
+    this.esPersonal = false,
+    this.logoPath,
   });
 
   /// Mapea una fila de `stores` con su categoria unida.
@@ -30,6 +34,8 @@ class LocalUniversitario {
       emoji: (fila['emoji'] as String?) ?? '🍽️',
       // color_hex es bigint en Postgres: 0xFFFFE8D6 desborda un int32.
       colorHexadecimal: (fila['color_hex'] as num?)?.toInt() ?? 0xFFF1F6F0,
+      esPersonal: (fila['is_personal'] as bool?) ?? false,
+      logoPath: fila['logo_path'] as String?,
     );
   }
 
@@ -44,4 +50,10 @@ class LocalUniversitario {
   final double costoEntrega;
   final String emoji;
   final int colorHexadecimal;
+
+  /// Espacio creado automaticamente al publicar sin abrir un local formal.
+  final bool esPersonal;
+  final String? logoPath;
+
+  String? get logoUrl => ServicioImagenes.urlPublica(logoPath);
 }

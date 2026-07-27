@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../datos/repositorio_mi_local.dart';
@@ -15,7 +16,13 @@ class ControladorMiLocal extends ChangeNotifier {
   bool cargando = true;
   String? error;
 
+  /// Hay donde publicar (local formal o espacio personal).
   bool get tieneLocal => local != null;
+
+  /// Local formal abierto por el estudiante. Un espacio personal NO cuenta:
+  /// la invitacion "Abre tu local" debe seguir visible para quien solo
+  /// publica de manera casual.
+  bool get tieneLocalFormal => local != null && !local!.esPersonal;
 
   // Comodidades para la pantalla, que solo necesita mostrar estos datos.
   String? get nombre => local?.nombre;
@@ -40,19 +47,34 @@ class ControladorMiLocal extends ChangeNotifier {
     }
   }
 
+  /// Garantiza un contenedor donde publicar. Si el estudiante no tiene nada,
+  /// crea el espacio personal por detras, sin pedirle abrir un local.
+  Future<void> asegurarEspacioPersonal() async {
+    if (local != null) return;
+    local = await _repositorio.crearEspacioPersonal(
+      nombreEstudiante: SesionUsuario.instancia.primerNombre,
+    );
+    productos = const [];
+    notifyListeners();
+  }
+
   Future<void> crearLocal({
     required String nuevoNombre,
     required String nuevaDescripcion,
     required String nuevoLogo,
     required String categoriaId,
+    String? logoPath,
   }) async {
     local = await _repositorio.crearLocal(
       nombre: nuevoNombre.trim(),
       descripcion: nuevaDescripcion.trim(),
       emoji: nuevoLogo,
       categoriaId: categoriaId,
+      logoPath: logoPath,
     );
-    productos = const [];
+    // Si venia de un espacio personal, el inventario ya publicado se
+    // conserva: solo cambio la identidad del store.
+    productos = await _repositorio.cargarInventario(local!.id);
     notifyListeners();
   }
 
@@ -61,14 +83,16 @@ class ControladorMiLocal extends ChangeNotifier {
     required double precio,
     required int cantidad,
     String emoji = '🛍️',
+    String? imagePath,
   }) async {
-    if (local == null) return;
+    await asegurarEspacioPersonal();
     await _repositorio.agregarProducto(
       localId: local!.id,
       nombre: nombre.trim(),
       precio: precio,
       stock: cantidad,
       emoji: emoji,
+      imagePath: imagePath,
     );
     // Se relee el inventario para tomar el id que genero la base.
     productos = await _repositorio.cargarInventario(local!.id);
@@ -82,16 +106,8 @@ class ControladorMiLocal extends ChangeNotifier {
 
     // Se refleja de inmediato y se revierte si el servidor rechaza.
     final anteriores = List<ProductoMarketplace>.from(productos);
-    productos = [...productos]..[indice] = ProductoMarketplace(
-      id: producto.id,
-      localId: producto.localId,
-      nombre: producto.nombre,
-      descripcion: producto.descripcion,
-      precio: producto.precio,
-      emoji: producto.emoji,
-      stock: nuevoStock,
-      esServicio: producto.esServicio,
-    );
+    productos = [...productos]
+      ..[indice] = producto.copiarCon(stock: nuevoStock);
     notifyListeners();
 
     try {

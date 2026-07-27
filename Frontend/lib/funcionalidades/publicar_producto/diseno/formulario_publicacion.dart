@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../logica/controlador_publicacion.dart';
 import 'boton_confirmar_publicacion.dart';
@@ -9,11 +10,8 @@ import 'campo_precio_publicacion.dart';
 import 'selector_emoji_publicacion.dart';
 import 'selector_tipo_publicacion.dart';
 
-/// Publica un producto o servicio dentro del local del estudiante.
-///
-/// Antes guardaba en una lista en memoria paralela al inventario de Mi Local:
-/// dos caminos que creaban "productos" sin hablarse. Ahora es uno solo, porque
-/// en este marketplace todo producto pertenece a un local.
+/// Publica un producto o servicio. No exige local: si el estudiante no
+/// tiene, el controlador crea su espacio personal por detras.
 class FormularioPublicacion extends StatefulWidget {
   const FormularioPublicacion({
     required this.controlador,
@@ -35,6 +33,8 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   final precio = TextEditingController();
   final stock = TextEditingController(text: '1');
   bool _publicando = false;
+  bool _subiendoFoto = false;
+  String? _fotoPath;
 
   @override
   void dispose() {
@@ -43,6 +43,25 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
     precio.dispose();
     stock.dispose();
     super.dispose();
+  }
+
+  Future<void> _elegirFoto() async {
+    setState(() => _subiendoFoto = true);
+    try {
+      final ruta = await ServicioImagenes.elegirYSubir(etiqueta: 'producto');
+      if (ruta != null) setState(() => _fotoPath = ruta);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo subir la foto.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _subiendoFoto = false);
+    }
   }
 
   Future<void> publicar() async {
@@ -59,6 +78,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
             ? 0
             : (int.tryParse(stock.text) ?? 0),
         emoji: widget.controlador.emoji,
+        imagePath: _fotoPath,
       );
 
       if (!mounted) return;
@@ -66,13 +86,16 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       descripcion.clear();
       precio.clear();
       stock.text = '1';
+      setState(() => _fotoPath = null);
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
             content: Text(
-              'Publicado en ${widget.miLocal.nombre ?? 'tu local'}.',
+              widget.miLocal.tieneLocalFormal
+                  ? 'Publicado en ${widget.miLocal.nombre}.'
+                  : 'Publicación creada.',
             ),
             behavior: SnackBarBehavior.floating,
           ),
@@ -110,9 +133,6 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
           CampoDescripcionPublicacion(controlador: descripcion),
           const SizedBox(height: 14),
           CampoPrecioPublicacion(controlador: precio),
-          // La categoria vive en el local, no en cada producto: por eso ya
-          // no se pregunta aqui. En su lugar se pide el stock, que si hacia
-          // falta y el formulario no tenia.
           if (!widget.controlador.esServicio) ...[
             const SizedBox(height: 14),
             TextFormField(
@@ -132,16 +152,102 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
             ),
           ],
           const SizedBox(height: 18),
+          _SelectorFoto(
+            fotoUrl: ServicioImagenes.urlPublica(_fotoPath),
+            subiendo: _subiendoFoto,
+            alElegir: _elegirFoto,
+            alQuitar: () => setState(() => _fotoPath = null),
+          ),
+          const SizedBox(height: 14),
+          // El emoji sigue siendo el respaldo visual cuando no hay foto.
           SelectorEmojiPublicacion(
             valor: widget.controlador.emoji,
             alCambiar: widget.controlador.seleccionarEmoji,
           ),
           const SizedBox(height: 22),
           BotonConfirmarPublicacion(
-            alPresionar: _publicando ? null : publicar,
+            alPresionar: _publicando || _subiendoFoto ? null : publicar,
           ),
         ],
       ),
     ),
   );
+}
+
+/// Foto opcional del producto: eleva mucho la tarjeta frente al emoji.
+class _SelectorFoto extends StatelessWidget {
+  const _SelectorFoto({
+    required this.fotoUrl,
+    required this.subiendo,
+    required this.alElegir,
+    required this.alQuitar,
+  });
+
+  final String? fotoUrl;
+  final bool subiendo;
+  final VoidCallback alElegir;
+  final VoidCallback alQuitar;
+
+  @override
+  Widget build(BuildContext context) {
+    if (fotoUrl != null) {
+      return Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.network(
+              fotoUrl!,
+              width: double.infinity,
+              height: 180,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: IconButton.filled(
+              tooltip: 'Quitar foto',
+              style: IconButton.styleFrom(backgroundColor: Colors.black54),
+              onPressed: alQuitar,
+              icon: const Icon(Icons.close_rounded, size: 18),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return InkWell(
+      onTap: subiendo ? null : alElegir,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(26),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFC9CEC9)),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            if (subiendo)
+              const SizedBox(
+                width: 34,
+                height: 34,
+                child: CircularProgressIndicator(strokeWidth: 2.6),
+              )
+            else
+              const Icon(
+                Icons.add_photo_alternate_outlined,
+                size: 38,
+                color: Color(0xFF7C827E),
+              ),
+            const SizedBox(height: 8),
+            Text(
+              subiendo ? 'Subiendo foto...' : 'Agregar foto (opcional)',
+              style: const TextStyle(color: Color(0xFF7C827E)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
