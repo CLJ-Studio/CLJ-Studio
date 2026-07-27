@@ -45,7 +45,6 @@ class _PantallaContactandoVendedorState
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF4F7F3),
     appBar: AppBar(
       backgroundColor: Colors.transparent,
       leading: IconButton(

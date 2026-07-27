@@ -61,7 +61,6 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFEFEFE),
     body: SafeArea(
       child: LayoutBuilder(
         builder: (context, restricciones) => Stack(
@@ -84,7 +83,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                         const Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'UPSA Eat',
+                            'UPSA Net',
                             style: TextStyle(
                               color: Color(0xFF181818),
                               fontFamily: 'Metropolis',

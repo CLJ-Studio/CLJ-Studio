@@ -5,7 +5,7 @@
 // cambio hecho a mano. Este se registra por separado y solo se ocupa de push.
 
 self.addEventListener('push', (evento) => {
-  let datos = { title: 'UPSA Eat', body: '', order_id: null };
+  let datos = { title: 'UPSA Net', body: '', order_id: null };
   try {
     if (evento.data) datos = evento.data.json();
   } catch (_) {
@@ -13,7 +13,7 @@ self.addEventListener('push', (evento) => {
   }
 
   evento.waitUntil(
-    self.registration.showNotification(datos.title || 'UPSA Eat', {
+    self.registration.showNotification(datos.title || 'UPSA Net', {
       body: datos.body || '',
       icon: '/icons/Icon-192.png',
       badge: '/icons/Icon-192.png',

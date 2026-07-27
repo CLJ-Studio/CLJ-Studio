@@ -12,9 +12,7 @@ class PantallaFavoritos extends StatelessWidget {
   Widget build(BuildContext context) {
     final controlador = ControladorFavoritos.instancia;
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFBFA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAFBFA),
         surfaceTintColor: Colors.transparent,
         title: const Text(
           'Favoritos',

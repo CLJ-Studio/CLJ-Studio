@@ -85,10 +85,7 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: controlador,
     builder: (context, _) => Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
         centerTitle: true,
         title: const Text(
           'Carrito',

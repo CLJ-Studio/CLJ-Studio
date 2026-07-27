@@ -9,9 +9,7 @@ class PantallaPedidosCompleta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFAFBFA),
     appBar: AppBar(
-      backgroundColor: const Color(0xFFFAFBFA),
       surfaceTintColor: Colors.transparent,
       title: const Text(
         'Pedidos',

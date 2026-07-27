@@ -28,9 +28,7 @@ class _PantallaMisPublicacionesState extends State<PantallaMisPublicaciones> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFAFBFA),
     appBar: AppBar(
-      backgroundColor: const Color(0xFFFAFBFA),
       surfaceTintColor: Colors.transparent,
       title: const Text(
         'Mis publicaciones',
@@ -88,7 +86,6 @@ class _Resumen extends StatelessWidget {
       children: [
         const CircleAvatar(
           radius: 29,
-          backgroundColor: Colors.white,
           child: Icon(Icons.person_rounded, color: Color(0xFF5C8A63)),
         ),
         const SizedBox(width: 15),

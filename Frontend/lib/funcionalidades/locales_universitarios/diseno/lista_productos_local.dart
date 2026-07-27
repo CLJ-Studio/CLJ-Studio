@@ -140,7 +140,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: Colors.white,
+    color: Theme.of(context).colorScheme.surface,
     borderRadius: BorderRadius.circular(22),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
@@ -149,7 +149,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
       onTap: _abrirDetalle,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFECEFED)),
+          border: Border.all(color: Theme.of(context).dividerColor),
           borderRadius: BorderRadius.circular(22),
         ),
         child: Column(
@@ -232,8 +232,8 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                     widget.producto.nombre,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF292A29),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                     ),

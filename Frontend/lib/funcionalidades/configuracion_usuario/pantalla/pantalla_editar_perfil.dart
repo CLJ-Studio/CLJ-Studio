@@ -131,9 +131,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFEFEFE),
     appBar: AppBar(
-      backgroundColor: const Color(0xFFFEFEFE),
       surfaceTintColor: Colors.transparent,
       title: const Text(
         'Editar perfil',

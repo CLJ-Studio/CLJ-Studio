@@ -17,7 +17,6 @@ class PantallaOnboarding extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFEFEFE),
     body: SafeArea(
       child: Center(
         child: SingleChildScrollView(

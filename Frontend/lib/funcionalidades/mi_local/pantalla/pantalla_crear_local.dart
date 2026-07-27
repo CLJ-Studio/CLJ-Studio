@@ -110,7 +110,6 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF4F6F3),
     appBar: AppBar(
       backgroundColor: Colors.transparent,
       title: const Text('Abre tu local'),

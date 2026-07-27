@@ -89,9 +89,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
     final fotos = widget.producto.galeriaUrls;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         actions: [
           AnimatedBuilder(
@@ -302,6 +300,9 @@ class _Vendedor extends StatelessWidget {
         },
       ),
       const SizedBox(width: 12),
+      // Quien vende siempre tiene nombre y cara. Si es un negocio, manda la
+      // marca y debajo va la persona detras; si vende por su cuenta, manda
+      // su nombre. "Vendedor independiente" solo decia que no habia negocio.
       Expanded(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,10 +311,13 @@ class _Vendedor extends StatelessWidget {
               local.esPersonal ? local.vendedorNombre : local.nombre,
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
+            const SizedBox(height: 2),
             Text(
-              local.esPersonal ? 'Vendedor independiente' : local.categoria,
-              style: const TextStyle(
-                color: Color(0xFF7C827E),
+              local.esPersonal
+                  ? 'Vende por su cuenta'
+                  : 'Por ${local.vendedorNombre}',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 fontSize: 12,
               ),
             ),

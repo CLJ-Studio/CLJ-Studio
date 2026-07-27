@@ -73,9 +73,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFAFBFA),
     appBar: AppBar(
-      backgroundColor: const Color(0xFFFAFBFA),
       surfaceTintColor: Colors.transparent,
       title: const Text(
         'Pedido',

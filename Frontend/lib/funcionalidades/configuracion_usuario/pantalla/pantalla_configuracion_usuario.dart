@@ -79,10 +79,7 @@ class _PantallaConfiguracionUsuarioState
                 const Divider(height: 1, indent: 58, endIndent: 18),
                 const OpcionNotificaciones(),
                 const Divider(height: 1, indent: 58, endIndent: 18),
-                OpcionTemaAplicacion(
-                  valor: controlador.temaOscuro,
-                  alCambiar: controlador.cambiarTema,
-                ),
+                const OpcionTemaAplicacion(),
                 const Divider(height: 1, indent: 58, endIndent: 18),
                 const OpcionAyuda(),
               ],
@@ -111,7 +108,8 @@ class _PanelConfiguracion extends StatelessWidget {
   // DecoratedBox de por medio, esos efectos quedaban invisibles.
   @override
   Widget build(BuildContext context) => Material(
-    color: const Color(0xFFF5F6F5),
+    // Del tema, no fijo: en oscuro un panel blanco deslumbra.
+    color: Theme.of(context).colorScheme.surfaceContainerHighest,
     borderRadius: BorderRadius.circular(26),
     clipBehavior: Clip.antiAlias,
     child: Container(

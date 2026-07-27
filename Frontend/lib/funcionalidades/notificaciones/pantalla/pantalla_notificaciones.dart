@@ -43,9 +43,7 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFFAFBFA),
     appBar: AppBar(
-      backgroundColor: const Color(0xFFFAFBFA),
       surfaceTintColor: Colors.transparent,
       title: const Text(
         'Notificaciones',
@@ -119,13 +117,14 @@ class _Fila extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Material(
-      color: notificacion.leida ? Colors.white : const Color(0xFFEAF2EA),
+      color: notificacion.leida
+          ? Theme.of(context).colorScheme.surface
+          : Theme.of(context).colorScheme.primary.withValues(alpha: .14),
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         onTap: alTocar,
         leading: CircleAvatar(
-          backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF5C8A63),
           child: Icon(notificacion.icono, size: 21),
         ),
