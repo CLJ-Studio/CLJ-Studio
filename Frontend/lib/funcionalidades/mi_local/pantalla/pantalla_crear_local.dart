@@ -273,12 +273,12 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                                       alignment: Alignment.center,
                                       decoration: BoxDecoration(
                                         color: _logo == logo
-                                            ? const Color(0xFFE1F0E3)
+                                            ? Theme.of(context).colorScheme.primary.withValues(alpha: .12)
                                             : Colors.white,
                                         border: Border.all(
                                           color: _logo == logo
                                               ? const Color(0xFF6F9A76)
-                                              : const Color(0xFFE3E7E3),
+                                              : Theme.of(context).colorScheme.surfaceContainerHighest,
                                           width: _logo == logo ? 2 : 1,
                                         ),
                                         borderRadius: BorderRadius.circular(
@@ -346,7 +346,7 @@ class _FichaCategoria extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: activa ? const Color(0xFFE1F0E3) : Colors.white,
+    color: activa ? Theme.of(context).colorScheme.primary.withValues(alpha: .12) : Colors.white,
     borderRadius: BorderRadius.circular(20),
     child: InkWell(
       onTap: alPresionar,
@@ -356,7 +356,7 @@ class _FichaCategoria extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
           border: Border.all(
-            color: activa ? const Color(0xFF6F9A76) : const Color(0xFFE3E7E3),
+            color: activa ? const Color(0xFF6F9A76) : Theme.of(context).colorScheme.surfaceContainerHighest,
             width: activa ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(20),

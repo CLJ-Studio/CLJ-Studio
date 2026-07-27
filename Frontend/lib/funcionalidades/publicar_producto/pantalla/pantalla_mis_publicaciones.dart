@@ -79,7 +79,7 @@ class _Resumen extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: const Color(0xFFE8F2E9),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
       borderRadius: BorderRadius.circular(26),
     ),
     child: Row(
@@ -129,7 +129,7 @@ class _TarjetaPublicacion extends StatelessWidget {
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: const Color(0xFFE8EBE8)),
+      border: Border.all(color: Theme.of(context).dividerColor),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,7 +158,7 @@ class _TarjetaPublicacion extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 14),
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: const Color(0xFFF0F5EF),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
             borderRadius: BorderRadius.circular(20),
           ),
           child: switch (publicacion.imagenUrl) {
@@ -221,10 +221,10 @@ class _EstadoVacio extends StatelessWidget {
     child: Center(
       child: Column(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 48,
-            backgroundColor: Color(0xFFE8F2E9),
-            child: Icon(
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+            child: const Icon(
               Icons.grid_on_rounded,
               size: 46,
               color: Color(0xFF6F9A76),

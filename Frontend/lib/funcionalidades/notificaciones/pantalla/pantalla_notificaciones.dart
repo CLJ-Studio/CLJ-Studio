@@ -160,10 +160,10 @@ class _SinNotificaciones extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 44,
-            backgroundColor: Color(0xFFE8F2E9),
-            child: Icon(
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+            child: const Icon(
               Icons.notifications_none_rounded,
               size: 42,
               color: Color(0xFF6F9A76),

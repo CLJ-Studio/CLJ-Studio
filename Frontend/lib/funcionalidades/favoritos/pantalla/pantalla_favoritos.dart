@@ -57,10 +57,10 @@ class _FavoritosVacios extends StatelessWidget {
     child: Center(
       child: Column(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 48,
-            backgroundColor: Color(0xFFE8F2E9),
-            child: Icon(
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+            child: const Icon(
               Icons.favorite_border_rounded,
               size: 48,
               color: Color(0xFF6F9A76),
