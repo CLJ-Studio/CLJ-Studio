@@ -216,10 +216,7 @@ class _Seccion extends StatelessWidget {
                     ),
                   ),
                   Expanded(
-                    child: Text(
-                      parrafo,
-                      style: const TextStyle(height: 1.45),
-                    ),
+                    child: Text(parrafo, style: const TextStyle(height: 1.45)),
                   ),
                 ],
               ),

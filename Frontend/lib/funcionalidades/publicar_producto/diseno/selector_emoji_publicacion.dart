@@ -58,7 +58,9 @@ class SelectorEmojiPublicacion extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: valor == opcion
-                      ? Theme.of(context).colorScheme.primary.withValues(alpha: .12)
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: .12)
                       : Colors.white,
                   border: Border.all(
                     color: valor == opcion

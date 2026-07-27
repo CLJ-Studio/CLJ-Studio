@@ -9,11 +9,12 @@ class OpcionMisPublicaciones extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
     onTap: () => Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const PantallaMisPublicaciones(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const PantallaMisPublicaciones()),
     ),
-    leading: Icon(Icons.grid_on_rounded, color: Theme.of(context).colorScheme.primary),
+    leading: Icon(
+      Icons.grid_on_rounded,
+      color: Theme.of(context).colorScheme.primary,
+    ),
     title: const Text('Mis publicaciones'),
     subtitle: const Text('Lo que ofreces en tu local'),
     trailing: const Icon(Icons.chevron_right_rounded),

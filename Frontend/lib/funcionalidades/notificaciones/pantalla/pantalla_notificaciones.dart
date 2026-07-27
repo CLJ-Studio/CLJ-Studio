@@ -141,10 +141,7 @@ class _Fila extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontSize: 12),
         ),
-        trailing: Text(
-          hace,
-          style: const TextStyle(fontSize: 11),
-        ),
+        trailing: Text(hace, style: const TextStyle(fontSize: 11)),
       ),
     ),
   );
@@ -162,7 +159,9 @@ class _SinNotificaciones extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 44,
-            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: .12),
             child: Icon(
               Icons.notifications_none_rounded,
               size: 42,

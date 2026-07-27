@@ -30,8 +30,9 @@ class PantallaOnboarding extends StatelessWidget {
                 children: [
                   Text(
                     'Ya casi estás',
-                    style: Theme.of(context).textTheme.headlineMedium
-                        ?.copyWith(fontWeight: FontWeight.w900),
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -121,9 +122,7 @@ class PantallaOnboarding extends StatelessWidget {
                     Text(
                       controlador.borrador.error!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 12,
-                      ),
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ],
                 ],

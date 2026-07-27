@@ -28,7 +28,11 @@ class SelectorCantidadProducto extends StatelessWidget {
           child: SizedBox(
             width: 38,
             height: 20,
-            child: Icon(Icons.add_rounded, size: 16, color: Theme.of(context).colorScheme.primary),
+            child: Icon(
+              Icons.add_rounded,
+              size: 16,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
         ),
         Text(

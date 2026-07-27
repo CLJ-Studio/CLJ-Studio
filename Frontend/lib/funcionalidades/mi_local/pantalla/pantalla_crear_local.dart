@@ -252,8 +252,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                                   setState(() => _subiendoLogo = false);
                                 }
                               },
-                              alQuitar: () =>
-                                  setState(() => _logoPath = null),
+                              alQuitar: () => setState(() => _logoPath = null),
                             ),
                             const SizedBox(height: 16),
                             Wrap(
@@ -273,17 +272,22 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                                       alignment: Alignment.center,
                                       decoration: BoxDecoration(
                                         color: _logo == logo
-                                            ? Theme.of(context).colorScheme.primary.withValues(alpha: .12)
+                                            ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withValues(alpha: .12)
                                             : Colors.white,
                                         border: Border.all(
                                           color: _logo == logo
-                                              ? Theme.of(context).colorScheme.primary
-                                              : Theme.of(context).colorScheme.surfaceContainerHighest,
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.primary
+                                              : Theme.of(context)
+                                                    .colorScheme
+                                                    .surfaceContainerHighest,
                                           width: _logo == logo ? 2 : 1,
                                         ),
-                                        borderRadius: BorderRadius.circular(
-                                          22,
-                                        ),
+                                        borderRadius: BorderRadius.circular(22),
                                       ),
                                       child: Text(
                                         logo,
@@ -346,7 +350,9 @@ class _FichaCategoria extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: activa ? Theme.of(context).colorScheme.primary.withValues(alpha: .12) : Colors.white,
+    color: activa
+        ? Theme.of(context).colorScheme.primary.withValues(alpha: .12)
+        : Colors.white,
     borderRadius: BorderRadius.circular(20),
     child: InkWell(
       onTap: alPresionar,
@@ -356,7 +362,9 @@ class _FichaCategoria extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
           border: Border.all(
-            color: activa ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceContainerHighest,
+            color: activa
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.surfaceContainerHighest,
             width: activa ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(20),
@@ -509,7 +517,9 @@ class _BurbujaPregunta extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 22,
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: .12),
               foregroundColor: Theme.of(context).colorScheme.primary,
               child: Icon(icono, size: 22),
             ),
@@ -523,7 +533,10 @@ class _BurbujaPregunta extends StatelessWidget {
             const SizedBox(height: 7),
             Text(
               descripcion,
-              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, height: 1.4),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 22),
             child,
@@ -580,7 +593,10 @@ class _LogoSubido extends StatelessWidget {
       onPressed: subiendo ? null : alElegir,
       style: OutlinedButton.styleFrom(
         foregroundColor: Theme.of(context).colorScheme.primary,
-        side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.4),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
+          width: 1.4,
+        ),
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
       ),

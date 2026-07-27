@@ -47,7 +47,9 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
             ),
             Text(
               'Comparte productos o servicios con la comunidad UPSA.',
-              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
             ),
             const SizedBox(height: 24),
             if (widget.miLocal.cargando)

@@ -24,7 +24,9 @@ class EncabezadoCarrito extends StatelessWidget {
             tooltip: 'Cerrar',
             onPressed: alCerrar,
             style: IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
               foregroundColor: const Color(0xFF303432),
             ),
             icon: const Icon(Icons.close_rounded, size: 22),

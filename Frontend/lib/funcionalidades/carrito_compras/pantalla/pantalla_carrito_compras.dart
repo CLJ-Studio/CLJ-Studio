@@ -103,10 +103,7 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
                 if (controlador.local case final local?) ...[
                   Row(
                     children: [
-                      Text(
-                        local.emoji,
-                        style: const TextStyle(fontSize: 22),
-                      ),
+                      Text(local.emoji, style: const TextStyle(fontSize: 22)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(

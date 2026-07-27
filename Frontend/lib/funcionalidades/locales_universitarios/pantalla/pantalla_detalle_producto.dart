@@ -160,7 +160,9 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                         Text(
                           widget.producto.descripcion,
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color,
                             height: 1.5,
                           ),
                         ),
@@ -175,7 +177,9 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                               ? _agregar
                               : null,
                           style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                             shape: const StadiumBorder(),
                           ),
                           icon: const Icon(Icons.add_shopping_cart_rounded),
@@ -237,7 +241,9 @@ class _Galeria extends StatelessWidget {
               fotos[i],
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => ColoredBox(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: .12),
                 child: Center(
                   child: Text(emoji, style: const TextStyle(fontSize: 90)),
                 ),

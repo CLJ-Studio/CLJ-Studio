@@ -25,10 +25,7 @@ class PantallaAyuda extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text(
-        'Ayuda',
-        style: TextStyle(fontWeight: FontWeight.w900),
-      ),
+      title: const Text('Ayuda', style: TextStyle(fontWeight: FontWeight.w900)),
     ),
     body: SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 48),

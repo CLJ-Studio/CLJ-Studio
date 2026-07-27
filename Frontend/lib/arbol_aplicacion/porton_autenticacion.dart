@@ -158,10 +158,7 @@ class _PantallaErrorSesion extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.cloud_off_rounded,
-                size: 54,
-              ),
+              const Icon(Icons.cloud_off_rounded, size: 54),
               const SizedBox(height: 18),
               Text(
                 'No pudimos cargar tu perfil',

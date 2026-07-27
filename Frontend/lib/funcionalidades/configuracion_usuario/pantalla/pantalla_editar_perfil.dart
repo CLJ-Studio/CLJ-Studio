@@ -164,8 +164,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                   children: [
                     _SelectorFotoPerfil(
                       fotoUrl: ServicioImagenes.urlPublica(_avatarPath),
-                      inicial:
-                          SesionUsuario.instancia.perfil?.inicial ?? '?',
+                      inicial: SesionUsuario.instancia.perfil?.inicial ?? '?',
                       subiendo: _subiendoFoto,
                       alElegir: _elegirFoto,
                       alQuitar: () => setState(() => _avatarPath = null),
@@ -226,7 +225,9 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                       child: FilledButton(
                         onPressed: _guardando ? null : _guardar,
                         style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           shape: const StadiumBorder(),
                         ),
                         child: _guardando
@@ -288,7 +289,10 @@ class _DatosInstitucionales extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             perfil.correo,
-            style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 13),
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 10),
           const Text(
@@ -382,7 +386,9 @@ class _SelectorFotoPerfil extends StatelessWidget {
             height: 104,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: .12),
               shape: BoxShape.circle,
             ),
             child: subiendo
@@ -425,10 +431,7 @@ class _SelectorFotoPerfil extends StatelessWidget {
       if (fotoUrl != null && !subiendo)
         TextButton(
           onPressed: alQuitar,
-          child: const Text(
-            'Quitar foto',
-            style: TextStyle(fontSize: 12),
-          ),
+          child: const Text('Quitar foto', style: TextStyle(fontSize: 12)),
         ),
     ],
   );

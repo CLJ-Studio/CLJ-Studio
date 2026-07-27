@@ -157,15 +157,10 @@ class _Encabezado extends StatelessWidget {
               width: 78,
               height: 78,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Text(
-                controlador.logo,
-                style: const TextStyle(fontSize: 38),
-              ),
+              errorBuilder: (_, _, _) =>
+                  Text(controlador.logo, style: const TextStyle(fontSize: 38)),
             ),
-            _ => Text(
-              controlador.logo,
-              style: const TextStyle(fontSize: 38),
-            ),
+            _ => Text(controlador.logo, style: const TextStyle(fontSize: 38)),
           },
         ),
         const SizedBox(width: 18),
@@ -175,9 +170,9 @@ class _Encabezado extends StatelessWidget {
             children: [
               Text(
                 controlador.nombre ?? 'Tu local',
-                style: Theme.of(
-                  context,
-                ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -247,7 +242,9 @@ class _FilaProducto extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -255,7 +252,9 @@ class _FilaProducto extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w900,
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
                             ),
                           ),
                         ),

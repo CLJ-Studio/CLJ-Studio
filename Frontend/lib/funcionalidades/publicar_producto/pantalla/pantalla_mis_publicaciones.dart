@@ -86,7 +86,10 @@ class _Resumen extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 29,
-          child: Icon(Icons.person_rounded, color: Theme.of(context).colorScheme.primary),
+          child: Icon(
+            Icons.person_rounded,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
         const SizedBox(width: 15),
         const Expanded(
@@ -136,7 +139,9 @@ class _TarjetaPublicacion extends StatelessWidget {
       children: [
         ListTile(
           leading: CircleAvatar(
-            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: .12),
             child: Text(
               publicacion.emoji,
               style: const TextStyle(fontSize: 20),
@@ -223,7 +228,9 @@ class _EstadoVacio extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 48,
-            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: .12),
             child: Icon(
               Icons.grid_on_rounded,
               size: 46,

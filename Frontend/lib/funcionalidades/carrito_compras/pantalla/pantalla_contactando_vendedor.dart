@@ -32,8 +32,7 @@ class _PantallaContactandoVendedorState
   /// Se vuelve hasta la raiz y no con un pop simple: a esta pantalla se
   /// llega reemplazando la del carrito, asi que un pop dejaba al usuario en
   /// una pila intermedia y parecia que el boton no hacia nada.
-  void _volver() =>
-      Navigator.of(context).popUntil((ruta) => ruta.isFirst);
+  void _volver() => Navigator.of(context).popUntil((ruta) => ruta.isFirst);
 
   void _abrirDetalle(String pedidoId) {
     Navigator.of(context).pushReplacement(

@@ -81,10 +81,8 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => PantallaDetalleProducto(
-          producto: widget.producto,
-          local: local,
-        ),
+        builder: (_) =>
+            PantallaDetalleProducto(producto: widget.producto, local: local),
       ),
     );
   }
@@ -169,9 +167,8 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                           url,
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.low,
-                          errorBuilder: (_, _, _) => _FondoEmoji(
-                            emoji: widget.producto.emoji,
-                          ),
+                          errorBuilder: (_, _, _) =>
+                              _FondoEmoji(emoji: widget.producto.emoji),
                         ),
                         _ => _FondoEmoji(emoji: widget.producto.emoji),
                       },
@@ -215,7 +212,9 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: .12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -273,7 +272,9 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                       IconButton.filled(
                         visualDensity: VisualDensity.compact,
                         style: IconButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           foregroundColor: Colors.white,
                         ),
                         onPressed: _agregar,

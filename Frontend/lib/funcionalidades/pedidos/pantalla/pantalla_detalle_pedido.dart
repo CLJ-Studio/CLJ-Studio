@@ -307,7 +307,9 @@ class _Items extends StatelessWidget {
                 ),
                 Text(
                   '×${item.cantidad}',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -327,14 +329,21 @@ class _Totales extends StatelessWidget {
 
   final Pedido pedido;
 
-  Widget _fila(BuildContext context, String etiqueta, double valor, {bool fuerte = false}) => Padding(
+  Widget _fila(
+    BuildContext context,
+    String etiqueta,
+    double valor, {
+    bool fuerte = false,
+  }) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
       children: [
         Text(
           etiqueta,
           style: TextStyle(
-            color: fuerte ? Theme.of(context).colorScheme.onSurface : Theme.of(context).textTheme.bodyMedium?.color,
+            color: fuerte
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).textTheme.bodyMedium?.color,
             fontWeight: fuerte ? FontWeight.w800 : FontWeight.normal,
           ),
         ),
@@ -365,11 +374,18 @@ class _Totales extends StatelessWidget {
         const SizedBox(height: 6),
         Row(
           children: [
-            Icon(Icons.payments_outlined, size: 15, color: Theme.of(context).textTheme.bodyMedium?.color),
+            Icon(
+              Icons.payments_outlined,
+              size: 15,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+            ),
             SizedBox(width: 6),
             Text(
               'Pago coordinado entre ustedes',
-              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 12,
+              ),
             ),
           ],
         ),
@@ -379,11 +395,7 @@ class _Totales extends StatelessWidget {
 }
 
 class _Dato extends StatelessWidget {
-  const _Dato({
-    required this.icono,
-    required this.titulo,
-    required this.valor,
-  });
+  const _Dato({required this.icono, required this.titulo, required this.valor});
 
   final IconData icono;
   final String titulo;
@@ -393,16 +405,17 @@ class _Dato extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Icon(icono, size: 19, color: Theme.of(context).textTheme.bodyMedium?.color),
+      Icon(
+        icono,
+        size: 19,
+        color: Theme.of(context).textTheme.bodyMedium?.color,
+      ),
       const SizedBox(width: 10),
       Expanded(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              titulo,
-              style: const TextStyle(fontSize: 12),
-            ),
+            Text(titulo, style: const TextStyle(fontSize: 12)),
             Text(valor, style: const TextStyle(fontWeight: FontWeight.w700)),
           ],
         ),

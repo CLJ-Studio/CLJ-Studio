@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../modelos/carrera_upsa.dart';
 
-
 /// Campo que abre una hoja deslizable con todas las carreras.
 ///
 /// Se prefirio una hoja al menu nativo de DropdownButton porque este ultimo
@@ -86,7 +85,9 @@ class SelectorCarrera extends StatelessWidget {
           style: TextStyle(
             fontSize: 15,
             fontWeight: carrera == null ? FontWeight.w500 : FontWeight.w700,
-            color: carrera == null ? Theme.of(context).textTheme.bodyMedium?.color : Theme.of(context).colorScheme.onSurface,
+            color: carrera == null
+                ? Theme.of(context).textTheme.bodyMedium?.color
+                : Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ),
@@ -181,7 +182,9 @@ class _FilaCarrera extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 6),
     child: Material(
-      color: seleccionada ? Theme.of(context).colorScheme.primary.withValues(alpha: .12) : Colors.transparent,
+      color: seleccionada
+          ? Theme.of(context).colorScheme.primary.withValues(alpha: .12)
+          : Colors.transparent,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: () => Navigator.of(context).pop(carrera.id),
@@ -196,7 +199,9 @@ class _FilaCarrera extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     height: 1.3,
-                    color: seleccionada ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
+                    color: seleccionada
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurface,
                     fontWeight: seleccionada
                         ? FontWeight.w800
                         : FontWeight.w600,

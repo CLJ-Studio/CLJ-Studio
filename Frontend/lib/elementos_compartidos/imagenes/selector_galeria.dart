@@ -96,10 +96,7 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
         ],
       ),
       const SizedBox(height: 4),
-      const Text(
-        'La primera es la portada.',
-        style: TextStyle(fontSize: 12),
-      ),
+      const Text('La primera es la portada.', style: TextStyle(fontSize: 12)),
       const SizedBox(height: 10),
       Wrap(
         spacing: 10,
@@ -196,11 +193,7 @@ class _Miniatura extends StatelessWidget {
               customBorder: const CircleBorder(),
               child: const Padding(
                 padding: EdgeInsets.all(4),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 14,
-                  color: Colors.white,
-                ),
+                child: Icon(Icons.close_rounded, size: 14, color: Colors.white),
               ),
             ),
           ),

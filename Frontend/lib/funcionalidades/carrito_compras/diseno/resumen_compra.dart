@@ -10,14 +10,21 @@ class ResumenCompra extends StatelessWidget {
   final double subtotal;
   final double entrega;
   final double total;
-  Widget fila(BuildContext context, String etiqueta, String valor, {bool fuerte = false}) => Padding(
+  Widget fila(
+    BuildContext context,
+    String etiqueta,
+    String valor, {
+    bool fuerte = false,
+  }) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 5),
     child: Row(
       children: [
         Text(
           etiqueta,
           style: TextStyle(
-            color: fuerte ? Theme.of(context).colorScheme.onSurface : Theme.of(context).textTheme.bodyMedium?.color,
+            color: fuerte
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).textTheme.bodyMedium?.color,
             fontWeight: fuerte ? FontWeight.w800 : FontWeight.normal,
           ),
         ),
@@ -46,7 +53,12 @@ class ResumenCompra extends StatelessWidget {
           fila(context, 'Costo de entrega', 'Bs ${entrega.toStringAsFixed(2)}'),
           fila(context, 'Método de pago', 'Al recoger'),
           Divider(color: Theme.of(context).dividerColor),
-          fila(context, 'Total', 'Bs ${total.toStringAsFixed(2)}', fuerte: true),
+          fila(
+            context,
+            'Total',
+            'Bs ${total.toStringAsFixed(2)}',
+            fuerte: true,
+          ),
         ],
       ),
     ),

@@ -238,9 +238,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
             },
           ),
           const SizedBox(height: 22),
-          BotonConfirmarPublicacion(
-            alPresionar: _publicando ? null : publicar,
-          ),
+          BotonConfirmarPublicacion(alPresionar: _publicando ? null : publicar),
         ],
       ),
     ),

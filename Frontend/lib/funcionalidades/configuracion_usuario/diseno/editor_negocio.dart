@@ -164,7 +164,10 @@ class _EditorNegocioState extends State<EditorNegocio> {
           const SizedBox(height: 6),
           Text(
             mensaje,
-            style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12),
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontSize: 12,
+            ),
           ),
         ],
         const SizedBox(height: 14),
@@ -172,7 +175,10 @@ class _EditorNegocioState extends State<EditorNegocio> {
           onPressed: _guardando ? null : _guardar,
           style: OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.primary,
-            side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.4),
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.primary,
+              width: 1.4,
+            ),
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(vertical: 13),
           ),
@@ -260,7 +266,10 @@ class _Logo extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subiendo ? 'Subiendo logo...' : 'Subir logo del negocio',
-              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 12,
+              ),
             ),
           ],
         ),
