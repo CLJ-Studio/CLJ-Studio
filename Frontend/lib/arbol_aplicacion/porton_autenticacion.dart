@@ -7,6 +7,7 @@ import '../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../funcionalidades/acceso_upsa/arbol/arbol_acceso_upsa.dart';
 import '../funcionalidades/carrito_compras/logica/controlador_carrito_compras.dart';
 import '../funcionalidades/favoritos/logica/controlador_favoritos.dart';
+import '../funcionalidades/notificaciones/logica/controlador_notificaciones.dart';
 import '../funcionalidades/navegacion_principal/arbol/arbol_navegacion_principal.dart';
 import '../funcionalidades/onboarding_usuario/arbol/arbol_onboarding.dart';
 
@@ -50,6 +51,7 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
         SesionUsuario.instancia.limpiar();
         ControladorFavoritos.instancia.limpiar();
         ControladorCarritoCompras.instancia.vaciar();
+        ControladorNotificaciones.instancia.limpiar();
       }
       setState(() {});
     });
@@ -114,6 +116,7 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           // configuracion) y los favoritos (corazones del catalogo).
           SesionUsuario.instancia.cargar();
           ControladorFavoritos.instancia.cargar();
+          ControladorNotificaciones.instancia.cargar();
           return const ArbolNavegacionPrincipal();
         }
         return ArbolOnboarding(

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../notificaciones/diseno/boton_campana.dart';
 import '../modelos/categoria_marketplace.dart';
 import 'barra_busqueda_marketplace.dart';
 import 'barra_categorias_marketplace.dart';
@@ -127,6 +128,8 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                       alignment: Alignment.topRight,
                       child: Row(
                         children: [
+                          const BotonCampana(),
+                          const SizedBox(width: 8),
                           IconButton.filledTonal(
                             tooltip: 'Mis pedidos',
                             onPressed: alAbrirPedidos,
@@ -141,7 +144,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                   // El buscador sube y deja espacio a los botones al compactarse.
                   Positioned(
                     left: 0,
-                    right: lerpDouble(0, 108, progress)!,
+                    right: lerpDouble(0, 158, progress)!,
                     top: lerpDouble(88, 3, progress)!,
                     child: BarraBusquedaMarketplace(
                       alCambiar: alBuscar,
