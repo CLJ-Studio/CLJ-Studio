@@ -19,6 +19,7 @@ class _ArbolPedidosState extends State<ArbolPedidos> {
   void initState() {
     super.initState();
     controlador.cargar();
+    controlador.iniciarTiempoReal();
   }
 
   @override

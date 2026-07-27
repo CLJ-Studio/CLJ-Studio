@@ -20,6 +20,7 @@ class _ArbolInicioMarketplaceState extends State<ArbolInicioMarketplace> {
   void initState() {
     super.initState();
     controlador.cargar();
+    controlador.iniciarTiempoReal();
   }
 
   @override

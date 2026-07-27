@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../datos/repositorio_inicio_marketplace.dart';
 import '../modelos/local_universitario.dart';
 import 'estado_inicio_marketplace.dart';
@@ -18,6 +19,32 @@ class ControladorInicioMarketplace extends ChangeNotifier {
 
   /// Catalogo completo sin filtrar; la base de cada filtrado.
   List<LocalUniversitario> _todos = const [];
+
+  /// Un local que abre o cierra debe verse al instante, sin recargar.
+  late final _escucha = EscuchaTabla(
+    tabla: 'stores',
+    alCambiar: _recargarEnSilencio,
+  );
+
+  void iniciarTiempoReal() => _escucha.iniciar();
+
+  @override
+  void dispose() {
+    _escucha.detener();
+    super.dispose();
+  }
+
+  /// Refresca sin mostrar el indicador de carga: el usuario no pidio nada,
+  /// asi que la lista debe cambiar sin parpadear.
+  Future<void> _recargarEnSilencio() async {
+    try {
+      _todos = await repositorio.obtenerLocales();
+      estado = estado.copiarCon(locales: _aplicarFiltros());
+      notifyListeners();
+    } catch (_) {
+      // Se reintenta en el siguiente evento o sondeo.
+    }
+  }
 
   Future<void> cargar() async {
     estado = estado.copiarCon(cargando: true);

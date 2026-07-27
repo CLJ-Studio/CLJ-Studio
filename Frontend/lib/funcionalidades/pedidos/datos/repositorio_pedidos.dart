@@ -129,8 +129,10 @@ class RepositorioPedidos {
     controlador = StreamController<Pedido?>(
       onListen: () {
         emitir();
+        // Respaldo corto: es la pantalla donde el usuario esta mirando
+        // fijamente, esperando que el vendedor responda.
         sondeo = Timer.periodic(
-          const Duration(seconds: 8),
+          const Duration(seconds: 2),
           (_) => emitir(),
         );
         try {

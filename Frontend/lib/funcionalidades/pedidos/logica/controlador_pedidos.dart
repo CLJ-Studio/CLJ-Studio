@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../datos/repositorio_pedidos.dart';
 import '../modelos/pedido.dart';
 
@@ -18,6 +19,36 @@ class ControladorPedidos extends ChangeNotifier {
   /// porque es la accion que no puede pasar desapercibida al vendedor.
   int get ventasPorResponder =>
       ventas.where((p) => p.estado == EstadoPedido.solicitado).length;
+
+  /// Un pedido nuevo o una respuesta del vendedor deben aparecer sin que
+  /// nadie recargue: es la pantalla donde mas se nota la espera.
+  late final _escucha = EscuchaTabla(
+    tabla: 'orders',
+    alCambiar: _recargarEnSilencio,
+  );
+
+  void iniciarTiempoReal() => _escucha.iniciar();
+
+  @override
+  void dispose() {
+    _escucha.detener();
+    super.dispose();
+  }
+
+  /// Refresca sin el indicador de carga, para no parpadear la lista.
+  Future<void> _recargarEnSilencio() async {
+    try {
+      final resultados = await Future.wait([
+        _repositorio.misCompras(),
+        _repositorio.misVentas(),
+      ]);
+      compras = resultados[0];
+      ventas = resultados[1];
+      notifyListeners();
+    } catch (_) {
+      // Se reintenta en el siguiente evento o sondeo.
+    }
+  }
 
   Future<void> cargar() async {
     cargando = true;

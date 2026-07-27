@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
+import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../datos/repositorio_mi_local.dart';
@@ -15,6 +16,31 @@ class ControladorMiLocal extends ChangeNotifier {
   List<ProductoMarketplace> productos = const [];
   bool cargando = true;
   String? error;
+
+  /// El stock baja solo cuando alguien compra: el inventario debe reflejarlo
+  /// sin que el dueno recargue.
+  late final _escucha = EscuchaTabla(
+    tabla: 'products',
+    alCambiar: _refrescarInventario,
+  );
+
+  void iniciarTiempoReal() => _escucha.iniciar();
+
+  @override
+  void dispose() {
+    _escucha.detener();
+    super.dispose();
+  }
+
+  Future<void> _refrescarInventario() async {
+    if (local == null) return;
+    try {
+      productos = await _repositorio.cargarInventario(local!.id);
+      notifyListeners();
+    } catch (_) {
+      // Se reintenta en el siguiente evento o sondeo.
+    }
+  }
 
   /// Hay donde publicar (local formal o espacio personal).
   bool get tieneLocal => local != null;

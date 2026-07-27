@@ -38,6 +38,7 @@ class _PantallaLocalesUniversitariosState
   void initState() {
     super.initState();
     controlador.cargar();
+    controlador.iniciarTiempoReal();
   }
 
   @override

@@ -1,8 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../modelos/notificacion.dart';
 
 /// Notificaciones del usuario y su contador de no leidas.
@@ -21,7 +20,7 @@ class ControladorNotificaciones extends ChangeNotifier {
   List<Notificacion> notificaciones = const [];
   bool cargando = false;
   String? error;
-  StreamSubscription<dynamic>? _tiempoReal;
+  EscuchaTabla? _escucha;
 
   int get noLeidas => notificaciones.where((n) => !n.leida).length;
 
@@ -46,13 +45,32 @@ class ControladorNotificaciones extends ChangeNotifier {
       notifyListeners();
     }
 
-    // Una sola suscripcion por sesion; los errores del canal se ignoran
-    // porque el refresco al abrir la pantalla es el respaldo.
-    _tiempoReal ??= _cliente
-        .from('notifications')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', usuario.id)
-        .listen((_) => cargar(), onError: (_) {});
+    // Una sola escucha por sesion, filtrada a los avisos propios. El sondeo
+    // interno del ayudante cubre los cortes del websocket.
+    _escucha ??= EscuchaTabla(
+      tabla: 'notifications',
+      filtro: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'user_id',
+        value: usuario.id,
+      ),
+      alCambiar: _refrescarEnSilencio,
+    )..iniciar();
+  }
+
+  /// Refresca sin tocar el indicador de carga: la campana no debe parpadear.
+  Future<void> _refrescarEnSilencio() async {
+    try {
+      final filas = await _cliente
+          .from('notifications')
+          .select()
+          .order('created_at', ascending: false)
+          .limit(60);
+      notificaciones = filas.map(Notificacion.desdeMapa).toList();
+      notifyListeners();
+    } catch (_) {
+      // Se reintenta en el siguiente evento o sondeo.
+    }
   }
 
   Future<void> marcarLeida(Notificacion notificacion) async {
@@ -81,8 +99,8 @@ class ControladorNotificaciones extends ChangeNotifier {
   /// Al cerrar sesion: sin esto, el siguiente usuario veria avisos ajenos.
   void limpiar() {
     notificaciones = const [];
-    _tiempoReal?.cancel();
-    _tiempoReal = null;
+    _escucha?.detener();
+    _escucha = null;
     notifyListeners();
   }
 }

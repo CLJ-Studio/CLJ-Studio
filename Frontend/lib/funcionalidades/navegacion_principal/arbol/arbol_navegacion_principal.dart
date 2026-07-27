@@ -27,6 +27,7 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
     super.initState();
     // Define si aparece la pestaña "Tu local" en la barra inferior.
     miLocal.cargar();
+    miLocal.iniciarTiempoReal();
   }
 
   @override
