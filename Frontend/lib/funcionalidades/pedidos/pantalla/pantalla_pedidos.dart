@@ -37,6 +37,42 @@ class _PantallaPedidosState extends State<PantallaPedidos>
     await widget.controlador.cargar();
   }
 
+  Future<void> _cancelar(Pedido pedido) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (contexto) => AlertDialog(
+        title: const Text('Cancelar pedido'),
+        content: Text(
+          'Se cancelará tu pedido en ${pedido.nombreLocal}. '
+          'Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(contexto).pop(false),
+            child: const Text('Volver'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(contexto).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB3453B),
+            ),
+            child: const Text('Sí, cancelar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true) return;
+
+    final error = await widget.controlador.cancelar(pedido.id);
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(error), behavior: SnackBarBehavior.floating),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: widget.controlador,
@@ -106,6 +142,9 @@ class _PantallaPedidosState extends State<PantallaPedidos>
                     vacio: 'Todavía no has hecho ningún pedido.',
                     alRefrescar: controlador.cargar,
                     alAbrir: _abrir,
+                    // Solo el comprador puede cancelar, y solo mientras el
+                    // vendedor no haya respondido.
+                    alCancelar: _cancelar,
                   ),
                   _ListaPedidos(
                     pedidos: controlador.ventas,
@@ -131,6 +170,7 @@ class _ListaPedidos extends StatelessWidget {
     required this.vacio,
     required this.alRefrescar,
     required this.alAbrir,
+    this.alCancelar,
   });
 
   final List<Pedido> pedidos;
@@ -138,6 +178,7 @@ class _ListaPedidos extends StatelessWidget {
   final String vacio;
   final Future<void> Function() alRefrescar;
   final void Function(Pedido) alAbrir;
+  final void Function(Pedido)? alCancelar;
 
   @override
   Widget build(BuildContext context) => RefreshIndicator(
@@ -173,6 +214,11 @@ class _ListaPedidos extends StatelessWidget {
                         pedido: pedido,
                         soyVendedor: soyVendedor,
                         alAbrir: () => alAbrir(pedido),
+                        alCancelar:
+                            alCancelar != null &&
+                                pedido.estado == EstadoPedido.solicitado
+                            ? () => alCancelar!(pedido)
+                            : null,
                       ),
                   ],
                 ),

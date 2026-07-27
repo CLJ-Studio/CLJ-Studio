@@ -16,7 +16,7 @@ class RepositorioConfiguracion {
         .from('profiles')
         .select(
           'full_name, student_code, email, avatar_emoji, whatsapp, '
-          'is_on_campus, careers(name)',
+          'is_on_campus, avatar_path, careers(name)',
         )
         .eq('id', id)
         .single();

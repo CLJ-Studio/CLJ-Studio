@@ -100,13 +100,17 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-    } catch (_) {
+    } catch (fallo) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo publicar. Intenta de nuevo.'),
+          SnackBar(
+            content: Text(
+              fallo.toString().contains('CONTENIDO_NO_PERMITIDO')
+                  ? 'Revisa el texto: contiene palabras no permitidas.'
+                  : 'No se pudo publicar. Intenta de nuevo.',
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );

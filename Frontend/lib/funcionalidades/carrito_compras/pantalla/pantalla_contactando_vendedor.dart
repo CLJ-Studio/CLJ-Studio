@@ -25,24 +25,12 @@ class _PantallaContactandoVendedorState
   static const _repositorio = RepositorioPedidos();
 
   late final Stream<Pedido?> _pedido = _repositorio.escuchar(widget.pedidoId);
-  bool _cancelando = false;
 
-  Future<void> _cancelar() async {
-    setState(() => _cancelando = true);
-    try {
-      await _repositorio.cancelar(widget.pedidoId);
-      if (mounted) Navigator.of(context).pop();
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _cancelando = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se pudo cancelar el pedido.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
+  /// Salir de la pantalla NO cancela nada: el pedido sigue vivo y esperando
+  /// respuesta. Antes, volver atras lo cancelaba, asi que era imposible
+  /// seguir usando la app mientras el vendedor decidia. Para cancelar de
+  /// verdad esta el boton en Pedidos.
+  void _volver() => Navigator.of(context).pop();
 
   void _abrirDetalle(String pedidoId) {
     Navigator.of(context).pushReplacement(
@@ -58,8 +46,8 @@ class _PantallaContactandoVendedorState
     appBar: AppBar(
       backgroundColor: Colors.transparent,
       leading: IconButton(
-        tooltip: 'Cancelar pedido',
-        onPressed: _cancelando ? null : _cancelar,
+        tooltip: 'Volver',
+        onPressed: _volver,
         icon: const Icon(Icons.arrow_back_rounded),
       ),
     ),
@@ -122,6 +110,27 @@ class _PantallaContactandoVendedorState
                       const SizedBox(height: 16),
                       _CuentaRegresiva(venceEn: pedido.venceEn),
                     ],
+                    const SizedBox(height: 26),
+                    // Deja claro que salir no pierde el pedido: antes el
+                    // boton de atras lo cancelaba y nadie se atrevia a tocarlo.
+                    const Text(
+                      'Puedes seguir usando la app mientras tanto. Tu pedido '
+                      'te espera en Pedidos.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFF9AA29C), fontSize: 13),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                      onPressed: _volver,
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF55785A),
+                      ),
+                      icon: const Icon(Icons.explore_outlined, size: 18),
+                      label: const Text(
+                        'Seguir explorando',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
                   ],
                 ),
               ),

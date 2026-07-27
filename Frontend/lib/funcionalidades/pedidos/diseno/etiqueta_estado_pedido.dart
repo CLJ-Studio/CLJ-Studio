@@ -18,14 +18,26 @@ class EtiquetaEstadoPedido extends StatelessWidget {
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(
-            color: estado.color,
-            shape: BoxShape.circle,
+        // Mientras espera respuesta gira un indicador: comunica que algo
+        // sigue en curso, en vez de parecer un estado detenido.
+        if (estado == EstadoPedido.solicitado)
+          SizedBox(
+            width: 9,
+            height: 9,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.8,
+              color: estado.color,
+            ),
+          )
+        else
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: estado.color,
+              shape: BoxShape.circle,
+            ),
           ),
-        ),
         const SizedBox(width: 7),
         Text(
           estado.etiqueta,

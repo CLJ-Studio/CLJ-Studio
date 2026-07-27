@@ -15,19 +15,23 @@ class TarjetaPerfilUsuario extends StatelessWidget {
       Container(
         width: 104,
         height: 104,
+        clipBehavior: Clip.antiAlias,
         decoration: const BoxDecoration(
           color: Color(0xFFE7F0E7),
           shape: BoxShape.circle,
         ),
         alignment: Alignment.center,
-        child: Text(
-          usuario.inicial,
-          style: const TextStyle(
-            color: Color(0xFF55785A),
-            fontSize: 38,
-            fontWeight: FontWeight.w900,
+        // Foto si la subio; si no, la inicial de siempre.
+        child: switch (usuario.avatarUrl) {
+          final String url => Image.network(
+            url,
+            width: 104,
+            height: 104,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => _Inicial(usuario: usuario),
           ),
-        ),
+          _ => _Inicial(usuario: usuario),
+        },
       ),
       const SizedBox(height: 14),
       Text(
@@ -69,5 +73,24 @@ class TarjetaPerfilUsuario extends StatelessWidget {
         ),
       ),
     ],
+  );
+}
+
+/// Respaldo del avatar cuando no hay foto (o esta fallo al cargar).
+class _Inicial extends StatelessWidget {
+  const _Inicial({required this.usuario});
+
+  final UsuarioUpsa usuario;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Text(
+      usuario.inicial,
+      style: const TextStyle(
+        color: Color(0xFF55785A),
+        fontSize: 38,
+        fontWeight: FontWeight.w900,
+      ),
+    ),
   );
 }

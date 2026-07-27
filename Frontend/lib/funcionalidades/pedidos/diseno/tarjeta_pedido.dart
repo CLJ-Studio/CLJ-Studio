@@ -9,12 +9,16 @@ class TarjetaPedido extends StatelessWidget {
     required this.pedido,
     required this.soyVendedor,
     required this.alAbrir,
+    this.alCancelar,
     super.key,
   });
 
   final Pedido pedido;
   final bool soyVendedor;
   final VoidCallback alAbrir;
+
+  /// Solo se ofrece al comprador de un pedido aun sin responder.
+  final VoidCallback? alCancelar;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -99,6 +103,30 @@ class TarjetaPedido extends StatelessWidget {
                     ),
                   ],
                 ),
+                // Cancelar sin entrar al detalle: es la accion mas urgente
+                // mientras el pedido sigue sin respuesta.
+                if (alCancelar case final cancelar?) ...[
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: cancelar,
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFB3453B),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      icon: const Icon(Icons.close_rounded, size: 16),
+                      label: const Text(
+                        'Cancelar pedido',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

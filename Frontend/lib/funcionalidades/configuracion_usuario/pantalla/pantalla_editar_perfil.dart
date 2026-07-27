@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../onboarding_usuario/datos/repositorio_onboarding.dart';
 import '../../onboarding_usuario/diseno/selector_carrera.dart';
 import '../../onboarding_usuario/modelos/carrera_upsa.dart';
+import '../diseno/editor_negocio.dart';
 
 /// Edición de los datos que el estudiante sí controla.
 ///
@@ -23,9 +25,23 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
   final _whatsapp = TextEditingController();
   List<CarreraUpsa> _carreras = const [];
   String? _carreraId;
+  String? _avatarPath;
   bool _cargando = true;
   bool _guardando = false;
+  bool _subiendoFoto = false;
   String? _error;
+
+  Future<void> _elegirFoto() async {
+    setState(() => _subiendoFoto = true);
+    try {
+      final ruta = await ServicioImagenes.elegirYSubir(etiqueta: 'perfil');
+      if (ruta != null) setState(() => _avatarPath = ruta);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'No se pudo subir la foto.');
+    } finally {
+      if (mounted) setState(() => _subiendoFoto = false);
+    }
+  }
 
   @override
   void initState() {
@@ -52,6 +68,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
       _carreras = await _repositorioCarreras.cargarCarreras();
 
       final perfil = SesionUsuario.instancia.perfil;
+      _avatarPath = perfil?.avatarPath;
       if (perfil != null) {
         // El WhatsApp se guarda con el 591 delante; el campo muestra solo
         // los 8 digitos locales, igual que en el onboarding.
@@ -92,6 +109,13 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
         'actualizar_perfil',
         params: {'p_career_id': _carreraId, 'p_whatsapp': _whatsapp.text},
       );
+
+      // La foto es la unica columna del perfil con escritura directa:
+      // es una ruta del bucket, sin nada que validar en el servidor.
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'avatar_path': _avatarPath})
+          .eq('id', Supabase.instance.client.auth.currentUser!.id);
       // Refresca la copia compartida para que el resto de la app la vea.
       await SesionUsuario.instancia.cargar(forzar: true);
       if (mounted) Navigator.of(context).pop();
@@ -126,6 +150,15 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    _SelectorFotoPerfil(
+                      fotoUrl: ServicioImagenes.urlPublica(_avatarPath),
+                      inicial:
+                          SesionUsuario.instancia.perfil?.inicial ?? '?',
+                      subiendo: _subiendoFoto,
+                      alElegir: _elegirFoto,
+                      alQuitar: () => setState(() => _avatarPath = null),
+                    ),
+                    const SizedBox(height: 26),
                     const _DatosInstitucionales(),
                     const SizedBox(height: 26),
                     SelectorCarrera(
@@ -163,6 +196,8 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                     ),
                     const SizedBox(height: 22),
                     const _InterruptorCampus(),
+                    // Solo se muestra a quien tiene un local formal.
+                    const EditorNegocio(),
                     if (_error case final String mensaje) ...[
                       const SizedBox(height: 14),
                       Text(
@@ -304,6 +339,102 @@ class _InterruptorCampusState extends State<_InterruptorCampus> {
     subtitle: const Text(
       'Les indica a los compradores que puedes entregar ahora.',
       style: TextStyle(fontSize: 12),
+    ),
+  );
+}
+
+/// Foto de la persona. Opcional: quien no la sube conserva su inicial.
+class _SelectorFotoPerfil extends StatelessWidget {
+  const _SelectorFotoPerfil({
+    required this.fotoUrl,
+    required this.inicial,
+    required this.subiendo,
+    required this.alElegir,
+    required this.alQuitar,
+  });
+
+  final String? fotoUrl;
+  final String inicial;
+  final bool subiendo;
+  final VoidCallback alElegir;
+  final VoidCallback alQuitar;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          Container(
+            width: 104,
+            height: 104,
+            clipBehavior: Clip.antiAlias,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE7F0E7),
+              shape: BoxShape.circle,
+            ),
+            child: subiendo
+                ? const Center(
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(strokeWidth: 2.6),
+                    ),
+                  )
+                : switch (fotoUrl) {
+                    final String url => Image.network(
+                      url,
+                      width: 104,
+                      height: 104,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _InicialGrande(inicial),
+                    ),
+                    _ => _InicialGrande(inicial),
+                  },
+          ),
+          Material(
+            color: const Color(0xFF5C8A63),
+            shape: const CircleBorder(),
+            child: InkWell(
+              onTap: subiendo ? null : alElegir,
+              customBorder: const CircleBorder(),
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: Icon(
+                  Icons.photo_camera_outlined,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      if (fotoUrl != null && !subiendo)
+        TextButton(
+          onPressed: alQuitar,
+          child: const Text(
+            'Quitar foto',
+            style: TextStyle(color: Color(0xFF9A9A9A), fontSize: 12),
+          ),
+        ),
+    ],
+  );
+}
+
+class _InicialGrande extends StatelessWidget {
+  const _InicialGrande(this.inicial);
+  final String inicial;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Text(
+      inicial,
+      style: const TextStyle(
+        color: Color(0xFF55785A),
+        fontSize: 38,
+        fontWeight: FontWeight.w900,
+      ),
     ),
   );
 }

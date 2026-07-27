@@ -19,7 +19,7 @@ enum EstadoPedido {
   };
 
   String get etiqueta => switch (this) {
-    EstadoPedido.solicitado => 'Esperando respuesta',
+    EstadoPedido.solicitado => 'Por confirmar',
     EstadoPedido.aceptado => 'Aceptado',
     EstadoPedido.rechazado => 'Rechazado',
     EstadoPedido.cancelado => 'Cancelado',

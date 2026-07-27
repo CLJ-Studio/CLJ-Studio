@@ -1,3 +1,5 @@
+import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
+
 /// Perfil del estudiante autenticado, tal como lo devuelve `profiles`.
 class UsuarioUpsa {
   const UsuarioUpsa({
@@ -8,6 +10,7 @@ class UsuarioUpsa {
     required this.avatarEmoji,
     required this.whatsapp,
     required this.enCampus,
+    this.avatarPath,
   });
 
   factory UsuarioUpsa.desdeMapa(Map<String, dynamic> fila) {
@@ -21,6 +24,7 @@ class UsuarioUpsa {
       avatarEmoji: (fila['avatar_emoji'] as String?) ?? '🎓',
       whatsapp: (fila['whatsapp'] as String?) ?? '',
       enCampus: (fila['is_on_campus'] as bool?) ?? false,
+      avatarPath: fila['avatar_path'] as String?,
     );
   }
 
@@ -31,6 +35,11 @@ class UsuarioUpsa {
   final String avatarEmoji;
   final String whatsapp;
   final bool enCampus;
+
+  /// Foto de la persona. Si falta, la tarjeta cae a la inicial del nombre.
+  final String? avatarPath;
+
+  String? get avatarUrl => ServicioImagenes.urlPublica(avatarPath);
 
   /// Inicial para el avatar; evita reventar si el nombre llega vacio.
   String get inicial =>

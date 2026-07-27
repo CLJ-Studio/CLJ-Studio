@@ -35,6 +35,20 @@ class ControladorPedidos extends ChangeNotifier {
     super.dispose();
   }
 
+  /// Cancela y refresca. Devuelve el motivo si el servidor lo rechaza.
+  Future<String?> cancelar(String pedidoId) async {
+    try {
+      await _repositorio.cancelar(pedidoId);
+      await _recargarEnSilencio();
+      return null;
+    } catch (fallo) {
+      // El vendedor pudo aceptarlo justo antes: no es un error de la app.
+      return fallo.toString().contains('ESTADO_INVALIDO')
+          ? 'El pedido ya cambió de estado.'
+          : 'No se pudo cancelar el pedido.';
+    }
+  }
+
   /// Refresca sin el indicador de carga, para no parpadear la lista.
   Future<void> _recargarEnSilencio() async {
     try {
