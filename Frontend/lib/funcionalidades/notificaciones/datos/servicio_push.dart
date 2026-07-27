@@ -53,10 +53,14 @@ abstract final class ServicioPush {
     }
   }
 
+  /// Motivo del ultimo fallo, para poder mostrarlo en vez de un generico.
+  static String? ultimoError;
+
   /// Pide permiso (si hace falta), se suscribe y guarda la suscripcion.
   /// Devuelve true si el dispositivo quedo registrado.
   static Future<bool> activar() async {
     if (!kIsWeb) return false;
+    ultimoError = null;
 
     try {
       if (_permisoActual != 'granted') {
@@ -81,7 +85,12 @@ abstract final class ServicioPush {
       }, onConflict: 'endpoint');
 
       return true;
-    } catch (_) {
+    } catch (fallo) {
+      // Sin esto, cualquier fallo se veia como "No se pudieron activar" y
+      // habia que abrir las herramientas del navegador para saber por que.
+      ultimoError = fallo is PostgrestException
+          ? '${fallo.code ?? ''} ${fallo.message}'.trim()
+          : fallo.toString();
       return false;
     }
   }

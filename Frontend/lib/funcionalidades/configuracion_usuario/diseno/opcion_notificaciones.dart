@@ -45,11 +45,16 @@ class _OpcionNotificacionesState extends State<OpcionNotificaciones> {
     });
 
     if (valor && !listo) {
+      final motivo = ServicioPush.ultimoError;
       _avisar(
         ServicioPush.denegado
             ? 'Bloqueaste las notificaciones. Habilítalas en los ajustes '
                   'del navegador para poder activarlas.'
-            : 'No se pudieron activar en este dispositivo.',
+            // Mostrar el motivo evita tener que abrir las herramientas del
+            // navegador para saber que fallo.
+            : motivo == null
+            ? 'No se pudieron activar en este dispositivo.'
+            : 'No se pudieron activar: $motivo',
       );
     }
   }
