@@ -42,6 +42,32 @@ class RepositorioInicioMarketplace {
     return filas.map(LocalUniversitario.desdeMapa).toList();
   }
 
+  /// Todo lo publicado en el campus, de todos los vendedores.
+  ///
+  /// El inicio muestra publicaciones y no locales: con locales, quien
+  /// publicaba tres cosas seguia viendo una sola tarjeta y parecia que las
+  /// anteriores se habian borrado.
+  Future<List<ProductoMarketplace>> obtenerPublicaciones() async {
+    final filas = await _cliente
+        .from('products')
+        .select('''
+          id, store_id, name, description, price, emoji, stock, kind,
+          image_path, is_available, product_images(storage_path, position),
+          stores!inner(
+            id, name, description, category_id, emoji, color_hex,
+            estimated_time, delivery_cost, is_open, rating_average,
+            is_personal, logo_path, is_active, categories(name)
+          )
+        ''')
+        .eq('is_available', true)
+        .eq('stores.is_active', true)
+        // Lo mas reciente o relanzado encabeza el feed.
+        .order('bumped_at', ascending: false)
+        .limit(120);
+
+    return filas.map(ProductoMarketplace.desdeMapa).toList();
+  }
+
   Future<List<ProductoMarketplace>> obtenerProductos(String localId) async {
     final filas = await _cliente
         .from('products')

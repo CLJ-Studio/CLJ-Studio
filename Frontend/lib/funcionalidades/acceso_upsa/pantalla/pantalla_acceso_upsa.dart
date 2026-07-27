@@ -21,8 +21,14 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
   bool _cargando = false;
   String _digitos = '';
 
-  /// El codigo institucional son 10 digitos precedidos por 'a'.
-  bool get _codigoCompleto => RegExp(r'^\d{10}$').hasMatch(_digitos);
+  /// Formato real del codigo: año de ingreso (4), periodo (11 para el primer
+  /// semestre, 12 para el segundo) y correlativo (4). Aceptar diez digitos
+  /// cualesquiera dejaba pasar codigos inventados como "8382848283".
+  bool get _codigoCompleto {
+    if (!RegExp(r'^\d{4}(11|12)\d{4}$').hasMatch(_digitos)) return false;
+    final anio = int.parse(_digitos.substring(0, 4));
+    return anio >= 2000 && anio <= DateTime.now().year;
+  }
 
   /// Solo se envia como sugerencia si esta completo; a medio escribir
   /// confundiria al selector de Google en vez de ayudar.
@@ -61,10 +67,6 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
         builder: (context, restricciones) => Stack(
           children: [
             const _FormasDecorativas(),
-            _BuhosAnimados(
-              anchoPantalla: restricciones.maxWidth,
-              altoPantalla: restricciones.maxHeight,
-            ),
             SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: ConstrainedBox(
@@ -92,16 +94,21 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                             ),
                           ),
                         ),
-                        SizedBox(
-                          height: (restricciones.maxHeight * .30).clamp(
-                            100,
-                            260,
+                        // Los buhos van en el flujo y no superpuestos: como
+                        // capa flotante se encimaban con el titulo en
+                        // pantallas angostas y el texto quedaba ilegible.
+                        _BuhosAnimados(
+                          alto: (restricciones.maxHeight * .26).clamp(
+                            130,
+                            230,
                           ),
                         ),
+                        const SizedBox(height: 12),
                         const EncabezadoAccesoUpsa(),
                         const SizedBox(height: 28),
                         FormularioCorreoUpsa(
                           esValido: _codigoCompleto,
+                          digitos: _digitos,
                           alCambiar: (valor) => setState(
                             () => _digitos = valor.replaceAll(
                               RegExp(r'\D'),
@@ -140,46 +147,30 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
   );
 }
 
-/// Ubica la animación contra la pared derecha sin interceptar los toques.
+/// Búhos de bienvenida. Ocupan su propio espacio en la columna, así que
+/// nunca se enciman con el texto por angosta que sea la pantalla.
 class _BuhosAnimados extends StatelessWidget {
-  const _BuhosAnimados({
-    required this.anchoPantalla,
-    required this.altoPantalla,
-  });
+  const _BuhosAnimados({required this.alto});
 
-  final double anchoPantalla;
-  final double altoPantalla;
+  final double alto;
 
   @override
-  Widget build(BuildContext context) {
-    final ancho = (anchoPantalla * .74).clamp(390.0, 760.0);
-    return Positioned(
-      // Posición vertical: aumenta el valor para bajar y redúcelo para subir.
-      top: (altoPantalla * .12).clamp(70.0, 150.0),
-      // Posición horizontal: aumenta `right` para mover a la izquierda.
-      // El primer valor es para móvil y el segundo para pantallas grandes.
-      right: anchoPantalla < 600 ? -65 : -20,
-      child: IgnorePointer(
-        child: ExcludeSemantics(
-          child: RepaintBoundary(
-            child: SizedBox(
-              // Tamaño: `width` controla el ancho y `.56` la proporción de alto.
-              width: ancho,
-              height: ancho * .56,
-              child: Lottie.asset(
-                'assets/animations/owls.json',
-                fit: BoxFit.cover,
-                alignment: Alignment.centerRight,
-                repeat: true,
-                frameRate: const FrameRate(24),
-                filterQuality: FilterQuality.low,
-              ),
-            ),
+  Widget build(BuildContext context) => IgnorePointer(
+    child: ExcludeSemantics(
+      child: RepaintBoundary(
+        child: SizedBox(
+          height: alto,
+          child: Lottie.asset(
+            'assets/animations/owls.json',
+            fit: BoxFit.contain,
+            repeat: true,
+            frameRate: const FrameRate(24),
+            filterQuality: FilterQuality.low,
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 /// Manchas suaves que conservan el gran espacio en blanco de la referencia.

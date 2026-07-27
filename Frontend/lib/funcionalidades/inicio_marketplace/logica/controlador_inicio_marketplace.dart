@@ -2,13 +2,13 @@ import 'package:flutter/foundation.dart';
 
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../datos/repositorio_inicio_marketplace.dart';
-import '../modelos/local_universitario.dart';
+import '../modelos/producto_marketplace.dart';
 import 'estado_inicio_marketplace.dart';
 
-/// Carga el catalogo desde el backend y aplica busqueda y categoria.
+/// Feed de publicaciones del campus, con busqueda y filtro por categoria.
 ///
 /// El filtrado es en cliente a proposito: a escala de campus son decenas de
-/// locales, y filtrar sobre la lista ya cargada hace que escribir en el
+/// publicaciones, y filtrar sobre lo ya cargado hace que escribir en el
 /// buscador responda al instante, sin un viaje al servidor por cada tecla.
 class ControladorInicioMarketplace extends ChangeNotifier {
   ControladorInicioMarketplace(this.repositorio);
@@ -18,32 +18,30 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   EstadoInicioMarketplace estado = const EstadoInicioMarketplace();
 
   /// Catalogo completo sin filtrar; la base de cada filtrado.
-  List<LocalUniversitario> _todos = const [];
+  List<ProductoMarketplace> _todas = const [];
 
-  /// Un local que abre o cierra debe verse al instante, sin recargar.
-  late final _escucha = EscuchaTabla(
+  /// Una publicacion nueva de cualquier vendedor debe aparecer sola.
+  late final _escuchaProductos = EscuchaTabla(
+    tabla: 'products',
+    alCambiar: _recargarEnSilencio,
+  );
+
+  /// Abrir o cerrar un local cambia que se ve en el feed.
+  late final _escuchaLocales = EscuchaTabla(
     tabla: 'stores',
     alCambiar: _recargarEnSilencio,
   );
 
-  void iniciarTiempoReal() => _escucha.iniciar();
+  void iniciarTiempoReal() {
+    _escuchaProductos.iniciar();
+    _escuchaLocales.iniciar();
+  }
 
   @override
   void dispose() {
-    _escucha.detener();
+    _escuchaProductos.detener();
+    _escuchaLocales.detener();
     super.dispose();
-  }
-
-  /// Refresca sin mostrar el indicador de carga: el usuario no pidio nada,
-  /// asi que la lista debe cambiar sin parpadear.
-  Future<void> _recargarEnSilencio() async {
-    try {
-      _todos = await repositorio.obtenerLocales();
-      estado = estado.copiarCon(locales: _aplicarFiltros());
-      notifyListeners();
-    } catch (_) {
-      // Se reintenta en el siguiente evento o sondeo.
-    }
   }
 
   Future<void> cargar() async {
@@ -52,10 +50,10 @@ class ControladorInicioMarketplace extends ChangeNotifier {
 
     try {
       final categorias = await repositorio.obtenerCategorias();
-      _todos = await repositorio.obtenerLocales();
+      _todas = await repositorio.obtenerPublicaciones();
       estado = estado.copiarCon(
         categorias: categorias,
-        locales: _aplicarFiltros(),
+        publicaciones: _aplicarFiltros(),
         cargando: false,
       );
     } catch (_) {
@@ -65,6 +63,18 @@ class ControladorInicioMarketplace extends ChangeNotifier {
       );
     }
     notifyListeners();
+  }
+
+  /// Refresca sin mostrar el indicador de carga: el usuario no pidio nada,
+  /// asi que la lista debe cambiar sin parpadear.
+  Future<void> _recargarEnSilencio() async {
+    try {
+      _todas = await repositorio.obtenerPublicaciones();
+      estado = estado.copiarCon(publicaciones: _aplicarFiltros());
+      notifyListeners();
+    } catch (_) {
+      // Se reintenta en el siguiente evento o sondeo.
+    }
   }
 
   void seleccionarCategoria(String categoriaId) {
@@ -78,21 +88,27 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   }
 
   void _refiltrar() {
-    estado = estado.copiarCon(locales: _aplicarFiltros());
+    estado = estado.copiarCon(publicaciones: _aplicarFiltros());
     notifyListeners();
   }
 
-  List<LocalUniversitario> _aplicarFiltros() {
+  List<ProductoMarketplace> _aplicarFiltros() {
     final categoria = estado.categoriaId;
     final consulta = estado.busqueda;
 
-    return _todos.where((local) {
+    return _todas.where((publicacion) {
+      // La categoria vive en el local que publica.
       final coincideCategoria =
-          categoria == 'todas' || local.categoriaId == categoria;
+          categoria == 'todas' ||
+          publicacion.local?.categoriaId == categoria;
+
       final coincideTexto =
           consulta.isEmpty ||
-          local.nombre.toLowerCase().contains(consulta) ||
-          local.descripcion.toLowerCase().contains(consulta);
+          publicacion.nombre.toLowerCase().contains(consulta) ||
+          publicacion.descripcion.toLowerCase().contains(consulta) ||
+          (publicacion.local?.nombre.toLowerCase().contains(consulta) ??
+              false);
+
       return coincideCategoria && coincideTexto;
     }).toList();
   }

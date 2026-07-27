@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// SystemUiOverlayStyle vive aqui, no en material.
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 
 /// Identidad visual inspirada en la referencia de comida.
 abstract final class ConfiguracionTema {
@@ -75,6 +77,14 @@ abstract final class ConfiguracionTema {
       foregroundColor: texto,
       elevation: 0,
       centerTitle: true,
+      // Sin esto, la barra de estado hereda el color del sistema y se veia
+      // negra en unos telefonos y verde en otros. Se fija clara con iconos
+      // oscuros, que es lo que pide un fondo blanco.
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
       titleTextStyle: TextStyle(
         color: texto,
         fontFamily: 'Nunito',

@@ -26,11 +26,14 @@ class _PantallaContactandoVendedorState
 
   late final Stream<Pedido?> _pedido = _repositorio.escuchar(widget.pedidoId);
 
-  /// Salir de la pantalla NO cancela nada: el pedido sigue vivo y esperando
-  /// respuesta. Antes, volver atras lo cancelaba, asi que era imposible
-  /// seguir usando la app mientras el vendedor decidia. Para cancelar de
-  /// verdad esta el boton en Pedidos.
-  void _volver() => Navigator.of(context).pop();
+  /// Salir NO cancela nada: el pedido sigue vivo esperando respuesta. Para
+  /// cancelar de verdad esta el boton en Pedidos.
+  ///
+  /// Se vuelve hasta la raiz y no con un pop simple: a esta pantalla se
+  /// llega reemplazando la del carrito, asi que un pop dejaba al usuario en
+  /// una pila intermedia y parecia que el boton no hacia nada.
+  void _volver() =>
+      Navigator.of(context).popUntil((ruta) => ruta.isFirst);
 
   void _abrirDetalle(String pedidoId) {
     Navigator.of(context).pushReplacement(
