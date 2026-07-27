@@ -49,6 +49,22 @@
 <body>
   <script>
     /*
+     * Chrome dispara beforeinstallprompt en cuanto valida el manifest, que
+     * suele ser antes de que Flutter termine de arrancar. Si nadie escucha
+     * en ese momento el evento se pierde y el botón de instalar no aparece
+     * hasta recargar. Aquí solo se guarda; toda la lógica vive en Dart.
+     *
+     * Es a propósito lo mínimo posible: si el navegador sirve una copia
+     * cacheada de este archivo sin esta línea, Dart tiene su propio listener
+     * y lo único que se pierde es cazar el evento más temprano.
+     */
+    window.addEventListener('beforeinstallprompt', (evento) => {
+      evento.preventDefault();
+      window.eventoInstalacion = evento;
+    });
+  </script>
+  <script>
+    /*
      * Safari no respeta overscroll-behavior en todas sus versiones.
      * Bloqueamos únicamente los gestos que nacen en los bordes, sin afectar
      * listas horizontales como la barra de categorías.

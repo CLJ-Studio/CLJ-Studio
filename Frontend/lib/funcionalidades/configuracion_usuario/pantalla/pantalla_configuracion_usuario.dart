@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../instalacion_app/diseno/opcion_instalar_app.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../diseno/boton_cerrar_sesion.dart';
@@ -78,6 +79,8 @@ class _PantallaConfiguracionUsuarioState
                 const OpcionMisPublicaciones(),
                 const Divider(height: 1, indent: 58, endIndent: 18),
                 const OpcionNotificaciones(),
+                const Divider(height: 1, indent: 58, endIndent: 18),
+                const OpcionInstalarApp(),
                 const Divider(height: 1, indent: 58, endIndent: 18),
                 const OpcionTemaAplicacion(),
                 const Divider(height: 1, indent: 58, endIndent: 18),
