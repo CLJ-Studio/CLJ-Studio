@@ -1,195 +1,74 @@
 import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
-import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
+import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../diseno/dialogo_producto.dart';
 import '../logica/controlador_mi_local.dart';
 
-/// Panel básico para administrar el inventario del local creado.
+/// Panel para administrar el inventario del local.
 class PantallaMiLocal extends StatelessWidget {
   const PantallaMiLocal({required this.controlador, super.key});
 
   final ControladorMiLocal controlador;
 
-  /// Emojis del producto: hacen de imagen en el catalogo hasta que se
-  /// conecte Supabase Storage.
-  static const _emojis = [
-    '🛍️',
-    '🥪',
-    '☕',
-    '🥤',
-    '🍔',
-    '🍕',
-    '🧁',
-    '🍱',
-    '📓',
-    '🔌',
-    '💻',
-    '🖨️',
-  ];
+  Future<void> _agregar(BuildContext context) async {
+    final datos = await mostrarDialogoProducto(context);
+    if (datos == null) return;
 
-  Future<void> _mostrarFormulario(BuildContext context) async {
-    final nombre = TextEditingController();
-    final precio = TextEditingController();
-    final cantidad = TextEditingController(text: '1');
-    var emoji = _emojis.first;
-    String? fotoPath;
-    var subiendoFoto = false;
+    await controlador.agregarProducto(
+      nombre: datos.nombre,
+      precio: datos.precio,
+      cantidad: datos.cantidad,
+      emoji: datos.emoji,
+      descripcion: datos.descripcion,
+      galeria: datos.galeria,
+    );
+  }
 
-    final resultado = await showDialog<bool>(
+  Future<void> _editar(
+    BuildContext context,
+    ProductoMarketplace producto,
+  ) async {
+    final datos = await mostrarDialogoProducto(context, producto: producto);
+    if (datos == null) return;
+
+    await controlador.editarProducto(
+      productoId: producto.id,
+      nombre: datos.nombre,
+      precio: datos.precio,
+      cantidad: datos.cantidad,
+      emoji: datos.emoji,
+      descripcion: datos.descripcion,
+      galeria: datos.galeria,
+    );
+  }
+
+  Future<void> _confirmarBorrado(BuildContext context, int indice) async {
+    final producto = controlador.productos[indice];
+    final confirmado = await showDialog<bool>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, actualizar) => AlertDialog(
-          title: const Text('Agregar producto'),
-          content: SizedBox(
-            width: 420,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: nombre,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(labelText: 'Producto'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: precio,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Precio en Bs',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: cantidad,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Cantidad disponible',
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: subiendoFoto
-                            ? null
-                            : () async {
-                                actualizar(() => subiendoFoto = true);
-                                try {
-                                  fotoPath =
-                                      await ServicioImagenes.elegirYSubir(
-                                        etiqueta: 'producto',
-                                      );
-                                } catch (_) {
-                                  fotoPath = null;
-                                } finally {
-                                  actualizar(() => subiendoFoto = false);
-                                }
-                              },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF55785A),
-                          side: const BorderSide(color: Color(0xFF6F9D76)),
-                          shape: const StadiumBorder(),
-                        ),
-                        icon: subiendoFoto
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.add_photo_alternate_outlined,
-                                size: 18,
-                              ),
-                        label: Text(
-                          subiendoFoto
-                              ? 'Subiendo...'
-                              : fotoPath == null
-                              ? 'Foto (opcional)'
-                              : 'Foto lista ✓',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Icono',
-                    style: TextStyle(
-                      color: Color(0xFF7C827E),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final opcion in _emojis)
-                        InkWell(
-                          onTap: () => actualizar(() => emoji = opcion),
-                          borderRadius: BorderRadius.circular(14),
-                          child: Container(
-                            width: 46,
-                            height: 46,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: emoji == opcion
-                                  ? const Color(0xFFE1F0E3)
-                                  : Colors.white,
-                              border: Border.all(
-                                color: emoji == opcion
-                                    ? const Color(0xFF6F9A76)
-                                    : const Color(0xFFE3E7E3),
-                                width: emoji == opcion ? 2 : 1,
-                              ),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Text(
-                              opcion,
-                              style: const TextStyle(fontSize: 22),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Agregar'),
-            ),
-          ],
+      builder: (contexto) => AlertDialog(
+        title: const Text('Eliminar publicación'),
+        content: Text(
+          'Se eliminará "${producto.nombre}" para siempre. '
+          'Si solo quieres dejar de mostrarla, usa "Ocultar".',
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(contexto).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(contexto).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB3453B),
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
       ),
     );
-
-    final montoValido = double.tryParse(precio.text.replaceAll(',', '.'));
-    if (resultado == true &&
-        nombre.text.trim().isNotEmpty &&
-        montoValido != null) {
-      await controlador.agregarProducto(
-        nombre: nombre.text,
-        precio: montoValido,
-        cantidad: int.tryParse(cantidad.text) ?? 0,
-        emoji: emoji,
-        imagePath: fotoPath,
-      );
-    }
-    nombre.dispose();
-    precio.dispose();
-    cantidad.dispose();
+    if (confirmado == true) await controlador.eliminarProducto(indice);
   }
 
   @override
@@ -201,51 +80,7 @@ class PantallaMiLocal extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAF3E9),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 78,
-                    height: 78,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Text(
-                      controlador.logo,
-                      style: const TextStyle(fontSize: 38),
-                    ),
-                  ),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          controlador.nombre ?? 'Tu local',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          controlador.descripcion ?? '',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Color(0xFF69716B)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _Encabezado(controlador: controlador),
             const SizedBox(height: 28),
             Row(
               children: [
@@ -258,7 +93,10 @@ class PantallaMiLocal extends StatelessWidget {
                   ),
                 ),
                 FilledButton.icon(
-                  onPressed: () => _mostrarFormulario(context),
+                  onPressed: () => _agregar(context),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF5C8A63),
+                  ),
                   icon: const Icon(Icons.add_rounded),
                   label: const Text('Producto'),
                 ),
@@ -266,85 +104,295 @@ class PantallaMiLocal extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             if (controlador.productos.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 54),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F6F5),
-                  borderRadius: BorderRadius.circular(26),
-                ),
-                child: const Column(
-                  children: [
-                    Icon(
-                      Icons.inventory_2_outlined,
-                      size: 44,
-                      color: Color(0xFF8B928D),
-                    ),
-                    SizedBox(height: 12),
-                    Text('Todavía no agregaste productos.'),
-                  ],
-                ),
-              )
+              const _InventarioVacio()
             else
-              ...List.generate(controlador.productos.length, (indice) {
-                final producto = controlador.productos[indice];
-                return Card(
-                  elevation: 0,
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: const Color(0xFFE7F2E8),
-                          child: Text(
-                            producto.emoji,
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                producto.nombre,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              Text('Bs ${producto.precio.toStringAsFixed(2)}'),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () =>
-                              controlador.cambiarCantidad(indice, -1),
-                          icon: const Icon(Icons.remove_circle_outline),
-                        ),
-                        Text(
-                          '${producto.stock}',
-                          style: const TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                        IconButton(
-                          onPressed: () =>
-                              controlador.cambiarCantidad(indice, 1),
-                          icon: const Icon(Icons.add_circle_rounded),
-                          color: const Color(0xFF5C8A63),
-                        ),
-                        IconButton(
-                          tooltip: 'Eliminar',
-                          onPressed: () => controlador.eliminarProducto(indice),
-                          icon: const Icon(Icons.delete_outline_rounded),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
+              ...List.generate(
+                controlador.productos.length,
+                (indice) => _FilaProducto(
+                  producto: controlador.productos[indice],
+                  alSumar: () => controlador.cambiarCantidad(indice, 1),
+                  alRestar: () => controlador.cambiarCantidad(indice, -1),
+                  alEditar: () =>
+                      _editar(context, controlador.productos[indice]),
+                  alAlternarVisibilidad: () =>
+                      controlador.cambiarVisibilidad(indice),
+                  alRelanzar: () => controlador.relanzarProducto(indice),
+                  alEliminar: () => _confirmarBorrado(context, indice),
+                ),
+              ),
           ],
         ),
       ),
+    ),
+  );
+}
+
+class _Encabezado extends StatelessWidget {
+  const _Encabezado({required this.controlador});
+
+  final ControladorMiLocal controlador;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: const Color(0xFFEAF3E9),
+      borderRadius: BorderRadius.circular(30),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 78,
+          height: 78,
+          clipBehavior: Clip.antiAlias,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: switch (controlador.local?.logoUrl) {
+            final String url => Image.network(
+              url,
+              width: 78,
+              height: 78,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Text(
+                controlador.logo,
+                style: const TextStyle(fontSize: 38),
+              ),
+            ),
+            _ => Text(
+              controlador.logo,
+              style: const TextStyle(fontSize: 38),
+            ),
+          },
+        ),
+        const SizedBox(width: 18),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                controlador.nombre ?? 'Tu local',
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                controlador.descripcion ?? '',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color(0xFF69716B)),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _FilaProducto extends StatelessWidget {
+  const _FilaProducto({
+    required this.producto,
+    required this.alSumar,
+    required this.alRestar,
+    required this.alEditar,
+    required this.alAlternarVisibilidad,
+    required this.alRelanzar,
+    required this.alEliminar,
+  });
+
+  final ProductoMarketplace producto;
+  final VoidCallback alSumar;
+  final VoidCallback alRestar;
+  final VoidCallback alEditar;
+  final VoidCallback alAlternarVisibilidad;
+  final VoidCallback alRelanzar;
+  final VoidCallback alEliminar;
+
+  @override
+  Widget build(BuildContext context) => Opacity(
+    // Lo oculto se ve atenuado: sigue ahi, pero nadie mas lo ve.
+    opacity: producto.disponible ? 1 : .55,
+    child: Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            _Miniatura(producto: producto),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          producto.nombre,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      if (!producto.disponible) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8E8E8),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'Oculta',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF7C827E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  Text('Bs ${producto.precio.toStringAsFixed(2)}'),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: alRestar,
+              icon: const Icon(Icons.remove_circle_outline),
+            ),
+            Text(
+              '${producto.stock}',
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+            IconButton(
+              onPressed: alSumar,
+              icon: const Icon(Icons.add_circle_rounded),
+              color: const Color(0xFF5C8A63),
+            ),
+            // Las acciones menos frecuentes van en un menu para no llenar
+            // la fila de botones.
+            PopupMenuButton<String>(
+              tooltip: 'Más opciones',
+              onSelected: (opcion) => switch (opcion) {
+                'editar' => alEditar(),
+                'visibilidad' => alAlternarVisibilidad(),
+                'relanzar' => alRelanzar(),
+                _ => alEliminar(),
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'editar',
+                  child: ListTile(
+                    leading: Icon(Icons.edit_outlined),
+                    title: Text('Editar'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'visibilidad',
+                  child: ListTile(
+                    leading: Icon(
+                      producto.disponible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    title: Text(producto.disponible ? 'Ocultar' : 'Mostrar'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'relanzar',
+                  child: ListTile(
+                    leading: Icon(Icons.trending_up_rounded),
+                    title: Text('Relanzar'),
+                    subtitle: Text(
+                      'La sube al inicio',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'eliminar',
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.delete_outline_rounded,
+                      color: Color(0xFFB3453B),
+                    ),
+                    title: Text(
+                      'Eliminar',
+                      style: TextStyle(color: Color(0xFFB3453B)),
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _Miniatura extends StatelessWidget {
+  const _Miniatura({required this.producto});
+
+  final ProductoMarketplace producto;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 46,
+    height: 46,
+    clipBehavior: Clip.antiAlias,
+    decoration: const BoxDecoration(
+      color: Color(0xFFE7F2E8),
+      shape: BoxShape.circle,
+    ),
+    child: switch (producto.imagenUrl) {
+      final String url => Image.network(
+        url,
+        width: 46,
+        height: 46,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => Center(
+          child: Text(producto.emoji, style: const TextStyle(fontSize: 20)),
+        ),
+      ),
+      _ => Center(
+        child: Text(producto.emoji, style: const TextStyle(fontSize: 20)),
+      ),
+    },
+  );
+}
+
+class _InventarioVacio extends StatelessWidget {
+  const _InventarioVacio();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(vertical: 54),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF5F6F5),
+      borderRadius: BorderRadius.circular(26),
+    ),
+    child: const Column(
+      children: [
+        Icon(Icons.inventory_2_outlined, size: 44, color: Color(0xFF8B928D)),
+        SizedBox(height: 12),
+        Text('Todavía no agregaste productos.'),
+      ],
     ),
   );
 }

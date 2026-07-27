@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
+import '../../../elementos_compartidos/imagenes/selector_galeria.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
+import '../datos/borrador_publicacion.dart';
 import '../logica/controlador_publicacion.dart';
 import 'boton_confirmar_publicacion.dart';
 import 'campo_descripcion_publicacion.dart';
@@ -32,36 +33,92 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   final descripcion = TextEditingController();
   final precio = TextEditingController();
   final stock = TextEditingController(text: '1');
+
+  List<String> _galeria = const [];
   bool _publicando = false;
-  bool _subiendoFoto = false;
-  String? _fotoPath;
+  bool _revisandoBorrador = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _ofrecerBorrador();
+    // Cada cambio se guarda: si el usuario sale a sacar una foto o se le
+    // cierra la pestana, al volver encuentra lo que habia escrito.
+    for (final campo in [nombre, descripcion, precio, stock]) {
+      campo.addListener(_guardarBorrador);
+    }
+  }
 
   @override
   void dispose() {
-    nombre.dispose();
-    descripcion.dispose();
-    precio.dispose();
-    stock.dispose();
+    for (final campo in [nombre, descripcion, precio, stock]) {
+      campo.removeListener(_guardarBorrador);
+      campo.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _elegirFoto() async {
-    setState(() => _subiendoFoto = true);
-    try {
-      final ruta = await ServicioImagenes.elegirYSubir(etiqueta: 'producto');
-      if (ruta != null) setState(() => _fotoPath = ruta);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo subir la foto.'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _subiendoFoto = false);
+  Future<void> _ofrecerBorrador() async {
+    final borrador = await AlmacenBorrador.cargar();
+    if (!mounted) return;
+
+    if (borrador == null) {
+      setState(() => _revisandoBorrador = false);
+      return;
     }
+
+    final retomar = await showDialog<bool>(
+      context: context,
+      builder: (contexto) => AlertDialog(
+        title: const Text('Publicación sin terminar'),
+        content: Text(
+          'Dejaste "${borrador.resumen}" a medias. ¿Quieres continuarla?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(contexto).pop(false),
+            child: const Text('Descartar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(contexto).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF5C8A63),
+            ),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (retomar == true) {
+      nombre.text = borrador.nombre;
+      descripcion.text = borrador.descripcion;
+      precio.text = borrador.precio;
+      stock.text = borrador.stock;
+      widget.controlador.seleccionarTipo(borrador.tipo);
+      widget.controlador.seleccionarEmoji(borrador.emoji);
+      setState(() => _galeria = borrador.galeria);
+    } else {
+      await AlmacenBorrador.borrar();
+    }
+    if (mounted) setState(() => _revisandoBorrador = false);
+  }
+
+  void _guardarBorrador() {
+    if (_revisandoBorrador) return;
+    AlmacenBorrador.guardar(
+      BorradorPublicacion(
+        tipo: widget.controlador.tipo,
+        nombre: nombre.text,
+        descripcion: descripcion.text,
+        precio: precio.text,
+        stock: stock.text,
+        emoji: widget.controlador.emoji,
+        galeria: _galeria,
+      ),
+    );
   }
 
   Future<void> publicar() async {
@@ -78,16 +135,21 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
             ? 0
             : (int.tryParse(stock.text) ?? 0),
         emoji: widget.controlador.emoji,
-        imagePath: _fotoPath,
+        descripcion: descripcion.text,
+        esServicio: widget.controlador.esServicio,
+        galeria: _galeria,
       );
 
       if (!mounted) return;
+      // Publicado: el borrador ya cumplio su funcion.
+      await AlmacenBorrador.borrar();
       nombre.clear();
       descripcion.clear();
       precio.clear();
       stock.text = '1';
-      setState(() => _fotoPath = null);
+      setState(() => _galeria = const []);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -129,7 +191,10 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         children: [
           SelectorTipoPublicacion(
             valor: widget.controlador.tipo,
-            alCambiar: widget.controlador.seleccionarTipo,
+            alCambiar: (valor) {
+              widget.controlador.seleccionarTipo(valor);
+              _guardarBorrador();
+            },
           ),
           const SizedBox(height: 18),
           CampoNombrePublicacion(controlador: nombre),
@@ -155,103 +220,29 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
               },
             ),
           ],
-          const SizedBox(height: 18),
-          _SelectorFoto(
-            fotoUrl: ServicioImagenes.urlPublica(_fotoPath),
-            subiendo: _subiendoFoto,
-            alElegir: _elegirFoto,
-            alQuitar: () => setState(() => _fotoPath = null),
+          const SizedBox(height: 20),
+          SelectorGaleria(
+            rutas: _galeria,
+            alCambiar: (rutas) {
+              setState(() => _galeria = rutas);
+              _guardarBorrador();
+            },
           ),
-          const SizedBox(height: 14),
-          // El emoji sigue siendo el respaldo visual cuando no hay foto.
+          const SizedBox(height: 18),
+          // El emoji sigue siendo el respaldo visual cuando no hay fotos.
           SelectorEmojiPublicacion(
             valor: widget.controlador.emoji,
-            alCambiar: widget.controlador.seleccionarEmoji,
+            alCambiar: (valor) {
+              widget.controlador.seleccionarEmoji(valor);
+              _guardarBorrador();
+            },
           ),
           const SizedBox(height: 22),
           BotonConfirmarPublicacion(
-            alPresionar: _publicando || _subiendoFoto ? null : publicar,
+            alPresionar: _publicando ? null : publicar,
           ),
         ],
       ),
     ),
   );
-}
-
-/// Foto opcional del producto: eleva mucho la tarjeta frente al emoji.
-class _SelectorFoto extends StatelessWidget {
-  const _SelectorFoto({
-    required this.fotoUrl,
-    required this.subiendo,
-    required this.alElegir,
-    required this.alQuitar,
-  });
-
-  final String? fotoUrl;
-  final bool subiendo;
-  final VoidCallback alElegir;
-  final VoidCallback alQuitar;
-
-  @override
-  Widget build(BuildContext context) {
-    if (fotoUrl != null) {
-      return Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              fotoUrl!,
-              width: double.infinity,
-              height: 180,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned(
-            top: 8,
-            right: 8,
-            child: IconButton.filled(
-              tooltip: 'Quitar foto',
-              style: IconButton.styleFrom(backgroundColor: Colors.black54),
-              onPressed: alQuitar,
-              icon: const Icon(Icons.close_rounded, size: 18),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return InkWell(
-      onTap: subiendo ? null : alElegir,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(26),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFC9CEC9)),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            if (subiendo)
-              const SizedBox(
-                width: 34,
-                height: 34,
-                child: CircularProgressIndicator(strokeWidth: 2.6),
-              )
-            else
-              const Icon(
-                Icons.add_photo_alternate_outlined,
-                size: 38,
-                color: Color(0xFF7C827E),
-              ),
-            const SizedBox(height: 8),
-            Text(
-              subiendo ? 'Subiendo foto...' : 'Agregar foto (opcional)',
-              style: const TextStyle(color: Color(0xFF7C827E)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

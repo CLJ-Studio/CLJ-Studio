@@ -19,7 +19,8 @@ class RepositorioMiLocal {
       'is_personal, logo_path, categories(name)';
 
   static const _camposProducto =
-      'id, store_id, name, description, price, emoji, stock, kind, image_path';
+      'id, store_id, name, description, price, emoji, stock, kind, '
+      'image_path, is_available, product_images(storage_path, position)';
 
   /// Null si el estudiante todavia no tiene ni local ni espacio personal.
   Future<LocalUniversitario?> cargarLocal() async {
@@ -33,12 +34,13 @@ class RepositorioMiLocal {
     return fila == null ? null : LocalUniversitario.desdeMapa(fila);
   }
 
+  /// Incluye las ocultas: el dueno debe verlas para poder relanzarlas.
   Future<List<ProductoMarketplace>> cargarInventario(String localId) async {
     final filas = await _cliente
         .from('products')
         .select(_camposProducto)
         .eq('store_id', localId)
-        .order('created_at');
+        .order('bumped_at', ascending: false);
 
     return filas.map(ProductoMarketplace.desdeMapa).toList();
   }
@@ -109,21 +111,82 @@ class RepositorioMiLocal {
   Future<void> cambiarDisponibilidad(String localId, {required bool abierto}) =>
       _cliente.from('stores').update({'is_open': abierto}).eq('id', localId);
 
+  /// [galeria] son las fotos adicionales; la primera de todas viaja como
+  /// `image_path` porque es la que se ve en las tarjetas del catalogo.
   Future<void> agregarProducto({
     required String localId,
     required String nombre,
     required double precio,
     required int stock,
     required String emoji,
-    String? imagePath,
-  }) => _cliente.from('products').insert({
-    'store_id': localId,
-    'name': nombre,
-    'price': precio,
-    'stock': stock,
-    'emoji': emoji,
-    'image_path': ?imagePath,
-  });
+    String? descripcion,
+    bool esServicio = false,
+    List<String> galeria = const [],
+  }) async {
+    final creado = await _cliente
+        .from('products')
+        .insert({
+          'store_id': localId,
+          'name': nombre,
+          'description': descripcion ?? '',
+          'price': precio,
+          'stock': stock,
+          'emoji': emoji,
+          'kind': esServicio ? 'servicio' : 'producto',
+          'image_path': ?galeria.firstOrNull,
+        })
+        .select('id')
+        .single();
+
+    await _guardarGaleria(creado['id'] as String, galeria);
+  }
+
+  /// Las fotos secundarias van en `product_images`; se reescriben enteras
+  /// porque reordenarlas o quitar una del medio es mas simple asi.
+  Future<void> _guardarGaleria(String productoId, List<String> galeria) async {
+    await _cliente.from('product_images').delete().eq('product_id', productoId);
+
+    if (galeria.length < 2) return;
+    await _cliente.from('product_images').insert([
+      for (var i = 1; i < galeria.length; i++)
+        {'product_id': productoId, 'storage_path': galeria[i], 'position': i},
+    ]);
+  }
+
+  Future<void> editarProducto({
+    required String productoId,
+    required String nombre,
+    required double precio,
+    required int stock,
+    required String emoji,
+    String? descripcion,
+    List<String> galeria = const [],
+  }) async {
+    await _cliente
+        .from('products')
+        .update({
+          'name': nombre,
+          'description': descripcion ?? '',
+          'price': precio,
+          'stock': stock,
+          'emoji': emoji,
+          'image_path': galeria.firstOrNull,
+        })
+        .eq('id', productoId);
+
+    await _guardarGaleria(productoId, galeria);
+  }
+
+  /// Ocultar en vez de borrar: conserva historial y favoritos.
+  Future<void> cambiarVisibilidad(String productoId, {required bool visible}) =>
+      _cliente
+          .from('products')
+          .update({'is_available': visible})
+          .eq('id', productoId);
+
+  /// Sube la publicacion al tope del catalogo y la vuelve visible.
+  Future<void> relanzarProducto(String productoId) =>
+      _cliente.rpc('relanzar_producto', params: {'p_producto_id': productoId});
 
   /// El stock nunca baja de cero: la restriccion de la tabla lo rechazaria.
   Future<void> cambiarStock(String productoId, int nuevoStock) => _cliente

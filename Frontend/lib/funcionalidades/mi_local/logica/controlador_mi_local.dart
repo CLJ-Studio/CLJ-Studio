@@ -109,7 +109,9 @@ class ControladorMiLocal extends ChangeNotifier {
     required double precio,
     required int cantidad,
     String emoji = '🛍️',
-    String? imagePath,
+    String? descripcion,
+    bool esServicio = false,
+    List<String> galeria = const [],
   }) async {
     await asegurarEspacioPersonal();
     await _repositorio.agregarProducto(
@@ -118,11 +120,63 @@ class ControladorMiLocal extends ChangeNotifier {
       precio: precio,
       stock: cantidad,
       emoji: emoji,
-      imagePath: imagePath,
+      descripcion: descripcion,
+      esServicio: esServicio,
+      galeria: galeria,
     );
     // Se relee el inventario para tomar el id que genero la base.
     productos = await _repositorio.cargarInventario(local!.id);
     notifyListeners();
+  }
+
+  Future<void> editarProducto({
+    required String productoId,
+    required String nombre,
+    required double precio,
+    required int cantidad,
+    required String emoji,
+    String? descripcion,
+    List<String> galeria = const [],
+  }) async {
+    await _repositorio.editarProducto(
+      productoId: productoId,
+      nombre: nombre.trim(),
+      precio: precio,
+      stock: cantidad,
+      emoji: emoji,
+      descripcion: descripcion,
+      galeria: galeria,
+    );
+    await _refrescarInventario();
+  }
+
+  /// Ocultar conserva la publicacion; borrar la elimina para siempre.
+  Future<void> cambiarVisibilidad(int indice) async {
+    final producto = productos[indice];
+    final visible = !producto.disponible;
+
+    productos = [...productos]
+      ..[indice] = producto.copiarCon(disponible: visible);
+    notifyListeners();
+
+    try {
+      await _repositorio.cambiarVisibilidad(producto.id, visible: visible);
+    } catch (_) {
+      productos = [...productos]..[indice] = producto;
+      error = 'No se pudo cambiar la visibilidad.';
+      notifyListeners();
+    }
+  }
+
+  /// Vuelve a poner la publicacion al tope del catalogo.
+  Future<void> relanzarProducto(int indice) async {
+    try {
+      await _repositorio.relanzarProducto(productos[indice].id);
+      await _refrescarInventario();
+    } catch (_) {
+      error = 'No se pudo relanzar la publicación.';
+      notifyListeners();
+    }
   }
 
   Future<void> cambiarCantidad(int indice, int cambio) async {

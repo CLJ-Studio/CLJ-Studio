@@ -14,6 +14,8 @@ class ProductoMarketplace {
     this.esServicio = false,
     this.local,
     this.imagePath,
+    this.disponible = true,
+    this.imagenes = const [],
   });
 
   /// Mapea una fila de `products`. Si la consulta unio `stores`, el local
@@ -32,21 +34,31 @@ class ProductoMarketplace {
       esServicio: (fila['kind'] as String?) == 'servicio',
       local: tienda == null ? null : LocalUniversitario.desdeMapa(tienda),
       imagePath: fila['image_path'] as String?,
+      disponible: (fila['is_available'] as bool?) ?? true,
+      imagenes:
+          ((fila['product_images'] as List?) ?? const [])
+              .cast<Map<String, dynamic>>()
+              .map((i) => i['storage_path'] as String)
+              .toList()
+            ..sort(),
     );
   }
 
-  ProductoMarketplace copiarCon({int? stock}) => ProductoMarketplace(
-    id: id,
-    localId: localId,
-    nombre: nombre,
-    descripcion: descripcion,
-    precio: precio,
-    emoji: emoji,
-    stock: stock ?? this.stock,
-    esServicio: esServicio,
-    local: local,
-    imagePath: imagePath,
-  );
+  ProductoMarketplace copiarCon({int? stock, bool? disponible}) =>
+      ProductoMarketplace(
+        id: id,
+        localId: localId,
+        nombre: nombre,
+        descripcion: descripcion,
+        precio: precio,
+        emoji: emoji,
+        stock: stock ?? this.stock,
+        esServicio: esServicio,
+        local: local,
+        imagePath: imagePath,
+        disponible: disponible ?? this.disponible,
+        imagenes: imagenes,
+      );
 
   final String id;
   final String localId;
@@ -60,10 +72,22 @@ class ProductoMarketplace {
   /// Presente solo si la consulta unio `stores`.
   final LocalUniversitario? local;
 
-  /// Foto real subida por el vendedor; si falta, la tarjeta usa el emoji.
+  /// Foto principal; si falta, la tarjeta usa el emoji.
   final String? imagePath;
 
+  /// Visible en el catalogo. El vendedor puede ocultarla sin borrarla.
+  final bool disponible;
+
+  /// Galeria adicional (hasta 12), en orden.
+  final List<String> imagenes;
+
   String? get imagenUrl => ServicioImagenes.urlPublica(imagePath);
+
+  /// Todas las fotos para el carrusel: la principal encabeza la galeria.
+  List<String> get galeriaUrls => [
+    if (imagePath != null) ServicioImagenes.urlPublica(imagePath)!,
+    for (final ruta in imagenes) ServicioImagenes.urlPublica(ruta)!,
+  ];
 
   /// Los servicios no llevan inventario: siempre se pueden solicitar.
   bool get hayExistencias => esServicio || stock > 0;

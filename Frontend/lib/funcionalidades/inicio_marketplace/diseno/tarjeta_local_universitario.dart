@@ -1,8 +1,14 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../modelos/local_universitario.dart';
 
 /// Tarjeta fotográfica de ancho completo inspirada en la referencia.
+///
+/// El fondo es la foto real del local (su logo, o la primera foto de sus
+/// productos). Antes eran imágenes de archivo asignadas por id, así que un
+/// local de tecnología aparecía con una foto de desayuno.
 class TarjetaLocalUniversitario extends StatelessWidget {
   const TarjetaLocalUniversitario({
     required this.local,
@@ -12,14 +18,6 @@ class TarjetaLocalUniversitario extends StatelessWidget {
 
   final LocalUniversitario local;
   final VoidCallback alAbrir;
-
-  String get _imagen => switch (local.id) {
-    'cafeteria' => 'assets/images/real/coffee3.jpg',
-    'snack' => 'assets/images/real/hamburger2.jpg',
-    'tech' => 'assets/images/real/western2.jpg',
-    'libreria' => 'assets/images/real/bakery.jpg',
-    _ => 'assets/images/real/breakfast.jpg',
-  };
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -33,20 +31,40 @@ class TarjetaLocalUniversitario extends StatelessWidget {
         onTap: alAbrir,
         child: Ink(
           decoration: BoxDecoration(
+            color: Color(local.colorHexadecimal),
             borderRadius: BorderRadius.circular(34),
-            image: DecorationImage(
-              image: ResizeImage.resizeIfNeeded(
-                1200,
-                null,
-                AssetImage(_imagen),
-              ),
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.low,
-            ),
           ),
           child: Stack(
             fit: StackFit.expand,
             children: [
+              // La foto se difumina al fondo para que el texto se lea sin
+              // competir con ella; encima va la misma imagen nítida y
+              // contenida, para que el producto se vea completo.
+              if (local.portadaUrl case final String url) ...[
+                Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.low,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                  child: const ColoredBox(color: Color(0x33000000)),
+                ),
+                Center(
+                  child: Image.network(
+                    url,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ),
+              ] else
+                Center(
+                  child: Text(
+                    local.emoji,
+                    style: const TextStyle(fontSize: 96),
+                  ),
+                ),
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -84,13 +102,34 @@ class TarjetaLocalUniversitario extends StatelessWidget {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        CircleAvatar(
-                          radius: 13,
-                          backgroundColor: Colors.white,
-                          child: Text(
-                            local.emoji,
-                            style: const TextStyle(fontSize: 13),
+                        // Cara de quien vende: en un campus la confianza
+                        // viene de reconocer a la persona.
+                        Container(
+                          width: 26,
+                          height: 26,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
                           ),
+                          child: switch (local.vendedorAvatarUrl) {
+                            final String url => Image.network(
+                              url,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => Center(
+                                child: Text(
+                                  local.emoji,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ),
+                            _ => Center(
+                              child: Text(
+                                local.emoji,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ),
+                          },
                         ),
                         const SizedBox(width: 8),
                         Expanded(

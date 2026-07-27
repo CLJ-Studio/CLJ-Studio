@@ -4,6 +4,7 @@ import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../pantalla/pantalla_detalle_producto.dart';
 
 /// Cuadrícula responsiva de productos inspirada en un catálogo de mercado.
 class ListaProductosLocal extends StatelessWidget {
@@ -72,6 +73,22 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
       );
   }
 
+  void _abrirDetalle() {
+    final local = _local;
+    if (local == null) {
+      _avisar('No se pudo identificar el local de este producto.');
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PantallaDetalleProducto(
+          producto: widget.producto,
+          local: local,
+        ),
+      ),
+    );
+  }
+
   Future<void> _agregar() async {
     final carrito = ControladorCarritoCompras.instancia;
     final local = _local;
@@ -127,7 +144,9 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
     borderRadius: BorderRadius.circular(22),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
-      onTap: _agregar,
+      // Tocar la tarjeta abre el detalle con las fotos; el boton "+" de
+      // abajo sigue agregando directo para quien ya sabe lo que quiere.
+      onTap: _abrirDetalle,
       child: DecoratedBox(
         decoration: BoxDecoration(
           border: Border.all(color: const Color(0xFFECEFED)),

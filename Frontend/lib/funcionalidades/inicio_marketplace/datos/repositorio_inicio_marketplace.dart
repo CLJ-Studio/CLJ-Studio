@@ -5,13 +5,15 @@ import '../modelos/local_universitario.dart';
 import '../modelos/producto_marketplace.dart';
 
 /// Catalogo del marketplace leido desde Supabase.
-///
-/// Las RLS ya limitan lo visible a locales activos, asi que las consultas no
-/// repiten esas condiciones: solo piden lo que la pantalla necesita mostrar.
 class RepositorioInicioMarketplace {
   const RepositorioInicioMarketplace();
 
   SupabaseClient get _cliente => Supabase.instance.client;
+
+  /// Campos de producto compartidos por el catalogo y el detalle.
+  static const camposProducto =
+      'id, store_id, name, description, price, emoji, stock, kind, '
+      'image_path, is_available, product_images(storage_path, position)';
 
   Future<List<CategoriaMarketplace>> obtenerCategorias() async {
     final filas = await _cliente
@@ -26,14 +28,13 @@ class RepositorioInicioMarketplace {
     ];
   }
 
+  /// Se lee de la vista y no de `stores` porque incluye el avatar del
+  /// vendedor y una portada tomada de sus productos: la RLS de `profiles`
+  /// impide obtener lo primero con un join normal.
   Future<List<LocalUniversitario>> obtenerLocales() async {
     final filas = await _cliente
-        .from('stores')
-        .select(
-          'id, name, description, category_id, emoji, color_hex, '
-          'estimated_time, delivery_cost, is_open, rating_average, '
-          'is_personal, logo_path, categories(name)',
-        )
+        .from('locales_publicos')
+        .select()
         // Los abiertos primero; dentro de cada grupo, los mejor calificados.
         .order('is_open', ascending: false)
         .order('rating_average', ascending: false);
@@ -44,13 +45,11 @@ class RepositorioInicioMarketplace {
   Future<List<ProductoMarketplace>> obtenerProductos(String localId) async {
     final filas = await _cliente
         .from('products')
-        .select(
-          'id, store_id, name, description, price, emoji, stock, kind, '
-          'image_path',
-        )
+        .select(camposProducto)
         .eq('store_id', localId)
         .eq('is_available', true)
-        .order('created_at');
+        // Lo relanzado sube: es justo para eso que existe `bumped_at`.
+        .order('bumped_at', ascending: false);
 
     return filas.map(ProductoMarketplace.desdeMapa).toList();
   }
