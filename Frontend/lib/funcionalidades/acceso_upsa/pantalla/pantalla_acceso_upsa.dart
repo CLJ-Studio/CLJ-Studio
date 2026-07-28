@@ -165,8 +165,10 @@ class _BuhosAnimados extends StatelessWidget {
   // Tamaño: 1.0 normal, 1.5 más grande, 0.7 más pequeño.
   static double tamanoBuhos = 0.7;
 
-  // Posición: negativo mueve a la izquierda; positivo, a la derecha.
-  static double posicionHorizontalBuhos = 100;
+  // El archivo Lottie tiene espacio transparente después de la rama.
+  // Este porcentaje lo saca fuera de pantalla para que la punta negra sea
+  // la que toque la pared. Es proporcional y funciona igual en móvil y PC.
+  static double compensacionBordeDerecho = 0.15;
 
   // Posición: negativo mueve hacia arriba; positivo, hacia abajo.
   static double posicionVerticalBuhos = 0;
@@ -192,27 +194,41 @@ class _BuhosAnimados extends StatelessWidget {
             // El formulario lleva padding lateral y un ancho maximo; la rama
             // no debe respetarlos, o volveria a terminar antes del borde.
             child: OverflowBox(
-              alignment: Alignment.centerRight,
+              // El formulario mide como máximo 430 px y está centrado. El
+              // lienzo, en cambio, mide todo el viewport: centrarlo aquí hace
+              // que sus bordes coincidan con las paredes reales de pantalla.
+              alignment: Alignment.center,
+              minWidth: ancho,
               maxWidth: ancho,
+              minHeight: alto,
               maxHeight: alto,
-              child: Transform.translate(
-                offset: Offset(posicionHorizontalBuhos, posicionVerticalBuhos),
-                child: ClipRect(
-                  child: SizedBox(
-                    width: ancho,
-                    height: alto,
-                    child: Transform.scale(
-                      scale: tamanoBuhos,
-                      alignment: Alignment.centerRight,
-                      child: Lottie.asset(
-                        'assets/animations/owls.json',
-                        fit: BoxFit.cover,
-                        repeat: true,
-                        frameRate: const FrameRate(24),
-                        filterQuality: FilterQuality.low,
+              child: SizedBox(
+                width: ancho,
+                height: alto,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      // El espacio transparente del Lottie también crece o
+                      // disminuye con la escala. Compensarlo con el tamaño
+                      // mantiene la punta de la rama pegada al borde.
+                      right: -(ancho * compensacionBordeDerecho * tamanoBuhos),
+                      top: posicionVerticalBuhos,
+                      width: ancho,
+                      height: alto,
+                      child: Transform.scale(
+                        scale: tamanoBuhos,
+                        alignment: Alignment.centerRight,
+                        child: Lottie.asset(
+                          'assets/animations/owls.json',
+                          fit: BoxFit.cover,
+                          repeat: true,
+                          frameRate: const FrameRate(24),
+                          filterQuality: FilterQuality.low,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
