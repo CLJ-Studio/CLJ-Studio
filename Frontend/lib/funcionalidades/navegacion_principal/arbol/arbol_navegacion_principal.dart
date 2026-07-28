@@ -144,7 +144,13 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
     animation: Listenable.merge([miLocal, controlador]),
     builder: (context, _) {
       final pantallas = <Widget>[
-        PantallaInicioMarketplace(controlador: inicio),
+        PantallaInicioMarketplace(
+          controlador: inicio,
+          alVerLocalesDestacados: () {
+            locales.mostrarSoloDestacados();
+            controlador.seleccionarIndice(1);
+          },
+        ),
         PantallaLocalesUniversitarios(
           alCrearLocal: _abrirCreacion,
           // Un espacio personal no cuenta: la invitacion a abrir un local

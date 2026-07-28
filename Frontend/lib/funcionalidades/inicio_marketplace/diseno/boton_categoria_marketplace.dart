@@ -44,8 +44,15 @@ class BotonCategoriaMarketplace extends StatelessWidget {
                       ? verde
                       : esOscuro
                       ? tema.colorScheme.surfaceContainerHighest
-                      : const Color(0xFFEAF4EC),
+                      : Colors.white,
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: seleccionado
+                        ? verde
+                        : esOscuro
+                        ? const Color(0xFF464A46)
+                        : const Color(0xFFE1E4E1),
+                  ),
                   boxShadow: seleccionado
                       ? const [
                           BoxShadow(
@@ -54,12 +61,24 @@ class BotonCategoriaMarketplace extends StatelessWidget {
                             offset: Offset(0, 5),
                           ),
                         ]
-                      : null,
+                      : esOscuro
+                      ? null
+                      : const [
+                          BoxShadow(
+                            color: Color(0x12000000),
+                            blurRadius: 8,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
                 ),
                 child: Icon(
                   categoria.icono,
                   size: 22,
-                  color: seleccionado ? Colors.white : verde,
+                  color: seleccionado
+                      ? Colors.white
+                      : esOscuro
+                      ? Colors.white
+                      : const Color(0xFF303330),
                 ),
               ),
               const SizedBox(height: 5),

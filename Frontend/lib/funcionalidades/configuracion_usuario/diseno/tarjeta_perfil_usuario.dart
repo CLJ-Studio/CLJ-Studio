@@ -23,14 +23,6 @@ class TarjetaPerfilUsuario extends StatelessWidget {
 
     return Column(
       children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: IconButton(
-            tooltip: 'Editar perfil',
-            onPressed: () => _editar(context),
-            icon: Icon(Icons.edit_rounded, color: textoSecundario),
-          ),
-        ),
         Stack(
           clipBehavior: Clip.none,
           children: [

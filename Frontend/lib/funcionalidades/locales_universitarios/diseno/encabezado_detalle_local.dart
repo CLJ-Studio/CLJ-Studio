@@ -50,8 +50,8 @@ class EncabezadoDetalleLocal extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               local.esPersonal
-                  ? '⭐ ${local.calificacion}  ·  Vendedor independiente'
-                  : '⭐ ${local.calificacion}  ·  ${local.tiempoEstimado}  ·  Entrega Bs ${local.costoEntrega.toStringAsFixed(0)}',
+                  ? 'Vendedor independiente'
+                  : '${local.tiempoEstimado}  ·  Entrega Bs ${local.costoEntrega.toStringAsFixed(0)}',
             ),
           ],
         ),

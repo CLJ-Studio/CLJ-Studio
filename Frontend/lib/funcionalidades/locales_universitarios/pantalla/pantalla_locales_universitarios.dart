@@ -7,7 +7,6 @@ import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../inicio_marketplace/diseno/campus_collapsing_header.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
-import '../diseno/carrusel_locales_destacados.dart';
 import '../diseno/invitacion_abrir_local.dart';
 import '../diseno/lista_locales.dart';
 import '../logica/controlador_locales.dart';
@@ -87,59 +86,32 @@ class _PantallaLocalesUniversitariosState
                     alPresionar: widget.alCrearLocal,
                     yaTieneLocal: widget.yaTieneLocal,
                   ),
-                  const SizedBox(height: 28),
-                  Text(
-                    'Locales destacados',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Descubre negocios creados por estudiantes.',
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  if (!controlador.cargando &&
-                      controlador.error == null &&
-                      controlador.locales.isNotEmpty) ...[
-                    CarruselLocalesDestacados(
-                      locales: controlador.locales,
-                      construirDetalle: (_, local) =>
-                          PantallaDetalleLocal(local: local),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Explora locales',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () =>
-                            controlador.seleccionarCategoria('todas'),
-                        child: const Text(
-                          'Ver todo',
-                          style: TextStyle(
-                            color: Color(0xFF5C8A63),
-                            fontWeight: FontWeight.w800,
+                  if (controlador.soloDestacados) ...[
+                    const SizedBox(height: 28),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Locales destacados',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w900),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
+                        TextButton(
+                          onPressed: controlador.mostrarTodos,
+                          child: const Text(
+                            'Quitar filtro',
+                            style: TextStyle(
+                              color: Color(0xFF5C8A63),
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                  ] else
+                    const SizedBox(height: 20),
                   if (controlador.cargando)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 60),

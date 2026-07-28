@@ -22,10 +22,12 @@ import '../modelos/local_universitario.dart';
 class PantallaInicioMarketplace extends StatelessWidget {
   const PantallaInicioMarketplace({
     required this.controlador,
+    this.alVerLocalesDestacados,
     this.mostrarEncabezado = true,
     super.key,
   });
   final ControladorInicioMarketplace controlador;
+  final VoidCallback? alVerLocalesDestacados;
   final bool mostrarEncabezado;
 
   @override
@@ -86,8 +88,9 @@ class PantallaInicioMarketplace extends StatelessWidget {
                       if (localesDestacados.isNotEmpty) ...[
                         _TituloSeccion(
                           titulo: 'Locales destacados',
-                          alVerTodo: () =>
-                              controlador.seleccionarCategoria('todas'),
+                          alVerTodo:
+                              alVerLocalesDestacados ??
+                              () => controlador.seleccionarCategoria('todas'),
                         ),
                         const SizedBox(height: 6),
                         CarruselLocalesDestacados(

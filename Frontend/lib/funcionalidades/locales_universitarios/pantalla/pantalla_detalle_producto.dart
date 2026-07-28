@@ -7,6 +7,7 @@ import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../visualizaciones/indicador_vistas.dart';
 import '../../visualizaciones/servicio_visualizaciones.dart';
 
 /// Detalle del producto con su galeria de fotos.
@@ -31,12 +32,18 @@ class PantallaDetalleProducto extends StatefulWidget {
 class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
   final _paginas = PageController();
   int _pagina = 0;
+  late int _vistas = widget.producto.vistas;
 
   @override
   void initState() {
     super.initState();
-    // Igual que en el local: se cuenta, no se ensena.
-    unawaited(ServicioVisualizaciones.registrarProducto(widget.producto.id));
+    unawaited(
+      ServicioVisualizaciones.registrarProducto(widget.producto.id).then((
+        total,
+      ) {
+        if (mounted && total > 0) setState(() => _vistas = total);
+      }),
+    );
   }
 
   @override
@@ -152,6 +159,8 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                           fontWeight: FontWeight.w900,
                         ),
                       ),
+                      const SizedBox(height: 7),
+                      IndicadorVistas(total: _vistas),
                       const SizedBox(height: 6),
                       Text(
                         widget.producto.esServicio

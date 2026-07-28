@@ -6,7 +6,7 @@ import 'barra_busqueda_marketplace.dart';
 import 'barra_categorias_marketplace.dart';
 import 'boton_carrito_compras.dart';
 
-final _ubicacionSeleccionada = ValueNotifier<String>('Campus UPSA');
+final _ubicacionSeleccionada = ValueNotifier<String>('Elige tu ubicación');
 
 const _ubicacionesCampus = [
   'Jatata',

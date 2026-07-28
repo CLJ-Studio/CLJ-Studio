@@ -20,6 +20,7 @@ class ControladorLocales extends ChangeNotifier {
   List<CategoriaMarketplace> categorias = const [];
   String categoriaId = 'todas';
   String busqueda = '';
+  bool soloDestacados = false;
   bool cargando = true;
   String? error;
 
@@ -70,13 +71,31 @@ class ControladorLocales extends ChangeNotifier {
   }
 
   void seleccionarCategoria(String valor) {
+    soloDestacados = false;
     categoriaId = valor;
     locales = _filtrar();
     notifyListeners();
   }
 
   void buscar(String texto) {
+    soloDestacados = false;
     busqueda = texto.trim().toLowerCase();
+    locales = _filtrar();
+    notifyListeners();
+  }
+
+  void mostrarSoloDestacados() {
+    if (_todos.isEmpty && locales.isNotEmpty) _todos = List.of(locales);
+    soloDestacados = true;
+    categoriaId = 'todas';
+    busqueda = '';
+    locales = _filtrar();
+    notifyListeners();
+  }
+
+  void mostrarTodos() {
+    soloDestacados = false;
+    categoriaId = 'todas';
     locales = _filtrar();
     notifyListeners();
   }
@@ -91,18 +110,24 @@ class ControladorLocales extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<LocalUniversitario> _filtrar() => _todos.where((local) {
-    // Los espacios personales no son negocios: quedan fuera de esta seccion,
-    // aunque sus publicaciones si aparecen en el inicio.
-    if (local.esPersonal) return false;
+  List<LocalUniversitario> _filtrar() {
+    final resultado = _todos.where((local) {
+      // Los espacios personales no son negocios: quedan fuera de esta seccion,
+      // aunque sus publicaciones si aparecen en el inicio.
+      if (local.esPersonal) return false;
 
-    final coincideCategoria =
-        categoriaId == 'todas' || local.categoriaId == categoriaId;
-    final coincideTexto =
-        busqueda.isEmpty ||
-        local.nombre.toLowerCase().contains(busqueda) ||
-        local.descripcion.toLowerCase().contains(busqueda);
+      final coincideCategoria =
+          categoriaId == 'todas' || local.categoriaId == categoriaId;
+      final coincideTexto =
+          busqueda.isEmpty ||
+          local.nombre.toLowerCase().contains(busqueda) ||
+          local.descripcion.toLowerCase().contains(busqueda);
 
-    return coincideCategoria && coincideTexto;
-  }).toList();
+      return coincideCategoria && coincideTexto;
+    }).toList();
+
+    if (!soloDestacados) return resultado;
+    resultado.sort((a, b) => b.vistas.compareTo(a.vistas));
+    return resultado.take(8).toList(growable: false);
+  }
 }
