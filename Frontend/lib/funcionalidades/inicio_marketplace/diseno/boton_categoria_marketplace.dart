@@ -30,14 +30,12 @@ class BotonCategoriaMarketplace extends StatelessWidget {
       isSelected: seleccionado,
       onTap: alPresionar,
       selectedBackgroundColor: esOscuro
-          ? const Color(0xFF2E4636)
-          : const Color(0xFFDDECDD),
+          ? const Color(0xFF5C8A63)
+          : const Color(0xFF5C8A63),
       unselectedBackgroundColor: esOscuro
           ? tema.colorScheme.surfaceContainerHighest
           : const Color(0xFFF2F2F2),
-      selectedForegroundColor: esOscuro
-          ? const Color(0xFFAFD6B6)
-          : Colors.black,
+      selectedForegroundColor: esOscuro ? Colors.white : Colors.white,
       unselectedForegroundColor: esOscuro ? Colors.white : Colors.black,
       compactProgress: compactProgress,
     );

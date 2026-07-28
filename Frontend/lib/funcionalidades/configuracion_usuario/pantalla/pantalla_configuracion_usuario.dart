@@ -91,7 +91,6 @@ class _PantallaConfiguracionUsuarioState
                   ),
                   const SizedBox(height: 24),
                   BotonCerrarSesion(
-                    oscuro: esOscuro,
                     alPresionar: () => Supabase.instance.client.auth.signOut(),
                   ),
                 ],

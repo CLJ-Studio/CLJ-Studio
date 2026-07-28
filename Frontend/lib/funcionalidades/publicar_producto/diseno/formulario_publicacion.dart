@@ -190,16 +190,15 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
     animation: widget.controlador,
     builder: (_, _) {
       final oscuro = Theme.of(context).brightness == Brightness.dark;
-      final pasosCompletos = [
+      final pasosObligatorios = [
         true,
         nombre.text.trim().length >= 3 && descripcion.text.trim().isNotEmpty,
         double.tryParse(precio.text.replaceAll(',', '.')) != null &&
             (widget.controlador.esServicio ||
                 (int.tryParse(stock.text) ?? -1) >= 0),
-        _galeria.isNotEmpty,
       ];
-      final pasoActivo = pasosCompletos.indexWhere((valor) => !valor);
-      final formularioCompleto = pasosCompletos.every((valor) => valor);
+      final pasoActivo = pasosObligatorios.indexWhere((valor) => !valor);
+      final formularioCompleto = pasosObligatorios.every((valor) => valor);
       final colorTextoSecundario = oscuro ? Colors.white : Colors.black;
 
       return Form(
@@ -242,7 +241,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
             children: [
               _PasoPublicacion(
                 numero: '01',
-                completo: pasosCompletos[0],
+                completo: pasosObligatorios[0],
                 activo: pasoActivo == 0,
                 child: _TarjetaFormulario(
                   titulo: '¿Qué quieres ofrecer?',
@@ -258,7 +257,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
               ),
               _PasoPublicacion(
                 numero: '02',
-                completo: pasosCompletos[1],
+                completo: pasosObligatorios[1],
                 activo: pasoActivo == 1,
                 child: _TarjetaFormulario(
                   titulo: 'Cuéntanos lo esencial',
@@ -274,7 +273,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
               ),
               _PasoPublicacion(
                 numero: '03',
-                completo: pasosCompletos[2],
+                completo: pasosObligatorios[2],
                 activo: pasoActivo == 2,
                 child: _TarjetaFormulario(
                   titulo: 'Precio y disponibilidad',
@@ -334,12 +333,13 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
               ),
               _PasoPublicacion(
                 numero: '04',
-                completo: pasosCompletos[3],
-                activo: pasoActivo == 3 || pasoActivo == -1,
+                completo: _galeria.isNotEmpty,
+                activo: pasoActivo == -1,
                 ultimo: true,
                 child: _TarjetaFormulario(
-                  titulo: 'Haz que se vea increíble',
-                  subtitulo: 'Agrega fotos reales. La primera será tu portada.',
+                  titulo: 'Fotos opcionales',
+                  subtitulo:
+                      'Puedes agregar fotos reales. La primera será tu portada.',
                   child: SelectorGaleria(
                     rutas: _galeria,
                     alCambiar: (rutas) {
@@ -474,26 +474,8 @@ class _TarjetaFormulario extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 260),
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: oscuro ? const Color(0xFF151815) : Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: oscuro ? const Color(0xFF242824) : const Color(0xFFE8EBE8),
-        ),
-        boxShadow: oscuro
-            ? null
-            : const [
-                BoxShadow(
-                  color: Color(0x0D000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 7),
-                ),
-              ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 8, 4, 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -501,7 +483,7 @@ class _TarjetaFormulario extends StatelessWidget {
             titulo,
             style: TextStyle(
               color: oscuro ? Colors.white : Colors.black,
-              fontSize: 17,
+              fontSize: 19,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -509,11 +491,13 @@ class _TarjetaFormulario extends StatelessWidget {
           Text(
             subtitulo,
             style: TextStyle(
-              color: oscuro ? Colors.white : Colors.black,
-              fontSize: 12,
+              color: oscuro
+                  ? Colors.white.withValues(alpha: .72)
+                  : const Color(0xFF5E625E),
+              fontSize: 13,
             ),
           ),
-          const SizedBox(height: 17),
+          const SizedBox(height: 18),
           child,
         ],
       ),

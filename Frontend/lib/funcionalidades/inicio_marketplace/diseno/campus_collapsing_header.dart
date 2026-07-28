@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../notificaciones/diseno/boton_campana.dart';
@@ -7,12 +5,8 @@ import '../modelos/categoria_marketplace.dart';
 import 'barra_busqueda_marketplace.dart';
 import 'barra_categorias_marketplace.dart';
 import 'boton_carrito_compras.dart';
-import 'saludo_estudiante.dart';
 
-/// Cabecera fija compartida por Inicio y Locales.
-///
-/// El catálogo se desplaza a partir de los filtros; el nombre, las acciones,
-/// el buscador y las categorías permanecen siempre en su sitio.
+/// Cabecera compartida por Inicio y Locales inspirada en una app de delivery.
 class CampusCollapsingHeader extends StatelessWidget {
   const CampusCollapsingHeader({
     required this.nombre,
@@ -48,7 +42,7 @@ class CampusCollapsingHeader extends StatelessWidget {
   );
 }
 
-/// Versión fija usada fuera del área que cambia horizontalmente.
+/// Versión fija situada por encima del PageView principal.
 class CampusFixedHeader extends StatelessWidget {
   const CampusFixedHeader({
     required this.nombre,
@@ -84,7 +78,6 @@ class CampusFixedHeader extends StatelessWidget {
   );
 }
 
-/// Convierte `shrinkOffset` en posiciones y tamaños coordinados.
 class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   CampusHeaderDelegate({
     required this.nombre,
@@ -105,10 +98,10 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   final VoidCallback alAbrirPedidos;
 
   @override
-  double get maxExtent => 230;
+  double get maxExtent => 234;
 
   @override
-  double get minExtent => 230;
+  double get minExtent => 234;
 
   @override
   Widget build(
@@ -116,112 +109,135 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    final tema = Theme.of(context);
-    final esOscuro = tema.brightness == Brightness.dark;
-    // La cabecera no se colapsa: solo el contenido situado debajo se mueve.
-    const progress = 0.0;
-    final saludoOpacity = (1 - progress * 1.35).clamp(0.0, 1.0);
-    // Al compactarse se vuelve opaco para separarse del contenido. Fijo en
-    // blanco, en oscuro aparecia una franja clara al bajar.
-    final fondo = Color.lerp(
-      tema.scaffoldBackgroundColor,
-      tema.brightness == Brightness.dark
-          ? tema.colorScheme.surface
-          : Colors.white.withValues(alpha: .98),
-      progress,
-    );
+    final oscuro = Theme.of(context).brightness == Brightness.dark;
+    final fondo = oscuro ? Theme.of(context).colorScheme.surface : Colors.white;
+    final texto = oscuro ? Colors.white : const Color(0xFF202220);
+    final secundario = oscuro
+        ? Colors.white.withValues(alpha: .62)
+        : const Color(0xFF8A8E8A);
 
     return ColoredBox(
-      color: fondo!,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: Color.lerp(
-                Colors.transparent,
-                tema.dividerColor,
-                progress,
-              )!,
-            ),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: Center(
-            child: ConstrainedBox(
-              // En la versión fija el Center entrega restricciones flexibles.
-              // La altura mínima evita que el Stack mida cero y recorte las
-              // categorías, aunque todos sus hijos sean Positioned.
-              constraints: const BoxConstraints(maxWidth: 1200, minHeight: 230),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // El saludo sube y se desvanece sin capturar interacciones.
-                  Positioned(
-                    left: 0,
-                    top: lerpDouble(20, -12, progress)!,
-                    child: IgnorePointer(
-                      ignoring: saludoOpacity == 0,
-                      child: Opacity(
-                        opacity: saludoOpacity,
-                        child: SaludoEstudiante(nombre: nombre),
-                      ),
-                    ),
-                  ),
-                  // Pedidos y carrito quedan a la derecha en ambos estados.
-                  Positioned(
-                    right: 0,
-                    top: lerpDouble(20, 5, progress)!,
-                    child: Transform.scale(
-                      scale: lerpDouble(1, .92, progress)!,
-                      alignment: Alignment.topRight,
-                      child: Row(
-                        children: [
-                          const BotonCampana(),
-                          const SizedBox(width: 8),
-                          IconButton.filledTonal(
-                            tooltip: 'Mis pedidos',
-                            onPressed: alAbrirPedidos,
-                            style: IconButton.styleFrom(
-                              backgroundColor: esOscuro
-                                  ? const Color(0xFF405844)
-                                  : const Color(0xFFDDECDD),
-                              foregroundColor: esOscuro
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                            icon: const Icon(Icons.receipt_long_outlined),
+      color: fondo,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200, minHeight: 234),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 68,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 43,
+                        height: 43,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF5C8A63),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          nombre.isEmpty ? 'U' : nombre[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
                           ),
-                          const SizedBox(width: 8),
-                          BotonCarritoCompras(alPresionar: alAbrirCarrito),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ubicación',
+                              style: TextStyle(
+                                color: secundario,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on_outlined,
+                                  color: Color(0xFF5C8A63),
+                                  size: 17,
+                                ),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    'Campus UPSA',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: texto,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: Color(0xFF5C8A63),
+                                  size: 19,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const BotonCampana(),
+                      const SizedBox(width: 5),
+                      _AccionCircular(
+                        tooltip: 'Mis pedidos',
+                        icono: Icons.local_shipping_rounded,
+                        alPresionar: alAbrirPedidos,
+                      ),
+                      const SizedBox(width: 5),
+                      BotonCarritoCompras(alPresionar: alAbrirCarrito),
+                    ],
                   ),
-                  // El buscador sube y deja espacio a los botones al compactarse.
-                  Positioned(
-                    left: 0,
-                    right: lerpDouble(0, 158, progress)!,
-                    top: lerpDouble(88, 3, progress)!,
-                    child: BarraBusquedaMarketplace(
-                      alCambiar: alBuscar,
-                      compactProgress: progress,
-                    ),
+                ),
+                BarraBusquedaMarketplace(alCambiar: alBuscar),
+                const SizedBox(height: 7),
+                SizedBox(
+                  height: 34,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Explora categorías',
+                          style: TextStyle(
+                            color: texto,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => alSeleccionarCategoria('todas'),
+                        child: const Text(
+                          'Ver todo',
+                          style: TextStyle(
+                            color: Color(0xFF5C8A63),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  // Las categorías nunca desaparecen y conservan su scroll.
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: lerpDouble(160, 59, progress)!,
-                    child: BarraCategoriasMarketplace(
-                      categorias: categorias,
-                      categoriaId: categoriaId,
-                      alSeleccionar: alSeleccionarCategoria,
-                      compactProgress: progress,
-                    ),
+                ),
+                Expanded(
+                  child: BarraCategoriasMarketplace(
+                    categorias: categorias,
+                    categoriaId: categoriaId,
+                    alSeleccionar: alSeleccionarCategoria,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -234,4 +250,28 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
       oldDelegate.categoriaId != categoriaId ||
       oldDelegate.categorias != categorias ||
       oldDelegate.nombre != nombre;
+}
+
+class _AccionCircular extends StatelessWidget {
+  const _AccionCircular({
+    required this.tooltip,
+    required this.icono,
+    required this.alPresionar,
+  });
+
+  final String tooltip;
+  final IconData icono;
+  final VoidCallback alPresionar;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    onPressed: alPresionar,
+    style: IconButton.styleFrom(
+      foregroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : const Color(0xFF202220),
+    ),
+    icon: Icon(icono, size: 27, weight: 700),
+  );
 }

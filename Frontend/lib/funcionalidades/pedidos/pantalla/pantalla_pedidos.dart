@@ -150,6 +150,7 @@ class _PantallaPedidosState extends State<PantallaPedidos>
                   _ListaPedidos(
                     pedidos: controlador.ventas,
                     soyVendedor: true,
+                    mostrarTotalVendido: true,
                     vacio: 'Aún no has recibido pedidos en tu local.',
                     alRefrescar: controlador.cargar,
                     alAbrir: _abrir,
@@ -164,7 +165,7 @@ class _PantallaPedidosState extends State<PantallaPedidos>
   );
 }
 
-class _ListaPedidos extends StatelessWidget {
+class _ListaPedidos extends StatefulWidget {
   const _ListaPedidos({
     required this.pedidos,
     required this.soyVendedor,
@@ -172,6 +173,7 @@ class _ListaPedidos extends StatelessWidget {
     required this.alRefrescar,
     required this.alAbrir,
     this.alCancelar,
+    this.mostrarTotalVendido = false,
   });
 
   final List<Pedido> pedidos;
@@ -180,16 +182,43 @@ class _ListaPedidos extends StatelessWidget {
   final Future<void> Function() alRefrescar;
   final void Function(Pedido) alAbrir;
   final void Function(Pedido)? alCancelar;
+  final bool mostrarTotalVendido;
+
+  @override
+  State<_ListaPedidos> createState() => _ListaPedidosState();
+}
+
+class _ListaPedidosState extends State<_ListaPedidos> {
+  String _busqueda = '';
+
+  List<Pedido> get _filtrados {
+    final consulta = _busqueda.trim().toLowerCase();
+    if (consulta.isEmpty) return widget.pedidos;
+    return widget.pedidos.where((pedido) {
+      final productos = pedido.items.map((item) => item.nombre).join(' ');
+      return pedido.nombreLocal.toLowerCase().contains(consulta) ||
+          pedido.nombreComprador.toLowerCase().contains(consulta) ||
+          productos.toLowerCase().contains(consulta);
+    }).toList();
+  }
+
+  double get _totalVendido => widget.pedidos
+      .where(
+        (pedido) =>
+            pedido.estado == EstadoPedido.aceptado ||
+            pedido.estado == EstadoPedido.entregado,
+      )
+      .fold(0, (total, pedido) => total + pedido.total);
 
   @override
   Widget build(BuildContext context) => RefreshIndicator(
-    onRefresh: alRefrescar,
+    onRefresh: widget.alRefrescar,
     child: ListView(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 120),
       children: [
         ContenidoCentrado(
           anchoMaximo: 620,
-          child: pedidos.isEmpty
+          child: widget.pedidos.isEmpty
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: 80),
                   child: Column(
@@ -201,7 +230,7 @@ class _ListaPedidos extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
                       Text(
-                        vacio,
+                        widget.vacio,
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Color(0xFF858585)),
                       ),
@@ -209,20 +238,136 @@ class _ListaPedidos extends StatelessWidget {
                   ),
                 )
               : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (final pedido in pedidos)
+                    _ResumenMovimiento(
+                      titulo: widget.mostrarTotalVendido
+                          ? 'Total vendido'
+                          : 'Total comprado',
+                      total: widget.mostrarTotalVendido
+                          ? _totalVendido
+                          : widget.pedidos.fold(
+                              0,
+                              (total, pedido) => total + pedido.total,
+                            ),
+                      cantidad: widget.pedidos.length,
+                      esVenta: widget.mostrarTotalVendido,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      onChanged: (valor) => setState(() => _busqueda = valor),
+                      decoration: InputDecoration(
+                        hintText: 'Buscar pedido',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        filled: true,
+                        fillColor:
+                            Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF202320)
+                            : Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(22),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(22),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    for (final pedido in _filtrados)
                       TarjetaPedido(
                         pedido: pedido,
-                        soyVendedor: soyVendedor,
-                        alAbrir: () => alAbrir(pedido),
+                        soyVendedor: widget.soyVendedor,
+                        alAbrir: () => widget.alAbrir(pedido),
                         alCancelar:
-                            alCancelar != null &&
+                            widget.alCancelar != null &&
                                 pedido.estado == EstadoPedido.solicitado
-                            ? () => alCancelar!(pedido)
+                            ? () => widget.alCancelar!(pedido)
                             : null,
+                      ),
+                    if (_filtrados.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 44),
+                        child: Text(
+                          'No encontramos pedidos con esa búsqueda.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Color(0xFF858585)),
+                        ),
                       ),
                   ],
                 ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _ResumenMovimiento extends StatelessWidget {
+  const _ResumenMovimiento({
+    required this.titulo,
+    required this.total,
+    required this.cantidad,
+    required this.esVenta,
+  });
+
+  final String titulo;
+  final double total;
+  final int cantidad;
+  final bool esVenta;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(22),
+    decoration: BoxDecoration(
+      color: esVenta ? const Color(0xFF5C8A63) : const Color(0xFF171917),
+      borderRadius: BorderRadius.circular(26),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x22000000),
+          blurRadius: 18,
+          offset: Offset(0, 7),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                titulo,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'Bs ${total.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .16),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Text(
+            '$cantidad ${cantidad == 1 ? 'pedido' : 'pedidos'}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ),
       ],
     ),

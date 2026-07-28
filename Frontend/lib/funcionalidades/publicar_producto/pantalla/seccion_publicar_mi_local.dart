@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../mi_local/logica/controlador_mi_local.dart';
@@ -32,34 +31,12 @@ class SeccionPublicarMiLocal extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 10, 18, 8),
-            child: SizedBox(
-              width: double.infinity,
-              child: CupertinoSlidingSegmentedControl<int>(
-                groupValue: seleccionado,
-                backgroundColor: esOscuro
-                    ? const Color(0xFF252725)
-                    : const Color(0xFFF0F1EF),
-                thumbColor: esOscuro ? tema.colorScheme.primary : Colors.black,
-                padding: const EdgeInsets.all(4),
-                children: {
-                  0: _EtiquetaSegmento(
-                    icono: Icons.add_circle_outline_rounded,
-                    texto: 'Publicar',
-                    activo: seleccionado == 0,
-                    esOscuro: esOscuro,
-                  ),
-                  if (tieneLocal)
-                    1: _EtiquetaSegmento(
-                      icono: Icons.storefront_rounded,
-                      texto: 'Mi local',
-                      activo: seleccionado == 1,
-                      esOscuro: esOscuro,
-                    ),
-                },
-                onValueChanged: (valor) {
-                  if (valor != null) segmento.value = valor;
-                },
-              ),
+            child: _SelectorSegmentado(
+              seleccionado: seleccionado,
+              tieneLocal: tieneLocal,
+              esOscuro: esOscuro,
+              colorActivo: esOscuro ? tema.colorScheme.primary : Colors.black,
+              alSeleccionar: (valor) => segmento.value = valor,
             ),
           ),
           Expanded(
@@ -74,6 +51,91 @@ class SeccionPublicarMiLocal extends StatelessWidget {
         ],
       );
     },
+  );
+}
+
+class _SelectorSegmentado extends StatelessWidget {
+  const _SelectorSegmentado({
+    required this.seleccionado,
+    required this.tieneLocal,
+    required this.esOscuro,
+    required this.colorActivo,
+    required this.alSeleccionar,
+  });
+
+  final int seleccionado;
+  final bool tieneLocal;
+  final bool esOscuro;
+  final Color colorActivo;
+  final ValueChanged<int> alSeleccionar;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    height: 50,
+    padding: const EdgeInsets.all(4),
+    clipBehavior: Clip.antiAlias,
+    decoration: BoxDecoration(
+      color: esOscuro ? const Color(0xFF252725) : const Color(0xFFF0F1EF),
+      borderRadius: BorderRadius.circular(25),
+    ),
+    child: Stack(
+      children: [
+        AnimatedAlign(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          alignment: seleccionado == 0
+              ? Alignment.centerLeft
+              : Alignment.centerRight,
+          child: FractionallySizedBox(
+            widthFactor: tieneLocal ? .5 : 1,
+            heightFactor: 1,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colorActivo,
+                borderRadius: BorderRadius.circular(21),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x26000000),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => alSeleccionar(0),
+                child: _EtiquetaSegmento(
+                  icono: Icons.add_circle_outline_rounded,
+                  texto: 'Publicar',
+                  activo: seleccionado == 0,
+                  esOscuro: esOscuro,
+                ),
+              ),
+            ),
+            if (tieneLocal)
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => alSeleccionar(1),
+                  child: _EtiquetaSegmento(
+                    icono: Icons.storefront_rounded,
+                    texto: 'Mi local',
+                    activo: seleccionado == 1,
+                    esOscuro: esOscuro,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    ),
   );
 }
 

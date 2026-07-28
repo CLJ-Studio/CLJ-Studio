@@ -68,7 +68,18 @@ class PantallaInicioMarketplace extends StatelessWidget {
                         estado.categoriaId != 'todas' ||
                         estado.busqueda.isNotEmpty,
                   ),
-                  _ => ListaProductosLocal(productos: estado.publicaciones),
+                  _ => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _TituloSeccion(
+                        titulo: 'Productos populares',
+                        alVerTodo: () =>
+                            controlador.seleccionarCategoria('todas'),
+                      ),
+                      const SizedBox(height: 12),
+                      ListaProductosLocal(productos: estado.publicaciones),
+                    ],
+                  ),
                 },
               ),
             ),
@@ -76,6 +87,37 @@ class PantallaInicioMarketplace extends StatelessWidget {
         ],
       );
     },
+  );
+}
+
+class _TituloSeccion extends StatelessWidget {
+  const _TituloSeccion({required this.titulo, required this.alVerTodo});
+
+  final String titulo;
+  final VoidCallback alVerTodo;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          titulo,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        ),
+      ),
+      TextButton(
+        onPressed: alVerTodo,
+        child: const Text(
+          'Ver todo',
+          style: TextStyle(
+            color: Color(0xFF5C8A63),
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    ],
   );
 }
 

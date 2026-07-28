@@ -31,9 +31,9 @@ class ListaProductosLocal extends StatelessWidget {
           itemCount: productos.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columnas,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 16,
-            mainAxisExtent: columnas == 2 ? 292 : 302,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 14,
+            mainAxisExtent: columnas == 2 ? 270 : 282,
           ),
           itemBuilder: (_, indice) =>
               _TarjetaProducto(producto: productos[indice], local: local),
@@ -91,10 +91,8 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final colorTexto = oscuro ? Colors.white : Colors.black;
     return Material(
-      color: oscuro
-          ? const Color(0xFF111411)
-          : const Color.fromARGB(255, 225, 225, 224),
-      borderRadius: BorderRadius.circular(22),
+      color: oscuro ? const Color(0xFF151815) : Colors.white,
+      borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: _abrirDetalle,
@@ -103,14 +101,14 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
             border: Border.all(
               color: oscuro ? const Color(0xFF283028) : const Color(0xFFE9E4DD),
             ),
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: oscuro
                 ? null
                 : const [
                     BoxShadow(
-                      color: Color(0x0F4A3928),
-                      blurRadius: 16,
-                      offset: Offset(0, 7),
+                      color: Color(0x174A3928),
+                      blurRadius: 18,
+                      offset: Offset(0, 6),
                     ),
                   ],
           ),
@@ -190,14 +188,33 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Bs ${widget.producto.precio.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: colorTexto,
-                        fontSize: 19,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Bs ${widget.producto.precio.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: colorTexto,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF5C8A63),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

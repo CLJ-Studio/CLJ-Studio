@@ -80,7 +80,7 @@ class _PantallaLocalesUniversitariosState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Locales del campus',
+                    'Locales destacados',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.white
@@ -90,7 +90,7 @@ class _PantallaLocalesUniversitariosState
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Explora todos los negocios creados por estudiantes.',
+                    'Descubre negocios creados por estudiantes.',
                     style: TextStyle(
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.white
@@ -104,6 +104,29 @@ class _PantallaLocalesUniversitariosState
                     yaTieneLocal: widget.yaTieneLocal,
                   ),
                   const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Explora locales',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            controlador.seleccionarCategoria('todas'),
+                        child: const Text(
+                          'Ver todo',
+                          style: TextStyle(
+                            color: Color(0xFF5C8A63),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   if (controlador.cargando)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 60),

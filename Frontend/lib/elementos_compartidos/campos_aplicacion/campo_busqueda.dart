@@ -15,9 +15,8 @@ class CampoBusqueda extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorTexto = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
+    final oscuro = Theme.of(context).brightness == Brightness.dark;
+    final colorTexto = oscuro ? Colors.white : const Color(0xFF202220);
     final radio = lerpDouble(28, 22, compactProgress)!;
     final borde = OutlineInputBorder(
       borderRadius: BorderRadius.circular(radio),
@@ -33,7 +32,13 @@ class CampoBusqueda extends StatelessWidget {
         ),
         decoration: InputDecoration(
           hintText: texto,
-          hintStyle: TextStyle(color: colorTexto),
+          hintStyle: TextStyle(
+            color: oscuro
+                ? Colors.white.withValues(alpha: .55)
+                : const Color(0xFF9A9D9A),
+          ),
+          filled: true,
+          fillColor: oscuro ? const Color(0xFF242724) : const Color(0xFFF5F6F4),
           isDense: true,
           contentPadding: EdgeInsets.symmetric(
             horizontal: lerpDouble(20, 14, compactProgress)!,

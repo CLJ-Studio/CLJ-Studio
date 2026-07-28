@@ -15,22 +15,19 @@ class BotonCampana extends StatelessWidget {
       return Badge(
         isLabelVisible: sinLeer > 0,
         label: Text('$sinLeer'),
-        child: IconButton.filledTonal(
+        child: IconButton(
           tooltip: 'Notificaciones',
           style: IconButton.styleFrom(
-            backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF405844)
-                : const Color(0xFFDDECDD),
             foregroundColor: Theme.of(context).brightness == Brightness.dark
                 ? Colors.white
-                : Colors.black,
+                : const Color(0xFF202220),
           ),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => const PantallaNotificaciones(),
             ),
           ),
-          icon: const Icon(Icons.notifications_none_rounded),
+          icon: const Icon(Icons.notifications_rounded, size: 27, weight: 700),
         ),
       );
     },
