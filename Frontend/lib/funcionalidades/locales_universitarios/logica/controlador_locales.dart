@@ -10,7 +10,9 @@ import '../../inicio_marketplace/modelos/local_universitario.dart';
 /// Vive aparte del feed del inicio: ahi se mezclan publicaciones sueltas de
 /// todos, y aqui se listan los negocios para entrar a ver su catalogo.
 class ControladorLocales extends ChangeNotifier {
-  ControladorLocales([this._repositorio = const RepositorioInicioMarketplace()]);
+  ControladorLocales([
+    this._repositorio = const RepositorioInicioMarketplace(),
+  ]);
 
   final RepositorioInicioMarketplace _repositorio;
 
@@ -40,6 +42,9 @@ class ControladorLocales extends ChangeNotifier {
     cargando = true;
     error = null;
     notifyListeners();
+    final esperaVisual = Future<void>.delayed(
+      const Duration(milliseconds: 900),
+    );
 
     try {
       categorias = await _repositorio.obtenerCategorias();
@@ -48,10 +53,11 @@ class ControladorLocales extends ChangeNotifier {
     } catch (_) {
       error = 'No se pudieron cargar los locales.';
     } finally {
+      await esperaVisual;
       cargando = false;
       notifyListeners();
     }
-  }
+}
 
   Future<void> _recargarEnSilencio() async {
     try {

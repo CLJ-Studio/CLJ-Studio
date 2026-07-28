@@ -15,6 +15,9 @@ class CampoBusqueda extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorTexto = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black;
     final radio = lerpDouble(28, 22, compactProgress)!;
     final borde = OutlineInputBorder(
       borderRadius: BorderRadius.circular(radio),
@@ -24,9 +27,13 @@ class CampoBusqueda extends StatelessWidget {
       height: lerpDouble(56, 46, compactProgress),
       child: TextField(
         onChanged: alCambiar,
-        style: TextStyle(fontSize: lerpDouble(14, 13, compactProgress)),
+        style: TextStyle(
+          color: colorTexto,
+          fontSize: lerpDouble(14, 13, compactProgress),
+        ),
         decoration: InputDecoration(
           hintText: texto,
+          hintStyle: TextStyle(color: colorTexto),
           isDense: true,
           contentPadding: EdgeInsets.symmetric(
             horizontal: lerpDouble(20, 14, compactProgress)!,
@@ -34,6 +41,7 @@ class CampoBusqueda extends StatelessWidget {
           ),
           prefixIcon: Icon(
             Icons.search_rounded,
+            color: colorTexto,
             size: lerpDouble(24, 21, compactProgress),
           ),
           border: borde,

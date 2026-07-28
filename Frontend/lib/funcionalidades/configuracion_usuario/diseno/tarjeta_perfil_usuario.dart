@@ -3,90 +3,132 @@ import 'package:flutter/material.dart';
 import '../modelos/usuario_upsa.dart';
 import '../pantalla/pantalla_editar_perfil.dart';
 
-/// Perfil institucional centrado, inspirado en la referencia visual.
+/// Encabezado de perfil centrado de la pantalla de ajustes.
 class TarjetaPerfilUsuario extends StatelessWidget {
   const TarjetaPerfilUsuario({required this.usuario, super.key});
 
   final UsuarioUpsa usuario;
 
+  void _editar(BuildContext context) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => const PantallaEditarPerfil()));
+
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
+    final colorTexto = esOscuro ? Colors.white : const Color(0xFF121418);
+    final textoSecundario = esOscuro
+        ? const Color(0xFFA7ADB5)
+        : const Color(0xFF737A83);
 
     return Column(
-      // Los nombres institucionales son largos y con dos apellidos rompen en
-      // dos lineas: sin esto la segunda quedaba pegada a la izquierda.
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 104,
-          height: 104,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: tema.colorScheme.primary.withValues(alpha: .16),
-            shape: BoxShape.circle,
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
+            tooltip: 'Editar perfil',
+            onPressed: () => _editar(context),
+            icon: Icon(Icons.edit_rounded, color: textoSecundario),
           ),
-          alignment: Alignment.center,
-          // Foto si la subio; si no, la inicial de siempre.
-          child: switch (usuario.avatarUrl) {
-            final String url => Image.network(
-              url,
-              width: 104,
-              height: 104,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _Inicial(usuario: usuario),
-            ),
-            _ => _Inicial(usuario: usuario),
-          },
         ),
-        const SizedBox(height: 14),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 132,
+              height: 132,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: esOscuro
+                    ? const Color(0xFF202429)
+                    : const Color(0xFFDCE1E7),
+                shape: BoxShape.circle,
+              ),
+              child: switch (usuario.avatarUrl) {
+                final String url => Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => _Inicial(usuario: usuario),
+                ),
+                _ => _Inicial(usuario: usuario),
+              },
+            ),
+            Positioned(
+              right: -3,
+              bottom: 5,
+              child: Material(
+                color: esOscuro ? const Color(0xFF5F9368) : Colors.white,
+                shape: const CircleBorder(),
+                elevation: 2,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => _editar(context),
+                  child: SizedBox(
+                    width: 42,
+                    height: 42,
+                    child: Icon(
+                      Icons.camera_alt_rounded,
+                      size: 21,
+                      color: esOscuro ? Colors.white : colorTexto,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
         Text(
           usuario.nombre,
           textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: tema.colorScheme.onSurface,
-            // Baja de 28 a 24: los nombres completos de la UPSA son largos y
-            // a 28 se partian en tres lineas.
-            fontSize: 24,
+            color: colorTexto,
+            fontSize: 30,
             fontWeight: FontWeight.w900,
-            height: 1.2,
+            letterSpacing: -.8,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 7),
         Text(
           usuario.correo,
           textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: tema.textTheme.bodyMedium?.color,
+            color: textoSecundario,
             fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 5),
-        Text(
-          usuario.carrera,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: tema.textTheme.bodyMedium?.color,
-            fontSize: 13,
+        if (usuario.carrera.isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Text(
+            usuario.carrera,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: textoSecundario, fontSize: 13),
           ),
-        ),
-        const SizedBox(height: 18),
+        ],
+        const SizedBox(height: 16),
         OutlinedButton.icon(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const PantallaEditarPerfil(),
-            ),
-          ),
+          onPressed: () => _editar(context),
           style: OutlinedButton.styleFrom(
-            foregroundColor: tema.colorScheme.primary,
+            foregroundColor: colorTexto,
+            backgroundColor: esOscuro
+                ? const Color(0xFF15171A)
+                : const Color(0xFFF7F9FB),
             side: BorderSide(
-              color: tema.colorScheme.primary.withValues(alpha: .55),
-              width: 1.4,
+              color: esOscuro
+                  ? const Color(0xFF30343A)
+                  : const Color(0xFFDCE1E7),
             ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
             shape: const StadiumBorder(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 13),
           ),
-          icon: const Icon(Icons.edit_outlined, size: 18),
+          icon: const Icon(Icons.edit_outlined, size: 17),
           label: const Text(
             'Editar perfil',
             style: TextStyle(fontWeight: FontWeight.w800),
@@ -97,7 +139,6 @@ class TarjetaPerfilUsuario extends StatelessWidget {
   }
 }
 
-/// Respaldo del avatar cuando no hay foto (o esta fallo al cargar).
 class _Inicial extends StatelessWidget {
   const _Inicial({required this.usuario});
 
@@ -108,8 +149,10 @@ class _Inicial extends StatelessWidget {
     child: Text(
       usuario.inicial,
       style: TextStyle(
-        color: Theme.of(context).colorScheme.primary,
-        fontSize: 38,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : const Color(0xFF30353B),
+        fontSize: 54,
         fontWeight: FontWeight.w900,
       ),
     ),

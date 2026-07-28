@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../diseno/selector_carrera.dart';
 import '../logica/controlador_onboarding.dart';
 
@@ -97,17 +98,14 @@ class PantallaOnboarding extends StatelessWidget {
                               if (await controlador.enviar()) alCompletar();
                             },
                       style: FilledButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        backgroundColor: const Color(0xFF5C8A63),
                         shape: const StadiumBorder(),
                       ),
                       child: controlador.enviando
                           ? const SizedBox(
                               width: 22,
                               height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.4,
-                                color: Colors.white,
-                              ),
+                              child: IndicadorCarga(tamanio: 22),
                             )
                           : const Text('Continuar'),
                     ),
@@ -163,12 +161,12 @@ class _CampoNombre extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InputDecorator(
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             labelText: 'Nombre completo',
             prefixIcon: Icon(Icons.badge_outlined),
             suffixIcon: Icon(
               Icons.verified_rounded,
-              color: Theme.of(context).colorScheme.primary,
+              color: Color(0xFF5C8A63),
               size: 21,
             ),
           ),

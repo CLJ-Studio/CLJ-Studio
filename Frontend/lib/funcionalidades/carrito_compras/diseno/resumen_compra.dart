@@ -11,9 +11,9 @@ class ResumenCompra extends StatelessWidget {
   final double entrega;
   final double total;
   Widget fila(
-    BuildContext context,
     String etiqueta,
     String valor, {
+    required Color colorTexto,
     bool fuerte = false,
   }) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 5),
@@ -22,9 +22,7 @@ class ResumenCompra extends StatelessWidget {
         Text(
           etiqueta,
           style: TextStyle(
-            color: fuerte
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).textTheme.bodyMedium?.color,
+            color: colorTexto,
             fontWeight: fuerte ? FontWeight.w800 : FontWeight.normal,
           ),
         ),
@@ -32,7 +30,7 @@ class ResumenCompra extends StatelessWidget {
         Text(
           valor,
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
+            color: colorTexto,
             fontWeight: fuerte ? FontWeight.w900 : FontWeight.normal,
           ),
         ),
@@ -40,27 +38,41 @@ class ResumenCompra extends StatelessWidget {
     ),
   );
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        children: [
-          fila(context, 'Importe', 'Bs ${subtotal.toStringAsFixed(2)}'),
-          fila(context, 'Costo de entrega', 'Bs ${entrega.toStringAsFixed(2)}'),
-          fila(context, 'Método de pago', 'Al recoger'),
-          Divider(color: Theme.of(context).dividerColor),
-          fila(
-            context,
-            'Total',
-            'Bs ${total.toStringAsFixed(2)}',
-            fuerte: true,
-          ),
-        ],
+  Widget build(BuildContext context) {
+    final colorTexto = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF202221);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(18),
       ),
-    ),
-  );
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            fila(
+              'Importe',
+              'Bs ${subtotal.toStringAsFixed(2)}',
+              colorTexto: colorTexto,
+            ),
+            fila(
+              'Costo de entrega',
+              'Bs ${entrega.toStringAsFixed(2)}',
+              colorTexto: colorTexto,
+            ),
+            fila('Método de pago', 'Al recoger', colorTexto: colorTexto),
+            Divider(color: Theme.of(context).dividerColor),
+            fila(
+              'Total',
+              'Bs ${total.toStringAsFixed(2)}',
+              colorTexto: colorTexto,
+              fuerte: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

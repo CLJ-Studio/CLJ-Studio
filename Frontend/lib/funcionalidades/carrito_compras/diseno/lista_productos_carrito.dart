@@ -9,23 +9,19 @@ class ListaProductosCarrito extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (controlador.elementos.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 48),
+      final color = Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : const Color(0xFF777C79);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 48),
         child: Center(
           child: Column(
             children: [
-              Icon(
-                Icons.shopping_bag_outlined,
-                size: 44,
-                color: Color(0xFFA5AAA7),
-              ),
-              SizedBox(height: 12),
+              Icon(Icons.shopping_bag_outlined, size: 44, color: color),
+              const SizedBox(height: 12),
               Text(
                 'Tu carrito está vacío',
-                style: TextStyle(
-                  color: Color(0xFF777C79),
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(color: color, fontWeight: FontWeight.w700),
               ),
             ],
           ),

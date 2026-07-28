@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../modelos/carrera_upsa.dart';
+
+const _verde = Color(0xFF5C8A63);
+const _grisTexto = Color(0xFF7C827E);
 
 /// Campo que abre una hoja deslizable con todas las carreras.
 ///
@@ -65,7 +69,7 @@ class SelectorCarrera extends StatelessWidget {
                   child: SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2.2),
+                    child: IndicadorCarga(tamanio: 20),
                   ),
                 )
               : const Icon(Icons.expand_more_rounded),
@@ -86,7 +90,7 @@ class SelectorCarrera extends StatelessWidget {
             fontSize: 15,
             fontWeight: carrera == null ? FontWeight.w500 : FontWeight.w700,
             color: carrera == null
-                ? Theme.of(context).textTheme.bodyMedium?.color
+                ? _grisTexto
                 : Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -149,8 +153,8 @@ class _HojaCarreras extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
                     child: Text(
                       entrada.key.toUpperCase(),
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                      style: const TextStyle(
+                        color: _grisTexto,
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                         letterSpacing: .6,
@@ -200,7 +204,7 @@ class _FilaCarrera extends StatelessWidget {
                     fontSize: 15,
                     height: 1.3,
                     color: seleccionada
-                        ? Theme.of(context).colorScheme.primary
+                        ? _verde
                         : Theme.of(context).colorScheme.onSurface,
                     fontWeight: seleccionada
                         ? FontWeight.w800
@@ -209,11 +213,7 @@ class _FilaCarrera extends StatelessWidget {
                 ),
               ),
               if (seleccionada)
-                Icon(
-                  Icons.check_circle_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 21,
-                ),
+                const Icon(Icons.check_circle_rounded, color: _verde, size: 21),
             ],
           ),
         ),

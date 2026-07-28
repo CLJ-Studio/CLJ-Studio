@@ -55,6 +55,9 @@ class InvitacionAbrirLocal extends StatelessWidget {
                         ? '¡Tu local ya está activo!'
                         : '¿Quieres abrir tu propio local?',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                       fontWeight: FontWeight.w900,
                       height: 1.05,
                     ),
@@ -64,8 +67,10 @@ class InvitacionAbrirLocal extends StatelessWidget {
                     yaTieneLocal
                         ? 'Adminístralo desde “Tu local”.'
                         : 'Crea tu perfil y empieza a publicar tus productos.',
-                    style: const TextStyle(
-                      color: Color(0xFF667068),
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

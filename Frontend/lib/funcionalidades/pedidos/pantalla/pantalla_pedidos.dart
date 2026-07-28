@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../diseno/tarjeta_pedido.dart';
@@ -84,9 +85,9 @@ class _PantallaPedidosState extends State<PantallaPedidos>
           const SizedBox(height: 12),
           TabBar(
             controller: _pestanas,
-            labelColor: Theme.of(context).colorScheme.primary,
+            labelColor: const Color(0xFF55785A),
             unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
-            indicatorColor: Theme.of(context).colorScheme.primary,
+            indicatorColor: const Color(0xFF5C8A63),
             labelStyle: const TextStyle(fontWeight: FontWeight.w900),
             tabs: [
               const Tab(text: 'Mis compras'),
@@ -126,7 +127,7 @@ class _PantallaPedidosState extends State<PantallaPedidos>
           Expanded(
             child: switch (controlador) {
               ControladorPedidos(cargando: true) => const Center(
-                child: CircularProgressIndicator(),
+                child: IndicadorCarga(),
               ),
               ControladorPedidos(error: final String mensaje) =>
                 MensajeCatalogo(

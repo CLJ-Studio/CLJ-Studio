@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../funcionalidades/acceso_upsa/arbol/arbol_acceso_upsa.dart';
 import '../funcionalidades/carrito_compras/logica/controlador_carrito_compras.dart';
@@ -97,9 +98,7 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           );
         }
         if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: Center(child: IndicadorCarga()));
         }
         // Hay sesion pero el perfil no existe: el usuario fue borrado en el
         // servidor mientras el JWT seguia vigente. Sin esto, el onboarding
@@ -108,9 +107,7 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Supabase.instance.client.auth.signOut();
           });
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: Center(child: IndicadorCarga()));
         }
         if (snapshot.data == _EstadoPerfil.completo) {
           // Precarga lo que varias pantallas comparten: el perfil (saludo y
@@ -177,7 +174,7 @@ class _PantallaErrorSesion extends StatelessWidget {
               FilledButton(
                 onPressed: alReintentar,
                 style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: const Color(0xFF5C8A63),
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Reintentar'),

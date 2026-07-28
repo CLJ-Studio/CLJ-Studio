@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../carrito_compras/diseno/barra_resumen_carrito.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
@@ -26,6 +28,7 @@ class _PantallaDetalleLocalState extends State<PantallaDetalleLocal> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(widget.local.nombre)),
+    bottomNavigationBar: BarraResumenCarrito(localId: widget.local.id),
     body: SingleChildScrollView(
       child: ContenidoCentrado(
         anchoMaximo: 900,
@@ -46,7 +49,7 @@ class _PantallaDetalleLocalState extends State<PantallaDetalleLocal> {
                   if (!snapshot.hasData) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 40),
-                      child: Center(child: CircularProgressIndicator()),
+                      child: Center(child: IndicadorCarga()),
                     );
                   }
 

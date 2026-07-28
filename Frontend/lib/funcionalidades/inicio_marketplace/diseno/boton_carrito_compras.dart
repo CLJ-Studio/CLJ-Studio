@@ -17,6 +17,14 @@ class BotonCarritoCompras extends StatelessWidget {
         label: Text('$unidades'),
         child: IconButton.filledTonal(
           tooltip: 'Abrir carrito',
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF405844)
+                : const Color(0xFFDDECDD),
+            foregroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
+          ),
           onPressed: alPresionar,
           icon: const Icon(Icons.shopping_bag_outlined),
         ),

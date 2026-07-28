@@ -16,89 +16,95 @@ class TarjetaProductoCarrito extends StatelessWidget {
   final VoidCallback alDisminuir;
   final VoidCallback alEliminar;
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 14),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: 82,
-          height: 100,
-          child: Center(
-            child: Container(
-              width: 72,
-              height: 82,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Text(
-                elemento.producto.emoji,
-                style: const TextStyle(fontSize: 40),
+  Widget build(BuildContext context) {
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
+    final colorTexto = esOscuro ? Colors.white : const Color(0xFF202321);
+    final colorSecundario = esOscuro ? Colors.white : const Color(0xFFA0A5A1);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 82,
+            height: 100,
+            child: Center(
+              child: Container(
+                width: 72,
+                height: 82,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  elemento.producto.emoji,
+                  style: const TextStyle(fontSize: 40),
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 18),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bs ${elemento.producto.precio.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: colorTexto,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  elemento.producto.nombre,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: colorTexto,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  elemento.producto.descripcion,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorSecundario,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
             children: [
-              Text(
-                'Bs ${elemento.producto.precio.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Color(0xFF202321),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                ),
+              SelectorCantidadProducto(
+                cantidad: elemento.cantidad,
+                alDisminuir: alDisminuir,
+                alAumentar: alAumentar,
               ),
-              const SizedBox(height: 7),
-              Text(
-                elemento.producto.nombre,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF343835),
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                elemento.producto.descripcion,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFFA0A5A1),
-                  fontWeight: FontWeight.w600,
+              IconButton(
+                tooltip: 'Eliminar producto',
+                onPressed: alEliminar,
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.delete_outline_rounded,
+                  size: 20,
+                  color: colorSecundario,
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          children: [
-            SelectorCantidadProducto(
-              cantidad: elemento.cantidad,
-              alDisminuir: alDisminuir,
-              alAumentar: alAumentar,
-            ),
-            IconButton(
-              tooltip: 'Eliminar producto',
-              onPressed: alEliminar,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(
-                Icons.delete_outline_rounded,
-                size: 20,
-                color: Color(0xFFA0A5A1),
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }

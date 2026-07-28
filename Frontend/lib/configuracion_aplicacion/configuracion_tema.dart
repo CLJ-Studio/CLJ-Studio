@@ -5,9 +5,7 @@ import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 /// Identidad visual de la aplicación, en claro y en oscuro.
 ///
 /// El verde es el color de la marca (el búho) y manda en ambos temas. El
-/// oscuro no es el claro con los colores invertidos: usa un gris azulado
-/// cálido en vez de negro puro, que a pantalla completa cansa menos la
-/// vista y deja respirar a las fotos de los productos.
+/// El modo oscuro usa negro real, texto blanco y controles verdes.
 abstract final class ConfiguracionTema {
   // Marca
   static const Color verde = Color(0xFF5C8A63);
@@ -21,11 +19,11 @@ abstract final class ConfiguracionTema {
   static const Color fondo = Colors.white;
 
   // Tema oscuro
-  static const Color fondoOscuro = Color(0xFF16181A);
-  static const Color superficieOscura = Color(0xFF1F2225);
-  static const Color superficieOscuraAlta = Color(0xFF272B2F);
-  static const Color textoOscuro = Color(0xFFECEFEC);
-  static const Color textoSecundarioOscuro = Color(0xFF9BA29D);
+  static const Color fondoOscuro = Colors.black;
+  static const Color superficieOscura = Color(0xFF050805);
+  static const Color superficieOscuraAlta = Color(0xFF0B120D);
+  static const Color textoOscuro = Colors.white;
+  static const Color textoSecundarioOscuro = Color(0xFFC8D0C9);
 
   static ThemeData get temaClaro => _construir(
     brillo: Brightness.light,
@@ -46,8 +44,8 @@ abstract final class ConfiguracionTema {
     superficieAlta: superficieOscuraAlta,
     colorTexto: textoOscuro,
     colorTextoSecundario: textoSecundarioOscuro,
-    borde: const Color(0xFF32373B),
-    divisor: const Color(0xFF2C3134),
+    borde: const Color(0xFF18301E),
+    divisor: const Color(0xFF142719),
     relleno: superficieOscuraAlta,
   );
 
@@ -136,7 +134,7 @@ abstract final class ConfiguracionTema {
           backgroundColor: esOscuro ? verdeClaro : verde,
           foregroundColor: esOscuro ? const Color(0xFF11251A) : Colors.white,
           disabledBackgroundColor: esOscuro
-              ? const Color(0xFF3A4043)
+              ? const Color(0xFF142719)
               : const Color(0xFFB6B7B7),
           shape: const StadiumBorder(),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
@@ -149,10 +147,7 @@ abstract final class ConfiguracionTema {
             : const Color(0xFFE7F2E8),
         side: BorderSide.none,
         shape: const StadiumBorder(),
-        labelStyle: TextStyle(
-          color: colorTexto,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: TextStyle(color: colorTexto, fontWeight: FontWeight.w600),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: superficie,
@@ -163,7 +158,9 @@ abstract final class ConfiguracionTema {
         surfaceTintColor: Colors.transparent,
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: esOscuro ? superficieOscuraAlta : const Color(0xFF2E3330),
+        backgroundColor: esOscuro
+            ? superficieOscuraAlta
+            : const Color(0xFF2E3330),
         contentTextStyle: const TextStyle(color: Colors.white),
         behavior: SnackBarBehavior.floating,
       ),
@@ -197,19 +194,14 @@ abstract final class ConfiguracionTema {
       listTileTheme: ListTileThemeData(
         textColor: colorTexto,
         iconColor: esOscuro ? verdeClaro : verde,
-        subtitleTextStyle: TextStyle(
-          color: colorTextoSecundario,
-          fontSize: 13,
-        ),
+        subtitleTextStyle: TextStyle(color: colorTextoSecundario, fontSize: 13),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith(
-          (estados) => Colors.white,
-        ),
+        thumbColor: WidgetStateProperty.resolveWith((estados) => Colors.white),
         trackColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.selected)
               ? (esOscuro ? verdeClaro : verde)
-              : (esOscuro ? const Color(0xFF3A4043) : const Color(0xFFD2D5D2)),
+              : (esOscuro ? const Color(0xFF142719) : const Color(0xFFD2D5D2)),
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(

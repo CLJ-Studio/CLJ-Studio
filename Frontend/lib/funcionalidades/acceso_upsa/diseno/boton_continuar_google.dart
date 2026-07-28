@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Botón visual de Google; ejecuta una simulación local por ahora.
+/// Botón de acceso institucional con Google.
 class BotonContinuarGoogle extends StatelessWidget {
   const BotonContinuarGoogle({
     required this.habilitado,

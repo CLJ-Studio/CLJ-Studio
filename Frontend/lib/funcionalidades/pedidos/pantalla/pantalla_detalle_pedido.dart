@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -92,7 +94,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
           );
         }
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: IndicadorCarga());
         }
 
         final pedido = snapshot.data!;
@@ -139,7 +141,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
               ? null
               : () => _ejecutar(() => _repositorio.aceptar(pedido.id)),
           style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: const Color(0xFF5C8A63),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: const StadiumBorder(),
           ),
@@ -263,8 +265,8 @@ class _Encabezado extends StatelessWidget {
                   soyVendedor
                       ? 'Pedido de ${pedido.nombreComprador}'
                       : 'Vendedor: ${pedido.nombreVendedor}',
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  style: const TextStyle(
+                    color: Color(0xFF7C827E),
                     fontSize: 13,
                   ),
                 ),
@@ -307,9 +309,7 @@ class _Items extends StatelessWidget {
                 ),
                 Text(
                   '×${item.cantidad}',
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
+                  style: const TextStyle(color: Color(0xFF7C827E)),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -329,21 +329,14 @@ class _Totales extends StatelessWidget {
 
   final Pedido pedido;
 
-  Widget _fila(
-    BuildContext context,
-    String etiqueta,
-    double valor, {
-    bool fuerte = false,
-  }) => Padding(
+  Widget _fila(String etiqueta, double valor, {bool fuerte = false}) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
       children: [
         Text(
           etiqueta,
           style: TextStyle(
-            color: fuerte
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).textTheme.bodyMedium?.color,
+            color: fuerte ? const Color(0xFF202221) : const Color(0xFF7C827E),
             fontWeight: fuerte ? FontWeight.w800 : FontWeight.normal,
           ),
         ),
@@ -367,25 +360,18 @@ class _Totales extends StatelessWidget {
     ),
     child: Column(
       children: [
-        _fila(context, 'Importe', pedido.subtotal),
-        _fila(context, 'Costo de entrega', pedido.costoEntrega),
+        _fila('Importe', pedido.subtotal),
+        _fila('Costo de entrega', pedido.costoEntrega),
         Divider(color: Theme.of(context).dividerColor),
-        _fila(context, 'Total', pedido.total, fuerte: true),
+        _fila('Total', pedido.total, fuerte: true),
         const SizedBox(height: 6),
-        Row(
+        const Row(
           children: [
-            Icon(
-              Icons.payments_outlined,
-              size: 15,
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-            ),
+            Icon(Icons.payments_outlined, size: 15, color: Color(0xFF7C827E)),
             SizedBox(width: 6),
             Text(
               'Pago coordinado entre ustedes',
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Color(0xFF7C827E), fontSize: 12),
             ),
           ],
         ),
@@ -405,11 +391,7 @@ class _Dato extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Icon(
-        icono,
-        size: 19,
-        color: Theme.of(context).textTheme.bodyMedium?.color,
-      ),
+      Icon(icono, size: 19, color: const Color(0xFF7C827E)),
       const SizedBox(width: 10),
       Expanded(
         child: Column(

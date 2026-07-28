@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../diseno/formulario_publicacion.dart';
@@ -39,23 +40,10 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Crear publicación',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            Text(
-              'Comparte productos o servicios con la comunidad UPSA.',
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-              ),
-            ),
-            const SizedBox(height: 24),
             if (widget.miLocal.cargando)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 60),
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(child: IndicadorCarga(tamanio: 140)),
               )
             else ...[
               // Solo informa el destino cuando hay un local formal; el
@@ -92,10 +80,10 @@ class _AvisoDestino extends StatelessWidget {
     ),
     child: Row(
       children: [
-        Icon(
+        const Icon(
           Icons.storefront_rounded,
           size: 19,
-          color: Theme.of(context).colorScheme.primary,
+          color: Color(0xFF5C8A63),
         ),
         const SizedBox(width: 10),
         Expanded(

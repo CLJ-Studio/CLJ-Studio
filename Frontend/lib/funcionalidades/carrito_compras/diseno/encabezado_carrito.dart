@@ -15,7 +15,7 @@ class EncabezadoCarrito extends StatelessWidget {
           'Detalle del carrito',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: const Color(0xFF202221),
           ),
         ),
         Align(
@@ -24,9 +24,7 @@ class EncabezadoCarrito extends StatelessWidget {
             tooltip: 'Cerrar',
             onPressed: alCerrar,
             style: IconButton.styleFrom(
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               foregroundColor: const Color(0xFF303432),
             ),
             icon: const Icon(Icons.close_rounded, size: 22),

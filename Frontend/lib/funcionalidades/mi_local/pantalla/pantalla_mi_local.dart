@@ -95,7 +95,7 @@ class PantallaMiLocal extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: () => _agregar(context),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: const Color(0xFF5C8A63),
                   ),
                   icon: const Icon(Icons.add_rounded),
                   label: const Text('Producto'),
@@ -157,10 +157,15 @@ class _Encabezado extends StatelessWidget {
               width: 78,
               height: 78,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) =>
-                  Text(controlador.logo, style: const TextStyle(fontSize: 38)),
+              errorBuilder: (_, _, _) => Text(
+                controlador.logo,
+                style: const TextStyle(fontSize: 38),
+              ),
             ),
-            _ => Text(controlador.logo, style: const TextStyle(fontSize: 38)),
+            _ => Text(
+              controlador.logo,
+              style: const TextStyle(fontSize: 38),
+            ),
           },
         ),
         const SizedBox(width: 18),
@@ -170,9 +175,9 @@ class _Encabezado extends StatelessWidget {
             children: [
               Text(
                 controlador.nombre ?? 'Tu local',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 4),
               Text(
@@ -242,19 +247,15 @@ class _FilaProducto extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Oculta',
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w900,
-                              color: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.color,
+                              color: Color(0xFF7C827E),
                             ),
                           ),
                         ),
@@ -276,7 +277,7 @@ class _FilaProducto extends StatelessWidget {
             IconButton(
               onPressed: alSumar,
               icon: const Icon(Icons.add_circle_rounded),
-              color: Theme.of(context).colorScheme.primary,
+              color: const Color(0xFF5C8A63),
             ),
             // Las acciones menos frecuentes van en un menu para no llenar
             // la fila de botones.

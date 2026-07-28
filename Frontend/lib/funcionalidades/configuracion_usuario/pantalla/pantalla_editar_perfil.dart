@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -153,7 +155,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
       ),
     ),
     body: _cargando
-        ? const Center(child: CircularProgressIndicator())
+        ? const Center(child: IndicadorCarga())
         : SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
             child: Center(
@@ -225,19 +227,14 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                       child: FilledButton(
                         onPressed: _guardando ? null : _guardar,
                         style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                          backgroundColor: const Color(0xFF5C8A63),
                           shape: const StadiumBorder(),
                         ),
                         child: _guardando
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.4,
-                                  color: Colors.white,
-                                ),
+                                child: IndicadorCarga(tamanio: 22),
                               )
                             : const Text('Guardar cambios'),
                       ),
@@ -270,10 +267,10 @@ class _DatosInstitucionales extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.verified_rounded,
                 size: 18,
-                color: Theme.of(context).colorScheme.primary,
+                color: Color(0xFF5C8A63),
               ),
               const SizedBox(width: 8),
               Text(
@@ -289,10 +286,7 @@ class _DatosInstitucionales extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             perfil.correo,
-            style: TextStyle(
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-              fontSize: 13,
-            ),
+            style: const TextStyle(color: Color(0xFF7C827E), fontSize: 13),
           ),
           const SizedBox(height: 10),
           const Text(
@@ -343,11 +337,8 @@ class _InterruptorCampusState extends State<_InterruptorCampus> {
     value: _enCampus,
     onChanged: _guardando ? null : _cambiar,
     contentPadding: EdgeInsets.zero,
-    activeThumbColor: Theme.of(context).colorScheme.primary,
-    secondary: Icon(
-      Icons.location_on_outlined,
-      color: Theme.of(context).colorScheme.primary,
-    ),
+    activeThumbColor: const Color(0xFF5C8A63),
+    secondary: const Icon(Icons.location_on_outlined, color: Color(0xFF5C8A63)),
     title: const Text(
       'Estoy en el campus',
       style: TextStyle(fontWeight: FontWeight.w700),
@@ -396,7 +387,7 @@ class _SelectorFotoPerfil extends StatelessWidget {
                     child: SizedBox(
                       width: 28,
                       height: 28,
-                      child: CircularProgressIndicator(strokeWidth: 2.6),
+                      child: IndicadorCarga(tamanio: 28),
                     ),
                   )
                 : switch (fotoUrl) {
@@ -411,7 +402,7 @@ class _SelectorFotoPerfil extends StatelessWidget {
                   },
           ),
           Material(
-            color: Theme.of(context).colorScheme.primary,
+            color: const Color(0xFF5C8A63),
             shape: const CircleBorder(),
             child: InkWell(
               onTap: subiendo ? null : alElegir,
@@ -445,8 +436,8 @@ class _InicialGrande extends StatelessWidget {
   Widget build(BuildContext context) => Center(
     child: Text(
       inicial,
-      style: TextStyle(
-        color: Theme.of(context).colorScheme.primary,
+      style: const TextStyle(
+        color: Color(0xFF55785A),
         fontSize: 38,
         fontWeight: FontWeight.w900,
       ),

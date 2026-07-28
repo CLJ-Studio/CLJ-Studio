@@ -46,7 +46,8 @@ abstract final class ServicioImagenes {
   }
 
   /// URL publica y cacheable de una ruta del bucket.
-  static String? urlPublica(String? ruta) => ruta == null || ruta.isEmpty
-      ? null
-      : Supabase.instance.client.storage.from('imagenes').getPublicUrl(ruta);
+  static String? urlPublica(String? ruta) {
+    if (ruta == null || ruta.isEmpty) return null;
+    return Supabase.instance.client.storage.from('imagenes').getPublicUrl(ruta);
+  }
 }

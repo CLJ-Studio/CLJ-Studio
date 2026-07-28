@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
@@ -45,7 +46,7 @@ class _PantallaMisPublicacionesState extends State<PantallaMisPublicaciones> {
           );
         }
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: IndicadorCarga());
         }
 
         final publicaciones = snapshot.data!;
@@ -84,12 +85,9 @@ class _Resumen extends StatelessWidget {
     ),
     child: Row(
       children: [
-        CircleAvatar(
+        const CircleAvatar(
           radius: 29,
-          child: Icon(
-            Icons.person_rounded,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          child: Icon(Icons.person_rounded, color: Color(0xFF5C8A63)),
         ),
         const SizedBox(width: 15),
         const Expanded(
@@ -109,8 +107,8 @@ class _Resumen extends StatelessWidget {
         ),
         Text(
           '$cantidad',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
+          style: const TextStyle(
+            color: Color(0xFF5C8A63),
             fontSize: 26,
             fontWeight: FontWeight.w900,
           ),
@@ -193,8 +191,8 @@ class _TarjetaPublicacion extends StatelessWidget {
             children: [
               Text(
                 'Bs ${publicacion.precio.toStringAsFixed(2)}',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
+                style: const TextStyle(
+                  color: Color(0xFF4F7956),
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
                 ),
@@ -203,10 +201,7 @@ class _TarjetaPublicacion extends StatelessWidget {
                 const SizedBox(height: 7),
                 Text(
                   publicacion.descripcion,
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                    height: 1.4,
-                  ),
+                  style: const TextStyle(color: Color(0xFF555B57), height: 1.4),
                 ),
               ],
             ],
@@ -231,10 +226,10 @@ class _EstadoVacio extends StatelessWidget {
             backgroundColor: Theme.of(
               context,
             ).colorScheme.primary.withValues(alpha: .12),
-            child: Icon(
+            child: const Icon(
               Icons.grid_on_rounded,
               size: 46,
-              color: Theme.of(context).colorScheme.primary,
+              color: Color(0xFF6F9A76),
             ),
           ),
           const SizedBox(height: 20),

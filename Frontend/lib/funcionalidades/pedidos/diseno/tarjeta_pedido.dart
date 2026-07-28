@@ -67,10 +67,8 @@ class TarjetaPedido extends StatelessWidget {
                           Text(
                             '${pedido.unidades} '
                             '${pedido.unidades == 1 ? 'producto' : 'productos'}',
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.color,
+                            style: const TextStyle(
+                              color: Color(0xFF7C827E),
                               fontSize: 12,
                             ),
                           ),

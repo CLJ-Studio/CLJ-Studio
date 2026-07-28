@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../notificaciones/datos/servicio_push.dart';
 
 /// Enciende y apaga las notificaciones del sistema en este dispositivo.
@@ -77,7 +78,7 @@ class _OpcionNotificacionesState extends State<OpcionNotificaciones> {
         ? const SizedBox(
             width: 22,
             height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2.4),
+            child: IndicadorCarga(tamanio: 22),
           )
         : const Icon(Icons.notifications_outlined),
     title: const Text('Notificaciones'),

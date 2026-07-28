@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../pedidos/pantalla/pantalla_detalle_pedido.dart';
 import '../logica/controlador_notificaciones.dart';
@@ -56,10 +57,10 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
               ? const SizedBox.shrink()
               : TextButton(
                   onPressed: controlador.marcarTodasLeidas,
-                  child: Text(
+                  child: const Text(
                     'Marcar leídas',
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Color(0xFF5C8A63),
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -71,7 +72,7 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
       animation: controlador,
       builder: (context, _) {
         if (controlador.cargando && controlador.notificaciones.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: IndicadorCarga());
         }
         if (controlador.notificaciones.isEmpty) {
           return const _SinNotificaciones();
@@ -125,7 +126,7 @@ class _Fila extends StatelessWidget {
       child: ListTile(
         onTap: alTocar,
         leading: CircleAvatar(
-          foregroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: const Color(0xFF5C8A63),
           child: Icon(notificacion.icono, size: 21),
         ),
         title: Text(
@@ -162,10 +163,10 @@ class _SinNotificaciones extends StatelessWidget {
             backgroundColor: Theme.of(
               context,
             ).colorScheme.primary.withValues(alpha: .12),
-            child: Icon(
+            child: const Icon(
               Icons.notifications_none_rounded,
               size: 42,
-              color: Theme.of(context).colorScheme.primary,
+              color: Color(0xFF6F9A76),
             ),
           ),
           const SizedBox(height: 18),

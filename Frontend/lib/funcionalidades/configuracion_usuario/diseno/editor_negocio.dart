@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
@@ -114,10 +116,10 @@ class _EditorNegocioState extends State<EditorNegocio> {
         const Divider(height: 40),
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.storefront_rounded,
               size: 19,
-              color: Theme.of(context).colorScheme.primary,
+              color: Color(0xFF5C8A63),
             ),
             const SizedBox(width: 8),
             Text(
@@ -164,21 +166,15 @@ class _EditorNegocioState extends State<EditorNegocio> {
           const SizedBox(height: 6),
           Text(
             mensaje,
-            style: TextStyle(
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Color(0xFF7C827E), fontSize: 12),
           ),
         ],
         const SizedBox(height: 14),
         OutlinedButton.icon(
           onPressed: _guardando ? null : _guardar,
           style: OutlinedButton.styleFrom(
-            foregroundColor: Theme.of(context).colorScheme.primary,
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.primary,
-              width: 1.4,
-            ),
+            foregroundColor: const Color(0xFF55785A),
+            side: const BorderSide(color: Color(0xFF6F9D76), width: 1.4),
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(vertical: 13),
           ),
@@ -186,7 +182,7 @@ class _EditorNegocioState extends State<EditorNegocio> {
               ? const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: IndicadorCarga(tamanio: 16),
                 )
               : const Icon(Icons.storefront_outlined, size: 18),
           label: const Text(
@@ -259,17 +255,14 @@ class _Logo extends StatelessWidget {
               const SizedBox(
                 width: 30,
                 height: 30,
-                child: CircularProgressIndicator(strokeWidth: 2.4),
+                child: IndicadorCarga(tamanio: 30),
               )
             else
               Text(emoji, style: const TextStyle(fontSize: 40)),
             const SizedBox(height: 8),
             Text(
               subiendo ? 'Subiendo logo...' : 'Subir logo del negocio',
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Color(0xFF7C827E), fontSize: 12),
             ),
           ],
         ),

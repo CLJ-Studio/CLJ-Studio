@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
-import '../../instalacion_app/diseno/aviso_instalacion.dart';
 import '../../locales_universitarios/diseno/lista_productos_local.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../diseno/campus_collapsing_header.dart';
@@ -16,8 +16,13 @@ import '../logica/estado_inicio_marketplace.dart';
 /// Muestra publicaciones y no locales: el catalogo de cada vendedor vive en
 /// la seccion Locales, y aqui se mezcla todo como en cualquier marketplace.
 class PantallaInicioMarketplace extends StatelessWidget {
-  const PantallaInicioMarketplace({required this.controlador, super.key});
+  const PantallaInicioMarketplace({
+    required this.controlador,
+    this.mostrarEncabezado = true,
+    super.key,
+  });
   final ControladorInicioMarketplace controlador;
+  final bool mostrarEncabezado;
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
@@ -28,48 +33,43 @@ class PantallaInicioMarketplace extends StatelessWidget {
       final estado = controlador.estado;
       return CustomScrollView(
         slivers: [
-          CampusCollapsingHeader(
-            nombre: SesionUsuario.instancia.primerNombre,
-            categorias: estado.categorias,
-            categoriaId: estado.categoriaId,
-            alBuscar: controlador.buscar,
-            alSeleccionarCategoria: controlador.seleccionarCategoria,
-            alAbrirCarrito: () =>
-                Navigator.of(context).pushNamed(ConfiguracionRutas.carrito),
-            alAbrirPedidos: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const PantallaPedidosCompleta(),
+          if (mostrarEncabezado)
+            CampusCollapsingHeader(
+              nombre: SesionUsuario.instancia.primerNombre,
+              categorias: estado.categorias,
+              categoriaId: estado.categoriaId,
+              alBuscar: controlador.buscar,
+              alSeleccionarCategoria: controlador.seleccionarCategoria,
+              alAbrirCarrito: () =>
+                  Navigator.of(context).pushNamed(ConfiguracionRutas.carrito),
+              alAbrirPedidos: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const PantallaPedidosCompleta(),
+                ),
               ),
             ),
-          ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(18, 24, 18, 120),
             sliver: SliverToBoxAdapter(
               child: ContenidoCentrado(
                 anchoMaximo: 1000,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const AvisoInstalacion(),
-                    switch (estado) {
-                      EstadoInicioMarketplace(cargando: true) => const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 60),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      EstadoInicioMarketplace(error: final String mensaje) =>
-                        MensajeCatalogo(
-                          mensaje: mensaje,
-                          alReintentar: controlador.cargar,
-                        ),
-                      EstadoInicioMarketplace(publicaciones: []) => _FeedVacio(
-                        hayFiltro:
-                            estado.categoriaId != 'todas' ||
-                            estado.busqueda.isNotEmpty,
-                      ),
-                      _ => ListaProductosLocal(productos: estado.publicaciones),
-                    },
-                  ],
-                ),
+                child: switch (estado) {
+                  EstadoInicioMarketplace(cargando: true) => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 60),
+                    child: Center(child: IndicadorCarga(tamanio: 140)),
+                  ),
+                  EstadoInicioMarketplace(error: final String mensaje) =>
+                    MensajeCatalogo(
+                      mensaje: mensaje,
+                      alReintentar: controlador.cargar,
+                    ),
+                  EstadoInicioMarketplace(publicaciones: []) => _FeedVacio(
+                    hayFiltro:
+                        estado.categoriaId != 'todas' ||
+                        estado.busqueda.isNotEmpty,
+                  ),
+                  _ => ListaProductosLocal(productos: estado.publicaciones),
+                },
               ),
             ),
           ),
@@ -89,10 +89,10 @@ class _FeedVacio extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 70),
     child: Column(
       children: [
-        Icon(
+        const Icon(
           Icons.storefront_outlined,
           size: 50,
-          color: Theme.of(context).textTheme.bodyMedium?.color,
+          color: Color(0xFFB8BDB8),
         ),
         const SizedBox(height: 16),
         Text(
@@ -108,9 +108,7 @@ class _FeedVacio extends StatelessWidget {
               ? 'Prueba con otra categoría o busca otra cosa.'
               : 'Lo que publiques aparecerá aquí para toda la comunidad.',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-          ),
+          style: const TextStyle(color: Color(0xFF7B817D)),
         ),
       ],
     ),

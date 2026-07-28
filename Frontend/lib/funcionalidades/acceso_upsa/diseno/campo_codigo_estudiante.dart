@@ -22,7 +22,7 @@ class CampoCodigoEstudiante extends StatelessWidget {
     final colorBorde = hayError
         ? Theme.of(context).colorScheme.error
         : esValido
-        ? Theme.of(context).colorScheme.primary
+        ? const Color(0xFF5C8A63)
         : const Color(0xFFB8BDB8);
 
     return Column(
@@ -51,9 +51,9 @@ class CampoCodigoEstudiante extends StatelessWidget {
             ),
             prefixIcon: const Icon(Icons.badge_outlined),
             suffixIcon: esValido
-                ? Icon(
+                ? const Icon(
                     Icons.check_circle_rounded,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Color(0xFF5C8A63),
                   )
                 : null,
             enabledBorder: OutlineInputBorder(
@@ -76,7 +76,10 @@ class CampoCodigoEstudiante extends StatelessWidget {
           padding: EdgeInsets.only(left: 20),
           child: Text(
             '@estudiantes.upsa.edu.bo',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

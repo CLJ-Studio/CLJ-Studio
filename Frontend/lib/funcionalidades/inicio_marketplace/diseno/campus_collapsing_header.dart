@@ -9,7 +9,10 @@ import 'barra_categorias_marketplace.dart';
 import 'boton_carrito_compras.dart';
 import 'saludo_estudiante.dart';
 
-/// Cabecera reutilizable que permanece visible y se compacta con el scroll.
+/// Cabecera fija compartida por Inicio y Locales.
+///
+/// El catálogo se desplaza a partir de los filtros; el nombre, las acciones,
+/// el buscador y las categorías permanecen siempre en su sitio.
 class CampusCollapsingHeader extends StatelessWidget {
   const CampusCollapsingHeader({
     required this.nombre,
@@ -45,6 +48,42 @@ class CampusCollapsingHeader extends StatelessWidget {
   );
 }
 
+/// Versión fija usada fuera del área que cambia horizontalmente.
+class CampusFixedHeader extends StatelessWidget {
+  const CampusFixedHeader({
+    required this.nombre,
+    required this.categorias,
+    required this.categoriaId,
+    required this.alBuscar,
+    required this.alSeleccionarCategoria,
+    required this.alAbrirCarrito,
+    required this.alAbrirPedidos,
+    super.key,
+  });
+
+  final String nombre;
+  final List<CategoriaMarketplace> categorias;
+  final String categoriaId;
+  final ValueChanged<String> alBuscar;
+  final ValueChanged<String> alSeleccionarCategoria;
+  final VoidCallback alAbrirCarrito;
+  final VoidCallback alAbrirPedidos;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 234,
+    child: CampusHeaderDelegate(
+      nombre: nombre,
+      categorias: categorias,
+      categoriaId: categoriaId,
+      alBuscar: alBuscar,
+      alSeleccionarCategoria: alSeleccionarCategoria,
+      alAbrirCarrito: alAbrirCarrito,
+      alAbrirPedidos: alAbrirPedidos,
+    ).build(context, 0, false),
+  );
+}
+
 /// Convierte `shrinkOffset` en posiciones y tamaños coordinados.
 class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   CampusHeaderDelegate({
@@ -69,7 +108,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 230;
 
   @override
-  double get minExtent => 112;
+  double get minExtent => 230;
 
   @override
   Widget build(
@@ -78,7 +117,9 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final tema = Theme.of(context);
-    final progress = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+    final esOscuro = tema.brightness == Brightness.dark;
+    // La cabecera no se colapsa: solo el contenido situado debajo se mueve.
+    const progress = 0.0;
     final saludoOpacity = (1 - progress * 1.35).clamp(0.0, 1.0);
     // Al compactarse se vuelve opaco para separarse del contenido. Fijo en
     // blanco, en oscuro aparecia una franja clara al bajar.
@@ -108,7 +149,10 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
           padding: const EdgeInsets.symmetric(horizontal: 18),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
+              // En la versión fija el Center entrega restricciones flexibles.
+              // La altura mínima evita que el Stack mida cero y recorte las
+              // categorías, aunque todos sus hijos sean Positioned.
+              constraints: const BoxConstraints(maxWidth: 1200, minHeight: 230),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -138,6 +182,14 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                           IconButton.filledTonal(
                             tooltip: 'Mis pedidos',
                             onPressed: alAbrirPedidos,
+                            style: IconButton.styleFrom(
+                              backgroundColor: esOscuro
+                                  ? const Color(0xFF405844)
+                                  : const Color(0xFFDDECDD),
+                              foregroundColor: esOscuro
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
                             icon: const Icon(Icons.receipt_long_outlined),
                           ),
                           const SizedBox(width: 8),

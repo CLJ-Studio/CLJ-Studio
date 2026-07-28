@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../pedidos/datos/repositorio_pedidos.dart';
 import '../../pedidos/modelos/pedido.dart';
 import '../../pedidos/pantalla/pantalla_detalle_pedido.dart';
@@ -124,7 +125,7 @@ class _PantallaContactandoVendedorState
                     TextButton.icon(
                       onPressed: _volver,
                       style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: const Color(0xFF55785A),
                       ),
                       icon: const Icon(Icons.explore_outlined, size: 18),
                       label: const Text(
@@ -154,17 +155,10 @@ class _IndicadorEspera extends StatelessWidget {
       color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
       borderRadius: BorderRadius.circular(22),
     ),
-    child: Row(
+    child: const Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: 17,
-          height: 17,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.4,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
+        SizedBox(width: 17, height: 17, child: IndicadorCarga(tamanio: 17)),
         SizedBox(width: 10),
         Text(
           'Esperando confirmación',

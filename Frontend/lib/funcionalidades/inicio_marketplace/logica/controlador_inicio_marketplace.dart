@@ -47,16 +47,21 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   Future<void> cargar() async {
     estado = estado.copiarCon(cargando: true);
     notifyListeners();
+    final esperaVisual = Future<void>.delayed(
+      const Duration(milliseconds: 900),
+    );
 
     try {
       final categorias = await repositorio.obtenerCategorias();
       _todas = await repositorio.obtenerPublicaciones();
+      await esperaVisual;
       estado = estado.copiarCon(
         categorias: categorias,
         publicaciones: _aplicarFiltros(),
         cargando: false,
       );
     } catch (_) {
+      await esperaVisual;
       estado = estado.copiarCon(
         cargando: false,
         error: 'No se pudo cargar el catálogo. Revisa tu conexión.',
@@ -99,15 +104,13 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     return _todas.where((publicacion) {
       // La categoria vive en el local que publica.
       final coincideCategoria =
-          categoria == 'todas' ||
-          publicacion.local?.categoriaId == categoria;
+          categoria == 'todas' || publicacion.local?.categoriaId == categoria;
 
       final coincideTexto =
           consulta.isEmpty ||
           publicacion.nombre.toLowerCase().contains(consulta) ||
           publicacion.descripcion.toLowerCase().contains(consulta) ||
-          (publicacion.local?.nombre.toLowerCase().contains(consulta) ??
-              false);
+          (publicacion.local?.nombre.toLowerCase().contains(consulta) ?? false);
 
       return coincideCategoria && coincideTexto;
     }).toList();

@@ -37,9 +37,8 @@ class BotonCategoriaMarketplace extends StatelessWidget {
           : const Color(0xFFF2F2F2),
       selectedForegroundColor: esOscuro
           ? const Color(0xFFAFD6B6)
-          : const Color(0xFF55785A),
-      unselectedForegroundColor:
-          tema.textTheme.bodyLarge?.color ?? const Color(0xFF4A4B4D),
+          : Colors.black,
+      unselectedForegroundColor: esOscuro ? Colors.white : Colors.black,
       compactProgress: compactProgress,
     );
   }

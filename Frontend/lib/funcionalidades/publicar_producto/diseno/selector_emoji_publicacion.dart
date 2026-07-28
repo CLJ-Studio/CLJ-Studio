@@ -35,10 +35,10 @@ class SelectorEmojiPublicacion extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
+      const Text(
         'Icono',
         style: TextStyle(
-          color: Theme.of(context).textTheme.bodyMedium?.color,
+          color: Color(0xFF7C827E),
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -58,13 +58,11 @@ class SelectorEmojiPublicacion extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: valor == opcion
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: .12)
+                      ? Theme.of(context).colorScheme.primary.withValues(alpha: .12)
                       : Colors.white,
                   border: Border.all(
                     color: valor == opcion
-                        ? Theme.of(context).colorScheme.primary
+                        ? const Color(0xFF6F9A76)
                         : Theme.of(context).colorScheme.surfaceContainerHighest,
                     width: valor == opcion ? 2 : 1,
                   ),

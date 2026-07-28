@@ -59,6 +59,9 @@ class ControladorMiLocal extends ChangeNotifier {
     cargando = true;
     error = null;
     notifyListeners();
+    final esperaVisual = Future<void>.delayed(
+      const Duration(milliseconds: 900),
+    );
 
     try {
       local = await _repositorio.cargarLocal();
@@ -68,6 +71,7 @@ class ControladorMiLocal extends ChangeNotifier {
     } catch (_) {
       error = 'No se pudo cargar tu local.';
     } finally {
+      await esperaVisual;
       cargando = false;
       notifyListeners();
     }

@@ -16,7 +16,7 @@ class EncabezadoLocales extends StatelessWidget {
       ),
       Text(
         'Encuentra opciones creadas para la vida universitaria.',
-        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+        style: Theme.of(context).textTheme.bodyMedium,
       ),
     ],
   );

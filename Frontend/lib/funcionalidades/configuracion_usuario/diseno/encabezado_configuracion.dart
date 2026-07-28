@@ -15,7 +15,7 @@ class EncabezadoConfiguracion extends StatelessWidget {
       ),
       Text(
         'Administra tu cuenta y experiencia.',
-        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+        style: Theme.of(context).textTheme.bodyMedium,
       ),
     ],
   );

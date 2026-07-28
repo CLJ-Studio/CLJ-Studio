@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../carrito_compras/diseno/barra_resumen_carrito.dart';
 import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
@@ -62,7 +63,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
             FilledButton(
               onPressed: () => Navigator.of(contexto).pop(true),
               style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
+                backgroundColor: const Color(0xFF55785A),
               ),
               child: const Text('Vaciar y agregar'),
             ),
@@ -73,7 +74,6 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
     }
 
     carrito.agregar(widget.producto, widget.local);
-    if (mounted) _avisar('${widget.producto.nombre} agregado al carrito');
   }
 
   void _avisar(String mensaje) {
@@ -102,12 +102,13 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                 _favorito
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                color: Theme.of(context).colorScheme.primary,
+                color: const Color(0xFF739376),
               ),
             ),
           ),
         ],
       ),
+      bottomNavigationBar: BarraResumenCarrito(localId: widget.local.id),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
@@ -135,8 +136,8 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                       const SizedBox(height: 8),
                       Text(
                         'Bs ${widget.producto.precio.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
+                        style: const TextStyle(
+                          color: Color(0xFF4F7956),
                           fontSize: 26,
                           fontWeight: FontWeight.w900,
                         ),
@@ -150,7 +151,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                             : 'Agotado',
                         style: TextStyle(
                           color: widget.producto.hayExistencias
-                              ? Theme.of(context).textTheme.bodyMedium?.color
+                              ? const Color(0xFF7C827E)
                               : const Color(0xFFB3453B),
                           fontWeight: FontWeight.w700,
                         ),
@@ -159,10 +160,8 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                         const SizedBox(height: 18),
                         Text(
                           widget.producto.descripcion,
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.color,
+                          style: const TextStyle(
+                            color: Color(0xFF555B57),
                             height: 1.5,
                           ),
                         ),
@@ -177,9 +176,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                               ? _agregar
                               : null,
                           style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
+                            backgroundColor: const Color(0xFF5C8A63),
                             shape: const StadiumBorder(),
                           ),
                           icon: const Icon(Icons.add_shopping_cart_rounded),
@@ -281,14 +278,6 @@ class _Vendedor extends StatelessWidget {
 
   final LocalUniversitario local;
 
-  /// Quien vende siempre tiene nombre y cara. Si es un negocio manda la
-  /// marca y debajo va la persona detras; si vende por su cuenta manda su
-  /// nombre y no hace falta segunda linea.
-  String? get _subtitulo {
-    if (local.esPersonal) return 'Vende por su cuenta';
-    return local.vendedorNombre.isEmpty ? null : 'Por ${local.vendedorNombre}';
-  }
-
   @override
   Widget build(BuildContext context) => Row(
     children: [
@@ -325,17 +314,16 @@ class _Vendedor extends StatelessWidget {
               local.esPersonal ? local.vendedorNombre : local.nombre,
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
-            // Sin nombre no se pinta un "Por" colgando de la nada.
-            if (_subtitulo case final String texto) ...[
-              const SizedBox(height: 2),
-              Text(
-                texto,
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                  fontSize: 12,
-                ),
+            const SizedBox(height: 2),
+            Text(
+              local.esPersonal
+                  ? 'Vende por su cuenta'
+                  : 'Por ${local.vendedorNombre}',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 12,
               ),
-            ],
+            ),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../estados_aplicacion/indicador_carga.dart';
 import 'servicio_imagenes.dart';
 
 /// Galeria de fotos de una publicacion, al estilo de un marketplace.
@@ -84,7 +85,9 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
           Text(
             'Fotos',
             style: TextStyle(
-              color: Theme.of(context).textTheme.bodyMedium?.color,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -96,7 +99,15 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
         ],
       ),
       const SizedBox(height: 4),
-      const Text('La primera es la portada.', style: TextStyle(fontSize: 12)),
+      Text(
+        'La primera es la portada.',
+        style: TextStyle(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white
+              : Colors.black,
+          fontSize: 12,
+        ),
+      ),
       const SizedBox(height: 10),
       Wrap(
         spacing: 10,
@@ -149,7 +160,7 @@ class _Miniatura extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
+                color: const Color(0xFF5C8A63),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -226,11 +237,11 @@ class _BotonAgregar extends StatelessWidget {
             ? const SizedBox(
                 width: 22,
                 height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2.2),
+                child: IndicadorCarga(tamanio: 22),
               )
-            : Icon(
+            : const Icon(
                 Icons.add_photo_alternate_outlined,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
+                color: Color(0xFF7C827E),
               ),
       ),
     ),

@@ -17,6 +17,14 @@ class BotonCampana extends StatelessWidget {
         label: Text('$sinLeer'),
         child: IconButton.filledTonal(
           tooltip: 'Notificaciones',
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF405844)
+                : const Color(0xFFDDECDD),
+            foregroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
+          ),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => const PantallaNotificaciones(),

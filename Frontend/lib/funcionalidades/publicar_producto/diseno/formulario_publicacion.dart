@@ -8,7 +8,6 @@ import 'boton_confirmar_publicacion.dart';
 import 'campo_descripcion_publicacion.dart';
 import 'campo_nombre_publicacion.dart';
 import 'campo_precio_publicacion.dart';
-import 'selector_emoji_publicacion.dart';
 import 'selector_tipo_publicacion.dart';
 
 /// Publica un producto o servicio. No exige local: si el estudiante no
@@ -45,17 +44,22 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
     // Cada cambio se guarda: si el usuario sale a sacar una foto o se le
     // cierra la pestana, al volver encuentra lo que habia escrito.
     for (final campo in [nombre, descripcion, precio, stock]) {
-      campo.addListener(_guardarBorrador);
+      campo.addListener(_alCambiarCampo);
     }
   }
 
   @override
   void dispose() {
     for (final campo in [nombre, descripcion, precio, stock]) {
-      campo.removeListener(_guardarBorrador);
+      campo.removeListener(_alCambiarCampo);
       campo.dispose();
     }
     super.dispose();
+  }
+
+  void _alCambiarCampo() {
+    _guardarBorrador();
+    if (mounted) setState(() {});
   }
 
   Future<void> _ofrecerBorrador() async {
@@ -82,7 +86,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
           FilledButton(
             onPressed: () => Navigator.of(contexto).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: const Color(0xFF5C8A63),
             ),
             child: const Text('Continuar'),
           ),
@@ -184,63 +188,335 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: widget.controlador,
-    builder: (_, _) => Form(
-      key: llave,
+    builder: (_, _) {
+      final oscuro = Theme.of(context).brightness == Brightness.dark;
+      final pasosCompletos = [
+        true,
+        nombre.text.trim().length >= 3 && descripcion.text.trim().isNotEmpty,
+        double.tryParse(precio.text.replaceAll(',', '.')) != null &&
+            (widget.controlador.esServicio ||
+                (int.tryParse(stock.text) ?? -1) >= 0),
+        _galeria.isNotEmpty,
+      ];
+      final pasoActivo = pasosCompletos.indexWhere((valor) => !valor);
+      final formularioCompleto = pasosCompletos.every((valor) => valor);
+      final colorTextoSecundario = oscuro ? Colors.white : Colors.black;
+
+      return Form(
+        key: llave,
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            textTheme: Theme.of(context).textTheme.apply(
+              bodyColor: colorTextoSecundario,
+              displayColor: colorTextoSecundario,
+            ),
+            inputDecorationTheme: Theme.of(context).inputDecorationTheme
+                .copyWith(
+                  filled: true,
+                  fillColor: oscuro
+                      ? const Color(0xFF090B09)
+                      : const Color(0xFFF1F3F1),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF5F9368),
+                      width: 1.5,
+                    ),
+                  ),
+                  labelStyle: TextStyle(color: colorTextoSecundario),
+                  hintStyle: TextStyle(color: colorTextoSecundario),
+                  prefixIconColor: colorTextoSecundario,
+                  prefixStyle: TextStyle(color: colorTextoSecundario),
+                ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _PasoPublicacion(
+                numero: '01',
+                completo: pasosCompletos[0],
+                activo: pasoActivo == 0,
+                child: _TarjetaFormulario(
+                  titulo: '¿Qué quieres ofrecer?',
+                  subtitulo: 'Elige el formato de tu anuncio.',
+                  child: SelectorTipoPublicacion(
+                    valor: widget.controlador.tipo,
+                    alCambiar: (valor) {
+                      widget.controlador.seleccionarTipo(valor);
+                      _guardarBorrador();
+                    },
+                  ),
+                ),
+              ),
+              _PasoPublicacion(
+                numero: '02',
+                completo: pasosCompletos[1],
+                activo: pasoActivo == 1,
+                child: _TarjetaFormulario(
+                  titulo: 'Cuéntanos lo esencial',
+                  subtitulo: 'Un nombre claro y una descripción que convenza.',
+                  child: Column(
+                    children: [
+                      CampoNombrePublicacion(controlador: nombre),
+                      const SizedBox(height: 13),
+                      CampoDescripcionPublicacion(controlador: descripcion),
+                    ],
+                  ),
+                ),
+              ),
+              _PasoPublicacion(
+                numero: '03',
+                completo: pasosCompletos[2],
+                activo: pasoActivo == 2,
+                child: _TarjetaFormulario(
+                  titulo: 'Precio y disponibilidad',
+                  subtitulo: widget.controlador.esServicio
+                      ? 'Define cuánto cuesta tu servicio.'
+                      : 'Define el precio y cuántas unidades tienes.',
+                  child: LayoutBuilder(
+                    builder: (context, restricciones) {
+                      final precioWidget = CampoPrecioPublicacion(
+                        controlador: precio,
+                      );
+                      final stockWidget = AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        child: widget.controlador.esServicio
+                            ? const SizedBox.shrink(
+                                key: ValueKey('sin-inventario'),
+                              )
+                            : TextFormField(
+                                key: const ValueKey('con-inventario'),
+                                controller: stock,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Cantidad disponible',
+                                  prefixIcon: Icon(Icons.inventory_2_outlined),
+                                ),
+                                validator: (valor) {
+                                  final cantidad = int.tryParse(valor ?? '');
+                                  return cantidad == null || cantidad < 0
+                                      ? 'Ingresa una cantidad válida.'
+                                      : null;
+                                },
+                              ),
+                      );
+                      if (restricciones.maxWidth < 520 ||
+                          widget.controlador.esServicio) {
+                        return Column(
+                          children: [
+                            precioWidget,
+                            if (!widget.controlador.esServicio) ...[
+                              const SizedBox(height: 13),
+                              stockWidget,
+                            ],
+                          ],
+                        );
+                      }
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: precioWidget),
+                          const SizedBox(width: 13),
+                          Expanded(child: stockWidget),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+              _PasoPublicacion(
+                numero: '04',
+                completo: pasosCompletos[3],
+                activo: pasoActivo == 3 || pasoActivo == -1,
+                ultimo: true,
+                child: _TarjetaFormulario(
+                  titulo: 'Haz que se vea increíble',
+                  subtitulo: 'Agrega fotos reales. La primera será tu portada.',
+                  child: SelectorGaleria(
+                    rutas: _galeria,
+                    alCambiar: (rutas) {
+                      setState(() => _galeria = rutas);
+                      _guardarBorrador();
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              BotonConfirmarPublicacion(
+                alPresionar: _publicando || !formularioCompleto
+                    ? null
+                    : publicar,
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _PasoPublicacion extends StatelessWidget {
+  const _PasoPublicacion({
+    required this.numero,
+    required this.completo,
+    required this.activo,
+    required this.child,
+    this.ultimo = false,
+  });
+
+  final String numero;
+  final bool completo;
+  final bool activo;
+  final bool ultimo;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    children: [
+      Padding(
+        padding: EdgeInsets.only(left: 54, bottom: ultimo ? 0 : 16),
+        child: child,
+      ),
+      if (!ultimo)
+        Positioned(
+          left: 21.5,
+          top: 38,
+          bottom: 0,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 420),
+            width: 5,
+            decoration: BoxDecoration(
+              color: completo
+                  ? const Color(0xFF5F9368)
+                  : const Color(0xFFDFE4DF),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+      Positioned(
+        left: 3,
+        top: 0,
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 320),
+              width: activo ? 38 : 32,
+              height: activo ? 38 : 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: completo
+                    ? const Color(0xFF5F9368)
+                    : activo
+                    ? Colors.white
+                    : const Color(0xFFDFE4DF),
+                shape: BoxShape.circle,
+                border: activo
+                    ? Border.all(color: const Color(0xFF5F9368), width: 4)
+                    : null,
+                boxShadow: activo
+                    ? const [
+                        BoxShadow(color: Color(0x445F9368), blurRadius: 12),
+                      ]
+                    : null,
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: completo
+                    ? const Icon(
+                        Icons.check_rounded,
+                        key: ValueKey('completo'),
+                        color: Colors.white,
+                        size: 18,
+                      )
+                    : Text(
+                        numero,
+                        key: ValueKey(numero),
+                        style: TextStyle(
+                          color: activo
+                              ? const Color(0xFF5F9368)
+                              : Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+class _TarjetaFormulario extends StatelessWidget {
+  const _TarjetaFormulario({
+    required this.titulo,
+    required this.subtitulo,
+    required this.child,
+  });
+
+  final String titulo;
+  final String subtitulo;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final oscuro = Theme.of(context).brightness == Brightness.dark;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 260),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: oscuro ? const Color(0xFF151815) : Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: oscuro ? const Color(0xFF242824) : const Color(0xFFE8EBE8),
+        ),
+        boxShadow: oscuro
+            ? null
+            : const [
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 7),
+                ),
+              ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SelectorTipoPublicacion(
-            valor: widget.controlador.tipo,
-            alCambiar: (valor) {
-              widget.controlador.seleccionarTipo(valor);
-              _guardarBorrador();
-            },
-          ),
-          const SizedBox(height: 18),
-          CampoNombrePublicacion(controlador: nombre),
-          const SizedBox(height: 14),
-          CampoDescripcionPublicacion(controlador: descripcion),
-          const SizedBox(height: 14),
-          CampoPrecioPublicacion(controlador: precio),
-          if (!widget.controlador.esServicio) ...[
-            const SizedBox(height: 14),
-            TextFormField(
-              controller: stock,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Cantidad disponible',
-                prefixIcon: Icon(Icons.inventory_2_outlined),
-              ),
-              validator: (valor) {
-                final cantidad = int.tryParse(valor ?? '');
-                if (cantidad == null || cantidad < 0) {
-                  return 'Ingresa una cantidad válida.';
-                }
-                return null;
-              },
+          Text(
+            titulo,
+            style: TextStyle(
+              color: oscuro ? Colors.white : Colors.black,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
             ),
-          ],
-          const SizedBox(height: 20),
-          SelectorGaleria(
-            rutas: _galeria,
-            alCambiar: (rutas) {
-              setState(() => _galeria = rutas);
-              _guardarBorrador();
-            },
           ),
-          const SizedBox(height: 18),
-          // El emoji sigue siendo el respaldo visual cuando no hay fotos.
-          SelectorEmojiPublicacion(
-            valor: widget.controlador.emoji,
-            alCambiar: (valor) {
-              widget.controlador.seleccionarEmoji(valor);
-              _guardarBorrador();
-            },
+          const SizedBox(height: 2),
+          Text(
+            subtitulo,
+            style: TextStyle(
+              color: oscuro ? Colors.white : Colors.black,
+              fontSize: 12,
+            ),
           ),
-          const SizedBox(height: 22),
-          BotonConfirmarPublicacion(alPresionar: _publicando ? null : publicar),
+          const SizedBox(height: 17),
+          child,
         ],
       ),
-    ),
-  );
+    );
+  }
 }

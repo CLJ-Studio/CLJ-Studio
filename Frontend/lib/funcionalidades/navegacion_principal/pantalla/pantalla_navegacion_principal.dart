@@ -8,12 +8,14 @@ class PantallaNavegacionPrincipal extends StatelessWidget {
     required this.controlador,
     required this.pantallas,
     required this.mostrarMiLocal,
+    required this.encabezadoExploracion,
     super.key,
   });
 
   final ControladorNavegacionPrincipal controlador;
   final List<Widget> pantallas;
   final bool mostrarMiLocal;
+  final Widget encabezadoExploracion;
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
@@ -22,10 +24,24 @@ class PantallaNavegacionPrincipal extends StatelessWidget {
       extendBody: true,
       body: SafeArea(
         bottom: false,
-        child: _PantallasDeslizables(
-          indice: controlador.indice,
-          pantallas: pantallas,
-          alDeslizar: controlador.seleccionarIndice,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: _PantallasDeslizables(
+                indice: controlador.indice,
+                pantallas: pantallas,
+                alDeslizar: controlador.seleccionarIndice,
+                reservarEncabezadoEnPrimeras: true,
+              ),
+            ),
+            if (controlador.indice <= 1)
+              Positioned(
+                left: 0,
+                top: 0,
+                right: 0,
+                child: encabezadoExploracion,
+              ),
+          ],
         ),
       ),
       bottomNavigationBar: _BarraLigera(
@@ -47,11 +63,13 @@ class _PantallasDeslizables extends StatefulWidget {
     required this.indice,
     required this.pantallas,
     required this.alDeslizar,
+    required this.reservarEncabezadoEnPrimeras,
   });
 
   final int indice;
   final List<Widget> pantallas;
   final ValueChanged<int> alDeslizar;
+  final bool reservarEncabezadoEnPrimeras;
 
   @override
   State<_PantallasDeslizables> createState() => _PantallasDeslizablesState();
@@ -69,11 +87,23 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
     if (widget.indice != anterior.indice &&
         _paginas.hasClients &&
         _paginas.page?.round() != widget.indice) {
-      _paginas.animateToPage(
-        widget.indice,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-      );
+      final cambioDentroDeInicioYLocales =
+          widget.indice <= 1 && anterior.indice <= 1;
+      final cambioEntrePantallasCompletas =
+          widget.indice > 1 && anterior.indice > 1;
+
+      if (cambioDentroDeInicioYLocales || cambioEntrePantallasCompletas) {
+        _paginas.animateToPage(
+          widget.indice,
+          duration: const Duration(milliseconds: 480),
+          curve: Curves.easeInOutCubic,
+        );
+      } else {
+        // Al entrar o salir de Inicio/Locales no se anima el PageView:
+        // el encabezado y la pantalla cambian juntos, sin huecos oscuros,
+        // compresión, desplazamiento vertical ni desapariciones intermedias.
+        _paginas.jumpToPage(widget.indice);
+      }
     }
   }
 
@@ -88,7 +118,18 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
     controller: _paginas,
     onPageChanged: widget.alDeslizar,
     itemCount: widget.pantallas.length,
-    itemBuilder: (_, indice) => widget.pantallas[indice],
+    itemBuilder: (_, indice) {
+      final pantalla = widget.pantallas[indice];
+      if (widget.reservarEncabezadoEnPrimeras && indice <= 1) {
+        // El espacio pertenece a cada página y nunca cambia durante la
+        // transición. Así, al abrir Publicar no se comprime Inicio/Locales.
+        return Padding(
+          padding: const EdgeInsets.only(top: 234),
+          child: pantalla,
+        );
+      }
+      return pantalla;
+    },
   );
 }
 
@@ -128,16 +169,16 @@ class _BarraLigera extends StatelessWidget {
         decoration: BoxDecoration(
           // Del tema: fija en gris claro, la barra quedaba blanca flotando
           // sobre el fondo oscuro.
-          color: esOscuro
-              ? tema.colorScheme.surfaceContainerHighest
-              : const Color(0xFFF8F8F8),
+          color: esOscuro ? const Color(0xFF303230) : Colors.white,
           borderRadius: BorderRadius.circular(38),
-          border: Border.all(color: tema.dividerColor),
+          border: Border.all(
+            color: esOscuro ? const Color(0xFF484A48) : const Color(0xFFE1E1E1),
+          ),
           boxShadow: [
             BoxShadow(
               color: esOscuro
                   ? const Color(0x40000000)
-                  : const Color(0x12000000),
+                  : const Color(0x33000000),
               blurRadius: 16,
               offset: const Offset(0, 5),
             ),
@@ -162,7 +203,9 @@ class _BarraLigera extends StatelessWidget {
                   height: restricciones.maxHeight - margen * 2,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: tema.colorScheme.primary.withValues(alpha: .18),
+                      color: esOscuro
+                          ? tema.colorScheme.primary.withValues(alpha: .18)
+                          : Colors.black,
                       borderRadius: BorderRadius.circular(32),
                     ),
                   ),
@@ -208,9 +251,14 @@ class _DestinoBarra extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final color = activo
-        ? tema.colorScheme.primary
-        : tema.textTheme.bodyMedium?.color ?? const Color(0xFF7C7D7E);
+    final esOscuro = tema.brightness == Brightness.dark;
+    final color = esOscuro
+        ? activo
+              ? tema.colorScheme.primary
+              : Colors.white
+        : activo
+        ? Colors.white
+        : Colors.black;
     return InkWell(
       onTap: alPresionar,
       borderRadius: BorderRadius.circular(32),

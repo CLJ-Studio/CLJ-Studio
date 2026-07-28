@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
@@ -134,7 +135,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                         ),
                         decoration: BoxDecoration(
                           color: indice <= _pagina
-                              ? Theme.of(context).colorScheme.primary
+                              ? const Color(0xFF6F9A76)
                               : const Color(0xFFDDE3DD),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -158,9 +159,15 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                           controller: _nombre,
                           onChanged: (_) => setState(() {}),
                           textCapitalization: TextCapitalization.words,
+                          style: const TextStyle(color: Color(0xFF263029)),
+                          cursorColor: const Color(0xFF5C8A63),
                           decoration: const InputDecoration(
                             labelText: 'Nombre del local',
                             hintText: 'Ej. Sabor Campus',
+                            filled: true,
+                            fillColor: Color(0xFFF0F2EF),
+                            labelStyle: TextStyle(color: Color(0xFF68716B)),
+                            hintStyle: TextStyle(color: Color(0xFF8B928D)),
                           ),
                         ),
                       ),
@@ -194,9 +201,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                               return const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 20),
                                 child: Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.4,
-                                  ),
+                                  child: IndicadorCarga(tamanio: 34),
                                 ),
                               );
                             }
@@ -279,9 +284,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                                             : Colors.white,
                                         border: Border.all(
                                           color: _logo == logo
-                                              ? Theme.of(
-                                                  context,
-                                                ).colorScheme.primary
+                                              ? const Color(0xFF6F9A76)
                                               : Theme.of(context)
                                                     .colorScheme
                                                     .surfaceContainerHighest,
@@ -308,17 +311,14 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                   child: FilledButton(
                     onPressed: _guardando ? null : _continuar,
                     style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor: const Color(0xFF5C8A63),
                       padding: const EdgeInsets.symmetric(vertical: 17),
                     ),
                     child: _guardando
                         ? const SizedBox(
                             width: 22,
                             height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.4,
-                              color: Colors.white,
-                            ),
+                            child: IndicadorCarga(tamanio: 22),
                           )
                         : Text(
                             _pagina == _ultimaPagina
@@ -363,7 +363,7 @@ class _FichaCategoria extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border.all(
             color: activa
-                ? Theme.of(context).colorScheme.primary
+                ? const Color(0xFF6F9A76)
                 : Theme.of(context).colorScheme.surfaceContainerHighest,
             width: activa ? 2 : 1,
           ),
@@ -375,16 +375,14 @@ class _FichaCategoria extends StatelessWidget {
             Icon(
               categoria.icono,
               size: 19,
-              color: activa
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).textTheme.bodyMedium?.color,
+              color: activa ? const Color(0xFF5C8A63) : const Color(0xFF7C827E),
             ),
             const SizedBox(width: 8),
             Text(
               categoria.nombre,
               style: TextStyle(
                 color: activa
-                    ? Theme.of(context).colorScheme.primary
+                    ? const Color(0xFF5C8A63)
                     : Theme.of(context).colorScheme.onSurface,
                 fontWeight: activa ? FontWeight.w800 : FontWeight.w600,
               ),
@@ -520,7 +518,7 @@ class _BurbujaPregunta extends StatelessWidget {
               backgroundColor: Theme.of(
                 context,
               ).colorScheme.primary.withValues(alpha: .12),
-              foregroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: const Color(0xFF5C8A63),
               child: Icon(icono, size: 22),
             ),
             const SizedBox(height: 16),
@@ -533,10 +531,7 @@ class _BurbujaPregunta extends StatelessWidget {
             const SizedBox(height: 7),
             Text(
               descripcion,
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-                height: 1.4,
-              ),
+              style: const TextStyle(color: Color(0xFF7C827E), height: 1.4),
             ),
             const SizedBox(height: 22),
             child,
@@ -592,11 +587,8 @@ class _LogoSubido extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: subiendo ? null : alElegir,
       style: OutlinedButton.styleFrom(
-        foregroundColor: Theme.of(context).colorScheme.primary,
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.primary,
-          width: 1.4,
-        ),
+        foregroundColor: const Color(0xFF55785A),
+        side: const BorderSide(color: Color(0xFF6F9D76), width: 1.4),
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
       ),
@@ -604,7 +596,7 @@ class _LogoSubido extends StatelessWidget {
           ? const SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: IndicadorCarga(tamanio: 16),
             )
           : const Icon(Icons.add_photo_alternate_outlined, size: 19),
       label: Text(subiendo ? 'Subiendo...' : 'Subir imagen de portada'),

@@ -19,6 +19,10 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Marketplace exclusivo para estudiantes UPSA.">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
   <!-- El color lo ajusta ControladorTema al cambiar entre claro y oscuro:
        si queda fijo, la barra de estado muestra una franja de otro color y
        la app parece recortada. -->
@@ -26,7 +30,8 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="UPSA Eat">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
@@ -36,33 +41,32 @@
   <title>UPSA Eat</title>
   <link rel="manifest" href="manifest.json">
   <style>
-    /*
-     * Evita que el desplazamiento horizontal llegue al navegador y active
-     * la navegación hacia atrás/adelante en la PWA.
-     */
     html,
     body {
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
       overscroll-behavior-x: none;
+      background-color: #FFFFFF;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
+    flutter-view {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background-color: #FFFFFF;
     }
   </style>
 </head>
 <body>
-  <script>
-    /*
-     * Chrome dispara beforeinstallprompt en cuanto valida el manifest, que
-     * suele ser antes de que Flutter termine de arrancar. Si nadie escucha
-     * en ese momento el evento se pierde y el botón de instalar no aparece
-     * hasta recargar. Aquí solo se guarda; toda la lógica vive en Dart.
-     *
-     * Es a propósito lo mínimo posible: si el navegador sirve una copia
-     * cacheada de este archivo sin esta línea, Dart tiene su propio listener
-     * y lo único que se pierde es cazar el evento más temprano.
-     */
-    window.addEventListener('beforeinstallprompt', (evento) => {
-      evento.preventDefault();
-      window.eventoInstalacion = evento;
-    });
-  </script>
   <script>
     /*
      * Safari no respeta overscroll-behavior en todas sus versiones.

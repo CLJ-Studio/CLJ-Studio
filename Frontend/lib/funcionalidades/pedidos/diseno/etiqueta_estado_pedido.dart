@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../modelos/pedido.dart';
 
 /// Distintivo de color con el estado actual del pedido.
@@ -21,14 +22,7 @@ class EtiquetaEstadoPedido extends StatelessWidget {
         // Mientras espera respuesta gira un indicador: comunica que algo
         // sigue en curso, en vez de parecer un estado detenido.
         if (estado == EstadoPedido.solicitado)
-          SizedBox(
-            width: 9,
-            height: 9,
-            child: CircularProgressIndicator(
-              strokeWidth: 1.8,
-              color: estado.color,
-            ),
-          )
+          SizedBox(width: 9, height: 9, child: IndicadorCarga(tamanio: 9))
         else
           Container(
             width: 7,

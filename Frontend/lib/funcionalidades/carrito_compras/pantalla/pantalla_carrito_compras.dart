@@ -124,10 +124,27 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
                   const SizedBox(height: 22),
                   TextField(
                     controller: _puntoEncuentro,
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : null,
+                    ),
+                    decoration: InputDecoration(
                       labelText: '¿Dónde te lo entregan?',
                       hintText: 'Ej. Bloque A - Recepción',
-                      prefixIcon: Icon(Icons.place_outlined),
+                      labelStyle:
+                          Theme.of(context).brightness == Brightness.dark
+                          ? const TextStyle(color: Colors.white)
+                          : null,
+                      hintStyle: Theme.of(context).brightness == Brightness.dark
+                          ? const TextStyle(color: Colors.white)
+                          : null,
+                      prefixIcon: Icon(
+                        Icons.place_outlined,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : null,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),

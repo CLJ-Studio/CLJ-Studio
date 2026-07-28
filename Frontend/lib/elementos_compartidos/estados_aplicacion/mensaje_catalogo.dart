@@ -31,11 +31,8 @@ class MensajeCatalogo extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: alReintentar,
           style: OutlinedButton.styleFrom(
-            foregroundColor: Theme.of(context).colorScheme.primary,
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.primary,
-              width: 1.4,
-            ),
+            foregroundColor: const Color(0xFF55785A),
+            side: const BorderSide(color: Color(0xFF6F9D76), width: 1.4),
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
           ),
