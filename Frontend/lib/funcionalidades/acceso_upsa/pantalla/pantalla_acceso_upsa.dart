@@ -60,149 +60,114 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // Con el teclado abierto la pantalla pierde altura. Si se sigue exigiendo
-    // el alto completo, el contenido se recentra y encoge a cada tecla; asi
-    // solo se desplaza.
-    final tecladoAbierto = MediaQuery.viewInsetsOf(context).bottom > 0;
-
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, restricciones) => Stack(
-            children: [
-              const _FormasDecorativas(),
-              SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: tecladoAbierto ? 0 : restricciones.maxHeight,
-                    maxWidth: double.infinity,
-                  ),
-                  child: Center(
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: LayoutBuilder(
+        builder: (context, restricciones) => Stack(
+          children: [
+            const _FormasDecorativas(),
+            SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: restricciones.maxHeight,
+                  maxWidth: double.infinity,
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 430,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'UPSA Eat',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontFamily: 'Metropolis',
-                                fontSize: 34,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -1.2,
+                        SizedBox(
+                          height: 25,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Positioned(
+                                left: 0,
+                                top: -30,
+                                child: Text(
+                                  'UPSA Eat',
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                    fontFamily: 'Metropolis',
+                                    fontSize: 34,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -1.2,
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
-                        // Fuera del padding lateral: la rama tiene que cruzar
-                        // la pantalla entera.
-                        _BuhosAnimados(ancho: restricciones.maxWidth),
-                        Center(
-                          child: SizedBox(
-                            width: 430,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  const EncabezadoAccesoUpsa(),
-                                  const SizedBox(height: 28),
-                                  FormularioCorreoUpsa(
-                                    esValido: _codigoCompleto,
-                                    digitos: _digitos,
-                                    alCambiar: (valor) => setState(
-                                      () => _digitos = valor.replaceAll(
-                                        RegExp(r'\D'),
-                                        '',
-                                      ),
-                                    ),
-                                  ),
-                                  if (_errorDeRedireccion != null) ...[
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      _errorDeRedireccion!,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.error,
-                                      ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: 14),
-                                  BotonContinuarGoogle(
-                                    habilitado: !_cargando,
-                                    alPresionar: _continuar,
-                                  ),
-                                  const SizedBox(height: 18),
-                                  const MensajeAccesoExclusivo(),
-                                  const SizedBox(height: 24),
-                                ],
-                              ),
-                            ),
+                        _BuhosAnimados(
+                          alto: (restricciones.maxHeight * .26).clamp(130, 230),
+                        ),
+                        const SizedBox(height: 4),
+                        const EncabezadoAccesoUpsa(),
+                        const SizedBox(height: 28),
+                        FormularioCorreoUpsa(
+                          esValido: _codigoCompleto,
+                          digitos: _digitos,
+                          alCambiar: (valor) => setState(
+                            () =>
+                                _digitos = valor.replaceAll(RegExp(r'\D'), ''),
                           ),
                         ),
+                        if (_errorDeRedireccion != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            _errorDeRedireccion!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+                        BotonContinuarGoogle(
+                          habilitado: !_cargando,
+                          alPresionar: _continuar,
+                        ),
+                        const SizedBox(height: 18),
+                        const MensajeAccesoExclusivo(),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
-/// Búhos de bienvenida sobre una rama que cruza la pantalla de lado a lado.
-///
-/// Se mide por el ancho y nunca por el alto ni con desplazamientos en
-/// pixeles. Con un `Offset` fijo la escena caia bien solo en el telefono
-/// donde se probo y en el resto salia corrida y con un buho cortado; y al
-/// salir del alto disponible, abrir el teclado encogia la pantalla, achicaba
-/// la animacion y hacia saltar todo el formulario.
+/// Búhos de bienvenida. Ocupan su propio espacio en la columna.
 class _BuhosAnimados extends StatelessWidget {
-  const _BuhosAnimados({required this.ancho});
+  const _BuhosAnimados({required this.alto});
 
-  /// Ancho completo de la pantalla, sin el padding del formulario.
-  final double ancho;
-
-  /// El dibujo deja aire a los costados dentro de su propio lienzo, asi que
-  /// a tamaño exacto la rama termina antes del borde y parece un palo
-  /// flotando. Ampliarlo y recortar hace que las puntas salgan de la
-  /// pantalla en cualquier ancho, que es como se lee una rama de verdad.
-  static const _desborde = 1.3;
-
-  /// Banda visible del lienzo: recorta el aire de arriba y abajo para que la
-  /// escena no se coma media pantalla en telefonos angostos.
-  static const _proporcionAlto = .38;
+  final double alto;
 
   @override
   Widget build(BuildContext context) => IgnorePointer(
     child: ExcludeSemantics(
       child: RepaintBoundary(
-        child: ClipRect(
-          child: SizedBox(
-            width: ancho,
-            height: ancho * _proporcionAlto,
-            child: Transform.scale(
-              scale: _desborde,
-              child: Lottie.asset(
-                'assets/animations/owls.json',
-                fit: BoxFit.cover,
-                repeat: true,
-                frameRate: const FrameRate(24),
-                filterQuality: FilterQuality.low,
-              ),
+        child: SizedBox(
+          height: alto,
+          child: Transform.translate(
+            offset: const Offset(129, -45),
+            child: Lottie.asset(
+              'assets/animations/owls.json',
+              fit: BoxFit.contain,
+              repeat: true,
+              frameRate: const FrameRate(24),
+              filterQuality: FilterQuality.low,
             ),
           ),
         ),

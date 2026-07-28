@@ -19,6 +19,9 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Marketplace exclusivo para estudiantes UPSA.">
+  <!-- La pantalla de acceso arranca siempre clara. Sin esta preferencia,
+       iOS puede pintar de negro su barra aunque Flutter ya use fondo blanco. -->
+  <meta name="color-scheme" content="light">
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
@@ -49,6 +52,7 @@
   <style>
     :root {
       --app-background: #FFFFFF;
+      color-scheme: light;
       background-color: var(--app-background);
     }
 
