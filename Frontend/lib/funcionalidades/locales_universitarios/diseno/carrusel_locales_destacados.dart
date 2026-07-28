@@ -180,14 +180,6 @@ class _TarjetaDestacada extends StatelessWidget {
                       texto: local.calificacion.toStringAsFixed(1),
                     ),
                   ),
-                  Positioned(
-                    top: 9,
-                    right: 9,
-                    child: _Etiqueta(
-                      icono: Icons.visibility_rounded,
-                      texto: '${local.vistas}',
-                    ),
-                  ),
                 ],
               ),
             ),
