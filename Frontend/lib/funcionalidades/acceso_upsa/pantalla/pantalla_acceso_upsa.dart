@@ -159,13 +159,23 @@ class _BuhosAnimados extends StatelessWidget {
   /// Ancho completo de la pantalla, sin el padding del formulario.
   final double ancho;
 
+  // ================================================================
+  // MODIFICA SOLAMENTE ESTOS TRES VALORES
+  // ================================================================
+  // Tamaño: 1.0 normal, 1.5 más grande, 0.7 más pequeño.
+  static double tamanoBuhos = 0.7;
+
+  // Posición: negativo mueve a la izquierda; positivo, a la derecha.
+  static double posicionHorizontalBuhos = 100;
+
+  // Posición: negativo mueve hacia arriba; positivo, hacia abajo.
+  static double posicionVerticalBuhos = 0;
+
   /// La rama no llega a los bordes de su propio lienzo, asi que a tamaño
   /// exacto termina antes que la pantalla y parece un palo flotando.
   /// Ampliarla y recortar hace que las puntas salgan por los costados en
   /// cualquier ancho, que es como se lee una rama de verdad. El escalado va
   /// desde el centro, asi que aleja las dos puntas por igual.
-  static const _desborde = 1.5;
-
   /// Banda visible del lienzo: recorta el aire de arriba y abajo para que la
   /// escena no se coma media pantalla en telefonos angostos.
   static const _proporcionAlto = .38;
@@ -182,20 +192,25 @@ class _BuhosAnimados extends StatelessWidget {
             // El formulario lleva padding lateral y un ancho maximo; la rama
             // no debe respetarlos, o volveria a terminar antes del borde.
             child: OverflowBox(
+              alignment: Alignment.centerRight,
               maxWidth: ancho,
               maxHeight: alto,
-              child: ClipRect(
-                child: SizedBox(
-                  width: ancho,
-                  height: alto,
-                  child: Transform.scale(
-                    scale: _desborde,
-                    child: Lottie.asset(
-                      'assets/animations/owls.json',
-                      fit: BoxFit.cover,
-                      repeat: true,
-                      frameRate: const FrameRate(24),
-                      filterQuality: FilterQuality.low,
+              child: Transform.translate(
+                offset: Offset(posicionHorizontalBuhos, posicionVerticalBuhos),
+                child: ClipRect(
+                  child: SizedBox(
+                    width: ancho,
+                    height: alto,
+                    child: Transform.scale(
+                      scale: tamanoBuhos,
+                      alignment: Alignment.centerRight,
+                      child: Lottie.asset(
+                        'assets/animations/owls.json',
+                        fit: BoxFit.cover,
+                        repeat: true,
+                        frameRate: const FrameRate(24),
+                        filterQuality: FilterQuality.low,
+                      ),
                     ),
                   ),
                 ),
