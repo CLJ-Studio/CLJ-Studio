@@ -11,9 +11,8 @@ import '../../locales_universitarios/logica/controlador_locales.dart';
 import '../../locales_universitarios/pantalla/pantalla_locales_universitarios.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
-import '../../mi_local/pantalla/pantalla_mi_local.dart';
-import '../../publicar_producto/arbol/arbol_publicar_producto.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
+import '../../publicar_producto/pantalla/seccion_publicar_mi_local.dart';
 import '../logica/controlador_navegacion_principal.dart';
 import '../pantalla/pantalla_navegacion_principal.dart';
 
@@ -28,6 +27,7 @@ class ArbolNavegacionPrincipal extends StatefulWidget {
 class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
   final controlador = ControladorNavegacionPrincipal();
   final miLocal = ControladorMiLocal();
+  final segmentoPublicar = ValueNotifier<int>(0);
   late final inicio = ControladorInicioMarketplace(
     ArbolDependencias.crearRepositorioInicio(),
   );
@@ -36,7 +36,6 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
   @override
   void initState() {
     super.initState();
-    // Define si aparece la pestaña "Tu local" en la barra inferior.
     miLocal.cargar();
     miLocal.iniciarTiempoReal();
     inicio.cargar();
@@ -49,6 +48,7 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
   void dispose() {
     controlador.dispose();
     miLocal.dispose();
+    segmentoPublicar.dispose();
     inicio.dispose();
     locales.dispose();
     super.dispose();
@@ -59,7 +59,10 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
       MaterialPageRoute<void>(
         builder: (_) => PantallaCrearLocal(
           controlador: miLocal,
-          alCompletar: () => controlador.seleccionarIndice(3),
+          alCompletar: () {
+            segmentoPublicar.value = 1;
+            controlador.seleccionarIndice(2);
+          },
         ),
       ),
     );
@@ -83,14 +86,12 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
           controladorExterno: locales,
           mostrarEncabezado: false,
         ),
-        ArbolPublicarProducto(miLocal: miLocal),
-        if (miLocal.tieneLocal) PantallaMiLocal(controlador: miLocal),
+        SeccionPublicarMiLocal(miLocal: miLocal, segmento: segmentoPublicar),
         const ArbolConfiguracionUsuario(),
       ];
       return PantallaNavegacionPrincipal(
         controlador: controlador,
         pantallas: pantallas,
-        mostrarMiLocal: miLocal.tieneLocal,
         encabezadoExploracion: AnimatedBuilder(
           animation: Listenable.merge([
             inicio,

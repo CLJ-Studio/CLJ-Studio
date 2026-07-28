@@ -65,7 +65,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                   const SizedBox(height: 9),
                   Text(
                     yaTieneLocal
-                        ? 'Adminístralo desde “Tu local”.'
+                        ? 'Adminístralo desde Publicar → Mi local.'
                         : 'Crea tu perfil y empieza a publicar tus productos.',
                     style: TextStyle(
                       color: Theme.of(context).brightness == Brightness.dark

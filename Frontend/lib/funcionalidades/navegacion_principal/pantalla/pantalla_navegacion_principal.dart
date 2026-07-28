@@ -7,14 +7,12 @@ class PantallaNavegacionPrincipal extends StatelessWidget {
   const PantallaNavegacionPrincipal({
     required this.controlador,
     required this.pantallas,
-    required this.mostrarMiLocal,
     required this.encabezadoExploracion,
     super.key,
   });
 
   final ControladorNavegacionPrincipal controlador;
   final List<Widget> pantallas;
-  final bool mostrarMiLocal;
   final Widget encabezadoExploracion;
 
   @override
@@ -46,7 +44,6 @@ class PantallaNavegacionPrincipal extends StatelessWidget {
       ),
       bottomNavigationBar: _BarraLigera(
         indice: controlador.indice,
-        mostrarMiLocal: mostrarMiLocal,
         alSeleccionar: controlador.seleccionarIndice,
       ),
     ),
@@ -135,14 +132,9 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
 
 /// Cápsula deslizante sin blur, shaders ni filtros costosos.
 class _BarraLigera extends StatelessWidget {
-  const _BarraLigera({
-    required this.indice,
-    required this.mostrarMiLocal,
-    required this.alSeleccionar,
-  });
+  const _BarraLigera({required this.indice, required this.alSeleccionar});
 
   final int indice;
-  final bool mostrarMiLocal;
   final ValueChanged<int> alSeleccionar;
 
   // El orden debe coincidir con la lista `pantallas` de ArbolNavegacionPrincipal.
@@ -152,8 +144,6 @@ class _BarraLigera extends StatelessWidget {
     (Icons.home_outlined, Icons.home_rounded, 'Inicio'),
     (Icons.storefront_outlined, Icons.storefront_rounded, 'Locales'),
     (Icons.add_circle_outline_rounded, Icons.add_circle_rounded, 'Publicar'),
-    if (mostrarMiLocal)
-      (Icons.inventory_2_outlined, Icons.inventory_2_rounded, 'Tu local'),
     (Icons.settings_outlined, Icons.settings_rounded, 'Configuración'),
   ];
 
