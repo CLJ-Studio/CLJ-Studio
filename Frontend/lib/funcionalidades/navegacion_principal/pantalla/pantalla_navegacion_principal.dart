@@ -7,13 +7,11 @@ class PantallaNavegacionPrincipal extends StatelessWidget {
   const PantallaNavegacionPrincipal({
     required this.controlador,
     required this.pantallas,
-    required this.encabezadoExploracion,
     super.key,
   });
 
   final ControladorNavegacionPrincipal controlador;
   final List<Widget> pantallas;
-  final Widget encabezadoExploracion;
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
@@ -29,16 +27,8 @@ class PantallaNavegacionPrincipal extends StatelessWidget {
                 indice: controlador.indice,
                 pantallas: pantallas,
                 alDeslizar: controlador.seleccionarIndice,
-                reservarEncabezadoEnPrimeras: true,
               ),
             ),
-            if (controlador.indice <= 1)
-              Positioned(
-                left: 0,
-                top: 0,
-                right: 0,
-                child: encabezadoExploracion,
-              ),
           ],
         ),
       ),
@@ -60,13 +50,11 @@ class _PantallasDeslizables extends StatefulWidget {
     required this.indice,
     required this.pantallas,
     required this.alDeslizar,
-    required this.reservarEncabezadoEnPrimeras,
   });
 
   final int indice;
   final List<Widget> pantallas;
   final ValueChanged<int> alDeslizar;
-  final bool reservarEncabezadoEnPrimeras;
 
   @override
   State<_PantallasDeslizables> createState() => _PantallasDeslizablesState();
@@ -115,18 +103,7 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
     controller: _paginas,
     onPageChanged: widget.alDeslizar,
     itemCount: widget.pantallas.length,
-    itemBuilder: (_, indice) {
-      final pantalla = widget.pantallas[indice];
-      if (widget.reservarEncabezadoEnPrimeras && indice <= 1) {
-        // El espacio pertenece a cada página y nunca cambia durante la
-        // transición. Así, al abrir Publicar no se comprime Inicio/Locales.
-        return Padding(
-          padding: const EdgeInsets.only(top: 234),
-          child: pantalla,
-        );
-      }
-      return pantalla;
-    },
+    itemBuilder: (_, indice) => widget.pantallas[indice],
   );
 }
 

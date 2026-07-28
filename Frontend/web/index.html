@@ -31,7 +31,13 @@
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!--
+    En algunos iPhone WebKit mantiene una franja negra con
+    `black-translucent` aunque el viewport use `viewport-fit=cover`.
+    `default` conserva la barra dentro del área segura y la integra con el
+    fondo claro de la aplicación.
+  -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="UPSA Eat">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
@@ -87,50 +93,6 @@
       evento.preventDefault();
       window.eventoInstalacion = evento;
     });
-  </script>
-  <script>
-    /*
-     * Safari no respeta overscroll-behavior en todas sus versiones.
-     * Bloqueamos únicamente los gestos que nacen en los bordes, sin afectar
-     * listas horizontales como la barra de categorías.
-     */
-    (() => {
-      const edgeWidth = 28;
-      let edgeGesture = false;
-
-      document.addEventListener('touchstart', (event) => {
-        if (event.touches.length !== 1) {
-          edgeGesture = false;
-          return;
-        }
-
-        const x = event.touches[0].clientX;
-        edgeGesture = x <= edgeWidth || x >= window.innerWidth - edgeWidth;
-
-        if (edgeGesture && event.cancelable) {
-          event.preventDefault();
-        }
-      }, { passive: false, capture: true });
-
-      document.addEventListener('touchmove', (event) => {
-        if (edgeGesture && event.cancelable) {
-          event.preventDefault();
-        }
-      }, { passive: false, capture: true });
-
-      const finishEdgeGesture = () => {
-        edgeGesture = false;
-      };
-
-      document.addEventListener('touchend', finishEdgeGesture, {
-        passive: true,
-        capture: true,
-      });
-      document.addEventListener('touchcancel', finishEdgeGesture, {
-        passive: true,
-        capture: true,
-      });
-    })();
   </script>
   <script>
     /*

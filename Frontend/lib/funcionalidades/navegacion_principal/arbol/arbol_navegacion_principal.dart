@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../arbol_aplicacion/arbol_dependencias.dart';
-import '../../../configuracion_aplicacion/configuracion_rutas.dart';
-import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../configuracion_usuario/arbol/arbol_configuracion_usuario.dart';
-import '../../inicio_marketplace/diseno/campus_collapsing_header.dart';
 import '../../inicio_marketplace/logica/controlador_inicio_marketplace.dart';
 import '../../inicio_marketplace/pantalla/pantalla_inicio_marketplace.dart';
 import '../../locales_universitarios/logica/controlador_locales.dart';
 import '../../locales_universitarios/pantalla/pantalla_locales_universitarios.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
-import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../../publicar_producto/pantalla/seccion_publicar_mi_local.dart';
 import '../logica/controlador_navegacion_principal.dart';
 import '../pantalla/pantalla_navegacion_principal.dart';
@@ -72,19 +68,14 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: Listenable.merge([miLocal, controlador]),
     builder: (context, _) {
-      final enLocales = controlador.indice == 1;
       final pantallas = <Widget>[
-        PantallaInicioMarketplace(
-          controlador: inicio,
-          mostrarEncabezado: false,
-        ),
+        PantallaInicioMarketplace(controlador: inicio),
         PantallaLocalesUniversitarios(
           alCrearLocal: _abrirCreacion,
           // Un espacio personal no cuenta: la invitacion a abrir un local
           // formal debe seguir visible para el vendedor casual.
           yaTieneLocal: miLocal.tieneLocalFormal,
           controladorExterno: locales,
-          mostrarEncabezado: false,
         ),
         SeccionPublicarMiLocal(miLocal: miLocal, segmento: segmentoPublicar),
         const ArbolConfiguracionUsuario(),
@@ -92,37 +83,6 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
       return PantallaNavegacionPrincipal(
         controlador: controlador,
         pantallas: pantallas,
-        encabezadoExploracion: AnimatedBuilder(
-          animation: Listenable.merge([
-            inicio,
-            locales,
-            SesionUsuario.instancia,
-          ]),
-          builder: (context, _) {
-            final categorias = enLocales
-                ? locales.categorias
-                : inicio.estado.categorias;
-            final categoriaId = enLocales
-                ? locales.categoriaId
-                : inicio.estado.categoriaId;
-            return CampusFixedHeader(
-              nombre: SesionUsuario.instancia.primerNombre,
-              categorias: categorias,
-              categoriaId: categoriaId,
-              alBuscar: enLocales ? locales.buscar : inicio.buscar,
-              alSeleccionarCategoria: enLocales
-                  ? locales.seleccionarCategoria
-                  : inicio.seleccionarCategoria,
-              alAbrirCarrito: () =>
-                  Navigator.of(context).pushNamed(ConfiguracionRutas.carrito),
-              alAbrirPedidos: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const PantallaPedidosCompleta(),
-                ),
-              ),
-            );
-          },
-        ),
       );
     },
   );

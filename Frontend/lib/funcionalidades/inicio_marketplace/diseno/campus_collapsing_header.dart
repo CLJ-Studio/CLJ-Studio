@@ -101,7 +101,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 234;
 
   @override
-  double get minExtent => 234;
+  double get minExtent => 72;
 
   @override
   Widget build(
@@ -109,6 +109,8 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    final progreso = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+    final opacidadSecundaria = (1 - progreso * 1.8).clamp(0.0, 1.0);
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final fondo = oscuro ? Theme.of(context).colorScheme.surface : Colors.white;
     final texto = oscuro ? Colors.white : const Color(0xFF202220);
@@ -118,126 +120,156 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
 
     return ColoredBox(
       color: fondo,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200, minHeight: 234),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 68,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 43,
-                        height: 43,
+      child: ClipRect(
+        child: OverflowBox(
+          alignment: Alignment.topCenter,
+          minHeight: maxExtent,
+          maxHeight: maxExtent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 1200,
+                  minHeight: 234,
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 68,
+                      child: Transform.scale(
+                        scale: 1 - progreso * .1,
                         alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF5C8A63),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          nombre.isEmpty ? 'U' : nombre[0].toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Text(
-                              'Ubicación',
-                              style: TextStyle(
-                                color: secundario,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                            Container(
+                              width: 43,
+                              height: 43,
+                              alignment: Alignment.center,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF5C8A63),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                nombre.isEmpty ? 'U' : nombre[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
                             ),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.location_on_outlined,
-                                  color: Color(0xFF5C8A63),
-                                  size: 17,
-                                ),
-                                const SizedBox(width: 3),
-                                Flexible(
-                                  child: Text(
-                                    'Campus UPSA',
-                                    overflow: TextOverflow.ellipsis,
+                            const SizedBox(width: 11),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Ubicación',
                                     style: TextStyle(
-                                      color: texto,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
+                                      color: secundario,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.location_on_outlined,
+                                        color: Color(0xFF5C8A63),
+                                        size: 17,
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Flexible(
+                                        child: Text(
+                                          'Campus UPSA',
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: texto,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Color(0xFF5C8A63),
+                                        size: 19,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const BotonCampana(),
+                            const SizedBox(width: 5),
+                            _AccionCircular(
+                              tooltip: 'Mis pedidos',
+                              icono: Icons.local_shipping_rounded,
+                              alPresionar: alAbrirPedidos,
+                            ),
+                            const SizedBox(width: 5),
+                            BotonCarritoCompras(alPresionar: alAbrirCarrito),
+                          ],
+                        ),
+                      ),
+                    ),
+                    IgnorePointer(
+                      ignoring: opacidadSecundaria < .15,
+                      child: Opacity(
+                        opacity: opacidadSecundaria,
+                        child: BarraBusquedaMarketplace(alCambiar: alBuscar),
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Opacity(
+                      opacity: opacidadSecundaria,
+                      child: SizedBox(
+                        height: 34,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Explora categorías',
+                                style: TextStyle(
+                                  color: texto,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
                                 ),
-                                const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => alSeleccionarCategoria('todas'),
+                              child: const Text(
+                                'Ver todo',
+                                style: TextStyle(
                                   color: Color(0xFF5C8A63),
-                                  size: 19,
+                                  fontWeight: FontWeight.w800,
                                 ),
-                              ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const BotonCampana(),
-                      const SizedBox(width: 5),
-                      _AccionCircular(
-                        tooltip: 'Mis pedidos',
-                        icono: Icons.local_shipping_rounded,
-                        alPresionar: alAbrirPedidos,
-                      ),
-                      const SizedBox(width: 5),
-                      BotonCarritoCompras(alPresionar: alAbrirCarrito),
-                    ],
-                  ),
-                ),
-                BarraBusquedaMarketplace(alCambiar: alBuscar),
-                const SizedBox(height: 7),
-                SizedBox(
-                  height: 34,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Explora categorías',
-                          style: TextStyle(
-                            color: texto,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
+                    ),
+                    Expanded(
+                      child: IgnorePointer(
+                        ignoring: opacidadSecundaria < .15,
+                        child: Opacity(
+                          opacity: opacidadSecundaria,
+                          child: BarraCategoriasMarketplace(
+                            categorias: categorias,
+                            categoriaId: categoriaId,
+                            alSeleccionar: alSeleccionarCategoria,
+                            compactProgress: progreso,
                           ),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () => alSeleccionarCategoria('todas'),
-                        child: const Text(
-                          'Ver todo',
-                          style: TextStyle(
-                            color: Color(0xFF5C8A63),
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: BarraCategoriasMarketplace(
-                    categorias: categorias,
-                    categoriaId: categoriaId,
-                    alSeleccionar: alSeleccionarCategoria,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
