@@ -21,7 +21,13 @@ class ProductoMarketplace {
   /// Mapea una fila de `products`. Si la consulta unio `stores`, el local
   /// queda incluido: lo necesitan las listas que mezclan varios vendedores
   /// (favoritos), donde no hay un local unico que pasar por fuera.
-  factory ProductoMarketplace.desdeMapa(Map<String, dynamic> fila) {
+  /// `local` permite inyectar el vendedor resuelto por fuera: el nombre de
+  /// quien publica vive en la vista `locales_publicos`, porque la RLS de
+  /// `profiles` impide unirlo desde `stores`.
+  factory ProductoMarketplace.desdeMapa(
+    Map<String, dynamic> fila, {
+    LocalUniversitario? local,
+  }) {
     final tienda = fila['stores'] as Map<String, dynamic>?;
     return ProductoMarketplace(
       id: fila['id'] as String,
@@ -32,7 +38,9 @@ class ProductoMarketplace {
       emoji: (fila['emoji'] as String?) ?? '🛍️',
       stock: (fila['stock'] as num?)?.toInt() ?? 0,
       esServicio: (fila['kind'] as String?) == 'servicio',
-      local: tienda == null ? null : LocalUniversitario.desdeMapa(tienda),
+      local:
+          local ??
+          (tienda == null ? null : LocalUniversitario.desdeMapa(tienda)),
       imagePath: fila['image_path'] as String?,
       disponible: (fila['is_available'] as bool?) ?? true,
       imagenes:

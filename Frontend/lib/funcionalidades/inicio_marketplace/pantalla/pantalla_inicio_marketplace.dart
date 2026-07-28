@@ -5,6 +5,7 @@ import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
+import '../../instalacion_app/diseno/aviso_instalacion.dart';
 import '../../locales_universitarios/diseno/lista_productos_local.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../diseno/campus_collapsing_header.dart';
@@ -71,6 +72,7 @@ class PantallaInicioMarketplace extends StatelessWidget {
                   _ => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const AvisoInstalacion(),
                       _TituloSeccion(
                         titulo: 'Productos populares',
                         alVerTodo: () =>

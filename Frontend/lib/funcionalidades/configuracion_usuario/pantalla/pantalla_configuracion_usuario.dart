@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
+import '../../instalacion_app/diseno/opcion_instalar_app.dart';
+import '../../instalacion_app/logica/controlador_instalacion.dart';
 import '../diseno/boton_cerrar_sesion.dart';
 import '../diseno/opcion_ayuda.dart';
 import '../diseno/opcion_cuenta_institucional.dart';
@@ -44,7 +46,11 @@ class _PantallaConfiguracionUsuarioState
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: Listenable.merge([controlador, sesion]),
+    animation: Listenable.merge([
+      controlador,
+      sesion,
+      ControladorInstalacion.instancia,
+    ]),
     builder: (context, _) {
       final esOscuro = Theme.of(context).brightness == Brightness.dark;
 
@@ -81,12 +87,14 @@ class _PantallaConfiguracionUsuarioState
                     ],
                   ),
                   const SizedBox(height: 22),
-                  const _GrupoAjustes(
+                  _GrupoAjustes(
                     titulo: 'Preferencias',
                     opciones: [
-                      OpcionNotificaciones(),
-                      OpcionTemaAplicacion(),
-                      OpcionAyuda(),
+                      const OpcionNotificaciones(),
+                      if (ControladorInstalacion.instancia.disponible)
+                        const OpcionInstalarApp(),
+                      const OpcionTemaAplicacion(),
+                      const OpcionAyuda(),
                     ],
                   ),
                   const SizedBox(height: 24),
