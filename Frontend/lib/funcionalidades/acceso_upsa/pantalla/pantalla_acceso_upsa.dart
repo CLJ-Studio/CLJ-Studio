@@ -103,9 +103,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                             ],
                           ),
                         ),
-                        _BuhosAnimados(
-                          alto: (restricciones.maxHeight * .26).clamp(130, 230),
-                        ),
+                        _BuhosAnimados(ancho: restricciones.maxWidth),
                         const SizedBox(height: 4),
                         const EncabezadoAccesoUpsa(),
                         const SizedBox(height: 28),
@@ -148,32 +146,66 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
   );
 }
 
-/// Búhos de bienvenida. Ocupan su propio espacio en la columna.
+/// Búhos de bienvenida sobre una rama que cruza la pantalla de lado a lado.
+///
+/// Se mide por el ancho, nunca por el alto ni con desplazamientos en pixeles.
+/// Un `Offset` fijo cuadra solo en el telefono donde se probo: en el resto la
+/// escena sale corrida y con un buho cortado. Y salir del alto disponible
+/// hace que abrir el teclado encoja la pantalla, achique la animacion y todo
+/// el formulario de un salto.
 class _BuhosAnimados extends StatelessWidget {
-  const _BuhosAnimados({required this.alto});
+  const _BuhosAnimados({required this.ancho});
 
-  final double alto;
+  /// Ancho completo de la pantalla, sin el padding del formulario.
+  final double ancho;
+
+  /// La rama no llega a los bordes de su propio lienzo, asi que a tamaño
+  /// exacto termina antes que la pantalla y parece un palo flotando.
+  /// Ampliarla y recortar hace que las puntas salgan por los costados en
+  /// cualquier ancho, que es como se lee una rama de verdad. El escalado va
+  /// desde el centro, asi que aleja las dos puntas por igual.
+  static const _desborde = 1.5;
+
+  /// Banda visible del lienzo: recorta el aire de arriba y abajo para que la
+  /// escena no se coma media pantalla en telefonos angostos.
+  static const _proporcionAlto = .38;
 
   @override
-  Widget build(BuildContext context) => IgnorePointer(
-    child: ExcludeSemantics(
-      child: RepaintBoundary(
-        child: SizedBox(
-          height: alto,
-          child: Transform.translate(
-            offset: const Offset(129, -45),
-            child: Lottie.asset(
-              'assets/animations/owls.json',
-              fit: BoxFit.contain,
-              repeat: true,
-              frameRate: const FrameRate(24),
-              filterQuality: FilterQuality.low,
+  Widget build(BuildContext context) {
+    final alto = ancho * _proporcionAlto;
+
+    return IgnorePointer(
+      child: ExcludeSemantics(
+        child: RepaintBoundary(
+          child: SizedBox(
+            height: alto,
+            // El formulario lleva padding lateral y un ancho maximo; la rama
+            // no debe respetarlos, o volveria a terminar antes del borde.
+            child: OverflowBox(
+              maxWidth: ancho,
+              maxHeight: alto,
+              child: ClipRect(
+                child: SizedBox(
+                  width: ancho,
+                  height: alto,
+                  child: Transform.scale(
+                    scale: _desborde,
+                    child: Lottie.asset(
+                      'assets/animations/owls.json',
+                      fit: BoxFit.cover,
+                      repeat: true,
+                      frameRate: const FrameRate(24),
+                      filterQuality: FilterQuality.low,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Manchas suaves que conservan el gran espacio en blanco de la referencia.
