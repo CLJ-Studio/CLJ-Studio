@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../configuracion_aplicacion/modo_local.dart';
 import '../../funcionalidades/configuracion_usuario/datos/repositorio_configuracion.dart';
 import '../../funcionalidades/configuracion_usuario/modelos/usuario_upsa.dart';
 
@@ -29,6 +30,19 @@ class SesionUsuario extends ChangeNotifier {
   Future<void> cargar({bool forzar = false}) async {
     if (cargando) return;
     if (perfil != null && !forzar) return;
+    if (ModoLocal.activo) {
+      perfil = const UsuarioUpsa(
+        nombre: 'Estudiante UPSA',
+        codigo: 'LOCAL',
+        correo: 'estudiante@upsa.edu.bo',
+        carrera: 'Modo de diseño',
+        avatarEmoji: '🎓',
+        whatsapp: '',
+        enCampus: true,
+      );
+      notifyListeners();
+      return;
+    }
     if (Supabase.instance.client.auth.currentUser == null) return;
 
     cargando = true;

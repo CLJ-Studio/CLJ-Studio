@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../modelos/notificacion.dart';
 
@@ -25,6 +26,12 @@ class ControladorNotificaciones extends ChangeNotifier {
   int get noLeidas => notificaciones.where((n) => !n.leida).length;
 
   Future<void> cargar() async {
+    if (ModoLocal.activo) {
+      cargando = false;
+      error = null;
+      notifyListeners();
+      return;
+    }
     final usuario = _cliente.auth.currentUser;
     if (usuario == null) return;
 

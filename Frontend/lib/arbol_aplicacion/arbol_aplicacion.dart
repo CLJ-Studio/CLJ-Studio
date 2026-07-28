@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../configuracion_aplicacion/modo_local.dart';
 import '../configuracion_aplicacion/configuracion_tema.dart';
 import '../configuracion_aplicacion/controlador_tema.dart';
+import '../funcionalidades/acceso_upsa/arbol/arbol_acceso_upsa.dart';
+import '../funcionalidades/navegacion_principal/arbol/arbol_navegacion_principal.dart';
 import '../funcionalidades/instalacion_app/logica/controlador_instalacion.dart';
 import 'arbol_rutas.dart';
 import 'porton_autenticacion.dart';
@@ -16,6 +19,7 @@ class ArbolAplicacion extends StatefulWidget {
 
 class _ArbolAplicacionState extends State<ArbolAplicacion> {
   final tema = ControladorTema.instancia;
+  bool _accesoLocalCompletado = false;
 
   @override
   void initState() {
@@ -34,7 +38,14 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
       darkTheme: ConfiguracionTema.temaOscuro,
       themeMode: tema.modo,
       onGenerateRoute: ArbolRutas.generarRuta,
-      home: const PortonAutenticacion(),
+      home: ModoLocal.activo
+          ? _accesoLocalCompletado
+                ? const ArbolNavegacionPrincipal()
+                : ArbolAccesoUpsa(
+                    alAccederLocal: () =>
+                        setState(() => _accesoLocalCompletado = true),
+                  )
+          : const PortonAutenticacion(),
     ),
   );
 }

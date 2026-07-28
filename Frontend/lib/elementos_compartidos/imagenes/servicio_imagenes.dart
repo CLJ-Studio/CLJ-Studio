@@ -1,6 +1,8 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../configuracion_aplicacion/modo_local.dart';
+
 /// Seleccion y subida de imagenes al bucket publico `imagenes`.
 ///
 /// Cada archivo se guarda bajo la carpeta del usuario (`<uid>/...`): las
@@ -23,6 +25,7 @@ abstract final class ServicioImagenes {
       imageQuality: 82,
     );
     if (archivo == null) return null;
+    if (ModoLocal.activo) return archivo.path;
 
     final bytes = await archivo.readAsBytes();
     final uid = Supabase.instance.client.auth.currentUser!.id;
@@ -48,6 +51,12 @@ abstract final class ServicioImagenes {
   /// URL publica y cacheable de una ruta del bucket.
   static String? urlPublica(String? ruta) {
     if (ruta == null || ruta.isEmpty) return null;
+    if (ModoLocal.activo ||
+        ruta.startsWith('blob:') ||
+        ruta.startsWith('data:') ||
+        ruta.startsWith('http')) {
+      return ruta;
+    }
     return Supabase.instance.client.storage.from('imagenes').getPublicUrl(ruta);
   }
 }

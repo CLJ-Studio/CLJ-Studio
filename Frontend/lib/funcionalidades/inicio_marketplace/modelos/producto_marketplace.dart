@@ -16,6 +16,7 @@ class ProductoMarketplace {
     this.imagePath,
     this.disponible = true,
     this.imagenes = const [],
+    this.vistas = 0,
   });
 
   /// Mapea una fila de `products`. Si la consulta unio `stores`, el local
@@ -43,6 +44,7 @@ class ProductoMarketplace {
           (tienda == null ? null : LocalUniversitario.desdeMapa(tienda)),
       imagePath: fila['image_path'] as String?,
       disponible: (fila['is_available'] as bool?) ?? true,
+      vistas: (fila['view_count'] as num?)?.toInt() ?? 0,
       imagenes:
           ((fila['product_images'] as List?) ?? const [])
               .cast<Map<String, dynamic>>()
@@ -66,6 +68,7 @@ class ProductoMarketplace {
         imagePath: imagePath,
         disponible: disponible ?? this.disponible,
         imagenes: imagenes,
+        vistas: vistas,
       );
 
   final String id;
@@ -88,6 +91,7 @@ class ProductoMarketplace {
 
   /// Galeria adicional (hasta 12), en orden.
   final List<String> imagenes;
+  final int vistas;
 
   String? get imagenUrl => ServicioImagenes.urlPublica(imagePath);
 

@@ -57,7 +57,7 @@ class ControladorLocales extends ChangeNotifier {
       cargando = false;
       notifyListeners();
     }
-}
+  }
 
   Future<void> _recargarEnSilencio() async {
     try {
@@ -77,6 +77,16 @@ class ControladorLocales extends ChangeNotifier {
 
   void buscar(String texto) {
     busqueda = texto.trim().toLowerCase();
+    locales = _filtrar();
+    notifyListeners();
+  }
+
+  /// Mantiene el catálogo de diseño sincronizado con el local recién creado.
+  ///
+  /// En producción los eventos de Supabase recargan esta información. En el
+  /// modo local no existe ese evento, así que se replica aquí explícitamente.
+  void actualizarLocalDePrueba(LocalUniversitario local) {
+    _todos = [local, ..._todos.where((existente) => existente.id != local.id)];
     locales = _filtrar();
     notifyListeners();
   }

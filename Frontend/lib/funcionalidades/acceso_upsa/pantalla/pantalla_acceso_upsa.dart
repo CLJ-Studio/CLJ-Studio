@@ -9,9 +9,14 @@ import '../diseno/mensaje_acceso_exclusivo.dart';
 
 /// Acceso institucional minimalista y responsivo.
 class PantallaAccesoUpsa extends StatefulWidget {
-  const PantallaAccesoUpsa({required this.repositorio, super.key});
+  const PantallaAccesoUpsa({
+    required this.repositorio,
+    this.alAccederLocal,
+    super.key,
+  });
 
   final RepositorioAccesoUpsa repositorio;
+  final VoidCallback? alAccederLocal;
 
   @override
   State<PantallaAccesoUpsa> createState() => _PantallaAccesoUpsaState();
@@ -47,6 +52,10 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
   }
 
   Future<void> _continuar() async {
+    if (widget.alAccederLocal != null) {
+      widget.alAccederLocal!();
+      return;
+    }
     setState(() => _cargando = true);
     try {
       await widget.repositorio.iniciarSesionConGoogle(
@@ -89,10 +98,8 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                                 top: -30,
                                 child: Text(
                                   'UPSA Eat',
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface,
+                                  style: const TextStyle(
+                                    color: Colors.black,
                                     fontFamily: 'Metropolis',
                                     fontSize: 34,
                                     fontWeight: FontWeight.w900,

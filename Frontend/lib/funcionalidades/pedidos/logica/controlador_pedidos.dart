@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../datos/repositorio_pedidos.dart';
 import '../modelos/pedido.dart';
@@ -27,7 +28,9 @@ class ControladorPedidos extends ChangeNotifier {
     alCambiar: _recargarEnSilencio,
   );
 
-  void iniciarTiempoReal() => _escucha.iniciar();
+  void iniciarTiempoReal() {
+    if (!ModoLocal.activo) _escucha.iniciar();
+  }
 
   @override
   void dispose() {
@@ -37,6 +40,11 @@ class ControladorPedidos extends ChangeNotifier {
 
   /// Cancela y refresca. Devuelve el motivo si el servidor lo rechaza.
   Future<String?> cancelar(String pedidoId) async {
+    if (ModoLocal.activo) {
+      compras = compras.where((pedido) => pedido.id != pedidoId).toList();
+      notifyListeners();
+      return null;
+    }
     try {
       await _repositorio.cancelar(pedidoId);
       await _recargarEnSilencio();
@@ -51,6 +59,7 @@ class ControladorPedidos extends ChangeNotifier {
 
   /// Refresca sin el indicador de carga, para no parpadear la lista.
   Future<void> _recargarEnSilencio() async {
+    if (ModoLocal.activo) return;
     try {
       final resultados = await Future.wait([
         _repositorio.misCompras(),
@@ -65,6 +74,14 @@ class ControladorPedidos extends ChangeNotifier {
   }
 
   Future<void> cargar() async {
+    if (ModoLocal.activo) {
+      compras = const [];
+      ventas = const [];
+      cargando = false;
+      error = null;
+      notifyListeners();
+      return;
+    }
     cargando = true;
     error = null;
     notifyListeners();

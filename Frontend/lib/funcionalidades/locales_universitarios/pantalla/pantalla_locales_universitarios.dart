@@ -7,6 +7,7 @@ import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../inicio_marketplace/diseno/campus_collapsing_header.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
+import '../diseno/carrusel_locales_destacados.dart';
 import '../diseno/invitacion_abrir_local.dart';
 import '../diseno/lista_locales.dart';
 import '../logica/controlador_locales.dart';
@@ -59,6 +60,7 @@ class _PantallaLocalesUniversitariosState
         if (widget.mostrarEncabezado)
           CampusCollapsingHeader(
             nombre: SesionUsuario.instancia.primerNombre,
+            avatarUrl: SesionUsuario.instancia.perfil?.avatarUrl,
             categorias: controlador.categorias,
             categoriaId: controlador.categoriaId,
             alBuscar: controlador.buscar,
@@ -79,6 +81,13 @@ class _PantallaLocalesUniversitariosState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // El acceso al local propio tiene prioridad sobre el
+                  // contenido recomendado.
+                  InvitacionAbrirLocal(
+                    alPresionar: widget.alCrearLocal,
+                    yaTieneLocal: widget.yaTieneLocal,
+                  ),
+                  const SizedBox(height: 28),
                   Text(
                     'Locales destacados',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -97,13 +106,17 @@ class _PantallaLocalesUniversitariosState
                           : Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  // La invitación permanece visible sin depender del filtro.
-                  InvitacionAbrirLocal(
-                    alPresionar: widget.alCrearLocal,
-                    yaTieneLocal: widget.yaTieneLocal,
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
+                  if (!controlador.cargando &&
+                      controlador.error == null &&
+                      controlador.locales.isNotEmpty) ...[
+                    CarruselLocalesDestacados(
+                      locales: controlador.locales,
+                      construirDetalle: (_, local) =>
+                          PantallaDetalleLocal(local: local),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                   Row(
                     children: [
                       Expanded(

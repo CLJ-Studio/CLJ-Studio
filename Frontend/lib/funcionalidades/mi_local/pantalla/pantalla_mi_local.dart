@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../visualizaciones/indicador_vistas.dart';
 import '../diseno/dialogo_producto.dart';
 import '../logica/controlador_mi_local.dart';
 
@@ -129,7 +130,10 @@ class PantallaMiLocal extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Encabezado(controlador: controlador),
+            _Encabezado(
+              controlador: controlador,
+              alCerrar: () => _confirmarCierre(context),
+            ),
             const SizedBox(height: 34),
             Row(
               children: [
@@ -169,20 +173,6 @@ class PantallaMiLocal extends StatelessWidget {
                   alEliminar: () => _confirmarBorrado(context, indice),
                 ),
               ),
-            const SizedBox(height: 34),
-            Center(
-              child: TextButton.icon(
-                onPressed: () => _confirmarCierre(context),
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFB3453B),
-                ),
-                icon: const Icon(Icons.storefront_outlined, size: 18),
-                label: const Text(
-                  'Cerrar el local',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -191,9 +181,10 @@ class PantallaMiLocal extends StatelessWidget {
 }
 
 class _Encabezado extends StatelessWidget {
-  const _Encabezado({required this.controlador});
+  const _Encabezado({required this.controlador, required this.alCerrar});
 
   final ControladorMiLocal controlador;
+  final VoidCallback alCerrar;
 
   @override
   Widget build(BuildContext context) {
@@ -270,13 +261,42 @@ class _Encabezado extends StatelessWidget {
                     ),
                   ),
                 ],
+                const SizedBox(height: 8),
+                IndicadorVistas(
+                  total: controlador.local?.vistas ?? 0,
+                  compacto: true,
+                ),
               ],
             ),
           ),
-          IconButton(
+          PopupMenuButton<String>(
             tooltip: 'Opciones del local',
-            onPressed: () {},
             icon: const Icon(Icons.more_horiz_rounded),
+            color: oscuro ? const Color(0xFF202320) : const Color(0xFFF9FAF8),
+            elevation: 18,
+            surfaceTintColor: Colors.transparent,
+            menuPadding: const EdgeInsets.all(8),
+            offset: const Offset(-12, 8),
+            constraints: const BoxConstraints.tightFor(width: 240),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            onSelected: (opcion) {
+              if (opcion == 'cerrar') alCerrar();
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'cerrar',
+                height: 60,
+                padding: EdgeInsets.zero,
+                child: _AccionMenuInventario(
+                  icono: Icons.storefront_outlined,
+                  titulo: 'Cerrar el local',
+                  descripcion: 'Retíralo del catálogo',
+                  destructiva: true,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -396,7 +416,7 @@ class _FilaProducto extends StatelessWidget {
           final compacto = restricciones.maxWidth < 560;
           final ladoImagen = compacto ? 116.0 : 154.0;
           return Container(
-            height: compacto ? 144 : 182,
+            height: compacto ? 176 : 182,
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
@@ -462,6 +482,13 @@ class _FilaProducto extends StatelessWidget {
                               ),
                             ),
                           ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 5),
+                          child: IndicadorVistas(
+                            total: producto.vistas,
+                            compacto: true,
+                          ),
+                        ),
                         const Spacer(),
                         Row(
                           children: [

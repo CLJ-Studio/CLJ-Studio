@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
@@ -65,6 +66,12 @@ class ControladorMiLocal extends ChangeNotifier {
   String get logo => local?.emoji ?? '🍽️';
 
   Future<void> cargar() async {
+    if (ModoLocal.activo) {
+      cargando = false;
+      error = null;
+      notifyListeners();
+      return;
+    }
     cargando = true;
     error = null;
     notifyListeners();
@@ -95,6 +102,11 @@ class ControladorMiLocal extends ChangeNotifier {
   /// crea el espacio personal por detras, sin pedirle abrir un local.
   Future<void> asegurarEspacioPersonal() async {
     if (espacioPersonal != null) return;
+    if (ModoLocal.activo) {
+      espacioPersonal = negocio;
+      notifyListeners();
+      return;
+    }
     espacioPersonal = await _repositorio.crearEspacioPersonal(
       nombreEstudiante: SesionUsuario.instancia.primerNombre,
     );
@@ -107,7 +119,7 @@ class ControladorMiLocal extends ChangeNotifier {
     final actual = negocio;
     if (actual == null) return;
 
-    await _repositorio.cerrarLocal(actual.id);
+    if (!ModoLocal.activo) await _repositorio.cerrarLocal(actual.id);
     negocio = null;
     productos = const [];
     notifyListeners();
@@ -120,6 +132,25 @@ class ControladorMiLocal extends ChangeNotifier {
     required String categoriaId,
     String? logoPath,
   }) async {
+    if (ModoLocal.activo) {
+      negocio = LocalUniversitario(
+        id: 'local-diseno',
+        nombre: nuevoNombre.trim(),
+        categoriaId: categoriaId,
+        categoria: 'Local',
+        descripcion: nuevaDescripcion.trim(),
+        calificacion: 5,
+        tiempoEstimado: '15 min',
+        estaAbierto: true,
+        costoEntrega: 0,
+        emoji: nuevoLogo,
+        colorHexadecimal: 0xFFF1F6F0,
+        logoPath: logoPath,
+      );
+      productos = const [];
+      notifyListeners();
+      return;
+    }
     negocio = await _repositorio.crearLocal(
       nombre: nuevoNombre.trim(),
       descripcion: nuevaDescripcion.trim(),
@@ -142,6 +173,27 @@ class ControladorMiLocal extends ChangeNotifier {
     List<String> galeria = const [],
   }) async {
     await asegurarEspacioPersonal();
+    if (ModoLocal.activo) {
+      final rutas = List<String>.from(galeria);
+      productos = [
+        ProductoMarketplace(
+          id: 'producto-${DateTime.now().microsecondsSinceEpoch}',
+          localId: espacioPersonal?.id ?? 'local-diseno',
+          nombre: nombre.trim(),
+          descripcion: descripcion?.trim() ?? '',
+          precio: precio,
+          emoji: emoji,
+          stock: cantidad,
+          esServicio: esServicio,
+          local: negocio,
+          imagePath: rutas.isEmpty ? null : rutas.first,
+          imagenes: rutas.length <= 1 ? const [] : rutas.sublist(1),
+        ),
+        ...productos,
+      ];
+      notifyListeners();
+      return;
+    }
     await _repositorio.agregarProducto(
       localId: espacioPersonal!.id,
       nombre: nombre.trim(),
@@ -168,6 +220,26 @@ class ControladorMiLocal extends ChangeNotifier {
     String? descripcion,
     List<String> galeria = const [],
   }) async {
+    if (ModoLocal.activo) {
+      final indice = productos.indexWhere((p) => p.id == productoId);
+      if (indice < 0) return;
+      final anterior = productos[indice];
+      productos = [...productos]
+        ..[indice] = ProductoMarketplace(
+          id: anterior.id,
+          localId: anterior.localId,
+          nombre: nombre.trim(),
+          descripcion: descripcion?.trim() ?? '',
+          precio: precio,
+          emoji: emoji,
+          stock: cantidad,
+          local: anterior.local,
+          imagePath: galeria.isEmpty ? null : galeria.first,
+          imagenes: galeria.length <= 1 ? const [] : galeria.sublist(1),
+        );
+      notifyListeners();
+      return;
+    }
     await _repositorio.editarProducto(
       productoId: productoId,
       nombre: nombre.trim(),
@@ -189,6 +261,8 @@ class ControladorMiLocal extends ChangeNotifier {
       ..[indice] = producto.copiarCon(disponible: visible);
     notifyListeners();
 
+    if (ModoLocal.activo) return;
+
     try {
       await _repositorio.cambiarVisibilidad(producto.id, visible: visible);
     } catch (_) {
@@ -200,6 +274,13 @@ class ControladorMiLocal extends ChangeNotifier {
 
   /// Vuelve a poner la publicacion al tope del catalogo.
   Future<void> relanzarProducto(int indice) async {
+    if (ModoLocal.activo) {
+      final producto = productos[indice];
+      productos = [...productos]..removeAt(indice);
+      productos = [producto, ...productos];
+      notifyListeners();
+      return;
+    }
     try {
       await _repositorio.relanzarProducto(productos[indice].id);
       await _refrescarInventario();
@@ -220,6 +301,8 @@ class ControladorMiLocal extends ChangeNotifier {
       ..[indice] = producto.copiarCon(stock: nuevoStock);
     notifyListeners();
 
+    if (ModoLocal.activo) return;
+
     try {
       await _repositorio.cambiarStock(producto.id, nuevoStock);
     } catch (_) {
@@ -236,6 +319,8 @@ class ControladorMiLocal extends ChangeNotifier {
     productos = [...productos]..removeAt(indice);
     notifyListeners();
 
+    if (ModoLocal.activo) return;
+
     try {
       await _repositorio.eliminarProducto(producto.id);
     } catch (_) {
@@ -247,6 +332,7 @@ class ControladorMiLocal extends ChangeNotifier {
 
   Future<void> cambiarDisponibilidad({required bool abierto}) async {
     if (local == null) return;
+    if (ModoLocal.activo) return;
     await _repositorio.cambiarDisponibilidad(local!.id, abierto: abierto);
     await cargar();
   }

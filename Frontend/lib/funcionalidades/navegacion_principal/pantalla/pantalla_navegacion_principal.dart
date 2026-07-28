@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/navegacion/bloqueo_deslizamiento_principal.dart';
 import '../logica/controlador_navegacion_principal.dart';
 
 /// Presenta las secciones con una navegación nativa y ligera.
@@ -62,6 +63,7 @@ class _PantallasDeslizables extends StatefulWidget {
 
 class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
   late final _paginas = PageController(initialPage: widget.indice);
+  bool _deslizamientoBloqueado = false;
 
   @override
   void didUpdateWidget(covariant _PantallasDeslizables anterior) {
@@ -99,12 +101,24 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
   }
 
   @override
-  Widget build(BuildContext context) => PageView.builder(
-    controller: _paginas,
-    onPageChanged: widget.alDeslizar,
-    itemCount: widget.pantallas.length,
-    itemBuilder: (_, indice) => widget.pantallas[indice],
-  );
+  Widget build(BuildContext context) =>
+      NotificationListener<BloqueoDeslizamientoPrincipal>(
+        onNotification: (notificacion) {
+          if (_deslizamientoBloqueado != notificacion.bloqueado) {
+            setState(() => _deslizamientoBloqueado = notificacion.bloqueado);
+          }
+          return true;
+        },
+        child: PageView.builder(
+          controller: _paginas,
+          physics: _deslizamientoBloqueado
+              ? const NeverScrollableScrollPhysics()
+              : const PageScrollPhysics(),
+          onPageChanged: widget.alDeslizar,
+          itemCount: widget.pantallas.length,
+          itemBuilder: (_, indice) => widget.pantallas[indice],
+        ),
+      );
 }
 
 /// Cápsula deslizante sin blur, shaders ni filtros costosos.

@@ -10,3 +10,8 @@ node_modules/
 # Editores / sistema
 .DS_Store
 Thumbs.db
+.dart_tool/
+.idea/
+.vscode/
+*.iml
+build/

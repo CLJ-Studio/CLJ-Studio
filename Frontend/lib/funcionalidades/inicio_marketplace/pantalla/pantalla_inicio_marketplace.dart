@@ -6,11 +6,14 @@ import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart'
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../instalacion_app/diseno/aviso_instalacion.dart';
+import '../../locales_universitarios/diseno/carrusel_locales_destacados.dart';
 import '../../locales_universitarios/diseno/lista_productos_local.dart';
+import '../../locales_universitarios/pantalla/pantalla_detalle_local.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../diseno/campus_collapsing_header.dart';
 import '../logica/controlador_inicio_marketplace.dart';
 import '../logica/estado_inicio_marketplace.dart';
+import '../modelos/local_universitario.dart';
 
 /// Feed con todo lo que se publica en el campus.
 ///
@@ -32,11 +35,18 @@ class PantallaInicioMarketplace extends StatelessWidget {
     animation: Listenable.merge([controlador, SesionUsuario.instancia]),
     builder: (context, _) {
       final estado = controlador.estado;
+      final localesPorId = <String, LocalUniversitario>{};
+      for (final producto in estado.publicaciones) {
+        final local = producto.local;
+        if (local != null) localesPorId[local.id] = local;
+      }
+      final localesDestacados = localesPorId.values.toList(growable: false);
       return CustomScrollView(
         slivers: [
           if (mostrarEncabezado)
             CampusCollapsingHeader(
               nombre: SesionUsuario.instancia.primerNombre,
+              avatarUrl: SesionUsuario.instancia.perfil?.avatarUrl,
               categorias: estado.categorias,
               categoriaId: estado.categoriaId,
               alBuscar: controlador.buscar,
@@ -73,6 +83,20 @@ class PantallaInicioMarketplace extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const AvisoInstalacion(),
+                      if (localesDestacados.isNotEmpty) ...[
+                        _TituloSeccion(
+                          titulo: 'Locales destacados',
+                          alVerTodo: () =>
+                              controlador.seleccionarCategoria('todas'),
+                        ),
+                        const SizedBox(height: 6),
+                        CarruselLocalesDestacados(
+                          locales: localesDestacados,
+                          construirDetalle: (_, local) =>
+                              PantallaDetalleLocal(local: local),
+                        ),
+                        const SizedBox(height: 18),
+                      ],
                       _TituloSeccion(
                         titulo: 'Productos populares',
                         alVerTodo: () =>

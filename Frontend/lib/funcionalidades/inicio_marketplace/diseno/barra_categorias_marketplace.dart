@@ -19,11 +19,11 @@ class BarraCategoriasMarketplace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 54 - (10 * compactProgress),
+    height: 82 - (18 * compactProgress),
     child: ListView.separated(
       scrollDirection: Axis.horizontal,
       itemCount: categorias.length,
-      separatorBuilder: (_, _) => const SizedBox(width: 8),
+      separatorBuilder: (_, _) => const SizedBox(width: 14),
       itemBuilder: (_, indice) {
         final categoria = categorias[indice];
         return BotonCategoriaMarketplace(

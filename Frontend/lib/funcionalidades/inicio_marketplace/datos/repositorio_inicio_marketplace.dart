@@ -13,7 +13,8 @@ class RepositorioInicioMarketplace {
   /// Campos de producto compartidos por el catalogo y el detalle.
   static const camposProducto =
       'id, store_id, name, description, price, emoji, stock, kind, '
-      'image_path, is_available, product_images(storage_path, position)';
+      'image_path, is_available, view_count, '
+      'product_images(storage_path, position)';
 
   Future<List<CategoriaMarketplace>> obtenerCategorias() async {
     final filas = await _cliente

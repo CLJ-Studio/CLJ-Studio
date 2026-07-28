@@ -46,12 +46,6 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
                 child: Center(child: IndicadorCarga(tamanio: 140)),
               )
             else ...[
-              // Solo informa el destino cuando hay un local formal; el
-              // espacio personal es interno y no hace falta mencionarlo.
-              if (widget.miLocal.tieneLocalFormal) ...[
-                _AvisoDestino(nombreLocal: widget.miLocal.nombre!),
-                const SizedBox(height: 18),
-              ],
               FormularioPublicacion(
                 controlador: controlador,
                 miLocal: widget.miLocal,
@@ -60,42 +54,6 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
           ],
         ),
       ),
-    ),
-  );
-}
-
-/// Indica en qué local quedará la publicación.
-class _AvisoDestino extends StatelessWidget {
-  const _AvisoDestino({required this.nombreLocal});
-
-  final String nombreLocal;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Row(
-      children: [
-        const Icon(
-          Icons.storefront_rounded,
-          size: 19,
-          color: Color(0xFF5C8A63),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            'Se publicará en $nombreLocal',
-            style: const TextStyle(
-              color: Color(0xFF3F6146),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ],
     ),
   );
 }

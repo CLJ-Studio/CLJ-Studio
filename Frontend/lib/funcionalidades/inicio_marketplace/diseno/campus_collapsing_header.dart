@@ -6,6 +6,18 @@ import 'barra_busqueda_marketplace.dart';
 import 'barra_categorias_marketplace.dart';
 import 'boton_carrito_compras.dart';
 
+final _ubicacionSeleccionada = ValueNotifier<String>('Campus UPSA');
+
+const _ubicacionesCampus = [
+  'Jatata',
+  'Pascana',
+  'Mozza',
+  'Cafetería',
+  'Bloque A',
+  'Bloque B',
+  'Ingeniería',
+];
+
 /// Cabecera compartida por Inicio y Locales inspirada en una app de delivery.
 class CampusCollapsingHeader extends StatelessWidget {
   const CampusCollapsingHeader({
@@ -16,6 +28,7 @@ class CampusCollapsingHeader extends StatelessWidget {
     required this.alSeleccionarCategoria,
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
+    this.avatarUrl,
     super.key,
   });
 
@@ -26,6 +39,7 @@ class CampusCollapsingHeader extends StatelessWidget {
   final ValueChanged<String> alSeleccionarCategoria;
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) => SliverPersistentHeader(
@@ -38,6 +52,7 @@ class CampusCollapsingHeader extends StatelessWidget {
       alSeleccionarCategoria: alSeleccionarCategoria,
       alAbrirCarrito: alAbrirCarrito,
       alAbrirPedidos: alAbrirPedidos,
+      avatarUrl: avatarUrl,
     ),
   );
 }
@@ -52,6 +67,7 @@ class CampusFixedHeader extends StatelessWidget {
     required this.alSeleccionarCategoria,
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
+    this.avatarUrl,
     super.key,
   });
 
@@ -62,10 +78,11 @@ class CampusFixedHeader extends StatelessWidget {
   final ValueChanged<String> alSeleccionarCategoria;
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 234,
+    height: 264,
     child: CampusHeaderDelegate(
       nombre: nombre,
       categorias: categorias,
@@ -74,6 +91,7 @@ class CampusFixedHeader extends StatelessWidget {
       alSeleccionarCategoria: alSeleccionarCategoria,
       alAbrirCarrito: alAbrirCarrito,
       alAbrirPedidos: alAbrirPedidos,
+      avatarUrl: avatarUrl,
     ).build(context, 0, false),
   );
 }
@@ -87,6 +105,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.alSeleccionarCategoria,
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
+    this.avatarUrl,
   });
 
   final String nombre;
@@ -96,9 +115,75 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   final ValueChanged<String> alSeleccionarCategoria;
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
+  final String? avatarUrl;
+
+  Future<void> _elegirUbicacion(BuildContext context) async {
+    final elegida = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.only(bottom: 14),
+          children: [
+            const ListTile(
+              title: Text(
+                'Elige una ubicación',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              ),
+            ),
+            for (final ubicacion in _ubicacionesCampus)
+              ListTile(
+                leading: const Icon(
+                  Icons.location_on_outlined,
+                  color: Color(0xFF5C8A63),
+                ),
+                title: Text(ubicacion),
+                trailing: _ubicacionSeleccionada.value == ubicacion
+                    ? const Icon(Icons.check_rounded, color: Color(0xFF5C8A63))
+                    : null,
+                onTap: () => Navigator.of(context).pop(ubicacion),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (elegida != null) _ubicacionSeleccionada.value = elegida;
+  }
+
+  Future<void> _mostrarTodasCategorias(BuildContext context) async {
+    final elegida = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.only(bottom: 14),
+          children: [
+            const ListTile(
+              title: Text(
+                'Todas las categorías',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              ),
+            ),
+            for (final categoria in categorias)
+              ListTile(
+                leading: Icon(categoria.icono, color: const Color(0xFF5C8A63)),
+                title: Text(categoria.nombre),
+                trailing: categoria.id == categoriaId
+                    ? const Icon(Icons.check_rounded, color: Color(0xFF5C8A63))
+                    : null,
+                onTap: () => Navigator.of(context).pop(categoria.id),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (elegida != null) alSeleccionarCategoria(elegida);
+  }
 
   @override
-  double get maxExtent => 234;
+  double get maxExtent => 264;
 
   @override
   double get minExtent => 72;
@@ -131,7 +216,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
                   maxWidth: 1200,
-                  minHeight: 234,
+                  minHeight: 264,
                 ),
                 child: Column(
                   children: [
@@ -142,64 +227,65 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                         alignment: Alignment.center,
                         child: Row(
                           children: [
-                            Container(
-                              width: 43,
-                              height: 43,
-                              alignment: Alignment.center,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF5C8A63),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                nombre.isEmpty ? 'U' : nombre[0].toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
+                            _AvatarEncabezado(
+                              nombre: nombre,
+                              avatarUrl: avatarUrl,
                             ),
                             const SizedBox(width: 11),
                             Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Ubicación',
-                                    style: TextStyle(
-                                      color: secundario,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
+                              child: ValueListenableBuilder<String>(
+                                valueListenable: _ubicacionSeleccionada,
+                                builder: (context, ubicacion, _) => InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: () => _elegirUbicacion(context),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 7,
                                     ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.location_on_outlined,
-                                        color: Color(0xFF5C8A63),
-                                        size: 17,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Flexible(
-                                        child: Text(
-                                          'Campus UPSA',
-                                          overflow: TextOverflow.ellipsis,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Ubicación',
                                           style: TextStyle(
-                                            color: texto,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w800,
+                                            color: secundario,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                      ),
-                                      const Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        color: Color(0xFF5C8A63),
-                                        size: 19,
-                                      ),
-                                    ],
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.location_on_outlined,
+                                              color: Color(0xFF5C8A63),
+                                              size: 17,
+                                            ),
+                                            const SizedBox(width: 3),
+                                            Flexible(
+                                              child: Text(
+                                                ubicacion,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  color: texto,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.keyboard_arrow_down_rounded,
+                                              color: Color(0xFF5C8A63),
+                                              size: 19,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                             const BotonCampana(),
@@ -240,7 +326,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                               ),
                             ),
                             TextButton(
-                              onPressed: () => alSeleccionarCategoria('todas'),
+                              onPressed: () => _mostrarTodasCategorias(context),
                               child: const Text(
                                 'Ver todo',
                                 style: TextStyle(
@@ -281,7 +367,52 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant CampusHeaderDelegate oldDelegate) =>
       oldDelegate.categoriaId != categoriaId ||
       oldDelegate.categorias != categorias ||
-      oldDelegate.nombre != nombre;
+      oldDelegate.nombre != nombre ||
+      oldDelegate.avatarUrl != avatarUrl;
+}
+
+class _AvatarEncabezado extends StatelessWidget {
+  const _AvatarEncabezado({required this.nombre, this.avatarUrl});
+
+  final String nombre;
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 43,
+    height: 43,
+    clipBehavior: Clip.antiAlias,
+    alignment: Alignment.center,
+    decoration: const BoxDecoration(
+      color: Color(0xFF5C8A63),
+      shape: BoxShape.circle,
+    ),
+    child: avatarUrl == null || avatarUrl!.isEmpty
+        ? _InicialAvatar(nombre: nombre)
+        : Image.network(
+            avatarUrl!,
+            width: 43,
+            height: 43,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => _InicialAvatar(nombre: nombre),
+          ),
+  );
+}
+
+class _InicialAvatar extends StatelessWidget {
+  const _InicialAvatar({required this.nombre});
+
+  final String nombre;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    nombre.isEmpty ? 'U' : nombre[0].toUpperCase(),
+    style: const TextStyle(
+      color: Colors.white,
+      fontSize: 18,
+      fontWeight: FontWeight.w900,
+    ),
+  );
 }
 
 class _AccionCircular extends StatelessWidget {

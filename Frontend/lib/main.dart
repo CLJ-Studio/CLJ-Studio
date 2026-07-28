@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'arbol_aplicacion/arbol_aplicacion.dart';
+import 'configuracion_aplicacion/modo_local.dart';
 import 'configuracion_aplicacion/configuracion_supabase.dart';
 
 /// Punto de entrada de UPSA Eat.
@@ -18,10 +19,12 @@ void main() async {
   PaintingBinding.instance.imageCache.maximumSize = 80;
   PaintingBinding.instance.imageCache.maximumSizeBytes = 48 << 20;
 
-  await Supabase.initialize(
-    url: ConfiguracionSupabase.url,
-    publishableKey: ConfiguracionSupabase.publishableKey,
-  );
+  if (!ModoLocal.activo) {
+    await Supabase.initialize(
+      url: ConfiguracionSupabase.url,
+      publishableKey: ConfiguracionSupabase.publishableKey,
+    );
+  }
 
   runApp(const ArbolAplicacion());
 }

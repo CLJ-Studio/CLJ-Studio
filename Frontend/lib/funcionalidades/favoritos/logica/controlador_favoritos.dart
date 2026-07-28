@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../datos/repositorio_favoritos.dart';
 
@@ -23,6 +24,12 @@ class ControladorFavoritos extends ChangeNotifier {
       _productos.containsKey(producto.id);
 
   Future<void> cargar() async {
+    if (ModoLocal.activo) {
+      cargando = false;
+      error = null;
+      notifyListeners();
+      return;
+    }
     cargando = true;
     error = null;
     notifyListeners();
@@ -50,6 +57,8 @@ class ControladorFavoritos extends ChangeNotifier {
       _productos[producto.id] = producto;
     }
     notifyListeners();
+
+    if (ModoLocal.activo) return;
 
     try {
       if (estaba) {

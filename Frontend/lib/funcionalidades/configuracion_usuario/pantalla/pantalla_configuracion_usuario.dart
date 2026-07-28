@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../instalacion_app/diseno/opcion_instalar_app.dart';
@@ -99,7 +100,19 @@ class _PantallaConfiguracionUsuarioState
                   ),
                   const SizedBox(height: 24),
                   BotonCerrarSesion(
-                    alPresionar: () => Supabase.instance.client.auth.signOut(),
+                    alPresionar: () {
+                      if (ModoLocal.activo) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'El acceso está omitido en modo local.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      Supabase.instance.client.auth.signOut();
+                    },
                   ),
                 ],
               ),

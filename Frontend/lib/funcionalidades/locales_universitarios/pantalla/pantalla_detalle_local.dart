@@ -6,6 +6,8 @@ import '../../carrito_compras/diseno/barra_resumen_carrito.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../visualizaciones/indicador_vistas.dart';
+import '../../visualizaciones/servicio_visualizaciones.dart';
 import '../diseno/encabezado_detalle_local.dart';
 import '../diseno/lista_productos_local.dart';
 
@@ -20,10 +22,19 @@ class PantallaDetalleLocal extends StatefulWidget {
 }
 
 class _PantallaDetalleLocalState extends State<PantallaDetalleLocal> {
+  late int _vistas = widget.local.vistas;
   // La pantalla carga su propio catalogo: evita traer los productos de todos
   // los locales por adelantado solo porque uno pueda abrirse.
   late final Future<List<ProductoMarketplace>> _productos =
       const RepositorioInicioMarketplace().obtenerProductos(widget.local.id);
+
+  @override
+  void initState() {
+    super.initState();
+    ServicioVisualizaciones.registrarLocal(widget.local.id).then((total) {
+      if (mounted && total > 0) setState(() => _vistas = total);
+    });
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -35,7 +46,16 @@ class _PantallaDetalleLocalState extends State<PantallaDetalleLocal> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            EncabezadoDetalleLocal(local: widget.local),
+            Stack(
+              children: [
+                EncabezadoDetalleLocal(local: widget.local),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: IndicadorVistas(total: _vistas),
+                ),
+              ],
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
               child: FutureBuilder<List<ProductoMarketplace>>(

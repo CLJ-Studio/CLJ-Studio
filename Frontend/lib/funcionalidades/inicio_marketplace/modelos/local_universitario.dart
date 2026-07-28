@@ -19,6 +19,7 @@ class LocalUniversitario {
     this.portadaPath,
     this.vendedorNombre = '',
     this.vendedorAvatarPath,
+    this.vistas = 0,
   });
 
   /// Mapea una fila de `stores` o de la vista `locales_publicos`, que ademas
@@ -46,6 +47,7 @@ class LocalUniversitario {
       portadaPath: fila['portada_path'] as String?,
       vendedorNombre: (fila['vendedor_nombre'] as String?) ?? '',
       vendedorAvatarPath: fila['vendedor_avatar'] as String?,
+      vistas: (fila['view_count'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -70,6 +72,7 @@ class LocalUniversitario {
 
   final String vendedorNombre;
   final String? vendedorAvatarPath;
+  final int vistas;
 
   String? get logoUrl => ServicioImagenes.urlPublica(logoPath);
   String? get vendedorAvatarUrl =>

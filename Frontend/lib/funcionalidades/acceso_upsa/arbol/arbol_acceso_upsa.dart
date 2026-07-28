@@ -6,12 +6,15 @@ import '../pantalla/pantalla_acceso_upsa.dart';
 
 /// Une pantalla y repositorio del acceso UPSA.
 class ArbolAccesoUpsa extends StatelessWidget {
-  const ArbolAccesoUpsa({super.key});
+  const ArbolAccesoUpsa({this.alAccederLocal, super.key});
+
+  final VoidCallback? alAccederLocal;
 
   @override
   Widget build(BuildContext context) {
-    return const PantallaAccesoUpsa(
-      repositorio: RepositorioAccesoUpsa(ServicioAutenticacionGoogle()),
+    return PantallaAccesoUpsa(
+      repositorio: const RepositorioAccesoUpsa(ServicioAutenticacionGoogle()),
+      alAccederLocal: alAccederLocal,
     );
   }
 }

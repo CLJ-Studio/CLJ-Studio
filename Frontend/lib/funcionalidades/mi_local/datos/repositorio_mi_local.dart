@@ -16,11 +16,12 @@ class RepositorioMiLocal {
   static const _camposLocal =
       'id, name, description, category_id, emoji, color_hex, '
       'estimated_time, delivery_cost, is_open, rating_average, '
-      'is_personal, logo_path, categories(name)';
+      'is_personal, logo_path, view_count, categories(name)';
 
   static const _camposProducto =
       'id, store_id, name, description, price, emoji, stock, kind, '
-      'image_path, is_available, product_images(storage_path, position)';
+      'image_path, is_available, view_count, '
+      'product_images(storage_path, position)';
 
   /// Contenedor de las publicaciones sueltas. Null si nunca publico nada.
   Future<LocalUniversitario?> cargarEspacioPersonal() =>
