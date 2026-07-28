@@ -54,6 +54,20 @@ class ControladorTema extends ChangeNotifier {
     for (var i = 0; i < etiquetas.length; i++) {
       (etiquetas.item(i) as web.Element?)?.setAttribute('content', color);
     }
+
+    // iOS toma el color que rodea la barra de estado de la capa HTML real,
+    // no del Scaffold de Flutter. Mantener estas superficies sincronizadas
+    // evita la franja clara/gris al usar el tema oscuro.
+    if (web.document.documentElement case final web.HTMLElement raiz) {
+      raiz.style.setProperty('--app-background', color);
+      raiz.style.backgroundColor = color;
+    }
+    web.document.body?.style.backgroundColor = color;
+
+    final vistaFlutter = web.document.querySelector('flutter-view');
+    if (vistaFlutter case final web.HTMLElement vista) {
+      vista.style.backgroundColor = color;
+    }
   }
 
   static String _aHex(Color color) =>
