@@ -60,6 +60,7 @@ class _PantallaLocalesUniversitariosState
           CampusCollapsingHeader(
             nombre: SesionUsuario.instancia.primerNombre,
             avatarUrl: SesionUsuario.instancia.perfil?.avatarUrl,
+            mostrarCategorias: false,
             categorias: controlador.categorias,
             categoriaId: controlador.categoriaId,
             alBuscar: controlador.buscar,

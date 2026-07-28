@@ -36,6 +36,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   List<String> _galeria = const [];
   bool _publicando = false;
   bool _revisandoBorrador = true;
+  bool _limpiandoFormulario = false;
 
   @override
   void initState() {
@@ -58,6 +59,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   }
 
   void _alCambiarCampo() {
+    if (_limpiandoFormulario) return;
     _guardarBorrador();
     if (mounted) setState(() {});
   }
@@ -111,7 +113,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   }
 
   void _guardarBorrador() {
-    if (_revisandoBorrador) return;
+    if (_revisandoBorrador || _limpiandoFormulario) return;
     AlmacenBorrador.guardar(
       BorradorPublicacion(
         tipo: widget.controlador.tipo,
@@ -145,13 +147,22 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       );
 
       if (!mounted) return;
-      // Publicado: el borrador ya cumplio su funcion.
-      await AlmacenBorrador.borrar();
-      nombre.clear();
-      descripcion.clear();
-      precio.clear();
-      stock.text = '1';
-      setState(() => _galeria = const []);
+      // Mientras se vacian los controladores no se autoguarda cada estado
+      // intermedio; de lo contrario el ultimo campo vuelve a crear el
+      // borrador que acabamos de borrar.
+      _limpiandoFormulario = true;
+      try {
+        nombre.clear();
+        descripcion.clear();
+        precio.clear();
+        stock.text = '1';
+        widget.controlador.seleccionarTipo('Producto');
+        widget.controlador.seleccionarEmoji('🛍️');
+        setState(() => _galeria = const []);
+        await AlmacenBorrador.borrar();
+      } finally {
+        _limpiandoFormulario = false;
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context)

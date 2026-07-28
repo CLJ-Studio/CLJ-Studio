@@ -2,22 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../configuracion_aplicacion/modo_local.dart';
-import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
-import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../instalacion_app/diseno/opcion_instalar_app.dart';
 import '../../instalacion_app/logica/controlador_instalacion.dart';
 import '../diseno/boton_cerrar_sesion.dart';
 import '../diseno/opcion_ayuda.dart';
 import '../diseno/opcion_cuenta_institucional.dart';
-import '../diseno/opcion_favoritos.dart';
-import '../diseno/opcion_mis_publicaciones.dart';
 import '../diseno/opcion_notificaciones.dart';
-import '../diseno/opcion_pedidos.dart';
 import '../diseno/opcion_privacidad.dart';
 import '../diseno/opcion_tema_aplicacion.dart';
-import '../diseno/tarjeta_perfil_usuario.dart';
 import '../logica/controlador_configuracion.dart';
-import '../modelos/usuario_upsa.dart';
 
 /// Perfil y preferencias organizados en tarjetas agrupadas.
 class PantallaConfiguracionUsuario extends StatefulWidget {
@@ -31,13 +24,6 @@ class PantallaConfiguracionUsuario extends StatefulWidget {
 class _PantallaConfiguracionUsuarioState
     extends State<PantallaConfiguracionUsuario> {
   final controlador = ControladorConfiguracion();
-  final sesion = SesionUsuario.instancia;
-
-  @override
-  void initState() {
-    super.initState();
-    sesion.cargar();
-  }
 
   @override
   void dispose() {
@@ -49,7 +35,6 @@ class _PantallaConfiguracionUsuarioState
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: Listenable.merge([
       controlador,
-      sesion,
       ControladorInstalacion.instancia,
     ]),
     builder: (context, _) {
@@ -64,28 +49,9 @@ class _PantallaConfiguracionUsuarioState
               constraints: const BoxConstraints(maxWidth: 560),
               child: Column(
                 children: [
-                  switch (sesion.perfil) {
-                    final UsuarioUpsa perfil => TarjetaPerfilUsuario(
-                      usuario: perfil,
-                    ),
-                    _ => const SizedBox(
-                      height: 280,
-                      child: Center(child: IndicadorCarga()),
-                    ),
-                  },
-                  const SizedBox(height: 28),
                   const _GrupoAjustes(
                     titulo: 'Cuenta',
                     opciones: [OpcionCuentaInstitucional(), OpcionPrivacidad()],
-                  ),
-                  const SizedBox(height: 22),
-                  const _GrupoAjustes(
-                    titulo: 'Actividad',
-                    opciones: [
-                      OpcionPedidos(),
-                      OpcionFavoritos(),
-                      OpcionMisPublicaciones(),
-                    ],
                   ),
                   const SizedBox(height: 22),
                   _GrupoAjustes(

@@ -13,6 +13,10 @@ class IndicadorVistas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final etiqueta = '$total ${total == 1 ? 'vista' : 'vistas'}';
+    final color = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF202220);
+
     return Semantics(
       label: etiqueta,
       child: Row(
@@ -21,14 +25,14 @@ class IndicadorVistas extends StatelessWidget {
           Icon(
             Icons.visibility_rounded,
             size: compacto ? 18 : 23,
-            color: const Color(0xFF202220),
+            color: color,
             weight: 700,
           ),
           const SizedBox(width: 5),
           Text(
             '$total',
             style: TextStyle(
-              color: const Color(0xFF202220),
+              color: color,
               fontSize: compacto ? 12 : 14,
               fontWeight: FontWeight.w800,
             ),

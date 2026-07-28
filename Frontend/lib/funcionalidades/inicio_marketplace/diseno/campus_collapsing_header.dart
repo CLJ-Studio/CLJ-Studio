@@ -29,6 +29,7 @@ class CampusCollapsingHeader extends StatelessWidget {
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
     this.avatarUrl,
+    this.mostrarCategorias = true,
     super.key,
   });
 
@@ -40,6 +41,7 @@ class CampusCollapsingHeader extends StatelessWidget {
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
   final String? avatarUrl;
+  final bool mostrarCategorias;
 
   @override
   Widget build(BuildContext context) => SliverPersistentHeader(
@@ -53,6 +55,7 @@ class CampusCollapsingHeader extends StatelessWidget {
       alAbrirCarrito: alAbrirCarrito,
       alAbrirPedidos: alAbrirPedidos,
       avatarUrl: avatarUrl,
+      mostrarCategorias: mostrarCategorias,
     ),
   );
 }
@@ -68,6 +71,7 @@ class CampusFixedHeader extends StatelessWidget {
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
     this.avatarUrl,
+    this.mostrarCategorias = true,
     super.key,
   });
 
@@ -79,10 +83,11 @@ class CampusFixedHeader extends StatelessWidget {
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
   final String? avatarUrl;
+  final bool mostrarCategorias;
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 264,
+    height: mostrarCategorias ? 264 : 154,
     child: CampusHeaderDelegate(
       nombre: nombre,
       categorias: categorias,
@@ -92,6 +97,7 @@ class CampusFixedHeader extends StatelessWidget {
       alAbrirCarrito: alAbrirCarrito,
       alAbrirPedidos: alAbrirPedidos,
       avatarUrl: avatarUrl,
+      mostrarCategorias: mostrarCategorias,
     ).build(context, 0, false),
   );
 }
@@ -106,6 +112,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
     this.avatarUrl,
+    this.mostrarCategorias = true,
   });
 
   final String nombre;
@@ -116,6 +123,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
   final String? avatarUrl;
+  final bool mostrarCategorias;
 
   Future<void> _elegirUbicacion(BuildContext context) async {
     final elegida = await showModalBottomSheet<String>(
@@ -183,7 +191,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 264;
+  double get maxExtent => mostrarCategorias ? 264 : 154;
 
   @override
   double get minExtent => 72;
@@ -214,9 +222,9 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
             padding: const EdgeInsets.symmetric(horizontal: 18),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(
+                constraints: BoxConstraints(
                   maxWidth: 1200,
-                  minHeight: 264,
+                  minHeight: maxExtent,
                 ),
                 child: Column(
                   children: [
@@ -309,50 +317,54 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                       ),
                     ),
                     const SizedBox(height: 7),
-                    Opacity(
-                      opacity: opacidadSecundaria,
-                      child: SizedBox(
-                        height: 34,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Explora categorías',
-                                style: TextStyle(
-                                  color: texto,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w900,
+                    if (mostrarCategorias) ...[
+                      Opacity(
+                        opacity: opacidadSecundaria,
+                        child: SizedBox(
+                          height: 34,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Explora categorías',
+                                  style: TextStyle(
+                                    color: texto,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
                               ),
-                            ),
-                            TextButton(
-                              onPressed: () => _mostrarTodasCategorias(context),
-                              child: const Text(
-                                'Ver todo',
-                                style: TextStyle(
-                                  color: Color(0xFF5C8A63),
-                                  fontWeight: FontWeight.w800,
+                              TextButton(
+                                onPressed: () =>
+                                    _mostrarTodasCategorias(context),
+                                child: const Text(
+                                  'Ver todo',
+                                  style: TextStyle(
+                                    color: Color(0xFF5C8A63),
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: IgnorePointer(
-                        ignoring: opacidadSecundaria < .15,
-                        child: Opacity(
-                          opacity: opacidadSecundaria,
-                          child: BarraCategoriasMarketplace(
-                            categorias: categorias,
-                            categoriaId: categoriaId,
-                            alSeleccionar: alSeleccionarCategoria,
-                            compactProgress: progreso,
+                            ],
                           ),
                         ),
                       ),
-                    ),
+                      Expanded(
+                        child: IgnorePointer(
+                          ignoring: opacidadSecundaria < .15,
+                          child: Opacity(
+                            opacity: opacidadSecundaria,
+                            child: BarraCategoriasMarketplace(
+                              categorias: categorias,
+                              categoriaId: categoriaId,
+                              alSeleccionar: alSeleccionarCategoria,
+                              compactProgress: progreso,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ] else
+                      const Spacer(),
                   ],
                 ),
               ),
@@ -368,7 +380,8 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
       oldDelegate.categoriaId != categoriaId ||
       oldDelegate.categorias != categorias ||
       oldDelegate.nombre != nombre ||
-      oldDelegate.avatarUrl != avatarUrl;
+      oldDelegate.avatarUrl != avatarUrl ||
+      oldDelegate.mostrarCategorias != mostrarCategorias;
 }
 
 class _AvatarEncabezado extends StatelessWidget {

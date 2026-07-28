@@ -8,6 +8,7 @@ class EncabezadoDetalleLocal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       SizedBox(
         height: 210,
@@ -24,36 +25,39 @@ class EncabezadoDetalleLocal extends StatelessWidget {
       ),
       Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              local.esPersonal ? local.vendedorNombre : local.nombre,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            // El nombre de la persona detras del negocio: en un campus la
-            // confianza viene de saber a quien le estas comprando.
-            if (!local.esPersonal && local.vendedorNombre.isNotEmpty) ...[
-              const SizedBox(height: 2),
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                'Por ${local.vendedorNombre}',
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                  fontSize: 13,
+                local.esPersonal ? local.vendedorNombre : local.nombre,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
                 ),
               ),
+              // El nombre de la persona detras del negocio: en un campus la
+              // confianza viene de saber a quien le estas comprando.
+              if (!local.esPersonal && local.vendedorNombre.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  'Por ${local.vendedorNombre}',
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 6),
+              Text(local.descripcion),
+              const SizedBox(height: 10),
+              Text(
+                local.esPersonal
+                    ? 'Vendedor independiente'
+                    : '${local.tiempoEstimado}  ·  Entrega Bs ${local.costoEntrega.toStringAsFixed(0)}',
+              ),
             ],
-            const SizedBox(height: 6),
-            Text(local.descripcion),
-            const SizedBox(height: 10),
-            Text(
-              local.esPersonal
-                  ? 'Vendedor independiente'
-                  : '${local.tiempoEstimado}  ·  Entrega Bs ${local.costoEntrega.toStringAsFixed(0)}',
-            ),
-          ],
+          ),
         ),
       ),
     ],
