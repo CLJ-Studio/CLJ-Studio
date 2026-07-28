@@ -20,12 +20,10 @@ class _PantallaMisPublicacionesState extends State<PantallaMisPublicaciones> {
 
   late Future<List<ProductoMarketplace>> _publicaciones = _cargar();
 
-  /// Sin local no hay publicaciones: todo producto pertenece a uno.
-  Future<List<ProductoMarketplace>> _cargar() async {
-    final local = await _repositorio.cargarLocal();
-    if (local == null) return const [];
-    return _repositorio.cargarInventario(local.id);
-  }
+  /// Todo lo publicado, tanto lo suelto como lo del negocio: son espacios
+  /// distintos en la base, pero para quien publica es una sola lista.
+  Future<List<ProductoMarketplace>> _cargar() =>
+      _repositorio.cargarMisPublicaciones();
 
   @override
   Widget build(BuildContext context) => Scaffold(

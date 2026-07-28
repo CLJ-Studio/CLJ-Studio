@@ -48,9 +48,8 @@ class _EditorNegocioState extends State<EditorNegocio> {
 
   Future<void> _cargar() async {
     try {
-      final local = await _repositorio.cargarLocal();
-      // Un espacio personal no es un negocio: no se ofrece editarlo.
-      if (local != null && !local.esPersonal) {
+      final local = await _repositorio.cargarNegocio();
+      if (local != null) {
         _tieneNegocio = true;
         _nombre.text = local.nombre;
         _descripcion.text = local.descripcion;

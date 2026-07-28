@@ -71,6 +71,54 @@ class PantallaMiLocal extends StatelessWidget {
     if (confirmado == true) await controlador.eliminarProducto(indice);
   }
 
+  /// Cerrar el local no borra su fila: `orders.store_id` es `on delete
+  /// restrict` para que el historial del comprador no desaparezca porque el
+  /// vendedor cierre. Sale del catalogo y sus pedidos vivos se cancelan.
+  Future<void> _confirmarCierre(BuildContext context) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (contexto) => AlertDialog(
+        title: const Text('Cerrar el local'),
+        content: const Text(
+          'Tu local sale del catálogo y sus publicaciones dejan de verse. '
+          'Los pedidos que estén esperando respuesta se cancelan y se avisa '
+          'a quienes los hicieron.\n\n'
+          'Lo que ya entregaste se conserva en tu historial y en el de tus '
+          'compradores. Lo que publiques por tu cuenta no se toca.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(contexto).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(contexto).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB3453B),
+            ),
+            child: const Text('Cerrar el local'),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true) return;
+
+    try {
+      await controlador.cerrarLocal();
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Tu local se cerró.')));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo cerrar el local.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: controlador,
@@ -121,6 +169,20 @@ class PantallaMiLocal extends StatelessWidget {
                   alEliminar: () => _confirmarBorrado(context, indice),
                 ),
               ),
+            const SizedBox(height: 34),
+            Center(
+              child: TextButton.icon(
+                onPressed: () => _confirmarCierre(context),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFFB3453B),
+                ),
+                icon: const Icon(Icons.storefront_outlined, size: 18),
+                label: const Text(
+                  'Cerrar el local',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
           ],
         ),
       ),

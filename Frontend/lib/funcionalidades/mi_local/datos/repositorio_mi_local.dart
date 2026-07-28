@@ -22,17 +22,56 @@ class RepositorioMiLocal {
       'id, store_id, name, description, price, emoji, stock, kind, '
       'image_path, is_available, product_images(storage_path, position)';
 
-  /// Null si el estudiante todavia no tiene ni local ni espacio personal.
-  Future<LocalUniversitario?> cargarLocal() async {
+  /// Contenedor de las publicaciones sueltas. Null si nunca publico nada.
+  Future<LocalUniversitario?> cargarEspacioPersonal() =>
+      _cargarPorTipo(personal: true);
+
+  /// Negocio con vitrina propia. Null si solo publica a titulo personal.
+  Future<LocalUniversitario?> cargarNegocio() =>
+      _cargarPorTipo(personal: false);
+
+  /// Los dos conviven: publicar algo suelto no debe meterlo en el catalogo
+  /// del negocio, que es otra cosa.
+  Future<LocalUniversitario?> _cargarPorTipo({required bool personal}) async {
     final fila = await _cliente
         .from('stores')
         .select(_camposLocal)
         .eq('owner_id', _usuarioId)
         .eq('is_active', true)
+        .eq('is_personal', personal)
         .maybeSingle();
 
     return fila == null ? null : LocalUniversitario.desdeMapa(fila);
   }
+
+  /// Todo lo que la persona publico, sin importar en cual de sus dos
+  /// espacios cayo. Incluye lo oculto: el dueno debe poder relanzarlo.
+  Future<List<ProductoMarketplace>> cargarMisPublicaciones() async {
+    final locales = await _cliente
+        .from('stores')
+        .select('id')
+        .eq('owner_id', _usuarioId)
+        .eq('is_active', true);
+    if (locales.isEmpty) return const [];
+
+    final filas = await _cliente
+        .from('products')
+        .select(_camposProducto)
+        .inFilter(
+          'store_id',
+          locales.map((fila) => fila['id'] as String).toList(),
+        )
+        .order('bumped_at', ascending: false);
+
+    return filas.map(ProductoMarketplace.desdeMapa).toList();
+  }
+
+  /// Retira el negocio del catalogo y cancela sus pedidos vivos.
+  ///
+  /// No es un DELETE: `orders.store_id` es `on delete restrict` para que el
+  /// historial del comprador no desaparezca porque el vendedor cierre.
+  Future<void> cerrarLocal(String localId) =>
+      _cliente.rpc<void>('cerrar_local', params: {'p_local': localId});
 
   /// Incluye las ocultas: el dueno debe verlas para poder relanzarlas.
   Future<List<ProductoMarketplace>> cargarInventario(String localId) async {
@@ -66,9 +105,11 @@ class RepositorioMiLocal {
     return LocalUniversitario.desdeMapa(fila);
   }
 
-  /// Abre un local formal. Si ya existia un espacio personal, lo convierte
-  /// (el indice unico de la base solo permite un store activo por persona,
-  /// y ademas asi el inventario ya publicado viaja con el local nuevo).
+  /// Abre un negocio, sin tocar el espacio personal.
+  ///
+  /// Antes lo convertia, porque solo cabia un store activo por persona: al
+  /// abrir un negocio, todo lo publicado a titulo personal pasaba a colgar
+  /// de la marca. Ahora son dos registros distintos.
   Future<LocalUniversitario> crearLocal({
     required String nombre,
     required String descripcion,
@@ -81,6 +122,7 @@ class RepositorioMiLocal {
         .select('id')
         .eq('owner_id', _usuarioId)
         .eq('is_active', true)
+        .eq('is_personal', false)
         .maybeSingle();
 
     final datos = {

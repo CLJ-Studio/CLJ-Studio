@@ -37,10 +37,7 @@ class SelectorEmojiPublicacion extends StatelessWidget {
     children: [
       const Text(
         'Icono',
-        style: TextStyle(
-          color: Color(0xFF7C827E),
-          fontWeight: FontWeight.w700,
-        ),
+        style: TextStyle(color: Color(0xFF7C827E), fontWeight: FontWeight.w700),
       ),
       const SizedBox(height: 10),
       Wrap(
@@ -58,7 +55,9 @@ class SelectorEmojiPublicacion extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: valor == opcion
-                      ? Theme.of(context).colorScheme.primary.withValues(alpha: .12)
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: .12)
                       : Colors.white,
                   border: Border.all(
                     color: valor == opcion

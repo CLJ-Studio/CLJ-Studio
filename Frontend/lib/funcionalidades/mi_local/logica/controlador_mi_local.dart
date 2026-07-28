@@ -12,7 +12,16 @@ class ControladorMiLocal extends ChangeNotifier {
 
   final RepositorioMiLocal _repositorio;
 
-  LocalUniversitario? local;
+  /// Contenedor de las publicaciones sueltas, invisible como tal.
+  LocalUniversitario? espacioPersonal;
+
+  /// Negocio con vitrina propia, si lo abrio.
+  LocalUniversitario? negocio;
+
+  /// Lo que administra "Tu local" es el negocio. Una publicacion suelta no
+  /// es un producto del local, asi que no aparece en su inventario.
+  LocalUniversitario? get local => negocio;
+
   List<ProductoMarketplace> productos = const [];
   bool cargando = true;
   String? error;
@@ -33,22 +42,22 @@ class ControladorMiLocal extends ChangeNotifier {
   }
 
   Future<void> _refrescarInventario() async {
-    if (local == null) return;
+    final actual = negocio;
+    if (actual == null) return;
     try {
-      productos = await _repositorio.cargarInventario(local!.id);
+      productos = await _repositorio.cargarInventario(actual.id);
       notifyListeners();
     } catch (_) {
       // Se reintenta en el siguiente evento o sondeo.
     }
   }
 
-  /// Hay donde publicar (local formal o espacio personal).
-  bool get tieneLocal => local != null;
+  /// Hay un negocio que administrar. El espacio personal NO cuenta: se crea
+  /// solo con la primera publicacion y mostrar "Tu local" por eso hacia
+  /// parecer que publicar abria un negocio.
+  bool get tieneLocal => negocio != null;
 
-  /// Local formal abierto por el estudiante. Un espacio personal NO cuenta:
-  /// la invitacion "Abre tu local" debe seguir visible para quien solo
-  /// publica de manera casual.
-  bool get tieneLocalFormal => local != null && !local!.esPersonal;
+  bool get tieneLocalFormal => negocio != null;
 
   // Comodidades para la pantalla, que solo necesita mostrar estos datos.
   String? get nombre => local?.nombre;
@@ -64,10 +73,15 @@ class ControladorMiLocal extends ChangeNotifier {
     );
 
     try {
-      local = await _repositorio.cargarLocal();
-      productos = local == null
+      final (personal, propio) = await (
+        _repositorio.cargarEspacioPersonal(),
+        _repositorio.cargarNegocio(),
+      ).wait;
+      espacioPersonal = personal;
+      negocio = propio;
+      productos = propio == null
           ? const []
-          : await _repositorio.cargarInventario(local!.id);
+          : await _repositorio.cargarInventario(propio.id);
     } catch (_) {
       error = 'No se pudo cargar tu local.';
     } finally {
@@ -80,10 +94,21 @@ class ControladorMiLocal extends ChangeNotifier {
   /// Garantiza un contenedor donde publicar. Si el estudiante no tiene nada,
   /// crea el espacio personal por detras, sin pedirle abrir un local.
   Future<void> asegurarEspacioPersonal() async {
-    if (local != null) return;
-    local = await _repositorio.crearEspacioPersonal(
+    if (espacioPersonal != null) return;
+    espacioPersonal = await _repositorio.crearEspacioPersonal(
       nombreEstudiante: SesionUsuario.instancia.primerNombre,
     );
+    notifyListeners();
+  }
+
+  /// Cierra el negocio. Sus pedidos vivos se cancelan y sus compradores
+  /// reciben aviso; lo entregado se conserva en el historial de ambos.
+  Future<void> cerrarLocal() async {
+    final actual = negocio;
+    if (actual == null) return;
+
+    await _repositorio.cerrarLocal(actual.id);
+    negocio = null;
     productos = const [];
     notifyListeners();
   }
@@ -95,16 +120,15 @@ class ControladorMiLocal extends ChangeNotifier {
     required String categoriaId,
     String? logoPath,
   }) async {
-    local = await _repositorio.crearLocal(
+    negocio = await _repositorio.crearLocal(
       nombre: nuevoNombre.trim(),
       descripcion: nuevaDescripcion.trim(),
       emoji: nuevoLogo,
       categoriaId: categoriaId,
       logoPath: logoPath,
     );
-    // Si venia de un espacio personal, el inventario ya publicado se
-    // conserva: solo cambio la identidad del store.
-    productos = await _repositorio.cargarInventario(local!.id);
+    // Arranca vacio: lo publicado a titulo personal se queda donde estaba.
+    productos = await _repositorio.cargarInventario(negocio!.id);
     notifyListeners();
   }
 
@@ -119,7 +143,7 @@ class ControladorMiLocal extends ChangeNotifier {
   }) async {
     await asegurarEspacioPersonal();
     await _repositorio.agregarProducto(
-      localId: local!.id,
+      localId: espacioPersonal!.id,
       nombre: nombre.trim(),
       precio: precio,
       stock: cantidad,
@@ -128,8 +152,10 @@ class ControladorMiLocal extends ChangeNotifier {
       esServicio: esServicio,
       galeria: galeria,
     );
-    // Se relee el inventario para tomar el id que genero la base.
-    productos = await _repositorio.cargarInventario(local!.id);
+    // Solo el negocio tiene inventario visible en "Tu local".
+    if (negocio != null) {
+      productos = await _repositorio.cargarInventario(negocio!.id);
+    }
     notifyListeners();
   }
 
