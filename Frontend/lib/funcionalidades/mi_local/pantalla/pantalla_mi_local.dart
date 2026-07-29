@@ -16,6 +16,8 @@ class PantallaMiLocal extends StatelessWidget {
     final datos = await mostrarDialogoProducto(context);
     if (datos == null) return;
 
+    // Desde aqui el destino es el local, no el espacio personal: es la
+    // diferencia entre un producto del catalogo y una publicacion suelta.
     await controlador.agregarProducto(
       nombre: datos.nombre,
       precio: datos.precio,
@@ -23,6 +25,7 @@ class PantallaMiLocal extends StatelessWidget {
       emoji: datos.emoji,
       descripcion: datos.descripcion,
       galeria: datos.galeria,
+      alLocal: true,
     );
   }
 

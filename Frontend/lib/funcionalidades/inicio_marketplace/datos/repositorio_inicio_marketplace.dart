@@ -59,8 +59,11 @@ class RepositorioInicioMarketplace {
           .from('products')
           .select(camposProducto)
           .eq('is_available', true)
-          // Las publicaciones más vistas se convierten en las destacadas.
-          .order('view_count', ascending: false)
+          // Por recencia, no por vistas. Ordenar por vistas hundia al final
+          // todo lo recien publicado, que nace con cero: subias algo y
+          // aparecia el ultimo, donde nadie lo veia, asi que nunca ganaba
+          // las vistas que lo habrian subido. Lo popular ya tiene su sitio
+          // en el carrusel de destacados.
           .order('bumped_at', ascending: false)
           .limit(120),
     ).wait;
