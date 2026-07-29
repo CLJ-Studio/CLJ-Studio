@@ -7,9 +7,6 @@ abstract final class DestinosNavegacion {
     DestinoNavegacion(etiqueta: 'Inicio', icono: Icons.home_outlined),
     DestinoNavegacion(etiqueta: 'Locales', icono: Icons.storefront_outlined),
     DestinoNavegacion(etiqueta: 'Publicar', icono: Icons.add),
-    DestinoNavegacion(
-      etiqueta: 'Configuracion',
-      icono: Icons.settings_outlined,
-    ),
+    DestinoNavegacion(etiqueta: 'Perfil', icono: Icons.person_outline_rounded),
   ];
 }

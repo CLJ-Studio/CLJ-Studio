@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../carrito_compras/diseno/barra_resumen_carrito.dart';
@@ -5,6 +7,7 @@ import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../../visualizaciones/indicador_vistas.dart';
 import '../../visualizaciones/servicio_visualizaciones.dart';
 
@@ -35,9 +38,13 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
   @override
   void initState() {
     super.initState();
-    ServicioVisualizaciones.registrarProducto(widget.producto.id).then((total) {
-      if (mounted && total > 0) setState(() => _vistas = total);
-    });
+    unawaited(
+      ServicioVisualizaciones.registrarProducto(widget.producto.id).then((
+        total,
+      ) {
+        if (mounted && total > 0) setState(() => _vistas = total);
+      }),
+    );
   }
 
   @override
@@ -98,10 +105,14 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
   @override
   Widget build(BuildContext context) {
     final fotos = widget.producto.galeriaUrls;
+    final colorContenido = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black;
 
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,
+        foregroundColor: colorContenido,
         actions: [
           AnimatedBuilder(
             animation: ControladorFavoritos.instancia,
@@ -113,7 +124,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                 _favorito
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                color: Theme.of(context).colorScheme.primary,
+                color: const Color(0xFFE53935),
               ),
             ),
           ),
@@ -139,17 +150,13 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              widget.producto.nombre,
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.w900),
+                      Text(
+                        widget.producto.nombre,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              color: colorContenido,
+                              fontWeight: FontWeight.w900,
                             ),
-                          ),
-                          IndicadorVistas(total: _vistas),
-                        ],
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -160,6 +167,8 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                           fontWeight: FontWeight.w900,
                         ),
                       ),
+                      const SizedBox(height: 7),
+                      IndicadorVistas(total: _vistas),
                       const SizedBox(height: 6),
                       Text(
                         widget.producto.esServicio
@@ -169,7 +178,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                             : 'Agotado',
                         style: TextStyle(
                           color: widget.producto.hayExistencias
-                              ? Theme.of(context).textTheme.bodyMedium?.color
+                              ? colorContenido
                               : const Color(0xFFB3453B),
                           fontWeight: FontWeight.w700,
                         ),
@@ -178,16 +187,11 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                         const SizedBox(height: 18),
                         Text(
                           widget.producto.descripcion,
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.color,
-                            height: 1.5,
-                          ),
+                          style: TextStyle(color: colorContenido, height: 1.5),
                         ),
                       ],
                       const Divider(height: 36),
-                      _Vendedor(local: widget.local),
+                      _Vendedor(local: widget.local, producto: widget.producto),
                       const SizedBox(height: 26),
                       SizedBox(
                         height: 54,
@@ -296,9 +300,10 @@ class _Galeria extends StatelessWidget {
 }
 
 class _Vendedor extends StatelessWidget {
-  const _Vendedor({required this.local});
+  const _Vendedor({required this.local, required this.producto});
 
   final LocalUniversitario local;
+  final ProductoMarketplace producto;
 
   /// Quien vende siempre tiene nombre y cara. Si es un negocio manda la
   /// marca y debajo va la persona detras; si vende por su cuenta manda su
@@ -309,55 +314,82 @@ class _Vendedor extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Container(
-        width: 44,
-        height: 44,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-          shape: BoxShape.circle,
+  Widget build(BuildContext context) {
+    final colorContenido = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PantallaPerfilPublicoVendedor(
+            local: local,
+            publicacionInicial: producto,
+          ),
         ),
-        child: switch (local.vendedorAvatarUrl) {
-          final String url => Image.network(
-            url,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Center(
-              child: Text(local.emoji, style: const TextStyle(fontSize: 20)),
-            ),
-          ),
-          _ => Center(
-            child: Text(local.emoji, style: const TextStyle(fontSize: 20)),
-          ),
-        },
       ),
-      const SizedBox(width: 12),
-      // Quien vende siempre tiene nombre y cara. Si es un negocio, manda la
-      // marca y debajo va la persona detras; si vende por su cuenta, manda
-      // su nombre. "Vendedor independiente" solo decia que no habia negocio.
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
           children: [
-            Text(
-              local.esPersonal ? local.vendedorNombre : local.nombre,
-              style: const TextStyle(fontWeight: FontWeight.w900),
-            ),
-            // Sin nombre no se pinta un "Por" colgando de la nada.
-            if (_subtitulo case final String texto) ...[
-              const SizedBox(height: 2),
-              Text(
-                texto,
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                  fontSize: 12,
-                ),
+            Container(
+              width: 44,
+              height: 44,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: .12),
+                shape: BoxShape.circle,
               ),
-            ],
+              child: switch (local.vendedorAvatarUrl) {
+                final String url => Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Center(
+                    child: Text(
+                      local.emoji,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                  ),
+                ),
+                _ => Center(
+                  child: Text(
+                    local.emoji,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
+              },
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    local.vendedorNombre.isEmpty
+                        ? local.nombre
+                        : local.vendedorNombre,
+                    style: TextStyle(
+                      color: colorContenido,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  if (_subtitulo case final String texto) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      texto,
+                      style: TextStyle(color: colorContenido, fontSize: 12),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: colorContenido),
           ],
         ),
       ),
-    ],
-  );
+    );
+  }
 }

@@ -175,17 +175,30 @@ class _TarjetaDestacada extends StatelessWidget {
                   Positioned(
                     top: 9,
                     left: 9,
-                    child: _Etiqueta(
-                      icono: Icons.star_rounded,
-                      texto: local.calificacion.toStringAsFixed(1),
-                    ),
-                  ),
-                  Positioned(
-                    top: 9,
-                    right: 9,
-                    child: _Etiqueta(
-                      icono: Icons.visibility_rounded,
-                      texto: '${local.vistas}',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.favorite_border_rounded,
+                          color: Colors.black,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 9),
+                        const Icon(
+                          Icons.visibility_rounded,
+                          color: Colors.black,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${local.vistas}',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -234,35 +247,4 @@ class _Emoji extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       Center(child: Text(local.emoji, style: const TextStyle(fontSize: 54)));
-}
-
-class _Etiqueta extends StatelessWidget {
-  const _Etiqueta({required this.icono, required this.texto});
-
-  final IconData icono;
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-    decoration: BoxDecoration(
-      color: Colors.black.withValues(alpha: .72),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icono, color: const Color(0xFF79B982), size: 13),
-        const SizedBox(width: 3),
-        Text(
-          texto,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
-    ),
-  );
 }

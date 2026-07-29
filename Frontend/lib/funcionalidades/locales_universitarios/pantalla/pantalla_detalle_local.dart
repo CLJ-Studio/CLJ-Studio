@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
@@ -6,7 +8,6 @@ import '../../carrito_compras/diseno/barra_resumen_carrito.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
-import '../../visualizaciones/indicador_vistas.dart';
 import '../../visualizaciones/servicio_visualizaciones.dart';
 import '../diseno/encabezado_detalle_local.dart';
 import '../diseno/lista_productos_local.dart';
@@ -22,7 +23,6 @@ class PantallaDetalleLocal extends StatefulWidget {
 }
 
 class _PantallaDetalleLocalState extends State<PantallaDetalleLocal> {
-  late int _vistas = widget.local.vistas;
   // La pantalla carga su propio catalogo: evita traer los productos de todos
   // los locales por adelantado solo porque uno pueda abrirse.
   late final Future<List<ProductoMarketplace>> _productos =
@@ -31,9 +31,10 @@ class _PantallaDetalleLocalState extends State<PantallaDetalleLocal> {
   @override
   void initState() {
     super.initState();
-    ServicioVisualizaciones.registrarLocal(widget.local.id).then((total) {
-      if (mounted && total > 0) setState(() => _vistas = total);
-    });
+    // Se cuenta la visita pero no se muestra: el numero solo sirve para
+    // ordenar los locales destacados, y ensena al comprador algo que no le
+    // aporta nada. El dueno si lo ve, en Tu local.
+    unawaited(ServicioVisualizaciones.registrarLocal(widget.local.id));
   }
 
   @override
@@ -46,16 +47,7 @@ class _PantallaDetalleLocalState extends State<PantallaDetalleLocal> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                EncabezadoDetalleLocal(local: widget.local),
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: IndicadorVistas(total: _vistas),
-                ),
-              ],
-            ),
+            EncabezadoDetalleLocal(local: widget.local),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
               child: FutureBuilder<List<ProductoMarketplace>>(

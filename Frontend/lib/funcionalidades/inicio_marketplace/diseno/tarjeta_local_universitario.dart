@@ -159,12 +159,18 @@ class TarjetaLocalUniversitario extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(
-                          Icons.star_rounded,
-                          color: Color(0xFFFC6011),
+                          Icons.favorite_border_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(
+                          Icons.visibility_rounded,
+                          color: Colors.white,
                           size: 20,
                         ),
                         Text(
-                          ' ${local.calificacion}  ·  ${local.tiempoEstimado}',
+                          ' ${local.vistas}  ·  ${local.tiempoEstimado}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,

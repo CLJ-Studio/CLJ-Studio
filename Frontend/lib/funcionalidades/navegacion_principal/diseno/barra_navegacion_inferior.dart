@@ -34,9 +34,9 @@ class BarraNavegacionInferior extends StatelessWidget {
             label: 'Publicar',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Configuracion',
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Perfil',
           ),
         ],
       ),

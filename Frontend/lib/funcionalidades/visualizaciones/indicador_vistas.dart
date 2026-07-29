@@ -13,18 +13,31 @@ class IndicadorVistas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final etiqueta = '$total ${total == 1 ? 'vista' : 'vistas'}';
+    final color = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF202220);
+
     return Semantics(
-      button: true,
       label: etiqueta,
-      child: Tooltip(
-        message: etiqueta,
-        triggerMode: TooltipTriggerMode.tap,
-        child: Icon(
-          Icons.visibility_rounded,
-          size: compacto ? 20 : 25,
-          color: const Color(0xFF202220),
-          weight: 700,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.visibility_rounded,
+            size: compacto ? 18 : 23,
+            color: color,
+            weight: 700,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            '$total',
+            style: TextStyle(
+              color: color,
+              fontSize: compacto ? 12 : 14,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }

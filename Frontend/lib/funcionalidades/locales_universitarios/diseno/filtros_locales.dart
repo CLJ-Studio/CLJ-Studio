@@ -10,8 +10,8 @@ class FiltrosLocales extends StatelessWidget {
     children: [
       Chip(avatar: Icon(Icons.schedule, size: 17), label: Text('Abiertos')),
       Chip(
-        avatar: Icon(Icons.star_outline, size: 17),
-        label: Text('Mejor valorados'),
+        avatar: Icon(Icons.visibility_outlined, size: 17),
+        label: Text('Más vistos'),
       ),
       Chip(
         avatar: Icon(Icons.delivery_dining, size: 17),

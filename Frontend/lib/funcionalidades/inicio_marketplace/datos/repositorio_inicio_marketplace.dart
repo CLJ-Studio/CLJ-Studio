@@ -59,7 +59,8 @@ class RepositorioInicioMarketplace {
           .from('products')
           .select(camposProducto)
           .eq('is_available', true)
-          // Lo mas reciente o relanzado encabeza el feed.
+          // Las publicaciones más vistas se convierten en las destacadas.
+          .order('view_count', ascending: false)
           .order('bumped_at', ascending: false)
           .limit(120),
     ).wait;

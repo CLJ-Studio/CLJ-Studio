@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../visualizaciones/indicador_vistas.dart';
 import '../pantalla/pantalla_detalle_producto.dart';
 
 /// Cuadrícula responsiva de productos inspirada en un catálogo de mercado.
@@ -137,10 +138,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                         onPressed: () => ControladorFavoritos.instancia
                             .alternar(widget.producto),
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: .92),
-                          foregroundColor: _favorito
-                              ? const Color(0xFFE53935)
-                              : Colors.black,
+                          foregroundColor: const Color(0xFFE53935),
                         ),
                         icon: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
@@ -201,18 +199,9 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                             ),
                           ),
                         ),
-                        Container(
-                          width: 34,
-                          height: 34,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF5C8A63),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_forward_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
+                        IndicadorVistas(
+                          total: widget.producto.vistas,
+                          compacto: true,
                         ),
                       ],
                     ),

@@ -130,12 +130,12 @@ class _BarraLigera extends StatelessWidget {
 
   // El orden debe coincidir con la lista `pantallas` de ArbolNavegacionPrincipal.
   // Pedidos no vive aqui: se abre desde el encabezado del inicio y desde
-  // Configuracion, para que la barra no acumule botones.
+  // Perfil, para que la barra no acumule botones.
   List<(IconData, IconData, String)> get destinos => [
     (Icons.home_outlined, Icons.home_rounded, 'Inicio'),
     (Icons.storefront_outlined, Icons.storefront_rounded, 'Locales'),
     (Icons.add_circle_outline_rounded, Icons.add_circle_rounded, 'Publicar'),
-    (Icons.settings_outlined, Icons.settings_rounded, 'Configuración'),
+    (Icons.person_outline_rounded, Icons.person_rounded, 'Perfil'),
   ];
 
   @override
