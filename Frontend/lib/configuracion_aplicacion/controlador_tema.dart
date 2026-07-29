@@ -23,9 +23,7 @@ class ControladorTema extends ChangeNotifier {
 
   Future<void> cargar() async {
     final prefs = await SharedPreferences.getInstance();
-    modo = (prefs.getBool(_clave) ?? false)
-        ? ThemeMode.dark
-        : ThemeMode.light;
+    modo = (prefs.getBool(_clave) ?? false) ? ThemeMode.dark : ThemeMode.light;
     _sincronizarBarraDelSistema();
     notifyListeners();
   }
@@ -45,9 +43,7 @@ class ControladorTema extends ChangeNotifier {
   void _sincronizarBarraDelSistema() {
     if (!kIsWeb) return;
 
-    final color = esOscuro
-        ? _aHex(ConfiguracionTema.fondoOscuro)
-        : '#FFFFFF';
+    final color = esOscuro ? _aHex(ConfiguracionTema.fondoOscuro) : '#FFFFFF';
 
     // NodeList no es iterable en Dart: se recorre por indice.
     final etiquetas = web.document.querySelectorAll('meta[name="theme-color"]');

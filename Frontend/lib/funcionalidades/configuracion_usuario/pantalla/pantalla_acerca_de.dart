@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/version_aplicacion.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 
 /// Quiénes hacen la aplicación y bajo qué términos se usa.
@@ -105,6 +106,16 @@ class PantallaAcercaDe extends StatelessWidget {
               const SizedBox(height: 30),
               const Divider(),
               const SizedBox(height: 16),
+              // Deja ver de un vistazo que version corre en este aparato.
+              Text(
+                'Versión ${VersionAplicacion.corta}',
+                style: TextStyle(
+                  color: tema.textTheme.bodyMedium?.color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
               Text(
                 '© $_anio CLJ Studio. Todos los derechos reservados.',
                 style: TextStyle(
