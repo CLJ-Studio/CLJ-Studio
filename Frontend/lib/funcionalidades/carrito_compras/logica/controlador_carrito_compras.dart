@@ -25,7 +25,8 @@ class ControladorCarritoCompras extends ChangeNotifier {
 
   List<ElementoCarrito> get elementos => List.unmodifiable(_elementos);
   bool get estaVacio => _elementos.isEmpty;
-  int get unidades => _elementos.fold(0, (total, item) => total + item.cantidad);
+  int get unidades =>
+      _elementos.fold(0, (total, item) => total + item.cantidad);
 
   double get subtotal => _elementos.fold(
     0,
@@ -33,7 +34,8 @@ class ControladorCarritoCompras extends ChangeNotifier {
   );
 
   /// El envio lo define cada local; antes estaba fijo en 3 Bs.
-  double get costoEntrega => _elementos.isEmpty ? 0 : (local?.costoEntrega ?? 0);
+  double get costoEntrega =>
+      _elementos.isEmpty ? 0 : (local?.costoEntrega ?? 0);
   double get total => _elementos.isEmpty ? 0 : subtotal + costoEntrega;
 
   /// Indica si agregar este producto obligaria a vaciar el carrito.

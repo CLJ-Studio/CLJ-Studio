@@ -41,12 +41,14 @@ class RepositorioMiLocal {
 
   /// Los dos conviven: publicar algo suelto no debe meterlo en el catalogo
   /// del negocio, que es otra cosa.
+  /// Se lee de la vista y no de `stores` porque esta trae ademas el nombre
+  /// de quien vende. Leyendolo de la tabla, el local viajaba sin dueño y la
+  /// ficha del producto mostraba la marca sin la persona debajo.
   Future<LocalUniversitario?> _cargarPorTipo({required bool personal}) async {
     final fila = await _cliente
-        .from('stores')
-        .select(_camposLocal)
+        .from('locales_publicos')
+        .select()
         .eq('owner_id', _usuarioId)
-        .eq('is_active', true)
         .eq('is_personal', personal)
         .maybeSingle();
 

@@ -7,6 +7,7 @@ import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import 'pantalla_detalle_local.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../../visualizaciones/indicador_vistas.dart';
 import '../../visualizaciones/servicio_visualizaciones.dart';
@@ -308,10 +309,8 @@ class _Vendedor extends StatelessWidget {
   /// Quien vende siempre tiene nombre y cara. Si es un negocio manda la
   /// marca y debajo va la persona detras; si vende por su cuenta manda su
   /// nombre y no hace falta segunda linea.
-  String? get _subtitulo {
-    if (local.esPersonal) return 'Vende por su cuenta';
-    return local.vendedorNombre.isEmpty ? null : 'Por ${local.vendedorNombre}';
-  }
+  String? get _subtitulo =>
+      local.esPersonal ? 'Vende por su cuenta' : local.personaDetras;
 
   @override
   Widget build(BuildContext context) {
@@ -321,12 +320,19 @@ class _Vendedor extends StatelessWidget {
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
+      // Cada cosa lleva a lo suyo: si el producto es de un negocio, se abre
+      // el local con su catalogo; si lo vende alguien por su cuenta, no hay
+      // local que abrir y se va a su perfil. Antes siempre iba al perfil,
+      // asi que tocar el nombre de una tienda llevaba a una pantalla de
+      // persona que no tenia ni carrera ni sentido.
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => PantallaPerfilPublicoVendedor(
-            local: local,
-            publicacionInicial: producto,
-          ),
+          builder: (_) => local.esPersonal
+              ? PantallaPerfilPublicoVendedor(
+                  local: local,
+                  publicacionInicial: producto,
+                )
+              : PantallaDetalleLocal(local: local),
         ),
       ),
       child: Padding(
@@ -367,10 +373,11 @@ class _Vendedor extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Manda la marca si hay negocio, y la persona si vende
+                  // por su cuenta. Al reves salia el nombre de la persona
+                  // dos veces y la tienda no aparecia por ningun lado.
                   Text(
-                    local.vendedorNombre.isEmpty
-                        ? local.nombre
-                        : local.vendedorNombre,
+                    local.nombreVisible,
                     style: TextStyle(
                       color: colorContenido,
                       fontWeight: FontWeight.w900,

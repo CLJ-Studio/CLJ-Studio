@@ -92,6 +92,17 @@ class LocalUniversitario {
   /// personal y su negocio, y el perfil publico necesita los dos.
   final String duenoId;
 
+  /// Como se presenta quien vende: manda la marca si hay negocio, y la
+  /// persona si vende por su cuenta. Vive aqui y no en cada pantalla porque
+  /// se decidia distinto en cada sitio y acababa saliendo el nombre de la
+  /// persona donde tocaba el de la tienda.
+  String get nombreVisible =>
+      esPersonal || nombre.isEmpty ? vendedorNombre : nombre;
+
+  /// Quien esta detras de la marca, si el nombre visible no es ya suyo.
+  String? get personaDetras =>
+      esPersonal || vendedorNombre.isEmpty ? null : vendedorNombre;
+
   String? get logoUrl => ServicioImagenes.urlPublica(logoPath);
   String? get vendedorAvatarUrl =>
       ServicioImagenes.urlPublica(vendedorAvatarPath);
