@@ -7,9 +7,9 @@ class OpcionPrivacidad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-    onTap: () => Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const PantallaPrivacidad()),
-    ),
+    onTap: () => Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const PantallaPrivacidad())),
     leading: const Icon(Icons.lock_outline_rounded),
     title: const Text('Privacidad'),
     subtitle: const Text('Qué guardamos y quién lo ve'),

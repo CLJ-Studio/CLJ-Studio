@@ -5,6 +5,7 @@ import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../instalacion_app/diseno/opcion_instalar_app.dart';
 import '../../instalacion_app/logica/controlador_instalacion.dart';
 import '../diseno/boton_cerrar_sesion.dart';
+import '../diseno/opcion_acerca_de.dart';
 import '../diseno/opcion_ayuda.dart';
 import '../diseno/opcion_cuenta_institucional.dart';
 import '../diseno/opcion_notificaciones.dart';
@@ -62,6 +63,7 @@ class _PantallaConfiguracionUsuarioState
                         const OpcionInstalarApp(),
                       const OpcionTemaAplicacion(),
                       const OpcionAyuda(),
+                      const OpcionAcercaDe(),
                     ],
                   ),
                   const SizedBox(height: 24),

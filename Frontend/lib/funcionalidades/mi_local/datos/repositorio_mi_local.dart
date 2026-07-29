@@ -18,10 +18,17 @@ class RepositorioMiLocal {
       'estimated_time, delivery_cost, is_open, rating_average, '
       'is_personal, logo_path, view_count, categories(name)';
 
+  /// El local viaja unido a cada producto. Sin el, la tarjeta del perfil no
+  /// tenia a donde abrirse y quedaba muerta al tocarla: el detalle necesita
+  /// saber de quien es lo que estas mirando para poder encargarlo.
   static const _camposProducto =
       'id, store_id, name, description, price, emoji, stock, kind, '
       'image_path, is_available, view_count, '
-      'product_images(storage_path, position)';
+      'product_images(storage_path, position), '
+      'stores!inner('
+      'id, name, description, category_id, emoji, color_hex, '
+      'estimated_time, delivery_cost, is_open, rating_average, '
+      'is_personal, logo_path, view_count, categories(name))';
 
   /// Contenedor de las publicaciones sueltas. Null si nunca publico nada.
   Future<LocalUniversitario?> cargarEspacioPersonal() =>

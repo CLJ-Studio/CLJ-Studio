@@ -14,14 +14,10 @@ class OpcionTemaAplicacion extends StatelessWidget {
       animation: tema,
       builder: (context, _) => SwitchListTile(
         secondary: Icon(
-          tema.esOscuro
-              ? Icons.dark_mode_rounded
-              : Icons.light_mode_outlined,
+          tema.esOscuro ? Icons.dark_mode_rounded : Icons.light_mode_outlined,
         ),
         title: const Text('Tema oscuro'),
-        subtitle: Text(
-          tema.esOscuro ? 'Activado' : 'Más cómodo de noche',
-        ),
+        subtitle: Text(tema.esOscuro ? 'Activado' : 'Más cómodo de noche'),
         value: tema.esOscuro,
         onChanged: (valor) => tema.cambiar(oscuro: valor),
       ),

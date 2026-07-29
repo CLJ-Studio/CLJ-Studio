@@ -85,7 +85,9 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
     if (widget.controlador.espacioPersonal?.id == producto.localId) {
       return widget.controlador.espacioPersonal;
     }
-    return null;
+    // Ultimo recurso: sin local la tarjeta no abre nada, y es preferible
+    // mostrar el detalle con el local propio que dejarla sin responder.
+    return widget.controlador.negocio ?? widget.controlador.espacioPersonal;
   }
 
   @override

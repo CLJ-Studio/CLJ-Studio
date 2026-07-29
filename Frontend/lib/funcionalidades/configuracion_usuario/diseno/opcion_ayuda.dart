@@ -7,9 +7,9 @@ class OpcionAyuda extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-    onTap: () => Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const PantallaAyuda()),
-    ),
+    onTap: () => Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const PantallaAyuda())),
     leading: const Icon(Icons.help_outline_rounded),
     title: const Text('Ayuda'),
     subtitle: const Text('Preguntas frecuentes y contacto'),

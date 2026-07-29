@@ -33,7 +33,9 @@ class OpcionFavoritos extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: .12),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
