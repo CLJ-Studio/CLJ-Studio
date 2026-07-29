@@ -17,9 +17,14 @@ import '../../mi_local/logica/controlador_mi_local.dart';
 
 /// Perfil del vendedor con sus métricas y publicaciones.
 class PantallaPerfilVendedor extends StatefulWidget {
-  const PantallaPerfilVendedor({required this.controlador, super.key});
+  const PantallaPerfilVendedor({
+    required this.controlador,
+    this.alCerrarSesion,
+    super.key,
+  });
 
   final ControladorMiLocal controlador;
+  final VoidCallback? alCerrarSesion;
 
   @override
   State<PantallaPerfilVendedor> createState() => _PantallaPerfilVendedorState();
@@ -66,7 +71,9 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
               style: TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
-          body: const ArbolConfiguracionUsuario(),
+          body: ArbolConfiguracionUsuario(
+            alCerrarSesion: widget.alCerrarSesion,
+          ),
         ),
       ),
     );

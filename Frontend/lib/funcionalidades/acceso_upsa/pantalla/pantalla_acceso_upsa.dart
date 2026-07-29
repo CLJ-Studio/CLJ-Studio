@@ -31,6 +31,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
   String _digitos = '';
   String _codigo = '';
   String? _error;
+  bool _agregandoCuenta = false;
 
   /// Correo al que se mandó el código. Mientras sea null se está en el
   /// primer paso; en cuanto tiene valor, la pantalla pide el código.
@@ -62,16 +63,19 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
 
   bool get _esperandoCodigo => _correoPendiente != null;
 
+  bool get _accesoDirecto => widget.alAccederLocal != null;
+
   /// Pide el código al buzón institucional.
   Future<void> _pedirCodigo([String? correoDirecto]) async {
-    if (widget.alAccederLocal != null) {
-      widget.alAccederLocal!();
-      return;
-    }
-
     final correo =
         correoDirecto ?? ServicioAutenticacionCorreo.normalizarCorreo(_digitos);
     if (correo == null) return;
+
+    if (widget.alAccederLocal != null) {
+      await CuentasRecordadas.recordar(correo);
+      widget.alAccederLocal!();
+      return;
+    }
 
     setState(() {
       _cargando = true;
@@ -196,17 +200,22 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                             cuentas: _cuentas,
                             alElegir: _pedirCodigo,
                             alOlvidar: _olvidarCuenta,
+                            alAgregar: () => setState(() {
+                              _agregandoCuenta = true;
+                              _digitos = '';
+                            }),
                           ),
-                          FormularioCorreoUpsa(
-                            esValido: _registroCompleto,
-                            digitos: _digitos,
-                            alCambiar: (valor) => setState(
-                              () => _digitos = valor.replaceAll(
-                                RegExp(r'\D'),
-                                '',
+                          if (_cuentas.isEmpty || _agregandoCuenta)
+                            FormularioCorreoUpsa(
+                              esValido: _registroCompleto,
+                              digitos: _digitos,
+                              alCambiar: (valor) => setState(
+                                () => _digitos = valor.replaceAll(
+                                  RegExp(r'\D'),
+                                  '',
+                                ),
                               ),
                             ),
-                          ),
                         ],
                         if (_error case final String mensaje) ...[
                           const SizedBox(height: 12),
@@ -219,21 +228,28 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                           ),
                         ],
                         const SizedBox(height: 14),
-                        BotonAccesoCorreo(
-                          habilitado: _esperandoCodigo
-                              ? _codigoCompleto
-                              : _registroCompleto,
-                          cargando: _cargando,
-                          texto: _esperandoCodigo
-                              ? 'Verificar e ingresar'
-                              : 'Enviarme el código',
-                          icono: _esperandoCodigo
-                              ? Icons.login_rounded
-                              : Icons.mark_email_unread_outlined,
-                          alPresionar: _esperandoCodigo
-                              ? _verificar
-                              : _pedirCodigo,
-                        ),
+                        if (_esperandoCodigo ||
+                            _cuentas.isEmpty ||
+                            _agregandoCuenta)
+                          BotonAccesoCorreo(
+                            habilitado: _esperandoCodigo
+                                ? _codigoCompleto
+                                : _registroCompleto,
+                            cargando: _cargando,
+                            texto: _esperandoCodigo
+                                ? 'Verificar e ingresar'
+                                : _accesoDirecto
+                                ? 'Ingresar'
+                                : 'Enviarme el código',
+                            icono: _esperandoCodigo
+                                ? Icons.login_rounded
+                                : _accesoDirecto
+                                ? Icons.login_rounded
+                                : Icons.mark_email_unread_outlined,
+                            alPresionar: _esperandoCodigo
+                                ? _verificar
+                                : _pedirCodigo,
+                          ),
                         if (_esperandoCodigo) ...[
                           const SizedBox(height: 4),
                           Row(
@@ -398,8 +414,7 @@ class _FormasDecorativas extends StatelessWidget {
   );
 }
 
-/// Confirma a dónde salió el código, para que nadie lo busque en el buzón
-/// equivocado ni dude de si llegó a enviarse.
+/// Confirma de forma breve a qué correo se envió el código.
 class _AvisoCodigoEnviado extends StatelessWidget {
   const _AvisoCodigoEnviado({required this.correo});
 
@@ -409,63 +424,37 @@ class _AvisoCodigoEnviado extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: tema.colorScheme.primary.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.mark_email_read_outlined, color: tema.colorScheme.primary),
-          const SizedBox(height: 8),
-          Text(
-            'Te enviamos un código a',
-            style: TextStyle(color: tema.textTheme.bodyMedium?.color),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            correo,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 12),
-          // Temporal: mientras el correo salga desde un dominio prestado, a
-          // Gmail le parece sospechoso y lo manda a spam. Sin este aviso la
-          // gente se queda esperando un correo que ya recibio. Se quita en
-          // cuanto haya dominio propio verificado.
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: tema.colorScheme.surface,
-              borderRadius: BorderRadius.circular(14),
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.mark_email_read_outlined,
+              size: 21,
+              color: tema.colorScheme.primary,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.report_gmailerrorred_rounded,
-                  size: 18,
-                  color: tema.textTheme.bodyMedium?.color,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    'Si no lo ves, revisa tu carpeta de spam o correo no '
-                    'deseado.',
-                    style: TextStyle(
-                      color: tema.textTheme.bodyMedium?.color,
-                      fontSize: 12,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(width: 8),
+            Text(
+              'Te enviamos un código a',
+              style: TextStyle(
+                color: tema.textTheme.bodyMedium?.color,
+                fontSize: 16,
+              ),
             ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        Text(
+          correo,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: tema.textTheme.bodyMedium?.color,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

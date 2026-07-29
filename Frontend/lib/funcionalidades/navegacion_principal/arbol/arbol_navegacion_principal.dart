@@ -22,7 +22,10 @@ import '../pantalla/pantalla_navegacion_principal.dart';
 
 /// Une inicio, locales, publicación, configuración y la barra inferior.
 class ArbolNavegacionPrincipal extends StatefulWidget {
-  const ArbolNavegacionPrincipal({super.key});
+  const ArbolNavegacionPrincipal({this.alCerrarSesion, super.key});
+
+  final VoidCallback? alCerrarSesion;
+
   @override
   State<ArbolNavegacionPrincipal> createState() =>
       _ArbolNavegacionPrincipalState();
@@ -204,7 +207,10 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
           controladorExterno: locales,
         ),
         ArbolPublicarProducto(miLocal: miLocal),
-        PantallaPerfilVendedor(controlador: miLocal),
+        PantallaPerfilVendedor(
+          controlador: miLocal,
+          alCerrarSesion: widget.alCerrarSesion,
+        ),
       ];
       return PantallaNavegacionPrincipal(
         controlador: controlador,

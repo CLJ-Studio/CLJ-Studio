@@ -15,7 +15,9 @@ import '../logica/controlador_configuracion.dart';
 
 /// Perfil y preferencias organizados en tarjetas agrupadas.
 class PantallaConfiguracionUsuario extends StatefulWidget {
-  const PantallaConfiguracionUsuario({super.key});
+  const PantallaConfiguracionUsuario({this.alCerrarSesion, super.key});
+
+  final VoidCallback? alCerrarSesion;
 
   @override
   State<PantallaConfiguracionUsuario> createState() =>
@@ -70,13 +72,7 @@ class _PantallaConfiguracionUsuarioState
                   BotonCerrarSesion(
                     alPresionar: () {
                       if (ModoLocal.activo) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'El acceso está omitido en modo local.',
-                            ),
-                          ),
-                        );
+                        widget.alCerrarSesion?.call();
                         return;
                       }
                       Supabase.instance.client.auth.signOut();

@@ -10,12 +10,14 @@ class CuentasGuardadas extends StatelessWidget {
     required this.cuentas,
     required this.alElegir,
     required this.alOlvidar,
+    required this.alAgregar,
     super.key,
   });
 
   final List<String> cuentas;
   final ValueChanged<String> alElegir;
   final ValueChanged<String> alOlvidar;
+  final VoidCallback alAgregar;
 
   @override
   Widget build(BuildContext context) {
@@ -23,76 +25,143 @@ class CuentasGuardadas extends StatelessWidget {
     final tema = Theme.of(context);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Entrar con una cuenta guardada',
+          '¿Quién va a entrar?',
+          textAlign: TextAlign.center,
           style: TextStyle(
             color: tema.textTheme.bodyMedium?.color,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 8),
-        for (final cuenta in cuentas)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Material(
-              color: tema.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(26),
+        const SizedBox(height: 16),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 20,
+          runSpacing: 16,
+          children: [
+            for (final cuenta in cuentas)
+              _CuentaCircular(
+                cuenta: cuenta,
+                alElegir: () => alElegir(cuenta),
+                alOlvidar: () => alOlvidar(cuenta),
+              ),
+            _AgregarCuenta(alPresionar: alAgregar),
+          ],
+        ),
+        const SizedBox(height: 22),
+      ],
+    );
+  }
+}
+
+class _CuentaCircular extends StatelessWidget {
+  const _CuentaCircular({
+    required this.cuenta,
+    required this.alElegir,
+    required this.alOlvidar,
+  });
+
+  final String cuenta;
+  final VoidCallback alElegir;
+  final VoidCallback alOlvidar;
+
+  String get _registro {
+    final inicio = cuenta.split('@').first;
+    return inicio.startsWith('a') ? inicio.substring(1) : inicio;
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 88,
+    child: Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Material(
+              shape: const CircleBorder(),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               clipBehavior: Clip.antiAlias,
               child: InkWell(
-                onTap: () => alElegir(cuenta),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: tema.colorScheme.primary.withValues(
-                          alpha: .18,
-                        ),
-                        child: Text(
-                          // El registro empieza por 'a'; la letra siguiente
-                          // no distingue nada, así que se usa el año.
-                          cuenta.replaceAll(RegExp('[^0-9]'), '').isEmpty
-                              ? '@'
-                              : cuenta
-                                    .replaceAll(RegExp('[^0-9]'), '')
-                                    .substring(0, 2),
-                          style: TextStyle(
-                            color: tema.colorScheme.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          cuenta,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Quitar de este dispositivo',
-                        visualDensity: VisualDensity.compact,
-                        onPressed: () => alOlvidar(cuenta),
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                      ),
-                    ],
+                onTap: alElegir,
+                child: const SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: Image(
+                    image: AssetImage('assets/images/real/user.jpg'),
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
             ),
-          ),
-        const SizedBox(height: 6),
+            Positioned(
+              right: -5,
+              top: -5,
+              child: Material(
+                color: Theme.of(context).colorScheme.surface,
+                shape: const CircleBorder(),
+                elevation: 2,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: alOlvidar,
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.close_rounded, size: 15),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _registro,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+        ),
       ],
-    );
-  }
+    ),
+  );
+}
+
+class _AgregarCuenta extends StatelessWidget {
+  const _AgregarCuenta({required this.alPresionar});
+
+  final VoidCallback alPresionar;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 88,
+    child: Column(
+      children: [
+        Material(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: alPresionar,
+            child: SizedBox(
+              width: 72,
+              height: 72,
+              child: Icon(
+                Icons.add_rounded,
+                size: 38,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Agregar',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+        ),
+      ],
+    ),
+  );
 }
