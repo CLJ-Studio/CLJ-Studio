@@ -4,7 +4,6 @@ import 'package:animations/animations.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
-import '../../locales_universitarios/pantalla/pantalla_detalle_local.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
 
 /// Perfil público al que se llega tocando el vendedor de una publicación.
@@ -320,10 +319,12 @@ class _AvatarVendedor extends StatelessWidget {
   );
 }
 
-/// Acceso al local de la persona, desde su perfil.
+/// Indica que esta persona tiene un local, sin llevar a ninguna parte.
 ///
-/// Un local no tiene carrera ni favoritos, asi que no cabe como pestaña del
-/// perfil: es otra cosa, y se abre en su propia pantalla.
+/// NO es un boton a proposito. Cuando lo era se podia ir perfil -> local ->
+/// producto -> vendedor -> local -> ... encadenando pantallas sin fin, porque
+/// el mismo par de sitios se enlazaba en los dos sentidos. El camino hacia el
+/// local sale de la publicacion; aqui solo se informa de quien es.
 class _EnlaceLocal extends StatelessWidget {
   const _EnlaceLocal({required this.local});
 
@@ -333,57 +334,47 @@ class _EnlaceLocal extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
 
-    return Material(
-      color: tema.colorScheme.primary.withValues(alpha: .12),
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => PantallaDetalleLocal(local: local),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
-          child: Row(
-            children: [
-              Icon(
-                Icons.storefront_rounded,
-                size: 20,
-                color: tema.colorScheme.primary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dueño de',
-                      style: TextStyle(
-                        color: tema.textTheme.bodyMedium?.color,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
+    return Container(
+      decoration: BoxDecoration(
+        color: tema.colorScheme.primary.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        child: Row(
+          children: [
+            Icon(
+              Icons.storefront_rounded,
+              size: 20,
+              color: tema.colorScheme.primary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Dueño de',
+                    style: TextStyle(
+                      color: tema.textTheme.bodyMedium?.color,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
                     ),
-                    Text(
-                      local.nombre,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: tema.colorScheme.onSurface,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                      ),
+                  ),
+                  Text(
+                    local.nombre,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: tema.colorScheme.onSurface,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: tema.colorScheme.primary,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

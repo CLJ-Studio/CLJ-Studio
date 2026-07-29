@@ -20,11 +20,19 @@ class PantallaDetalleProducto extends StatefulWidget {
   const PantallaDetalleProducto({
     required this.producto,
     required this.local,
+    this.desdeElLocal = false,
     super.key,
   });
 
   final ProductoMarketplace producto;
   final LocalUniversitario local;
+
+  /// Si se llego desde la pantalla del propio local.
+  ///
+  /// En ese caso la fila del vendedor no lleva a ningun sitio: apilaria otra
+  /// vez el local del que se acaba de venir, y encadenando eso se puede ir
+  /// local -> producto -> local -> producto sin fin.
+  final bool desdeElLocal;
 
   @override
   State<PantallaDetalleProducto> createState() =>
@@ -192,7 +200,11 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                         ),
                       ],
                       const Divider(height: 36),
-                      _Vendedor(local: widget.local, producto: widget.producto),
+                      _Vendedor(
+                        local: widget.local,
+                        producto: widget.producto,
+                        navegable: !widget.desdeElLocal,
+                      ),
                       const SizedBox(height: 26),
                       SizedBox(
                         height: 54,
@@ -301,10 +313,17 @@ class _Galeria extends StatelessWidget {
 }
 
 class _Vendedor extends StatelessWidget {
-  const _Vendedor({required this.local, required this.producto});
+  const _Vendedor({
+    required this.local,
+    required this.producto,
+    this.navegable = true,
+  });
 
   final LocalUniversitario local;
   final ProductoMarketplace producto;
+
+  /// Cuando es falso se pinta igual pero sin responder al toque.
+  final bool navegable;
 
   /// Quien vende siempre tiene nombre y cara. Si es un negocio manda la
   /// marca y debajo va la persona detras; si vende por su cuenta manda su
@@ -325,16 +344,18 @@ class _Vendedor extends StatelessWidget {
       // local que abrir y se va a su perfil. Antes siempre iba al perfil,
       // asi que tocar el nombre de una tienda llevaba a una pantalla de
       // persona que no tenia ni carrera ni sentido.
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => local.esPersonal
-              ? PantallaPerfilPublicoVendedor(
-                  local: local,
-                  publicacionInicial: producto,
-                )
-              : PantallaDetalleLocal(local: local),
-        ),
-      ),
+      onTap: !navegable
+          ? null
+          : () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => local.esPersonal
+                    ? PantallaPerfilPublicoVendedor(
+                        local: local,
+                        publicacionInicial: producto,
+                      )
+                    : PantallaDetalleLocal(local: local),
+              ),
+            ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
@@ -393,7 +414,10 @@ class _Vendedor extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: colorContenido),
+            // Sin flecha si no lleva a ningun sitio: prometerla y no
+            // responder es peor que no ponerla.
+            if (navegable)
+              Icon(Icons.chevron_right_rounded, color: colorContenido),
           ],
         ),
       ),

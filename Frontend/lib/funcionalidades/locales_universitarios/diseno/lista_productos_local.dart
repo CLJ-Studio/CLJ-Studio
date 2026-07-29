@@ -81,8 +81,14 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            PantallaDetalleProducto(producto: widget.producto, local: local),
+        builder: (_) => PantallaDetalleProducto(
+          producto: widget.producto,
+          local: local,
+          // `widget.local` solo viene informado en el catalogo de un
+          // local concreto; en el inicio y en favoritos es null porque
+          // ahi se mezclan varios vendedores.
+          desdeElLocal: widget.local != null,
+        ),
       ),
     );
   }
