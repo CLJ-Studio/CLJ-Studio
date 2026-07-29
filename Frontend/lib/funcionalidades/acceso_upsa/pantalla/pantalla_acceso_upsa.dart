@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -39,10 +41,40 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
 
   List<String> _cuentas = const [];
 
+  /// Segundos que faltan para poder pedir otro codigo.
+  ///
+  /// El servidor rechaza las peticiones seguidas, asi que sin esta cuenta
+  /// atras el boton de reenviar invita a pulsar y responde con un error. Es
+  /// mejor decir cuanto falta que dejar tropezar.
+  int _esperaReenvio = 0;
+  Timer? _cronometro;
+
+  static const _segundosEntreCodigos = 60;
+
   @override
   void initState() {
     super.initState();
     _cargarCuentas();
+  }
+
+  @override
+  void dispose() {
+    _cronometro?.cancel();
+    super.dispose();
+  }
+
+  void _iniciarEspera() {
+    _cronometro?.cancel();
+    setState(() => _esperaReenvio = _segundosEntreCodigos);
+
+    _cronometro = Timer.periodic(const Duration(seconds: 1), (cronometro) {
+      if (!mounted) {
+        cronometro.cancel();
+        return;
+      }
+      setState(() => _esperaReenvio--);
+      if (_esperaReenvio <= 0) cronometro.cancel();
+    });
   }
 
   Future<void> _cargarCuentas() async {
@@ -93,6 +125,8 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
         _codigo = '';
       }
     });
+
+    if (fallo == null) _iniciarEspera();
   }
 
   /// Canjea el código por una sesión.
@@ -260,10 +294,14 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                                 child: const Text('Cambiar de cuenta'),
                               ),
                               TextButton(
-                                onPressed: _cargando
+                                onPressed: _cargando || _esperaReenvio > 0
                                     ? null
                                     : () => _pedirCodigo(_correoPendiente),
-                                child: const Text('Reenviar código'),
+                                child: Text(
+                                  _esperaReenvio > 0
+                                      ? 'Reenviar en ${_esperaReenvio}s'
+                                      : 'Reenviar código',
+                                ),
                               ),
                             ],
                           ),
