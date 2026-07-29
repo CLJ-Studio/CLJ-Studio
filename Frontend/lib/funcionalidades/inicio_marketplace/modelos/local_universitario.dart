@@ -20,6 +20,9 @@ class LocalUniversitario {
     this.vendedorNombre = '',
     this.vendedorAvatarPath,
     this.vistas = 0,
+    this.muestraVistas = true,
+    this.ubicacionCampus,
+    this.duenoId = '',
   });
 
   /// Mapea una fila de `stores` o de la vista `locales_publicos`, que ademas
@@ -48,6 +51,9 @@ class LocalUniversitario {
       vendedorNombre: (fila['vendedor_nombre'] as String?) ?? '',
       vendedorAvatarPath: fila['vendedor_avatar'] as String?,
       vistas: (fila['view_count'] as num?)?.toInt() ?? 0,
+      muestraVistas: (fila['vendedor_muestra_vistas'] as bool?) ?? true,
+      ubicacionCampus: fila['campus_location'] as String?,
+      duenoId: (fila['owner_id'] as String?) ?? '',
     );
   }
 
@@ -73,6 +79,29 @@ class LocalUniversitario {
   final String vendedorNombre;
   final String? vendedorAvatarPath;
   final int vistas;
+
+  /// Si quien vende deja que el resto vea su contador. Se decide en
+  /// Privacidad y viaja con el local para no consultar el perfil aparte.
+  final bool muestraVistas;
+
+  /// Punto del campus donde esta quien vende ahora mismo. Null si no lo ha
+  /// confirmado todavia.
+  final String? ubicacionCampus;
+
+  /// Quien es la persona detras. Una misma persona puede tener su espacio
+  /// personal y su negocio, y el perfil publico necesita los dos.
+  final String duenoId;
+
+  /// Como se presenta quien vende: manda la marca si hay negocio, y la
+  /// persona si vende por su cuenta. Vive aqui y no en cada pantalla porque
+  /// se decidia distinto en cada sitio y acababa saliendo el nombre de la
+  /// persona donde tocaba el de la tienda.
+  String get nombreVisible =>
+      esPersonal || nombre.isEmpty ? vendedorNombre : nombre;
+
+  /// Quien esta detras de la marca, si el nombre visible no es ya suyo.
+  String? get personaDetras =>
+      esPersonal || vendedorNombre.isEmpty ? null : vendedorNombre;
 
   String? get logoUrl => ServicioImagenes.urlPublica(logoPath);
   String? get vendedorAvatarUrl =>

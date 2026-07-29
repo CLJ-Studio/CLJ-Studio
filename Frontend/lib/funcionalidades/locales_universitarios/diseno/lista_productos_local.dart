@@ -81,8 +81,14 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            PantallaDetalleProducto(producto: widget.producto, local: local),
+        builder: (_) => PantallaDetalleProducto(
+          producto: widget.producto,
+          local: local,
+          // `widget.local` solo viene informado en el catalogo de un
+          // local concreto; en el inicio y en favoritos es null porque
+          // ahi se mezclan varios vendedores.
+          desdeElLocal: widget.local != null,
+        ),
       ),
     );
   }
@@ -186,6 +192,38 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+                    // Quien vende, en la propia tarjeta: sin esto habia que
+                    // abrir cada publicacion para saber de quien era, y en un
+                    // campus eso es justo lo que decide si te interesa.
+                    if (widget.producto.local?.nombreVisible
+                        case final String vendedor
+                        when vendedor.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            widget.producto.local!.esPersonal
+                                ? Icons.person_rounded
+                                : Icons.storefront_rounded,
+                            size: 11,
+                            color: colorTexto,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              vendedor,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colorTexto,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Row(
                       children: [

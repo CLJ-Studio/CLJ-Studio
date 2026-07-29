@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../modelos/carrera_upsa.dart';
 
-const _verde = Color(0xFF5C8A63);
 const _grisTexto = Color(0xFF7C827E);
 
 /// Campo que abre una hoja deslizable con todas las carreras.
@@ -38,7 +37,6 @@ class SelectorCarrera extends StatelessWidget {
     final elegida = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
@@ -124,7 +122,7 @@ class _HojaCarreras extends StatelessWidget {
             width: 44,
             height: 5,
             decoration: BoxDecoration(
-              color: const Color(0xFFDDE3DD),
+              color: Theme.of(context).dividerColor,
               borderRadius: BorderRadius.circular(8),
             ),
           ),
@@ -153,8 +151,8 @@ class _HojaCarreras extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
                     child: Text(
                       entrada.key.toUpperCase(),
-                      style: const TextStyle(
-                        color: _grisTexto,
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                         letterSpacing: .6,
@@ -204,7 +202,7 @@ class _FilaCarrera extends StatelessWidget {
                     fontSize: 15,
                     height: 1.3,
                     color: seleccionada
-                        ? _verde
+                        ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.onSurface,
                     fontWeight: seleccionada
                         ? FontWeight.w800
@@ -213,7 +211,11 @@ class _FilaCarrera extends StatelessWidget {
                 ),
               ),
               if (seleccionada)
-                const Icon(Icons.check_circle_rounded, color: _verde, size: 21),
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 21,
+                ),
             ],
           ),
         ),

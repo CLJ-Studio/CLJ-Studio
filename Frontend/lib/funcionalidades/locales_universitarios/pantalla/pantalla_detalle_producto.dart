@@ -7,6 +7,7 @@ import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import 'pantalla_detalle_local.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../../visualizaciones/indicador_vistas.dart';
 import '../../visualizaciones/servicio_visualizaciones.dart';
@@ -19,11 +20,19 @@ class PantallaDetalleProducto extends StatefulWidget {
   const PantallaDetalleProducto({
     required this.producto,
     required this.local,
+    this.desdeElLocal = false,
     super.key,
   });
 
   final ProductoMarketplace producto;
   final LocalUniversitario local;
+
+  /// Si se llego desde la pantalla del propio local.
+  ///
+  /// En ese caso la fila del vendedor no lleva a ningun sitio: apilaria otra
+  /// vez el local del que se acaba de venir, y encadenando eso se puede ir
+  /// local -> producto -> local -> producto sin fin.
+  final bool desdeElLocal;
 
   @override
   State<PantallaDetalleProducto> createState() =>
@@ -191,7 +200,11 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                         ),
                       ],
                       const Divider(height: 36),
-                      _Vendedor(local: widget.local, producto: widget.producto),
+                      _Vendedor(
+                        local: widget.local,
+                        producto: widget.producto,
+                        navegable: !widget.desdeElLocal,
+                      ),
                       const SizedBox(height: 26),
                       SizedBox(
                         height: 54,
@@ -300,18 +313,23 @@ class _Galeria extends StatelessWidget {
 }
 
 class _Vendedor extends StatelessWidget {
-  const _Vendedor({required this.local, required this.producto});
+  const _Vendedor({
+    required this.local,
+    required this.producto,
+    this.navegable = true,
+  });
 
   final LocalUniversitario local;
   final ProductoMarketplace producto;
 
+  /// Cuando es falso se pinta igual pero sin responder al toque.
+  final bool navegable;
+
   /// Quien vende siempre tiene nombre y cara. Si es un negocio manda la
   /// marca y debajo va la persona detras; si vende por su cuenta manda su
   /// nombre y no hace falta segunda linea.
-  String? get _subtitulo {
-    if (local.esPersonal) return 'Vende por su cuenta';
-    return local.vendedorNombre.isEmpty ? null : 'Por ${local.vendedorNombre}';
-  }
+  String? get _subtitulo =>
+      local.esPersonal ? 'Vende por su cuenta' : local.personaDetras;
 
   @override
   Widget build(BuildContext context) {
@@ -321,14 +339,23 @@ class _Vendedor extends StatelessWidget {
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => PantallaPerfilPublicoVendedor(
-            local: local,
-            publicacionInicial: producto,
-          ),
-        ),
-      ),
+      // Cada cosa lleva a lo suyo: si el producto es de un negocio, se abre
+      // el local con su catalogo; si lo vende alguien por su cuenta, no hay
+      // local que abrir y se va a su perfil. Antes siempre iba al perfil,
+      // asi que tocar el nombre de una tienda llevaba a una pantalla de
+      // persona que no tenia ni carrera ni sentido.
+      onTap: !navegable
+          ? null
+          : () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => local.esPersonal
+                    ? PantallaPerfilPublicoVendedor(
+                        local: local,
+                        publicacionInicial: producto,
+                      )
+                    : PantallaDetalleLocal(local: local),
+              ),
+            ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
@@ -367,10 +394,11 @@ class _Vendedor extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Manda la marca si hay negocio, y la persona si vende
+                  // por su cuenta. Al reves salia el nombre de la persona
+                  // dos veces y la tienda no aparecia por ningun lado.
                   Text(
-                    local.vendedorNombre.isEmpty
-                        ? local.nombre
-                        : local.vendedorNombre,
+                    local.nombreVisible,
                     style: TextStyle(
                       color: colorContenido,
                       fontWeight: FontWeight.w900,
@@ -386,7 +414,10 @@ class _Vendedor extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: colorContenido),
+            // Sin flecha si no lleva a ningun sitio: prometerla y no
+            // responder es peor que no ponerla.
+            if (navegable)
+              Icon(Icons.chevron_right_rounded, color: colorContenido),
           ],
         ),
       ),

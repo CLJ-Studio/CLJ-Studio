@@ -5,6 +5,7 @@ import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../instalacion_app/diseno/opcion_instalar_app.dart';
 import '../../instalacion_app/logica/controlador_instalacion.dart';
 import '../diseno/boton_cerrar_sesion.dart';
+import '../diseno/opcion_acerca_de.dart';
 import '../diseno/opcion_ayuda.dart';
 import '../diseno/opcion_cuenta_institucional.dart';
 import '../diseno/opcion_notificaciones.dart';
@@ -14,7 +15,9 @@ import '../logica/controlador_configuracion.dart';
 
 /// Perfil y preferencias organizados en tarjetas agrupadas.
 class PantallaConfiguracionUsuario extends StatefulWidget {
-  const PantallaConfiguracionUsuario({super.key});
+  const PantallaConfiguracionUsuario({this.alCerrarSesion, super.key});
+
+  final VoidCallback? alCerrarSesion;
 
   @override
   State<PantallaConfiguracionUsuario> createState() =>
@@ -62,19 +65,14 @@ class _PantallaConfiguracionUsuarioState
                         const OpcionInstalarApp(),
                       const OpcionTemaAplicacion(),
                       const OpcionAyuda(),
+                      const OpcionAcercaDe(),
                     ],
                   ),
                   const SizedBox(height: 24),
                   BotonCerrarSesion(
                     alPresionar: () {
                       if (ModoLocal.activo) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'El acceso está omitido en modo local.',
-                            ),
-                          ),
-                        );
+                        widget.alCerrarSesion?.call();
                         return;
                       }
                       Supabase.instance.client.auth.signOut();

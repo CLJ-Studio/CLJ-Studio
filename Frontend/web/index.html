@@ -100,6 +100,54 @@
   </script>
   <script>
     /*
+     * Adopta la versión nueva en cuanto existe, sin esperar a que se cierren
+     * todas las pestañas.
+     *
+     * Por defecto un service worker nuevo se queda "en espera" mientras el
+     * anterior siga controlando alguna ventana. En una PWA instalada en la
+     * pantalla de inicio eso casi nunca ocurre, así que la aplicación se
+     * queda con una versión vieja indefinidamente: se corregía un fallo, se
+     * desplegaba, y en el teléfono seguía apareciendo el de antes.
+     *
+     * El service worker que genera Flutter escucha el mensaje 'skipWaiting',
+     * así que basta con avisarle y recargar cuando tome el control.
+     */
+    (() => {
+      if (!('serviceWorker' in navigator)) return;
+
+      // Evita el bucle: tras recargar una vez ya se está en la última.
+      let recargando = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (recargando) return;
+        recargando = true;
+        window.location.reload();
+      });
+
+      navigator.serviceWorker.ready.then((registro) => {
+        const adoptar = (trabajador) => {
+          if (!trabajador) return;
+          trabajador.addEventListener('statechange', () => {
+            // Solo si ya había uno controlando: en la primera visita no hay
+            // nada viejo que reemplazar ni motivo para recargar.
+            if (
+              trabajador.state === 'installed' &&
+              navigator.serviceWorker.controller
+            ) {
+              trabajador.postMessage('skipWaiting');
+            }
+          });
+        };
+
+        // El que ya estaba esperando de una visita anterior.
+        if (registro.waiting) registro.waiting.postMessage('skipWaiting');
+        registro.addEventListener('updatefound', () =>
+          adoptar(registro.installing),
+        );
+      });
+    })();
+  </script>
+  <script>
+    /*
      * Puente para las notificaciones push.
      *
      * Vive aquí y no en Dart porque PushManager espera la clave VAPID como

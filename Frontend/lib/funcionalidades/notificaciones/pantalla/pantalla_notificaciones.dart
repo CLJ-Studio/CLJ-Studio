@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
-import '../../pedidos/pantalla/pantalla_detalle_pedido.dart';
 import '../logica/controlador_notificaciones.dart';
+import '../logica/navegador_notificaciones.dart';
 import '../modelos/notificacion.dart';
 
 /// Lista de avisos del usuario; tocar uno lo marca leido y abre su pedido.
@@ -23,15 +23,17 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
     controlador.cargar();
   }
 
+  /// Cada aviso lleva a lo suyo; la resolucion vive en NavegadorNotificaciones
+  /// porque el mismo destino tambien llega como deep link desde el push del
+  /// sistema operativo.
   Future<void> _abrir(Notificacion notificacion) async {
     controlador.marcarLeida(notificacion);
-    if (notificacion.pedidoId case final String pedidoId) {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => PantallaDetallePedido(pedidoId: pedidoId),
-        ),
-      );
-    }
+    await NavegadorNotificaciones.abrir(
+      context,
+      pedidoId: notificacion.pedidoId,
+      localId: notificacion.localId,
+      productoId: notificacion.productoId,
+    );
   }
 
   String _hace(DateTime fecha) {

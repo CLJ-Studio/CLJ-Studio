@@ -54,21 +54,16 @@ class FormularioCorreoUpsa extends StatelessWidget {
           esValido: esValido,
           hayError: pista != null,
         ),
-        const SizedBox(height: 8),
-        Text(
-          pista ??
-              (esValido
-                  ? 'Te llevaremos directo a esta cuenta.'
-                  : 'Opcional: escribe tu registro para entrar más rápido.'),
-          style: TextStyle(
-            color: pista != null
-                ? Theme.of(context).colorScheme.error
-                : esValido
-                ? const Color(0xFF5C8A63)
-                : Theme.of(context).textTheme.bodyMedium?.color,
-            fontSize: 12,
+        if (pista != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            pista,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontSize: 12,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }

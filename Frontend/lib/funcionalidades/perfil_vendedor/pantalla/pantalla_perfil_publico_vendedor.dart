@@ -22,29 +22,97 @@ class PantallaPerfilPublicoVendedor extends StatefulWidget {
       _PantallaPerfilPublicoVendedorState();
 }
 
+/// Lo que se enseña en cada pestaña del perfil.
+class _ContenidoPerfil {
+  const _ContenidoPerfil({
+    this.personales = const [],
+    this.favoritos = const [],
+    this.favoritosPublicos = false,
+    this.nombre = '',
+    this.carrera = '',
+    this.biografia = '',
+    this.negocio,
+  });
+
+  final List<ProductoMarketplace> personales;
+  final List<ProductoMarketplace> favoritos;
+
+  /// Quien es la persona. El perfil es SUYO, no de su local: por eso el
+  /// nombre sale de `perfiles_publicos` y no del nombre de la tienda.
+  final String nombre;
+  final String carrera;
+
+  /// Lo que la persona escribio sobre si misma.
+  final String biografia;
+
+  /// Su negocio, si abrio uno. Se enseña como un enlace debajo de la
+  /// carrera en vez de como una pestaña: un local no tiene favoritos ni
+  /// carrera, asi que mezclarlo dentro del perfil no tenia sentido.
+  final LocalUniversitario? negocio;
+
+  /// Si la persona decidio enseñar sus favoritos. Se distingue de "no tiene
+  /// ninguno" para poder explicar por que la pestaña esta vacia.
+  final bool favoritosPublicos;
+
+  int get totalPublicaciones => personales.length;
+
+  int get vistas =>
+      personales.fold(0, (total, producto) => total + producto.vistas);
+}
+
 class _PantallaPerfilPublicoVendedorState
     extends State<PantallaPerfilPublicoVendedor> {
   int seccion = 0;
 
-  late final Future<List<ProductoMarketplace>> publicaciones =
-      _cargarPublicaciones();
+  late final Future<_ContenidoPerfil> contenido = _cargar();
 
-  Future<List<ProductoMarketplace>> _cargarPublicaciones() async {
+  /// Las tres pestañas enseñaban lo mismo porque solo se conocia el local
+  /// desde el que se abrio el perfil. Una persona puede tener su espacio
+  /// personal Y su negocio, asi que se piden los dos por su dueño y se
+  /// reparten; los favoritos vienen por su propia puerta, que respeta el
+  /// interruptor de privacidad.
+  Future<_ContenidoPerfil> _cargar() async {
+    const repositorio = RepositorioInicioMarketplace();
+    final dueno = widget.local.duenoId;
+
+    if (dueno.isEmpty) {
+      return _ContenidoPerfil(personales: [widget.publicacionInicial]);
+    }
+
     try {
-      return await const RepositorioInicioMarketplace().obtenerProductos(
-        widget.local.id,
+      final (perfil, locales, favoritos) = await (
+        repositorio.obtenerPerfilPublico(dueno),
+        repositorio.obtenerLocalesDe(dueno),
+        repositorio.obtenerFavoritosPublicos(dueno),
+      ).wait;
+
+      // Todo lo que publico, venga de su espacio personal o de su negocio:
+      // para quien mira es una sola lista de cosas que vende.
+      final publicaciones = await repositorio.obtenerProductosDe(locales);
+
+      return _ContenidoPerfil(
+        personales: publicaciones,
+        favoritos: favoritos,
+        favoritosPublicos: favoritos.isNotEmpty,
+        nombre: perfil?.nombre ?? widget.local.vendedorNombre,
+        carrera: perfil?.carrera ?? '',
+        biografia: perfil?.biografia ?? '',
+        negocio: locales.where((l) => !l.esPersonal).firstOrNull,
       );
     } catch (_) {
-      return [widget.publicacionInicial];
+      return _ContenidoPerfil(
+        personales: [widget.publicacionInicial],
+        nombre: widget.local.vendedorNombre,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final local = widget.local;
-    final nombre = local.vendedorNombre.isEmpty
-        ? local.nombre
-        : local.vendedorNombre;
+    // El perfil es de la persona: si su nombre no viniera, antes se caia al
+    // nombre del local y la pantalla parecia el perfil de una tienda.
+    final nombre = local.vendedorNombre;
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final colorContenido = oscuro ? Colors.white : Colors.black;
 
@@ -56,14 +124,15 @@ class _PantallaPerfilPublicoVendedorState
           style: TextStyle(color: colorContenido, fontWeight: FontWeight.w900),
         ),
       ),
-      body: FutureBuilder<List<ProductoMarketplace>>(
-        future: publicaciones,
+      body: FutureBuilder<_ContenidoPerfil>(
+        future: contenido,
         builder: (context, snapshot) {
-          final productos = snapshot.data ?? [widget.publicacionInicial];
-          final vistas = productos.fold(
-            0,
-            (total, producto) => total + producto.vistas,
-          );
+          final datos =
+              snapshot.data ??
+              _ContenidoPerfil(personales: [widget.publicacionInicial]);
+          final vistas = datos.vistas;
+          // Cada pestaña con lo suyo: sueltas, del local y me gusta.
+          final productos = seccion == 0 ? datos.personales : datos.favoritos;
 
           return CustomScrollView(
             slivers: [
@@ -115,23 +184,69 @@ class _PantallaPerfilPublicoVendedorState
                                     MainAxisAlignment.spaceAround,
                                 children: [
                                   _Metrica(
-                                    valor: '${productos.length}',
+                                    valor: '${datos.totalPublicaciones}',
                                     etiqueta: 'Post',
                                   ),
-                                  _Metrica(
-                                    valor: '$vistas',
-                                    etiqueta: 'Vistas',
-                                  ),
-                                  const _Metrica(
-                                    valor: '0',
-                                    etiqueta: 'Me gusta',
-                                  ),
+                                  // Solo si quien vende lo permite en
+                                  // Privacidad. Se oculta la metrica entera,
+                                  // no se pinta un cero: un cero dice tanto
+                                  // como el numero real.
+                                  if (local.muestraVistas)
+                                    _Metrica(
+                                      valor: '$vistas',
+                                      etiqueta: 'Vistas',
+                                    ),
+                                  // Solo si los hizo publicos: un cero
+                                  // fijo decia lo mismo tanto si no tiene
+                                  // ninguno como si los oculto.
+                                  if (datos.favoritosPublicos)
+                                    _Metrica(
+                                      valor: '${datos.favoritos.length}',
+                                      etiqueta: 'Me gusta',
+                                    ),
                                 ],
                               ),
                             ),
                           ),
                         ],
                       ),
+                      if (datos.carrera.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            datos.carrera,
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (datos.biografia.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            datos.biografia,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                      // El local va como enlace y no como pestaña: no tiene
+                      // carrera ni favoritos, asi que meterlo dentro del
+                      // perfil confundia las dos cosas.
+                      if (datos.negocio case final LocalUniversitario negocio)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: _EnlaceLocal(local: negocio),
+                        ),
                       const SizedBox(height: 20),
                       _SelectorPublico(
                         seleccionado: seccion,
@@ -142,14 +257,23 @@ class _PantallaPerfilPublicoVendedorState
                   ),
                 ),
               ),
-              if (seccion == 2)
+              if (productos.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 100),
+                      padding: const EdgeInsets.fromLTRB(40, 0, 40, 100),
                       child: Text(
-                        'Los favoritos son privados.',
+                        // El motivo importa: no es lo mismo que no tenga
+                        // nada a que haya decidido no enseñarlo.
+                        switch (seccion) {
+                          0 => 'Todavía no publicó nada.',
+                          _ =>
+                            datos.favoritosPublicos
+                                ? 'Todavía no guardó ningún favorito.'
+                                : 'Prefiere mantener sus favoritos en privado.',
+                        },
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: oscuro ? Colors.white : Colors.black,
                           fontWeight: FontWeight.w700,
@@ -214,6 +338,68 @@ class _AvatarVendedor extends StatelessWidget {
   );
 }
 
+/// Indica que esta persona tiene un local, sin llevar a ninguna parte.
+///
+/// NO es un boton a proposito. Cuando lo era se podia ir perfil -> local ->
+/// producto -> vendedor -> local -> ... encadenando pantallas sin fin, porque
+/// el mismo par de sitios se enlazaba en los dos sentidos. El camino hacia el
+/// local sale de la publicacion; aqui solo se informa de quien es.
+class _EnlaceLocal extends StatelessWidget {
+  const _EnlaceLocal({required this.local});
+
+  final LocalUniversitario local;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: tema.colorScheme.primary.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        child: Row(
+          children: [
+            Icon(
+              Icons.storefront_rounded,
+              size: 20,
+              color: tema.colorScheme.primary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Dueño de',
+                    style: TextStyle(
+                      color: tema.textTheme.bodyMedium?.color,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    local.nombre,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: tema.colorScheme.onSurface,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _Metrica extends StatelessWidget {
   const _Metrica({required this.valor, required this.etiqueta});
 
@@ -255,11 +441,8 @@ class _SelectorPublico extends StatelessWidget {
     final color = Theme.of(context).brightness == Brightness.dark
         ? Colors.white
         : Colors.black;
-    const iconos = [
-      Icons.grid_view_rounded,
-      Icons.storefront_rounded,
-      Icons.favorite_rounded,
-    ];
+    // La tienda ya no es una pestaña: se llega por el enlace de arriba.
+    const iconos = [Icons.grid_view_rounded, Icons.favorite_rounded];
 
     return SizedBox(
       height: 52,
@@ -268,9 +451,9 @@ class _SelectorPublico extends StatelessWidget {
           AnimatedAlign(
             duration: const Duration(milliseconds: 420),
             curve: Curves.easeInOutCubic,
-            alignment: Alignment((seleccionado - 1).toDouble(), 1),
+            alignment: Alignment(seleccionado == 0 ? -1 : 1, 1),
             child: FractionallySizedBox(
-              widthFactor: 1 / 3,
+              widthFactor: 1 / 2,
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
@@ -293,7 +476,7 @@ class _SelectorPublico extends StatelessWidget {
                     child: Center(
                       child: Icon(
                         iconos[indice],
-                        color: indice == 2 ? const Color(0xFFE53935) : color,
+                        color: indice == 1 ? const Color(0xFFE53935) : color,
                         size: 25,
                       ),
                     ),

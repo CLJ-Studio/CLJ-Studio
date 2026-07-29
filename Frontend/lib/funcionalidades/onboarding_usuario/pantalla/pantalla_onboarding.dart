@@ -160,32 +160,55 @@ class _CampoNombre extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InputDecorator(
-          decoration: const InputDecoration(
-            labelText: 'Nombre completo',
-            prefixIcon: Icon(Icons.badge_outlined),
-            suffixIcon: Icon(
-              Icons.verified_rounded,
-              color: Color(0xFF5C8A63),
-              size: 21,
+        // Solo es de solo lectura si de verdad hay un nombre detras. Al
+        // entrar con codigo por correo no lo hay, y bloquear el campo
+        // dejaria a la persona llamandose por su numero de registro.
+        if (controlador.nombreVieneDeLaCuenta) ...[
+          InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Nombre completo',
+              prefixIcon: Icon(Icons.badge_outlined),
+              suffixIcon: Icon(
+                Icons.verified_rounded,
+                color: Color(0xFF5C8A63),
+                size: 21,
+              ),
+            ),
+            child: Text(
+              controlador.borrador.nombreCompleto,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
-          child: Text(
-            controlador.borrador.nombreCompleto,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+          const Padding(
+            padding: EdgeInsets.only(left: 20, top: 6),
+            child: Text(
+              'Tomado de tu cuenta institucional.',
+              style: TextStyle(fontSize: 12),
             ),
           ),
-        ),
-        const Padding(
-          padding: EdgeInsets.only(left: 20, top: 6),
-          child: Text(
-            'Tomado de tu cuenta institucional.',
-            style: TextStyle(fontSize: 12),
+        ] else ...[
+          TextField(
+            onChanged: controlador.actualizarNombre,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              labelText: 'Nombre completo',
+              hintText: 'Como te conocen en la universidad',
+              prefixIcon: Icon(Icons.badge_outlined),
+            ),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
-        ),
+          const Padding(
+            padding: EdgeInsets.only(left: 20, top: 6),
+            child: Text(
+              'Es el nombre con el que te verán al comprar y vender.',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
       ],
     );
   }

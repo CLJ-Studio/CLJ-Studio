@@ -131,10 +131,7 @@ class RepositorioPedidos {
         emitir();
         // Respaldo corto: es la pantalla donde el usuario esta mirando
         // fijamente, esperando que el vendedor responda.
-        sondeo = Timer.periodic(
-          const Duration(seconds: 2),
-          (_) => emitir(),
-        );
+        sondeo = Timer.periodic(const Duration(seconds: 2), (_) => emitir());
         try {
           tiempoReal = _cliente
               .from('orders')

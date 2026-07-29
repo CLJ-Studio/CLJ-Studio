@@ -16,12 +16,20 @@ class RepositorioMiLocal {
   static const _camposLocal =
       'id, name, description, category_id, emoji, color_hex, '
       'estimated_time, delivery_cost, is_open, rating_average, '
-      'is_personal, logo_path, view_count, categories(name)';
+      'is_personal, logo_path, view_count, campus_location, '
+      'categories(name)';
 
+  /// El local viaja unido a cada producto. Sin el, la tarjeta del perfil no
+  /// tenia a donde abrirse y quedaba muerta al tocarla: el detalle necesita
+  /// saber de quien es lo que estas mirando para poder encargarlo.
   static const _camposProducto =
       'id, store_id, name, description, price, emoji, stock, kind, '
       'image_path, is_available, view_count, '
-      'product_images(storage_path, position)';
+      'product_images(storage_path, position), '
+      'stores!inner('
+      'id, name, description, category_id, emoji, color_hex, '
+      'estimated_time, delivery_cost, is_open, rating_average, '
+      'is_personal, logo_path, view_count, categories(name))';
 
   /// Contenedor de las publicaciones sueltas. Null si nunca publico nada.
   Future<LocalUniversitario?> cargarEspacioPersonal() =>
@@ -33,12 +41,14 @@ class RepositorioMiLocal {
 
   /// Los dos conviven: publicar algo suelto no debe meterlo en el catalogo
   /// del negocio, que es otra cosa.
+  /// Se lee de la vista y no de `stores` porque esta trae ademas el nombre
+  /// de quien vende. Leyendolo de la tabla, el local viajaba sin dueño y la
+  /// ficha del producto mostraba la marca sin la persona debajo.
   Future<LocalUniversitario?> _cargarPorTipo({required bool personal}) async {
     final fila = await _cliente
-        .from('stores')
-        .select(_camposLocal)
+        .from('locales_publicos')
+        .select()
         .eq('owner_id', _usuarioId)
-        .eq('is_active', true)
         .eq('is_personal', personal)
         .maybeSingle();
 
@@ -66,6 +76,16 @@ class RepositorioMiLocal {
 
     return filas.map(ProductoMarketplace.desdeMapa).toList();
   }
+
+  /// Confirma en que punto del campus esta quien vende ahora mismo.
+  ///
+  /// El recordatorio horario pide justo esto: sin guardarlo, el aviso
+  /// prometia algo que la aplicacion no podia cumplir.
+  Future<void> actualizarUbicacion(String localId, String ubicacion) =>
+      _cliente.rpc<void>(
+        'actualizar_ubicacion_local',
+        params: {'p_local': localId, 'p_ubicacion': ubicacion},
+      );
 
   /// Retira el negocio del catalogo y cancela sus pedidos vivos.
   ///

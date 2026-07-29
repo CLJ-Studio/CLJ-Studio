@@ -33,7 +33,7 @@ class ControladorOnboarding extends ChangeNotifier {
     try {
       carreras = await _repositorio.cargarCarreras();
       nombreInstitucional = await _repositorio.cargarNombreInstitucional();
-      if (nombreInstitucional != null) {
+      if (nombreInstitucional != null && nombreVieneDeLaCuenta) {
         borrador = borrador.copiarCon(nombreCompleto: nombreInstitucional);
       }
     } catch (_) {
@@ -42,6 +42,19 @@ class ControladorOnboarding extends ChangeNotifier {
       cargandoCarreras = false;
       notifyListeners();
     }
+  }
+
+  /// Si el nombre guardado es de verdad o solo el correo disfrazado.
+  ///
+  /// Con Google llegaba el nombre real y el campo era de solo lectura. Al
+  /// entrar con un codigo por correo no hay nombre en ninguna parte, asi que
+  /// el perfil se crea con la parte local del correo ("a2023115833") y hay
+  /// que pedirlo. Enseñar eso como nombre y bloquearlo dejaria a media
+  /// comunidad llamandose por su numero de registro.
+  bool get nombreVieneDeLaCuenta {
+    final nombre = nombreInstitucional?.trim() ?? '';
+    if (nombre.isEmpty) return false;
+    return !RegExp(r'^a?\d{6,}$').hasMatch(nombre);
   }
 
   void actualizarNombre(String valor) {

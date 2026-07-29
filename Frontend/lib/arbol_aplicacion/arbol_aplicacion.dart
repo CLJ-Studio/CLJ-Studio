@@ -19,6 +19,7 @@ class ArbolAplicacion extends StatefulWidget {
 
 class _ArbolAplicacionState extends State<ArbolAplicacion> {
   final tema = ControladorTema.instancia;
+  final _navegador = GlobalKey<NavigatorState>();
   bool _accesoLocalCompletado = false;
 
   @override
@@ -32,6 +33,7 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: tema,
     builder: (context, _) => MaterialApp(
+      navigatorKey: _navegador,
       title: 'UPSA Eat',
       debugShowCheckedModeBanner: false,
       theme: ConfiguracionTema.temaClaro,
@@ -40,7 +42,12 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
       onGenerateRoute: ArbolRutas.generarRuta,
       home: ModoLocal.activo
           ? _accesoLocalCompletado
-                ? const ArbolNavegacionPrincipal()
+                ? ArbolNavegacionPrincipal(
+                    alCerrarSesion: () {
+                      setState(() => _accesoLocalCompletado = false);
+                      _navegador.currentState?.popUntil((ruta) => ruta.isFirst);
+                    },
+                  )
                 : ArbolAccesoUpsa(
                     alAccederLocal: () =>
                         setState(() => _accesoLocalCompletado = true),

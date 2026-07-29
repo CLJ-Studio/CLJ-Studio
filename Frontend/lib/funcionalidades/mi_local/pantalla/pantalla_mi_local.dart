@@ -16,6 +16,8 @@ class PantallaMiLocal extends StatelessWidget {
     final datos = await mostrarDialogoProducto(context);
     if (datos == null) return;
 
+    // Desde aqui el destino es el local, no el espacio personal: es la
+    // diferencia entre un producto del catalogo y una publicacion suelta.
     await controlador.agregarProducto(
       nombre: datos.nombre,
       precio: datos.precio,
@@ -23,6 +25,7 @@ class PantallaMiLocal extends StatelessWidget {
       emoji: datos.emoji,
       descripcion: datos.descripcion,
       galeria: datos.galeria,
+      alLocal: true,
     );
   }
 
@@ -70,6 +73,60 @@ class PantallaMiLocal extends StatelessWidget {
       ),
     );
     if (confirmado == true) await controlador.eliminarProducto(indice);
+  }
+
+  /// Confirma en que punto del campus esta el local ahora mismo.
+  ///
+  /// Vive aqui y no en el encabezado del inicio porque el dato es del local,
+  /// no de quien mira: es lo que se le enseña al comprador para encontrarte,
+  /// y lo que el recordatorio horario pide confirmar.
+  Future<void> _elegirUbicacion(BuildContext context) async {
+    final elegida = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (hoja) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+              child: Text(
+                '¿Dónde estás ahora?',
+                style: Theme.of(
+                  hoja,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ),
+            for (final punto in ControladorMiLocal.ubicacionesCampus)
+              ListTile(
+                leading: const Icon(Icons.location_on_outlined),
+                title: Text(punto),
+                trailing: controlador.ubicacion == punto
+                    ? const Icon(Icons.check_rounded)
+                    : null,
+                onTap: () => Navigator.of(hoja).pop(punto),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (elegida == null) return;
+
+    try {
+      await controlador.actualizarUbicacion(elegida);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ahora te encuentran en $elegida.')),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo guardar tu ubicación.')),
+        );
+      }
+    }
   }
 
   /// Cerrar el local no borra su fila: `orders.store_id` es `on delete
@@ -134,7 +191,12 @@ class PantallaMiLocal extends StatelessWidget {
               controlador: controlador,
               alCerrar: () => _confirmarCierre(context),
             ),
-            const SizedBox(height: 34),
+            const SizedBox(height: 18),
+            _TarjetaUbicacion(
+              ubicacion: controlador.ubicacion,
+              alCambiar: () => _elegirUbicacion(context),
+            ),
+            const SizedBox(height: 26),
             Row(
               children: [
                 Expanded(
@@ -178,6 +240,77 @@ class PantallaMiLocal extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Punto del campus donde está el local ahora mismo.
+///
+/// Se muestra en grande y sin confirmada aparece en ámbar: el recordatorio
+/// horario pide justo esto, así que tiene que ser lo primero que se vea al
+/// entrar desde el aviso.
+class _TarjetaUbicacion extends StatelessWidget {
+  const _TarjetaUbicacion({required this.ubicacion, required this.alCambiar});
+
+  final String? ubicacion;
+  final VoidCallback alCambiar;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final puesta = ubicacion != null && ubicacion!.isNotEmpty;
+    final acento = puesta ? tema.colorScheme.primary : const Color(0xFFB07A2B);
+
+    return Material(
+      color: acento.withValues(alpha: .12),
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: alCambiar,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+          child: Row(
+            children: [
+              Icon(
+                puesta
+                    ? Icons.location_on_rounded
+                    : Icons.location_off_outlined,
+                color: acento,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      puesta ? 'Te encuentran en' : 'Sin ubicación',
+                      style: TextStyle(
+                        color: tema.textTheme.bodyMedium?.color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      puesta
+                          ? ubicacion!
+                          : 'Confirma dónde estás para que te encuentren',
+                      style: TextStyle(
+                        color: tema.colorScheme.onSurface,
+                        fontSize: puesta ? 17 : 14,
+                        fontWeight: FontWeight.w800,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right_rounded, color: acento),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _Encabezado extends StatelessWidget {

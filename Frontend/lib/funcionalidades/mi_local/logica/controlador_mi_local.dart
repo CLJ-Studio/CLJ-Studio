@@ -113,6 +113,34 @@ class ControladorMiLocal extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Puntos del campus donde puede estar quien vende. Es una lista cerrada
+  /// a proposito: texto libre acabaria en "por la puerta" y nadie encuentra
+  /// nada con eso.
+  static const ubicacionesCampus = [
+    'Jatata',
+    'Pascana',
+    'Mozza',
+    'Cafetería',
+    'Bloque A',
+    'Bloque B',
+    'Ingeniería',
+  ];
+
+  /// Donde esta el local ahora mismo, o null si no se confirmo.
+  String? get ubicacion => negocio?.ubicacionCampus;
+
+  /// Confirma la ubicacion. Es lo que pide el recordatorio horario.
+  Future<void> actualizarUbicacion(String nueva) async {
+    final actual = negocio;
+    if (actual == null) return;
+
+    await _repositorio.actualizarUbicacion(actual.id, nueva);
+    // Se relee para quedarse tambien con la marca de tiempo, que es la que
+    // decide si el recordatorio vuelve a salir.
+    negocio = await _repositorio.cargarNegocio();
+    notifyListeners();
+  }
+
   /// Cierra el negocio. Sus pedidos vivos se cancelan y sus compradores
   /// reciben aviso; lo entregado se conserva en el historial de ambos.
   Future<void> cerrarLocal() async {
@@ -163,6 +191,12 @@ class ControladorMiLocal extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// [alLocal] decide en cual de los dos espacios cae.
+  ///
+  /// Los dos botones que crean cosas llamaban a este metodo y siempre
+  /// escribian en el espacio personal, asi que lo que se subia desde "Tu
+  /// local" acababa como publicacion suelta: no aparecia en el inventario y
+  /// en su ficha ponia "Vende por su cuenta".
   Future<void> agregarProducto({
     required String nombre,
     required double precio,
@@ -171,14 +205,21 @@ class ControladorMiLocal extends ChangeNotifier {
     String? descripcion,
     bool esServicio = false,
     List<String> galeria = const [],
+    bool alLocal = false,
   }) async {
-    await asegurarEspacioPersonal();
+    // Solo se crea el espacio personal si de verdad hace falta: si va al
+    // local, crearlo dejaria una tienda vacia colgando.
+    if (alLocal && negocio == null) return;
+    if (!alLocal) await asegurarEspacioPersonal();
+
+    final destino = alLocal ? negocio! : espacioPersonal!;
+
     if (ModoLocal.activo) {
       final rutas = List<String>.from(galeria);
       productos = [
         ProductoMarketplace(
           id: 'producto-${DateTime.now().microsecondsSinceEpoch}',
-          localId: espacioPersonal?.id ?? 'local-diseno',
+          localId: destino.id,
           nombre: nombre.trim(),
           descripcion: descripcion?.trim() ?? '',
           precio: precio,
@@ -195,7 +236,7 @@ class ControladorMiLocal extends ChangeNotifier {
       return;
     }
     await _repositorio.agregarProducto(
-      localId: espacioPersonal!.id,
+      localId: destino.id,
       nombre: nombre.trim(),
       precio: precio,
       stock: cantidad,

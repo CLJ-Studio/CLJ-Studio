@@ -46,8 +46,7 @@ abstract final class ServicioPush {
   static bool get yaConcedido =>
       kIsWeb && web.Notification.permission == 'granted';
 
-  static bool get denegado =>
-      kIsWeb && web.Notification.permission == 'denied';
+  static bool get denegado => kIsWeb && web.Notification.permission == 'denied';
 
   /// Motivo del ultimo fallo, para poder mostrarlo en vez de un generico.
   static String? ultimoError;

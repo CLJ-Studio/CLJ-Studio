@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import '../datos/cuentas_recordadas.dart';
+import '../datos/servicio_autenticacion_correo.dart';
+import '../diseno/boton_acceso_correo.dart';
+import '../diseno/campo_codigo_verificacion.dart';
+import '../diseno/cuentas_guardadas.dart';
 import '../datos/repositorio_acceso_upsa.dart';
-import '../diseno/boton_continuar_google.dart';
 import '../diseno/encabezado_acceso_upsa.dart';
 import '../diseno/formulario_correo_upsa.dart';
 import '../diseno/mensaje_acceso_exclusivo.dart';
@@ -25,47 +29,112 @@ class PantallaAccesoUpsa extends StatefulWidget {
 class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
   bool _cargando = false;
   String _digitos = '';
+  String _codigo = '';
+  String? _error;
+  bool _agregandoCuenta = false;
+
+  /// Correo al que se mandó el código. Mientras sea null se está en el
+  /// primer paso; en cuanto tiene valor, la pantalla pide el código.
+  String? _correoPendiente;
+
+  List<String> _cuentas = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarCuentas();
+  }
+
+  Future<void> _cargarCuentas() async {
+    final guardadas = await CuentasRecordadas.leer();
+    if (mounted) setState(() => _cuentas = guardadas);
+  }
 
   /// Formato real del codigo: año de ingreso (4), periodo (11 para el primer
   /// semestre, 12 para el segundo) y correlativo (4). Aceptar diez digitos
   /// cualesquiera dejaba pasar codigos inventados como "8382848283".
-  bool get _codigoCompleto {
+  bool get _registroCompleto {
     if (!RegExp(r'^\d{4}(11|12)\d{4}$').hasMatch(_digitos)) return false;
     final anio = int.parse(_digitos.substring(0, 4));
     return anio >= 2000 && anio <= DateTime.now().year;
   }
 
-  /// Solo se envia como sugerencia si esta completo; a medio escribir
-  /// confundiria al selector de Google en vez de ayudar.
-  String? get _correoSugerido =>
-      _codigoCompleto ? 'a$_digitos@estudiantes.upsa.edu.bo' : null;
+  bool get _codigoCompleto => _codigo.length == CampoCodigoVerificacion.largo;
 
-  /// Si Supabase rechazo el alta (dominio no institucional), el redirect de
-  /// vuelta trae el motivo en la URL en vez de una sesion activa.
-  String? get _errorDeRedireccion {
-    final descripcion = Uri.base.queryParameters['error_description'];
-    if (descripcion == null) return null;
-    if (descripcion.contains('DOMINIO_NO_INSTITUCIONAL')) {
-      return 'Solo se permite el acceso con un correo institucional UPSA.';
-    }
-    return 'No se pudo completar el acceso con Google. Intenta de nuevo.';
-  }
+  bool get _esperandoCodigo => _correoPendiente != null;
 
-  Future<void> _continuar() async {
+  bool get _accesoDirecto => widget.alAccederLocal != null;
+
+  /// Pide el código al buzón institucional.
+  Future<void> _pedirCodigo([String? correoDirecto]) async {
+    final correo =
+        correoDirecto ?? ServicioAutenticacionCorreo.normalizarCorreo(_digitos);
+    if (correo == null) return;
+
     if (widget.alAccederLocal != null) {
+      await CuentasRecordadas.recordar(correo);
       widget.alAccederLocal!();
       return;
     }
-    setState(() => _cargando = true);
-    try {
-      await widget.repositorio.iniciarSesionConGoogle(
-        correoSugerido: _correoSugerido,
-      );
-      // En Flutter Web la pestana navega fuera de la app aqui mismo;
-      // si el widget sigue vivo es porque no hubo redireccion (p. ej. error).
-    } finally {
-      if (mounted) setState(() => _cargando = false);
+
+    setState(() {
+      _cargando = true;
+      _error = null;
+    });
+
+    final fallo = await widget.repositorio.enviarCodigo(correo);
+    if (!mounted) return;
+
+    setState(() {
+      _cargando = false;
+      _error = fallo;
+      if (fallo == null) {
+        _correoPendiente = correo;
+        _codigo = '';
+      }
+    });
+  }
+
+  /// Canjea el código por una sesión.
+  Future<void> _verificar() async {
+    final correo = _correoPendiente;
+    if (correo == null || !_codigoCompleto) return;
+
+    setState(() {
+      _cargando = true;
+      _error = null;
+    });
+
+    final fallo = await widget.repositorio.verificarCodigo(
+      correo: correo,
+      codigo: _codigo,
+    );
+    if (!mounted) return;
+
+    if (fallo == null) {
+      // Solo se recuerda cuando la sesión llegó a abrirse: guardar antes
+      // llenaría la lista de correos que ni siquiera existen.
+      await CuentasRecordadas.recordar(correo);
+      // No se navega desde aquí: PortonAutenticacion escucha el cambio de
+      // sesión y cambia de pantalla solo.
+      return;
     }
+
+    setState(() {
+      _cargando = false;
+      _error = fallo;
+    });
+  }
+
+  void _volverAlCorreo() => setState(() {
+    _correoPendiente = null;
+    _codigo = '';
+    _error = null;
+  });
+
+  Future<void> _olvidarCuenta(String correo) async {
+    await CuentasRecordadas.olvidar(correo);
+    await _cargarCuentas();
   }
 
   @override
@@ -114,18 +183,44 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                         const SizedBox(height: 4),
                         const EncabezadoAccesoUpsa(),
                         const SizedBox(height: 28),
-                        FormularioCorreoUpsa(
-                          esValido: _codigoCompleto,
-                          digitos: _digitos,
-                          alCambiar: (valor) => setState(
-                            () =>
-                                _digitos = valor.replaceAll(RegExp(r'\D'), ''),
+                        // Los dos pasos comparten el mismo hueco de la
+                        // pantalla: solo cambia lo que se pide.
+                        if (_esperandoCodigo) ...[
+                          _AvisoCodigoEnviado(correo: _correoPendiente!),
+                          const SizedBox(height: 16),
+                          CampoCodigoVerificacion(
+                            esValido: _codigoCompleto,
+                            hayError: _error != null,
+                            alCambiar: (valor) =>
+                                setState(() => _codigo = valor),
+                            alEnviar: _verificar,
                           ),
-                        ),
-                        if (_errorDeRedireccion != null) ...[
+                        ] else ...[
+                          CuentasGuardadas(
+                            cuentas: _cuentas,
+                            alElegir: _pedirCodigo,
+                            alOlvidar: _olvidarCuenta,
+                            alAgregar: () => setState(() {
+                              _agregandoCuenta = true;
+                              _digitos = '';
+                            }),
+                          ),
+                          if (_cuentas.isEmpty || _agregandoCuenta)
+                            FormularioCorreoUpsa(
+                              esValido: _registroCompleto,
+                              digitos: _digitos,
+                              alCambiar: (valor) => setState(
+                                () => _digitos = valor.replaceAll(
+                                  RegExp(r'\D'),
+                                  '',
+                                ),
+                              ),
+                            ),
+                        ],
+                        if (_error case final String mensaje) ...[
                           const SizedBox(height: 12),
                           Text(
-                            _errorDeRedireccion!,
+                            mensaje,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.error,
@@ -133,10 +228,46 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
                           ),
                         ],
                         const SizedBox(height: 14),
-                        BotonContinuarGoogle(
-                          habilitado: !_cargando,
-                          alPresionar: _continuar,
-                        ),
+                        if (_esperandoCodigo ||
+                            _cuentas.isEmpty ||
+                            _agregandoCuenta)
+                          BotonAccesoCorreo(
+                            habilitado: _esperandoCodigo
+                                ? _codigoCompleto
+                                : _registroCompleto,
+                            cargando: _cargando,
+                            texto: _esperandoCodigo
+                                ? 'Verificar e ingresar'
+                                : _accesoDirecto
+                                ? 'Ingresar'
+                                : 'Enviarme el código',
+                            icono: _esperandoCodigo
+                                ? Icons.login_rounded
+                                : _accesoDirecto
+                                ? Icons.login_rounded
+                                : Icons.mark_email_unread_outlined,
+                            alPresionar: _esperandoCodigo
+                                ? _verificar
+                                : _pedirCodigo,
+                          ),
+                        if (_esperandoCodigo) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                onPressed: _cargando ? null : _volverAlCorreo,
+                                child: const Text('Cambiar de cuenta'),
+                              ),
+                              TextButton(
+                                onPressed: _cargando
+                                    ? null
+                                    : () => _pedirCodigo(_correoPendiente),
+                                child: const Text('Reenviar código'),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 18),
                         const MensajeAccesoExclusivo(),
                         const SizedBox(height: 24),
@@ -281,4 +412,49 @@ class _FormasDecorativas extends StatelessWidget {
       borderRadius: BorderRadius.circular(24),
     ),
   );
+}
+
+/// Confirma de forma breve a qué correo se envió el código.
+class _AvisoCodigoEnviado extends StatelessWidget {
+  const _AvisoCodigoEnviado({required this.correo});
+
+  final String correo;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.mark_email_read_outlined,
+              size: 21,
+              color: tema.colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Te enviamos un código a',
+              style: TextStyle(
+                color: tema.textTheme.bodyMedium?.color,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        Text(
+          correo,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: tema.textTheme.bodyMedium?.color,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
 }
