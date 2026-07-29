@@ -76,10 +76,7 @@ class CampoCodigoEstudiante extends StatelessWidget {
           padding: EdgeInsets.only(left: 20),
           child: Text(
             '@estudiantes.upsa.edu.bo',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ),
       ],
