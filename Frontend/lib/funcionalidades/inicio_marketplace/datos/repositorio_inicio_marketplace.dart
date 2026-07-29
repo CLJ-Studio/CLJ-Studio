@@ -114,12 +114,11 @@ class RepositorioInicioMarketplace {
   ///
   /// Sale de `perfiles_publicos`, que corre como owner y solo deja salir lo
   /// que puede ver cualquiera: el whatsapp jamas aparece ahi.
-  Future<({String nombre, String carrera})?> obtenerPerfilPublico(
-    String usuarioId,
-  ) async {
+  Future<({String nombre, String carrera, String biografia})?>
+  obtenerPerfilPublico(String usuarioId) async {
     final fila = await _cliente
         .from('perfiles_publicos')
-        .select('full_name, career')
+        .select('full_name, career, bio')
         .eq('id', usuarioId)
         .maybeSingle();
     if (fila == null) return null;
@@ -127,6 +126,7 @@ class RepositorioInicioMarketplace {
     return (
       nombre: (fila['full_name'] as String?) ?? '',
       carrera: (fila['career'] as String?) ?? '',
+      biografia: (fila['bio'] as String?) ?? '',
     );
   }
 

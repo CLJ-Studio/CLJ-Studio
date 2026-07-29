@@ -13,6 +13,7 @@ class UsuarioUpsa {
     this.avatarPath,
     this.muestraVistas = true,
     this.muestraFavoritos = false,
+    this.biografia = '',
   });
 
   factory UsuarioUpsa.desdeMapa(Map<String, dynamic> fila) {
@@ -29,6 +30,7 @@ class UsuarioUpsa {
       avatarPath: fila['avatar_path'] as String?,
       muestraVistas: (fila['show_view_count'] as bool?) ?? true,
       muestraFavoritos: (fila['show_favorites'] as bool?) ?? false,
+      biografia: (fila['bio'] as String?) ?? '',
     );
   }
 
@@ -48,6 +50,10 @@ class UsuarioUpsa {
 
   /// Si el resto puede ver lo que guardo en favoritos.
   final bool muestraFavoritos;
+
+  /// Linea breve que escribe la propia persona. El nombre y la carrera los
+  /// pone la universidad; esto es lo unico suyo.
+  final String biografia;
 
   String? get avatarUrl => ServicioImagenes.urlPublica(avatarPath);
 

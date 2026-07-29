@@ -12,10 +12,11 @@ import '../../inicio_marketplace/pantalla/pantalla_inicio_marketplace.dart';
 import '../../locales_universitarios/logica/controlador_locales.dart';
 import '../../locales_universitarios/pantalla/pantalla_locales_universitarios.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
+import '../../mi_local/pantalla/pantalla_administrar_local.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
 import '../../notificaciones/logica/navegador_notificaciones.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_vendedor.dart';
-import '../../publicar_producto/pantalla/seccion_publicar_mi_local.dart';
+import '../../publicar_producto/arbol/arbol_publicar_producto.dart';
 import '../logica/controlador_navegacion_principal.dart';
 import '../pantalla/pantalla_navegacion_principal.dart';
 
@@ -30,7 +31,6 @@ class ArbolNavegacionPrincipal extends StatefulWidget {
 class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
   final controlador = ControladorNavegacionPrincipal();
   final miLocal = ControladorMiLocal();
-  final segmentoPublicar = ValueNotifier<int>(0);
   late final inicio = ControladorInicioMarketplace(
     ArbolDependencias.crearRepositorioInicio(),
   );
@@ -142,10 +142,22 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
   void dispose() {
     controlador.dispose();
     miLocal.dispose();
-    segmentoPublicar.dispose();
     inicio.dispose();
     locales.dispose();
     super.dispose();
+  }
+
+  /// Con negocio abierto lleva a administrarlo; sin el, al alta.
+  void _abrirLocal() {
+    if (miLocal.tieneLocalFormal) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PantallaAdministrarLocal(controlador: miLocal),
+        ),
+      );
+      return;
+    }
+    _abrirCreacion();
   }
 
   void _abrirCreacion() {
@@ -160,8 +172,12 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
                 locales.actualizarLocalDePrueba(nuevoLocal);
               }
             }
-            segmentoPublicar.value = 1;
-            controlador.seleccionarIndice(2);
+            // Recien creado, se abre directo su administracion.
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => PantallaAdministrarLocal(controlador: miLocal),
+              ),
+            );
           },
         ),
       ),
@@ -181,13 +197,13 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
           },
         ),
         PantallaLocalesUniversitarios(
-          alCrearLocal: _abrirCreacion,
+          alCrearLocal: _abrirLocal,
           // Un espacio personal no cuenta: la invitacion a abrir un local
           // formal debe seguir visible para el vendedor casual.
           yaTieneLocal: miLocal.tieneLocalFormal,
           controladorExterno: locales,
         ),
-        SeccionPublicarMiLocal(miLocal: miLocal, segmento: segmentoPublicar),
+        ArbolPublicarProducto(miLocal: miLocal),
         PantallaPerfilVendedor(controlador: miLocal),
       ];
       return PantallaNavegacionPrincipal(

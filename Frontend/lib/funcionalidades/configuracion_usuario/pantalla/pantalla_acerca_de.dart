@@ -108,7 +108,7 @@ class PantallaAcercaDe extends StatelessWidget {
               const SizedBox(height: 16),
               // Deja ver de un vistazo que version corre en este aparato.
               Text(
-                'Versión ${VersionAplicacion.corta}',
+                'Versión ${VersionAplicacion.completa}',
                 style: TextStyle(
                   color: tema.textTheme.bodyMedium?.color,
                   fontSize: 12,

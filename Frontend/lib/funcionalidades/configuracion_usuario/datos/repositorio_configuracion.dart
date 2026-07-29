@@ -33,7 +33,7 @@ class RepositorioConfiguracion {
         .select(
           'full_name, student_code, email, avatar_emoji, whatsapp, '
           'is_on_campus, avatar_path, show_view_count, show_favorites, '
-          'careers(name)',
+          'bio, careers(name)',
         )
         .eq('id', id)
         .single();

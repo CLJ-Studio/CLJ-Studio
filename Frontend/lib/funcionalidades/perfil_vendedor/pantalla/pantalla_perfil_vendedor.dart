@@ -359,6 +359,18 @@ class _EncabezadoPerfil extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              if (perfil?.biografia case final String bio when bio.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    bio,
+                    style: TextStyle(
+                      color: colorContenido,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

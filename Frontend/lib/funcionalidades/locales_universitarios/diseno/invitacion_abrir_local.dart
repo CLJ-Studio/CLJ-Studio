@@ -13,7 +13,9 @@ class InvitacionAbrirLocal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-    onTap: yaTieneLocal ? null : alPresionar,
+    // Con local ya abierto lleva a administrarlo; sin el, a crearlo. Antes
+    // se quedaba muerta al tenerlo, que es justo cuando mas se toca.
+    onTap: alPresionar,
     borderRadius: BorderRadius.circular(30),
     child: Ink(
       height: 180,

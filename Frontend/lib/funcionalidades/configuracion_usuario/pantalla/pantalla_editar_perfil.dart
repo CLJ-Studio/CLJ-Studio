@@ -9,7 +9,6 @@ import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../onboarding_usuario/datos/repositorio_onboarding.dart';
 import '../../onboarding_usuario/diseno/selector_carrera.dart';
 import '../../onboarding_usuario/modelos/carrera_upsa.dart';
-import '../diseno/editor_negocio.dart';
 
 /// Edición de los datos que el estudiante sí controla.
 ///
@@ -25,6 +24,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
   static const _repositorioCarreras = RepositorioOnboarding();
 
   final _whatsapp = TextEditingController();
+  final _biografia = TextEditingController();
   List<CarreraUpsa> _carreras = const [];
   String? _carreraId;
   String? _avatarPath;
@@ -58,6 +58,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
   @override
   void dispose() {
     _whatsapp.dispose();
+    _biografia.dispose();
     super.dispose();
   }
 
@@ -81,6 +82,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
       final perfil = SesionUsuario.instancia.perfil;
       _avatarPath = perfil?.avatarPath;
       _avatarOriginal = perfil?.avatarPath;
+      _biografia.text = perfil?.biografia ?? '';
       if (perfil != null) {
         // El WhatsApp se guarda con el 591 delante; el campo muestra solo
         // los 8 digitos locales, igual que en el onboarding.
@@ -132,6 +134,13 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
             .update({'avatar_path': _avatarPath})
             .eq('id', Supabase.instance.client.auth.currentUser!.id);
       }
+
+      // La biografia tambien va directa, pero el servidor la revisa con el
+      // mismo filtro de contenido que el resto de textos publicos.
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'bio': _biografia.text.trim()})
+          .eq('id', Supabase.instance.client.auth.currentUser!.id);
       // Refresca la copia compartida para que el resto de la app la vea.
       await SesionUsuario.instancia.cargar(forzar: true);
       if (mounted) Navigator.of(context).pop();
@@ -182,6 +191,21 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                       cargando: false,
                     ),
                     const SizedBox(height: 16),
+                    // Lo unico del perfil que escribe la propia persona:
+                    // el nombre y la carrera los pone la universidad.
+                    TextField(
+                      controller: _biografia,
+                      maxLength: 160,
+                      maxLines: 3,
+                      minLines: 1,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        labelText: 'Descripción',
+                        hintText: 'Qué vendes o cómo encontrarte',
+                        prefixIcon: Icon(Icons.notes_rounded),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     TextField(
                       controller: _whatsapp,
                       keyboardType: TextInputType.phone,
@@ -210,7 +234,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                     const SizedBox(height: 22),
                     const _InterruptorCampus(),
                     // Solo se muestra a quien tiene un local formal.
-                    const EditorNegocio(),
+
                     if (_error case final String mensaje) ...[
                       const SizedBox(height: 14),
                       Text(

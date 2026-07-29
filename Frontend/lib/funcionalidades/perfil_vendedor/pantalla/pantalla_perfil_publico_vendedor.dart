@@ -30,6 +30,7 @@ class _ContenidoPerfil {
     this.favoritosPublicos = false,
     this.nombre = '',
     this.carrera = '',
+    this.biografia = '',
     this.negocio,
   });
 
@@ -40,6 +41,9 @@ class _ContenidoPerfil {
   /// nombre sale de `perfiles_publicos` y no del nombre de la tienda.
   final String nombre;
   final String carrera;
+
+  /// Lo que la persona escribio sobre si misma.
+  final String biografia;
 
   /// Su negocio, si abrio uno. Se enseña como un enlace debajo de la
   /// carrera en vez de como una pestaña: un local no tiene favoritos ni
@@ -92,6 +96,7 @@ class _PantallaPerfilPublicoVendedorState
         favoritosPublicos: favoritos.isNotEmpty,
         nombre: perfil?.nombre ?? widget.local.vendedorNombre,
         carrera: perfil?.carrera ?? '',
+        biografia: perfil?.biografia ?? '',
         negocio: locales.where((l) => !l.esPersonal).firstOrNull,
       );
     } catch (_) {
@@ -216,6 +221,20 @@ class _PantallaPerfilPublicoVendedorState
                                 context,
                               ).textTheme.bodyMedium?.color,
                               fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (datos.biografia.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            datos.biografia,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 13,
+                              height: 1.35,
                             ),
                           ),
                         ),
