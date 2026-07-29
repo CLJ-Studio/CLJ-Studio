@@ -107,6 +107,26 @@ class RepositorioInicioMarketplace {
     return ProductoMarketplace.desdeMapa(fila, local: local);
   }
 
+  /// Nombre y carrera de una persona, sin datos sensibles.
+  ///
+  /// Sale de `perfiles_publicos`, que corre como owner y solo deja salir lo
+  /// que puede ver cualquiera: el whatsapp jamas aparece ahi.
+  Future<({String nombre, String carrera})?> obtenerPerfilPublico(
+    String usuarioId,
+  ) async {
+    final fila = await _cliente
+        .from('perfiles_publicos')
+        .select('full_name, career')
+        .eq('id', usuarioId)
+        .maybeSingle();
+    if (fila == null) return null;
+
+    return (
+      nombre: (fila['full_name'] as String?) ?? '',
+      carrera: (fila['career'] as String?) ?? '',
+    );
+  }
+
   /// Los locales de una misma persona: su espacio personal y su negocio.
   ///
   /// El perfil publico los necesita separados porque una publicacion suelta

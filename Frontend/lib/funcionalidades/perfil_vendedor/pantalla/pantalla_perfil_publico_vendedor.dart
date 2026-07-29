@@ -4,6 +4,7 @@ import 'package:animations/animations.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../locales_universitarios/pantalla/pantalla_detalle_local.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
 
 /// Perfil público al que se llega tocando el vendedor de una publicación.
@@ -26,27 +27,34 @@ class PantallaPerfilPublicoVendedor extends StatefulWidget {
 class _ContenidoPerfil {
   const _ContenidoPerfil({
     this.personales = const [],
-    this.delLocal = const [],
     this.favoritos = const [],
-    this.tieneLocal = false,
     this.favoritosPublicos = false,
+    this.nombre = '',
+    this.carrera = '',
+    this.negocio,
   });
 
   final List<ProductoMarketplace> personales;
-  final List<ProductoMarketplace> delLocal;
   final List<ProductoMarketplace> favoritos;
-  final bool tieneLocal;
+
+  /// Quien es la persona. El perfil es SUYO, no de su local: por eso el
+  /// nombre sale de `perfiles_publicos` y no del nombre de la tienda.
+  final String nombre;
+  final String carrera;
+
+  /// Su negocio, si abrio uno. Se enseña como un enlace debajo de la
+  /// carrera en vez de como una pestaña: un local no tiene favoritos ni
+  /// carrera, asi que mezclarlo dentro del perfil no tenia sentido.
+  final LocalUniversitario? negocio;
 
   /// Si la persona decidio enseñar sus favoritos. Se distingue de "no tiene
   /// ninguno" para poder explicar por que la pestaña esta vacia.
   final bool favoritosPublicos;
 
-  int get totalPublicaciones => personales.length + delLocal.length;
+  int get totalPublicaciones => personales.length;
 
-  int get vistas => [
-    ...personales,
-    ...delLocal,
-  ].fold(0, (total, producto) => total + producto.vistas);
+  int get vistas =>
+      personales.fold(0, (total, producto) => total + producto.vistas);
 }
 
 class _PantallaPerfilPublicoVendedorState
@@ -69,34 +77,38 @@ class _PantallaPerfilPublicoVendedorState
     }
 
     try {
-      final locales = await repositorio.obtenerLocalesDe(dueno);
-      final personales = locales.where((l) => l.esPersonal).toList();
-      final negocios = locales.where((l) => !l.esPersonal).toList();
-
-      final (sueltas, delLocal, favoritos) = await (
-        repositorio.obtenerProductosDe(personales),
-        repositorio.obtenerProductosDe(negocios),
+      final (perfil, locales, favoritos) = await (
+        repositorio.obtenerPerfilPublico(dueno),
+        repositorio.obtenerLocalesDe(dueno),
         repositorio.obtenerFavoritosPublicos(dueno),
       ).wait;
 
+      // Todo lo que publico, venga de su espacio personal o de su negocio:
+      // para quien mira es una sola lista de cosas que vende.
+      final publicaciones = await repositorio.obtenerProductosDe(locales);
+
       return _ContenidoPerfil(
-        personales: sueltas,
-        delLocal: delLocal,
+        personales: publicaciones,
         favoritos: favoritos,
-        tieneLocal: negocios.isNotEmpty,
         favoritosPublicos: favoritos.isNotEmpty,
+        nombre: perfil?.nombre ?? widget.local.vendedorNombre,
+        carrera: perfil?.carrera ?? '',
+        negocio: locales.where((l) => !l.esPersonal).firstOrNull,
       );
     } catch (_) {
-      return _ContenidoPerfil(personales: [widget.publicacionInicial]);
+      return _ContenidoPerfil(
+        personales: [widget.publicacionInicial],
+        nombre: widget.local.vendedorNombre,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final local = widget.local;
-    final nombre = local.vendedorNombre.isEmpty
-        ? local.nombre
-        : local.vendedorNombre;
+    // El perfil es de la persona: si su nombre no viniera, antes se caia al
+    // nombre del local y la pantalla parecia el perfil de una tienda.
+    final nombre = local.vendedorNombre;
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final colorContenido = oscuro ? Colors.white : Colors.black;
 
@@ -116,11 +128,7 @@ class _PantallaPerfilPublicoVendedorState
               _ContenidoPerfil(personales: [widget.publicacionInicial]);
           final vistas = datos.vistas;
           // Cada pestaña con lo suyo: sueltas, del local y me gusta.
-          final productos = switch (seccion) {
-            0 => datos.personales,
-            1 => datos.delLocal,
-            _ => datos.favoritos,
-          };
+          final productos = seccion == 0 ? datos.personales : datos.favoritos;
 
           return CustomScrollView(
             slivers: [
@@ -198,6 +206,29 @@ class _PantallaPerfilPublicoVendedorState
                           ),
                         ],
                       ),
+                      if (datos.carrera.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            datos.carrera,
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                      // El local va como enlace y no como pestaña: no tiene
+                      // carrera ni favoritos, asi que meterlo dentro del
+                      // perfil confundia las dos cosas.
+                      if (datos.negocio case final LocalUniversitario negocio)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: _EnlaceLocal(local: negocio),
+                        ),
                       const SizedBox(height: 20),
                       _SelectorPublico(
                         seleccionado: seccion,
@@ -218,11 +249,7 @@ class _PantallaPerfilPublicoVendedorState
                         // El motivo importa: no es lo mismo que no tenga
                         // nada a que haya decidido no enseñarlo.
                         switch (seccion) {
-                          0 => 'Todavía no publicó nada por su cuenta.',
-                          1 =>
-                            datos.tieneLocal
-                                ? 'Su local aún no tiene publicaciones.'
-                                : 'No tiene un local abierto.',
+                          0 => 'Todavía no publicó nada.',
                           _ =>
                             datos.favoritosPublicos
                                 ? 'Todavía no guardó ningún favorito.'
@@ -293,6 +320,76 @@ class _AvatarVendedor extends StatelessWidget {
   );
 }
 
+/// Acceso al local de la persona, desde su perfil.
+///
+/// Un local no tiene carrera ni favoritos, asi que no cabe como pestaña del
+/// perfil: es otra cosa, y se abre en su propia pantalla.
+class _EnlaceLocal extends StatelessWidget {
+  const _EnlaceLocal({required this.local});
+
+  final LocalUniversitario local;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+
+    return Material(
+      color: tema.colorScheme.primary.withValues(alpha: .12),
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => PantallaDetalleLocal(local: local),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+          child: Row(
+            children: [
+              Icon(
+                Icons.storefront_rounded,
+                size: 20,
+                color: tema.colorScheme.primary,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Dueño de',
+                      style: TextStyle(
+                        color: tema.textTheme.bodyMedium?.color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      local.nombre,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: tema.colorScheme.onSurface,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: tema.colorScheme.primary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Metrica extends StatelessWidget {
   const _Metrica({required this.valor, required this.etiqueta});
 
@@ -334,11 +431,8 @@ class _SelectorPublico extends StatelessWidget {
     final color = Theme.of(context).brightness == Brightness.dark
         ? Colors.white
         : Colors.black;
-    const iconos = [
-      Icons.grid_view_rounded,
-      Icons.storefront_rounded,
-      Icons.favorite_rounded,
-    ];
+    // La tienda ya no es una pestaña: se llega por el enlace de arriba.
+    const iconos = [Icons.grid_view_rounded, Icons.favorite_rounded];
 
     return SizedBox(
       height: 52,
@@ -347,9 +441,9 @@ class _SelectorPublico extends StatelessWidget {
           AnimatedAlign(
             duration: const Duration(milliseconds: 420),
             curve: Curves.easeInOutCubic,
-            alignment: Alignment((seleccionado - 1).toDouble(), 1),
+            alignment: Alignment(seleccionado == 0 ? -1 : 1, 1),
             child: FractionallySizedBox(
-              widthFactor: 1 / 3,
+              widthFactor: 1 / 2,
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
@@ -372,7 +466,7 @@ class _SelectorPublico extends StatelessWidget {
                     child: Center(
                       child: Icon(
                         iconos[indice],
-                        color: indice == 2 ? const Color(0xFFE53935) : color,
+                        color: indice == 1 ? const Color(0xFFE53935) : color,
                         size: 25,
                       ),
                     ),
