@@ -86,10 +86,18 @@ class ServicioAutenticacionCorreo {
     if (texto.toLowerCase().contains('invalid')) {
       return 'El código no es correcto. Revísalo.';
     }
-    // Supabase limita cuántos correos se piden seguidos.
-    if (texto.toLowerCase().contains('rate limit') ||
-        texto.toLowerCase().contains('security purposes')) {
-      return 'Espera un momento antes de pedir otro código.';
+    // Supabase limita cuantos correos se piden seguidos, y en el mensaje
+    // dice cuantos segundos faltan. Decir solo "espera un momento" hacia
+    // pensar que la espera era la hora de caducidad del codigo.
+    final bajo = texto.toLowerCase();
+    if (bajo.contains('rate limit') || bajo.contains('security purposes')) {
+      final segundos = RegExp(r'(\d+)\s*second').firstMatch(bajo)?.group(1);
+      if (segundos == null) {
+        return 'Pediste varios códigos seguidos. Espera un minuto y '
+            'vuelve a intentarlo.';
+      }
+      return 'Espera $segundos segundos antes de pedir otro código. '
+          'El que ya te llegó sigue sirviendo.';
     }
     return texto;
   }
