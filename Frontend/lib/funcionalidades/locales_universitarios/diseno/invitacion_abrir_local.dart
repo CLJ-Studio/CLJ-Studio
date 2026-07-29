@@ -54,7 +54,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                 children: [
                   Text(
                     yaTieneLocal
-                        ? '¡Tu local ya está activo!'
+                        ? 'Administra tu local aquí'
                         : '¿Quieres abrir tu propio local?',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Theme.of(context).brightness == Brightness.dark
@@ -67,7 +67,10 @@ class InvitacionAbrirLocal extends StatelessWidget {
                   const SizedBox(height: 9),
                   Text(
                     yaTieneLocal
-                        ? 'Adminístralo desde Publicar → Mi local.'
+                        // La instruccion anterior mandaba a Publicar, donde
+                        // el local ya no vive. Ahora la tarjeta ES el acceso.
+                        ? 'Tu inventario, tu ubicación y tu marca, en un '
+                              'solo sitio.'
                         : 'Crea tu perfil y empieza a publicar tus productos.',
                     style: TextStyle(
                       color: Theme.of(context).brightness == Brightness.dark
@@ -76,26 +79,27 @@ class InvitacionAbrirLocal extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (!yaTieneLocal) ...[
-                    const SizedBox(height: 12),
-                    const Row(
-                      children: [
-                        Text(
-                          'Comenzar',
-                          style: TextStyle(
-                            color: Color(0xFF4D7955),
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        SizedBox(width: 5),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
+                  // La llamada a la accion sale siempre: la tarjeta lleva a
+                  // algun sitio en los dos casos, y sin ella no parecia
+                  // pulsable justo cuando ya tienes local.
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Text(
+                        yaTieneLocal ? 'Administrar' : 'Comenzar',
+                        style: const TextStyle(
                           color: Color(0xFF4D7955),
+                          fontWeight: FontWeight.w900,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const SizedBox(width: 5),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 18,
+                        color: Color(0xFF4D7955),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
