@@ -113,6 +113,34 @@ class ControladorMiLocal extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Puntos del campus donde puede estar quien vende. Es una lista cerrada
+  /// a proposito: texto libre acabaria en "por la puerta" y nadie encuentra
+  /// nada con eso.
+  static const ubicacionesCampus = [
+    'Jatata',
+    'Pascana',
+    'Mozza',
+    'Cafetería',
+    'Bloque A',
+    'Bloque B',
+    'Ingeniería',
+  ];
+
+  /// Donde esta el local ahora mismo, o null si no se confirmo.
+  String? get ubicacion => negocio?.ubicacionCampus;
+
+  /// Confirma la ubicacion. Es lo que pide el recordatorio horario.
+  Future<void> actualizarUbicacion(String nueva) async {
+    final actual = negocio;
+    if (actual == null) return;
+
+    await _repositorio.actualizarUbicacion(actual.id, nueva);
+    // Se relee para quedarse tambien con la marca de tiempo, que es la que
+    // decide si el recordatorio vuelve a salir.
+    negocio = await _repositorio.cargarNegocio();
+    notifyListeners();
+  }
+
   /// Cierra el negocio. Sus pedidos vivos se cancelan y sus compradores
   /// reciben aviso; lo entregado se conserva en el historial de ambos.
   Future<void> cerrarLocal() async {

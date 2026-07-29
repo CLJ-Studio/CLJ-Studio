@@ -21,6 +21,8 @@ class LocalUniversitario {
     this.vendedorAvatarPath,
     this.vistas = 0,
     this.muestraVistas = true,
+    this.ubicacionCampus,
+    this.duenoId = '',
   });
 
   /// Mapea una fila de `stores` o de la vista `locales_publicos`, que ademas
@@ -50,6 +52,8 @@ class LocalUniversitario {
       vendedorAvatarPath: fila['vendedor_avatar'] as String?,
       vistas: (fila['view_count'] as num?)?.toInt() ?? 0,
       muestraVistas: (fila['vendedor_muestra_vistas'] as bool?) ?? true,
+      ubicacionCampus: fila['campus_location'] as String?,
+      duenoId: (fila['owner_id'] as String?) ?? '',
     );
   }
 
@@ -79,6 +83,14 @@ class LocalUniversitario {
   /// Si quien vende deja que el resto vea su contador. Se decide en
   /// Privacidad y viaja con el local para no consultar el perfil aparte.
   final bool muestraVistas;
+
+  /// Punto del campus donde esta quien vende ahora mismo. Null si no lo ha
+  /// confirmado todavia.
+  final String? ubicacionCampus;
+
+  /// Quien es la persona detras. Una misma persona puede tener su espacio
+  /// personal y su negocio, y el perfil publico necesita los dos.
+  final String duenoId;
 
   String? get logoUrl => ServicioImagenes.urlPublica(logoPath);
   String? get vendedorAvatarUrl =>

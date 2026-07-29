@@ -16,7 +16,8 @@ class RepositorioMiLocal {
   static const _camposLocal =
       'id, name, description, category_id, emoji, color_hex, '
       'estimated_time, delivery_cost, is_open, rating_average, '
-      'is_personal, logo_path, view_count, categories(name)';
+      'is_personal, logo_path, view_count, campus_location, '
+      'categories(name)';
 
   /// El local viaja unido a cada producto. Sin el, la tarjeta del perfil no
   /// tenia a donde abrirse y quedaba muerta al tocarla: el detalle necesita
@@ -73,6 +74,16 @@ class RepositorioMiLocal {
 
     return filas.map(ProductoMarketplace.desdeMapa).toList();
   }
+
+  /// Confirma en que punto del campus esta quien vende ahora mismo.
+  ///
+  /// El recordatorio horario pide justo esto: sin guardarlo, el aviso
+  /// prometia algo que la aplicacion no podia cumplir.
+  Future<void> actualizarUbicacion(String localId, String ubicacion) =>
+      _cliente.rpc<void>(
+        'actualizar_ubicacion_local',
+        params: {'p_local': localId, 'p_ubicacion': ubicacion},
+      );
 
   /// Retira el negocio del catalogo y cancela sus pedidos vivos.
   ///

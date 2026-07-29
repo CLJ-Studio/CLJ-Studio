@@ -22,20 +22,72 @@ class PantallaPerfilPublicoVendedor extends StatefulWidget {
       _PantallaPerfilPublicoVendedorState();
 }
 
+/// Lo que se enseña en cada pestaña del perfil.
+class _ContenidoPerfil {
+  const _ContenidoPerfil({
+    this.personales = const [],
+    this.delLocal = const [],
+    this.favoritos = const [],
+    this.tieneLocal = false,
+    this.favoritosPublicos = false,
+  });
+
+  final List<ProductoMarketplace> personales;
+  final List<ProductoMarketplace> delLocal;
+  final List<ProductoMarketplace> favoritos;
+  final bool tieneLocal;
+
+  /// Si la persona decidio enseñar sus favoritos. Se distingue de "no tiene
+  /// ninguno" para poder explicar por que la pestaña esta vacia.
+  final bool favoritosPublicos;
+
+  int get totalPublicaciones => personales.length + delLocal.length;
+
+  int get vistas => [
+    ...personales,
+    ...delLocal,
+  ].fold(0, (total, producto) => total + producto.vistas);
+}
+
 class _PantallaPerfilPublicoVendedorState
     extends State<PantallaPerfilPublicoVendedor> {
   int seccion = 0;
 
-  late final Future<List<ProductoMarketplace>> publicaciones =
-      _cargarPublicaciones();
+  late final Future<_ContenidoPerfil> contenido = _cargar();
 
-  Future<List<ProductoMarketplace>> _cargarPublicaciones() async {
+  /// Las tres pestañas enseñaban lo mismo porque solo se conocia el local
+  /// desde el que se abrio el perfil. Una persona puede tener su espacio
+  /// personal Y su negocio, asi que se piden los dos por su dueño y se
+  /// reparten; los favoritos vienen por su propia puerta, que respeta el
+  /// interruptor de privacidad.
+  Future<_ContenidoPerfil> _cargar() async {
+    const repositorio = RepositorioInicioMarketplace();
+    final dueno = widget.local.duenoId;
+
+    if (dueno.isEmpty) {
+      return _ContenidoPerfil(personales: [widget.publicacionInicial]);
+    }
+
     try {
-      return await const RepositorioInicioMarketplace().obtenerProductos(
-        widget.local.id,
+      final locales = await repositorio.obtenerLocalesDe(dueno);
+      final personales = locales.where((l) => l.esPersonal).toList();
+      final negocios = locales.where((l) => !l.esPersonal).toList();
+
+      final (sueltas, delLocal, favoritos) = await (
+        repositorio.obtenerProductosDe(personales),
+        repositorio.obtenerProductosDe(negocios),
+        repositorio.obtenerFavoritosPublicos(dueno),
+      ).wait;
+
+      return _ContenidoPerfil(
+        personales: sueltas,
+        delLocal: delLocal,
+        favoritos: favoritos,
+        tieneLocal: negocios.isNotEmpty,
+        favoritosPublicos: favoritos.isNotEmpty,
       );
     } catch (_) {
-      return [widget.publicacionInicial];
+      return _ContenidoPerfil(personales: [widget.publicacionInicial]);
     }
   }
 
@@ -56,14 +108,19 @@ class _PantallaPerfilPublicoVendedorState
           style: TextStyle(color: colorContenido, fontWeight: FontWeight.w900),
         ),
       ),
-      body: FutureBuilder<List<ProductoMarketplace>>(
-        future: publicaciones,
+      body: FutureBuilder<_ContenidoPerfil>(
+        future: contenido,
         builder: (context, snapshot) {
-          final productos = snapshot.data ?? [widget.publicacionInicial];
-          final vistas = productos.fold(
-            0,
-            (total, producto) => total + producto.vistas,
-          );
+          final datos =
+              snapshot.data ??
+              _ContenidoPerfil(personales: [widget.publicacionInicial]);
+          final vistas = datos.vistas;
+          // Cada pestaña con lo suyo: sueltas, del local y me gusta.
+          final productos = switch (seccion) {
+            0 => datos.personales,
+            1 => datos.delLocal,
+            _ => datos.favoritos,
+          };
 
           return CustomScrollView(
             slivers: [
@@ -115,7 +172,7 @@ class _PantallaPerfilPublicoVendedorState
                                     MainAxisAlignment.spaceAround,
                                 children: [
                                   _Metrica(
-                                    valor: '${productos.length}',
+                                    valor: '${datos.totalPublicaciones}',
                                     etiqueta: 'Post',
                                   ),
                                   // Solo si quien vende lo permite en
@@ -127,10 +184,14 @@ class _PantallaPerfilPublicoVendedorState
                                       valor: '$vistas',
                                       etiqueta: 'Vistas',
                                     ),
-                                  const _Metrica(
-                                    valor: '0',
-                                    etiqueta: 'Me gusta',
-                                  ),
+                                  // Solo si los hizo publicos: un cero
+                                  // fijo decia lo mismo tanto si no tiene
+                                  // ninguno como si los oculto.
+                                  if (datos.favoritosPublicos)
+                                    _Metrica(
+                                      valor: '${datos.favoritos.length}',
+                                      etiqueta: 'Me gusta',
+                                    ),
                                 ],
                               ),
                             ),
@@ -147,14 +208,27 @@ class _PantallaPerfilPublicoVendedorState
                   ),
                 ),
               ),
-              if (seccion == 2)
+              if (productos.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 100),
+                      padding: const EdgeInsets.fromLTRB(40, 0, 40, 100),
                       child: Text(
-                        'Los favoritos son privados.',
+                        // El motivo importa: no es lo mismo que no tenga
+                        // nada a que haya decidido no enseñarlo.
+                        switch (seccion) {
+                          0 => 'Todavía no publicó nada por su cuenta.',
+                          1 =>
+                            datos.tieneLocal
+                                ? 'Su local aún no tiene publicaciones.'
+                                : 'No tiene un local abierto.',
+                          _ =>
+                            datos.favoritosPublicos
+                                ? 'Todavía no guardó ningún favorito.'
+                                : 'Prefiere mantener sus favoritos en privado.',
+                        },
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: oscuro ? Colors.white : Colors.black,
                           fontWeight: FontWeight.w700,

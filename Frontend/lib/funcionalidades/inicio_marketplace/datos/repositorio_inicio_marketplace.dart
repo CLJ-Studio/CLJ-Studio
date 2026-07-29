@@ -107,6 +107,65 @@ class RepositorioInicioMarketplace {
     return ProductoMarketplace.desdeMapa(fila, local: local);
   }
 
+  /// Los locales de una misma persona: su espacio personal y su negocio.
+  ///
+  /// El perfil publico los necesita separados porque una publicacion suelta
+  /// no es lo mismo que un producto del local, y cada pestaña enseña una cosa.
+  Future<List<LocalUniversitario>> obtenerLocalesDe(String duenoId) async {
+    final filas = await _cliente
+        .from('locales_publicos')
+        .select()
+        .eq('owner_id', duenoId);
+
+    return filas.map(LocalUniversitario.desdeMapa).toList();
+  }
+
+  /// Publicaciones de varios locales a la vez, con su local ya resuelto.
+  Future<List<ProductoMarketplace>> obtenerProductosDe(
+    List<LocalUniversitario> locales,
+  ) async {
+    if (locales.isEmpty) return const [];
+    final porId = {for (final local in locales) local.id: local};
+
+    final filas = await _cliente
+        .from('products')
+        .select(camposProducto)
+        .inFilter('store_id', porId.keys.toList())
+        .eq('is_available', true)
+        .order('bumped_at', ascending: false);
+
+    return filas
+        .map(
+          (fila) => ProductoMarketplace.desdeMapa(
+            fila,
+            local: porId[fila['store_id'] as String],
+          ),
+        )
+        .toList();
+  }
+
+  /// Lo que esa persona marco como favorito, si decidio enseñarlo.
+  ///
+  /// La funcion del servidor devuelve vacio cuando lo tiene apagado, asi que
+  /// aqui no hace falta comprobar nada: sin ids no hay nada que pedir.
+  Future<List<ProductoMarketplace>> obtenerFavoritosPublicos(
+    String duenoId,
+  ) async {
+    final ids = await _cliente.rpc<List<dynamic>>(
+      'favoritos_publicos',
+      params: {'p_usuario': duenoId},
+    );
+    if (ids.isEmpty) return const [];
+
+    final filas = await _cliente
+        .from('products')
+        .select('$camposProducto, stores!inner(*)')
+        .inFilter('id', ids.cast<String>())
+        .eq('is_available', true);
+
+    return filas.map(ProductoMarketplace.desdeMapa).toList();
+  }
+
   Future<List<ProductoMarketplace>> obtenerProductos(String localId) async {
     final filas = await _cliente
         .from('products')
