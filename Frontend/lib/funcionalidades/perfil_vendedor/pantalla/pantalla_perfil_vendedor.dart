@@ -398,7 +398,7 @@ class _SelectorPerfil extends StatelessWidget {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final colorContenido = oscuro ? Colors.white : Colors.black;
     final iconos = [
-      (Icons.grid_view_rounded, 'Publicaciones'),
+      (Icons.grid_view_rounded, 'Publicaciones personales'),
       (Icons.storefront_rounded, 'Publicaciones del local'),
       (Icons.favorite_rounded, 'Favoritos'),
     ];

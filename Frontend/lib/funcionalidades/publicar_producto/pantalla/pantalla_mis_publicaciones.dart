@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../../mi_local/datos/repositorio_mi_local.dart';
 
@@ -126,7 +127,7 @@ class _TarjetaPublicacion extends StatelessWidget {
     width: double.infinity,
     margin: const EdgeInsets.only(bottom: 14),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(24),
       border: Border.all(color: Theme.of(context).dividerColor),
     ),
@@ -152,6 +153,10 @@ class _TarjetaPublicacion extends StatelessWidget {
                 ? 'Servicio'
                 : 'Producto · ${publicacion.stock} en stock',
           ),
+          // Aqui conviven las dos clases de publicacion, asi que sin marcarlas
+          // no hay forma de saber cual es cual ni por que una sale en el
+          // catalogo del local y la otra no.
+          trailing: _Origen(local: publicacion.local),
         ),
         Container(
           height: 190,
@@ -208,6 +213,52 @@ class _TarjetaPublicacion extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// De donde sale la publicacion: del local o del espacio personal.
+class _Origen extends StatelessWidget {
+  const _Origen({required this.local});
+
+  final LocalUniversitario? local;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    // Sin local resuelto no se afirma nada: mejor no marcarla que marcarla mal.
+    if (local == null) return const SizedBox.shrink();
+
+    final delLocal = !local!.esPersonal;
+    final color = delLocal
+        ? tema.colorScheme.primary
+        : tema.colorScheme.secondary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .14),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            delLocal ? Icons.storefront_rounded : Icons.person_rounded,
+            size: 13,
+            color: color,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            delLocal ? 'Tu local' : 'Personal',
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _EstadoVacio extends StatelessWidget {
