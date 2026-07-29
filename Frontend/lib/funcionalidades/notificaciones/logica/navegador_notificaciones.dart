@@ -20,6 +20,14 @@ abstract final class NavegadorNotificaciones {
     String? localId,
     String? productoId,
   }) async {
+    // Los avisos anteriores a que `notifications` guardara el destino nacieron
+    // sin ninguna referencia. Sin este aviso, tocarlos no hacia absolutamente
+    // nada y se lee como que la aplicacion se colgo.
+    if (pedidoId == null && localId == null && productoId == null) {
+      _avisar(context, 'Este aviso es antiguo y ya no lleva a ningún sitio.');
+      return;
+    }
+
     if (pedidoId != null) {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
@@ -65,9 +73,12 @@ abstract final class NavegadorNotificaciones {
   }
 
   /// Lo que anunciaba el aviso pudo borrarse o cerrarse desde que llegó.
-  static void _avisarNoDisponible(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Esto ya no está disponible.')),
-    );
+  static void _avisarNoDisponible(BuildContext context) =>
+      _avisar(context, 'Esto ya no está disponible.');
+
+  static void _avisar(BuildContext context, String mensaje) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje)));
   }
 }
