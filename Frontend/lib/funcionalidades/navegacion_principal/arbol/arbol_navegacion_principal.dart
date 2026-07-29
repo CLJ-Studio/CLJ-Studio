@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:web/web.dart' as web;
 
 import '../../../arbol_aplicacion/arbol_dependencias.dart';
 import '../../../configuracion_aplicacion/modo_local.dart';
@@ -12,6 +13,7 @@ import '../../locales_universitarios/logica/controlador_locales.dart';
 import '../../locales_universitarios/pantalla/pantalla_locales_universitarios.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
+import '../../notificaciones/logica/navegador_notificaciones.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_vendedor.dart';
 import '../../publicar_producto/pantalla/seccion_publicar_mi_local.dart';
 import '../logica/controlador_navegacion_principal.dart';
@@ -47,6 +49,33 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
     locales.cargar();
     inicio.iniciarTiempoReal();
     locales.iniciarTiempoReal();
+    _abrirDestinoDeNotificacion();
+  }
+
+  /// Al tocar una notificacion del sistema, `push_sw.js` navega o abre la
+  /// app con el destino en la URL (`?notif_local=...`) porque un service
+  /// worker no puede llamar directamente al Navigator de Flutter. Aqui se
+  /// lee esa URL una sola vez al arrancar y se completa la navegacion.
+  void _abrirDestinoDeNotificacion() {
+    final parametros = Uri.base.queryParameters;
+    final pedidoId = parametros['notif_pedido'];
+    final localId = parametros['notif_local'];
+    final productoId = parametros['notif_producto'];
+    if (pedidoId == null && localId == null && productoId == null) return;
+
+    // Se limpia antes de navegar: si la persona recarga despues, no debe
+    // volver a saltar a la misma notificacion vieja.
+    web.window.history.replaceState(null, '', web.window.location.pathname);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      NavegadorNotificaciones.abrir(
+        context,
+        pedidoId: pedidoId,
+        localId: localId,
+        productoId: productoId,
+      );
+    });
   }
 
   void _cargarDatosLocales() {

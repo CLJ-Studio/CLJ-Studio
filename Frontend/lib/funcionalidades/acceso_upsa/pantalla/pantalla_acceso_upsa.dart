@@ -430,6 +430,40 @@ class _AvisoCodigoEnviado extends StatelessWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(fontWeight: FontWeight.w800),
           ),
+          const SizedBox(height: 12),
+          // Temporal: mientras el correo salga desde un dominio prestado, a
+          // Gmail le parece sospechoso y lo manda a spam. Sin este aviso la
+          // gente se queda esperando un correo que ya recibio. Se quita en
+          // cuanto haya dominio propio verificado.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: tema.colorScheme.surface,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.report_gmailerrorred_rounded,
+                  size: 18,
+                  color: tema.textTheme.bodyMedium?.color,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'Si no lo ves, revisa tu carpeta de spam o correo no '
+                    'deseado.',
+                    style: TextStyle(
+                      color: tema.textTheme.bodyMedium?.color,
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

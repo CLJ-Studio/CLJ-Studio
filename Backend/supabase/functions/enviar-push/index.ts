@@ -24,7 +24,8 @@ const supabase = createClient(
 
 Deno.serve(async (peticion) => {
   try {
-    const { user_id, title, body, order_id } = await peticion.json();
+    const { user_id, title, body, order_id, store_id, product_id } =
+      await peticion.json();
     if (!user_id) {
       return new Response('falta user_id', { status: 400 });
     }
@@ -40,10 +41,14 @@ Deno.serve(async (peticion) => {
       return new Response(JSON.stringify({ enviados: 0 }), { status: 200 });
     }
 
+    // El service worker construye el enlace de destino a partir de estos
+    // tres campos: sin ellos, tocar el aviso solo abre la app en la raiz.
     const contenido = JSON.stringify({
       title: title ?? 'UPSA Eat',
       body: body ?? '',
       order_id: order_id ?? null,
+      store_id: store_id ?? null,
+      product_id: product_id ?? null,
     });
 
     const resultados = await Promise.allSettled(

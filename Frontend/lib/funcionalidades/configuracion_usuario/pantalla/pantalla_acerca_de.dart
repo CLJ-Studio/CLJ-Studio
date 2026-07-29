@@ -80,19 +80,27 @@ class PantallaAcercaDe extends StatelessWidget {
               ),
               const SizedBox(height: 26),
               Text(
-                'El equipo',
+                'Cómo está hecha',
                 style: tema.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 10),
+              // Sin nombres propios: quien la usa no necesita saber quién es
+              // quién, y el equipo prefiere mantenerse anónimo.
               const _Integrante(
-                nombre: 'Juan Diego Salazar',
-                papel: 'Backend, base de datos e infraestructura',
+                icono: Icons.brush_outlined,
+                titulo: 'Interfaz y diseño',
+                detalle:
+                    'Las pantallas, la navegación y todo lo que se ve y '
+                    'se toca.',
               ),
               const _Integrante(
-                nombre: 'Lucas Tejerina',
-                papel: 'Interfaz, diseño y experiencia de uso',
+                icono: Icons.dns_outlined,
+                titulo: 'Backend y base de datos',
+                detalle:
+                    'Las cuentas, los pedidos, las notificaciones y lo que '
+                    'guarda cada dato en su sitio.',
               ),
               const SizedBox(height: 30),
               const Divider(),
@@ -145,17 +153,22 @@ class _Parrafo extends StatelessWidget {
 }
 
 class _Integrante extends StatelessWidget {
-  const _Integrante({required this.nombre, required this.papel});
+  const _Integrante({
+    required this.icono,
+    required this.titulo,
+    required this.detalle,
+  });
 
-  final String nombre;
-  final String papel;
+  final IconData icono;
+  final String titulo;
+  final String detalle;
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -167,13 +180,7 @@ class _Integrante extends StatelessWidget {
               color: tema.colorScheme.primary.withValues(alpha: .16),
               shape: BoxShape.circle,
             ),
-            child: Text(
-              nombre.characters.first,
-              style: TextStyle(
-                color: tema.colorScheme.primary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+            child: Icon(icono, size: 19, color: tema.colorScheme.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -181,14 +188,16 @@ class _Integrante extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  nombre,
+                  titulo,
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  papel,
+                  detalle,
                   style: TextStyle(
                     color: tema.textTheme.bodyMedium?.color,
                     fontSize: 13,
+                    height: 1.4,
                   ),
                 ),
               ],
