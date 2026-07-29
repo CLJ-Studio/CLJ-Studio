@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../diseno/ajustes_visibilidad.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 
 /// Política de privacidad.
@@ -26,6 +27,8 @@ class PantallaPrivacidad extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const _Intro(),
+            const SizedBox(height: 24),
+            const AjustesVisibilidad(),
             const SizedBox(height: 28),
             const _Seccion(
               icono: Icons.badge_outlined,

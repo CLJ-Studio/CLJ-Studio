@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 
+import '../../mi_local/pantalla/pantalla_crear_local.dart';
 import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
@@ -69,6 +70,18 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
         ),
       ),
     );
+  }
+
+  Future<void> _crearLocal() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PantallaCrearLocal(
+          controlador: widget.controlador,
+          alCompletar: () => Navigator.of(context).maybePop(),
+        ),
+      ),
+    );
+    if (mounted) await widget.controlador.cargar();
   }
 
   void _editarPerfil() {
@@ -146,13 +159,17 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
             else if (productos.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: _PerfilSinPublicaciones(
-                  mensaje: switch (seccion) {
-                    0 => 'Tus publicaciones personales aparecerán aquí.',
-                    1 => 'Las publicaciones de tu local aparecerán aquí.',
-                    _ => 'Los productos que te gusten aparecerán aquí.',
-                  },
-                ),
+                // Sin local, la pestaña del medio no tiene nada que
+                // enseñar: en vez de un vacio sin salida, invita a abrirlo.
+                child: seccion == 1 && !widget.controlador.tieneLocal
+                    ? _PerfilSinLocal(alCrear: _crearLocal)
+                    : _PerfilSinPublicaciones(
+                        mensaje: switch (seccion) {
+                          0 => 'Tus publicaciones personales aparecerán aquí.',
+                          1 => 'Las publicaciones de tu local aparecerán aquí.',
+                          _ => 'Los productos que te gusten aparecerán aquí.',
+                        },
+                      ),
               )
             else
               SliverPadding(
@@ -653,6 +670,55 @@ class _EmojiProducto extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       Center(child: Text(emoji, style: const TextStyle(fontSize: 42)));
+}
+
+/// Invitacion a abrir un local desde la pestaña que aun no tiene ninguno.
+class _PerfilSinLocal extends StatelessWidget {
+  const _PerfilSinLocal({required this.alCrear});
+
+  final VoidCallback alCrear;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 0, 32, 100),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.storefront_outlined,
+            size: 46,
+            color: tema.colorScheme.primary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Todavía no tienes un local',
+            style: tema.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Ábrelo si vendes con una marca y quieres tu propia vitrina. '
+            'Lo que publiques por tu cuenta seguirá donde está.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: tema.textTheme.bodyMedium?.color,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 18),
+          FilledButton.icon(
+            onPressed: alCrear,
+            icon: const Icon(Icons.add_business_rounded, size: 20),
+            label: const Text('Crear mi local'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _PerfilSinPublicaciones extends StatelessWidget {

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
+import '../../inicio_marketplace/modelos/local_universitario.dart';
+import '../../locales_universitarios/pantalla/pantalla_detalle_local.dart';
+import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../pedidos/pantalla/pantalla_detalle_pedido.dart';
@@ -23,15 +27,60 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
     controlador.cargar();
   }
 
+  /// Cada aviso lleva a lo suyo. Antes solo se abrian los de pedidos y el
+  /// resto no respondia al tocarlo, que se lee como que la app se colgo.
   Future<void> _abrir(Notificacion notificacion) async {
     controlador.marcarLeida(notificacion);
+
     if (notificacion.pedidoId case final String pedidoId) {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => PantallaDetallePedido(pedidoId: pedidoId),
         ),
       );
+      return;
     }
+
+    // El local y la publicacion viajan como referencia, asi que hay que
+    // resolverlos antes de poder abrirlos.
+    const repositorio = RepositorioInicioMarketplace();
+
+    if (notificacion.productoId case final String productoId) {
+      final publicacion = await repositorio.obtenerPublicacion(productoId);
+      if (!mounted) return;
+      if (publicacion?.local case final LocalUniversitario local) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) =>
+                PantallaDetalleProducto(producto: publicacion!, local: local),
+          ),
+        );
+      } else {
+        _avisarNoDisponible();
+      }
+      return;
+    }
+
+    if (notificacion.localId case final String localId) {
+      final local = await repositorio.obtenerLocal(localId);
+      if (!mounted) return;
+      if (local == null) {
+        _avisarNoDisponible();
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PantallaDetalleLocal(local: local),
+        ),
+      );
+    }
+  }
+
+  /// Lo que anunciaba el aviso pudo borrarse o cerrarse desde que llego.
+  void _avisarNoDisponible() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Esto ya no está disponible.')),
+    );
   }
 
   String _hace(DateTime fecha) {

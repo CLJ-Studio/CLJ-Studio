@@ -118,10 +118,15 @@ class _PantallaPerfilPublicoVendedorState
                                     valor: '${productos.length}',
                                     etiqueta: 'Post',
                                   ),
-                                  _Metrica(
-                                    valor: '$vistas',
-                                    etiqueta: 'Vistas',
-                                  ),
+                                  // Solo si quien vende lo permite en
+                                  // Privacidad. Se oculta la metrica entera,
+                                  // no se pinta un cero: un cero dice tanto
+                                  // como el numero real.
+                                  if (local.muestraVistas)
+                                    _Metrica(
+                                      valor: '$vistas',
+                                      etiqueta: 'Vistas',
+                                    ),
                                   const _Metrica(
                                     valor: '0',
                                     etiqueta: 'Me gusta',

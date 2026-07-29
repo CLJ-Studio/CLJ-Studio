@@ -11,6 +11,8 @@ class UsuarioUpsa {
     required this.whatsapp,
     required this.enCampus,
     this.avatarPath,
+    this.muestraVistas = true,
+    this.muestraFavoritos = false,
   });
 
   factory UsuarioUpsa.desdeMapa(Map<String, dynamic> fila) {
@@ -25,6 +27,8 @@ class UsuarioUpsa {
       whatsapp: (fila['whatsapp'] as String?) ?? '',
       enCampus: (fila['is_on_campus'] as bool?) ?? false,
       avatarPath: fila['avatar_path'] as String?,
+      muestraVistas: (fila['show_view_count'] as bool?) ?? true,
+      muestraFavoritos: (fila['show_favorites'] as bool?) ?? false,
     );
   }
 
@@ -38,6 +42,12 @@ class UsuarioUpsa {
 
   /// Foto de la persona. Si falta, la tarjeta cae a la inicial del nombre.
   final String? avatarPath;
+
+  /// Si el resto puede ver cuanta gente miro sus publicaciones.
+  final bool muestraVistas;
+
+  /// Si el resto puede ver lo que guardo en favoritos.
+  final bool muestraFavoritos;
 
   String? get avatarUrl => ServicioImagenes.urlPublica(avatarPath);
 

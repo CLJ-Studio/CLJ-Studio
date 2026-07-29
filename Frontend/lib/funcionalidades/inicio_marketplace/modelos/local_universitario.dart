@@ -20,6 +20,7 @@ class LocalUniversitario {
     this.vendedorNombre = '',
     this.vendedorAvatarPath,
     this.vistas = 0,
+    this.muestraVistas = true,
   });
 
   /// Mapea una fila de `stores` o de la vista `locales_publicos`, que ademas
@@ -48,6 +49,7 @@ class LocalUniversitario {
       vendedorNombre: (fila['vendedor_nombre'] as String?) ?? '',
       vendedorAvatarPath: fila['vendedor_avatar'] as String?,
       vistas: (fila['view_count'] as num?)?.toInt() ?? 0,
+      muestraVistas: (fila['vendedor_muestra_vistas'] as bool?) ?? true,
     );
   }
 
@@ -73,6 +75,10 @@ class LocalUniversitario {
   final String vendedorNombre;
   final String? vendedorAvatarPath;
   final int vistas;
+
+  /// Si quien vende deja que el resto vea su contador. Se decide en
+  /// Privacidad y viaja con el local para no consultar el perfil aparte.
+  final bool muestraVistas;
 
   String? get logoUrl => ServicioImagenes.urlPublica(logoPath);
   String? get vendedorAvatarUrl =>

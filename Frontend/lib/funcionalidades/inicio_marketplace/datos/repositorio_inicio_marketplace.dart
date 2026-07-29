@@ -80,6 +80,33 @@ class RepositorioInicioMarketplace {
         .toList();
   }
 
+  /// Un local suelto por su id. Lo necesitan las notificaciones, que solo
+  /// guardan la referencia y tienen que resolverla al tocarlas.
+  Future<LocalUniversitario?> obtenerLocal(String localId) async {
+    final fila = await _cliente
+        .from('locales_publicos')
+        .select()
+        .eq('id', localId)
+        .maybeSingle();
+
+    return fila == null ? null : LocalUniversitario.desdeMapa(fila);
+  }
+
+  /// Una publicacion con su local ya resuelto, lista para abrir el detalle.
+  Future<ProductoMarketplace?> obtenerPublicacion(String productoId) async {
+    final fila = await _cliente
+        .from('products')
+        .select(camposProducto)
+        .eq('id', productoId)
+        .maybeSingle();
+    if (fila == null) return null;
+
+    final local = await obtenerLocal(fila['store_id'] as String);
+    if (local == null) return null;
+
+    return ProductoMarketplace.desdeMapa(fila, local: local);
+  }
+
   Future<List<ProductoMarketplace>> obtenerProductos(String localId) async {
     final filas = await _cliente
         .from('products')

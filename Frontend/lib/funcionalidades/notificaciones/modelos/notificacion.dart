@@ -9,6 +9,8 @@ class Notificacion {
     required this.cuerpo,
     required this.creadaEn,
     this.pedidoId,
+    this.localId,
+    this.productoId,
     this.leidaEn,
   });
 
@@ -19,6 +21,8 @@ class Notificacion {
     cuerpo: (fila['body'] as String?) ?? '',
     creadaEn: DateTime.parse(fila['created_at'] as String),
     pedidoId: fila['order_id'] as String?,
+    localId: fila['store_id'] as String?,
+    productoId: fila['product_id'] as String?,
     leidaEn: fila['read_at'] == null
         ? null
         : DateTime.parse(fila['read_at'] as String),
@@ -29,8 +33,18 @@ class Notificacion {
   final String titulo;
   final String cuerpo;
   final DateTime creadaEn;
+
+  /// Los tres destinos posibles. Solo uno viene informado, segun el aviso:
+  /// tocarlo tiene que llevar a lo que anuncia y no a la nada.
   final String? pedidoId;
+  final String? localId;
+  final String? productoId;
+
   final DateTime? leidaEn;
+
+  /// Si hay algo que abrir al tocarla.
+  bool get llevaAAlgunSitio =>
+      pedidoId != null || localId != null || productoId != null;
 
   bool get leida => leidaEn != null;
 
@@ -42,6 +56,7 @@ class Notificacion {
     'pedido_vencido' => Icons.schedule_rounded,
     'pedido_entregado' => Icons.done_all_rounded,
     'nuevo_local' => Icons.storefront_rounded,
+    'ubicacion_pendiente' => Icons.location_on_outlined,
     _ => Icons.notifications_none_rounded,
   };
 }
