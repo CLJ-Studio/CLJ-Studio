@@ -138,9 +138,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                         onPressed: () => ControladorFavoritos.instancia
                             .alternar(widget.producto),
                         style: IconButton.styleFrom(
-                          foregroundColor: _favorito
-                              ? const Color(0xFFE53935)
-                              : Colors.black,
+                          foregroundColor: const Color(0xFFE53935),
                         ),
                         icon: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),

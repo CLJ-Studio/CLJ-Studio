@@ -124,7 +124,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                 _favorito
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                color: Theme.of(context).colorScheme.primary,
+                color: const Color(0xFFE53935),
               ),
             ),
           ),

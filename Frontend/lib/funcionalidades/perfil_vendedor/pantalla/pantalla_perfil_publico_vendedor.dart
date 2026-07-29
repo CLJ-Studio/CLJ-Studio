@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
 
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
 
 /// Perfil público al que se llega tocando el vendedor de una publicación.
 class PantallaPerfilPublicoVendedor extends StatefulWidget {
@@ -141,15 +143,15 @@ class _PantallaPerfilPublicoVendedorState
                 ),
               ),
               if (seccion == 2)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
                     child: Padding(
-                      padding: EdgeInsets.only(bottom: 100),
+                      padding: const EdgeInsets.only(bottom: 100),
                       child: Text(
                         'Los favoritos son privados.',
                         style: TextStyle(
-                          color: Colors.black,
+                          color: oscuro ? Colors.white : Colors.black,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -168,8 +170,10 @@ class _PantallaPerfilPublicoVendedorState
                           crossAxisSpacing: 3,
                           childAspectRatio: .72,
                         ),
-                    itemBuilder: (_, indice) =>
-                        _Publicacion(producto: productos[indice]),
+                    itemBuilder: (_, indice) => _Publicacion(
+                      producto: productos[indice],
+                      local: widget.local,
+                    ),
                   ),
                 ),
             ],
@@ -287,7 +291,11 @@ class _SelectorPublico extends StatelessWidget {
                   child: InkWell(
                     onTap: () => alSeleccionar(indice),
                     child: Center(
-                      child: Icon(iconos[indice], color: color, size: 25),
+                      child: Icon(
+                        iconos[indice],
+                        color: indice == 2 ? const Color(0xFFE53935) : color,
+                        size: 25,
+                      ),
                     ),
                   ),
                 ),
@@ -300,27 +308,46 @@ class _SelectorPublico extends StatelessWidget {
 }
 
 class _Publicacion extends StatelessWidget {
-  const _Publicacion({required this.producto});
+  const _Publicacion({required this.producto, required this.local});
 
   final ProductoMarketplace producto;
+  final LocalUniversitario local;
 
   @override
-  Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(9),
-    child: ColoredBox(
-      color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-      child: switch (producto.imagenUrl) {
-        final String url => Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => Center(
-            child: Text(producto.emoji, style: const TextStyle(fontSize: 40)),
-          ),
+  Widget build(BuildContext context) => OpenContainer<void>(
+    transitionDuration: const Duration(milliseconds: 580),
+    transitionType: ContainerTransitionType.fade,
+    closedElevation: 0,
+    openElevation: 0,
+    closedColor: Colors.transparent,
+    openColor: Theme.of(context).scaffoldBackgroundColor,
+    closedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+    openShape: const RoundedRectangleBorder(),
+    openBuilder: (_, _) =>
+        PantallaDetalleProducto(producto: producto, local: local),
+    closedBuilder: (_, abrir) => Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: abrir,
+        child: ColoredBox(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+          child: switch (producto.imagenUrl) {
+            final String url => Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Center(
+                child: Text(
+                  producto.emoji,
+                  style: const TextStyle(fontSize: 40),
+                ),
+              ),
+            ),
+            _ => Center(
+              child: Text(producto.emoji, style: const TextStyle(fontSize: 40)),
+            ),
+          },
         ),
-        _ => Center(
-          child: Text(producto.emoji, style: const TextStyle(fontSize: 40)),
-        ),
-      },
+      ),
     ),
   );
 }
