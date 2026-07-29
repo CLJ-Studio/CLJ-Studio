@@ -675,8 +675,13 @@ class _PublicacionPerfil extends StatelessWidget {
       ),
       openShape: const RoundedRectangleBorder(),
       closedBuilder: (_, abrir) => tarjeta(abrir),
-      openBuilder: (_, _) =>
-          PantallaDetalleProducto(producto: producto, local: local!),
+      openBuilder: (_, _) => PantallaDetalleProducto(
+        producto: producto,
+        local: local!,
+        // Ya se viene del perfil de quien vende: el enlace volveria a
+        // apilar la pantalla de la que se acaba de salir.
+        vendedorNavegable: false,
+      ),
     );
   }
 }

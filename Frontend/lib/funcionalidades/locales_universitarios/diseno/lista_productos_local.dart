@@ -87,7 +87,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
           // `widget.local` solo viene informado en el catalogo de un
           // local concreto; en el inicio y en favoritos es null porque
           // ahi se mezclan varios vendedores.
-          desdeElLocal: widget.local != null,
+          vendedorNavegable: widget.local == null,
         ),
       ),
     );

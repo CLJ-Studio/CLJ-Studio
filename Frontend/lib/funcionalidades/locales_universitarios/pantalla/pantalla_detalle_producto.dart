@@ -20,19 +20,21 @@ class PantallaDetalleProducto extends StatefulWidget {
   const PantallaDetalleProducto({
     required this.producto,
     required this.local,
-    this.desdeElLocal = false,
+    this.vendedorNavegable = true,
     super.key,
   });
 
   final ProductoMarketplace producto;
   final LocalUniversitario local;
 
-  /// Si se llego desde la pantalla del propio local.
+  /// Si la fila del vendedor lleva a algun sitio.
   ///
-  /// En ese caso la fila del vendedor no lleva a ningun sitio: apilaria otra
-  /// vez el local del que se acaba de venir, y encadenando eso se puede ir
-  /// local -> producto -> local -> producto sin fin.
-  final bool desdeElLocal;
+  /// Se apaga cuando se llega desde el propio local o desde el perfil de
+  /// quien vende: en los dos casos apilaria la pantalla de la que se acaba
+  /// de venir, y encadenando eso se puede ir perfil -> publicacion ->
+  /// vendedor -> perfil sin fin. El enlace solo existe cuando lleva a algo
+  /// que todavia no se esta viendo.
+  final bool vendedorNavegable;
 
   @override
   State<PantallaDetalleProducto> createState() =>
@@ -203,7 +205,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                       _Vendedor(
                         local: widget.local,
                         producto: widget.producto,
-                        navegable: !widget.desdeElLocal,
+                        navegable: widget.vendedorNavegable,
                       ),
                       const SizedBox(height: 26),
                       SizedBox(

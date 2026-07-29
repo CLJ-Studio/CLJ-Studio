@@ -506,8 +506,13 @@ class _Publicacion extends StatelessWidget {
     openColor: Theme.of(context).scaffoldBackgroundColor,
     closedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
     openShape: const RoundedRectangleBorder(),
-    openBuilder: (_, _) =>
-        PantallaDetalleProducto(producto: producto, local: local),
+    openBuilder: (_, _) => PantallaDetalleProducto(
+      producto: producto,
+      local: local,
+      // Ya se viene del perfil de quien vende: el enlace volveria a
+      // apilar la pantalla de la que se acaba de salir.
+      vendedorNavegable: false,
+    ),
     closedBuilder: (_, abrir) => Material(
       color: Colors.transparent,
       child: InkWell(
