@@ -32,6 +32,9 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
   /// Foto ya guardada: sirve para no reescribirla si no cambio.
   String? _avatarOriginal;
 
+  /// Igual con la descripcion: sin esto se reescribe en cada guardado.
+  String _bioOriginal = '';
+
   bool _cargando = true;
   bool _guardando = false;
   bool _subiendoFoto = false;
@@ -83,6 +86,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
       _avatarPath = perfil?.avatarPath;
       _avatarOriginal = perfil?.avatarPath;
       _biografia.text = perfil?.biografia ?? '';
+      _bioOriginal = _biografia.text;
       if (perfil != null) {
         // El WhatsApp se guarda con el 591 delante; el campo muestra solo
         // los 8 digitos locales, igual que en el onboarding.
@@ -136,22 +140,53 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
       }
 
       // La biografia tambien va directa, pero el servidor la revisa con el
-      // mismo filtro de contenido que el resto de textos publicos.
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'bio': _biografia.text.trim()})
-          .eq('id', Supabase.instance.client.auth.currentUser!.id);
+      // mismo filtro de contenido que el resto de textos publicos. Solo se
+      // escribe si cambio, para no gastar un viaje ni arriesgar un fallo
+      // cuando no se toco.
+      if (_biografia.text.trim() != _bioOriginal.trim()) {
+        await Supabase.instance.client
+            .from('profiles')
+            .update({'bio': _biografia.text.trim()})
+            .eq('id', Supabase.instance.client.auth.currentUser!.id);
+      }
       // Refresca la copia compartida para que el resto de la app la vea.
       await SesionUsuario.instancia.cargar(forzar: true);
       if (mounted) Navigator.of(context).pop();
-    } catch (_) {
+    } catch (fallo) {
       if (mounted) {
         setState(() {
           _guardando = false;
-          _error = 'No se pudo guardar. Intenta de nuevo.';
+          _error = _mensajeDeError(fallo);
         });
       }
     }
+  }
+
+  /// Traduce el fallo del servidor a algo accionable.
+  ///
+  /// Antes todo caia en un "No se pudo guardar" que no distinguia entre un
+  /// texto rechazado por el filtro, un numero mal escrito y la conexion
+  /// caida. Sin saber cual de los tres es, no hay nada que corregir.
+  String _mensajeDeError(Object fallo) {
+    if (fallo is! PostgrestException) {
+      return 'No se pudo guardar. Revisa tu conexión.';
+    }
+
+    final texto = '${fallo.code ?? ''} ${fallo.message}';
+    if (texto.contains('CONTENIDO_NO_PERMITIDO')) {
+      return 'Tu descripción tiene palabras que no podemos publicar.';
+    }
+    if (texto.contains('profiles_bio_breve')) {
+      return 'La descripción no puede pasar de 160 caracteres.';
+    }
+    if (texto.contains('WHATSAPP_INVALIDO')) {
+      return 'Revisa tu número de WhatsApp.';
+    }
+    if (texto.contains('CARRERA_INVALIDA')) {
+      return 'Selecciona tu carrera.';
+    }
+    // El resto sale tal cual: es mas util un mensaje raro que uno vacio.
+    return fallo.message;
   }
 
   @override
@@ -233,8 +268,8 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                     ),
                     const SizedBox(height: 22),
                     const _InterruptorCampus(),
-                    // Solo se muestra a quien tiene un local formal.
 
+                    // Solo se muestra a quien tiene un local formal.
                     if (_error case final String mensaje) ...[
                       const SizedBox(height: 14),
                       Text(
