@@ -107,8 +107,7 @@ class ControladorInicioMarketplace extends ChangeNotifier {
       // personal nace sin ninguna, asi que antes nada de lo publicado a
       // titulo propio aparecia jamas al filtrar.
       final coincideCategoria =
-          categoria == 'todas' ||
-          publicacion.categoriaEfectiva == categoria;
+          categoria == 'todas' || publicacion.categoriaEfectiva == categoria;
 
       final coincideTexto =
           consulta.isEmpty ||

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../inicio_marketplace/logica/ubicacion_comprador.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 
 /// Hero visual del detalle del local: su logo real o un lienzo con su emoji.
@@ -56,12 +57,63 @@ class EncabezadoDetalleLocal extends StatelessWidget {
                     ? 'Vendedor independiente'
                     : '${local.tiempoEstimado}  ·  Entrega Bs ${local.costoEntrega.toStringAsFixed(0)}',
               ),
+              // Donde esta ahora quien vende. Se guardaba desde hace varias
+              // versiones y no lo veia nadie: era justo el dato que hacia
+              // util el recordatorio horario.
+              if (local.ubicacionCampus case final String zona
+                  when zona.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                _Ubicacion(zona: zona),
+              ],
             ],
           ),
         ),
       ),
     ],
   );
+}
+
+/// Punto del campus donde está quien vende, y si coincide con el tuyo.
+class _Ubicacion extends StatelessWidget {
+  const _Ubicacion({required this.zona});
+
+  final String zona;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    // Coincidir con la zona propia es lo que decide si vale la pena pedir
+    // ahora o esperar, asi que se marca en vez de dejarlo a la comparacion
+    // mental.
+    final misma = UbicacionComprador.instancia.zona == zona;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: tema.colorScheme.primary.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.location_on_rounded,
+            size: 17,
+            color: tema.colorScheme.primary,
+          ),
+          const SizedBox(width: 7),
+          Text(
+            misma ? 'Está en $zona, como tú' : 'Está en $zona',
+            style: TextStyle(
+              color: tema.colorScheme.onSurface,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Portada de respaldo con el color e icono del propio local.

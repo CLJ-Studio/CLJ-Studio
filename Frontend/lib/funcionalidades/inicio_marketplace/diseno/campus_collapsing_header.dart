@@ -1,22 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../logica/ubicacion_comprador.dart';
 import '../../notificaciones/diseno/boton_campana.dart';
 import '../modelos/categoria_marketplace.dart';
 import 'barra_busqueda_marketplace.dart';
 import 'barra_categorias_marketplace.dart';
 import 'boton_carrito_compras.dart';
-
-final _ubicacionSeleccionada = ValueNotifier<String>('Elige tu ubicación');
-
-const _ubicacionesCampus = [
-  'Jatata',
-  'Pascana',
-  'Mozza',
-  'Cafetería',
-  'Bloque A',
-  'Bloque B',
-  'Ingeniería',
-];
 
 /// Cabecera compartida por Inicio y Locales inspirada en una app de delivery.
 class CampusCollapsingHeader extends StatelessWidget {
@@ -140,14 +129,14 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
               ),
             ),
-            for (final ubicacion in _ubicacionesCampus)
+            for (final ubicacion in UbicacionComprador.zonas)
               ListTile(
                 leading: const Icon(
                   Icons.location_on_outlined,
                   color: Color(0xFF5C8A63),
                 ),
                 title: Text(ubicacion),
-                trailing: _ubicacionSeleccionada.value == ubicacion
+                trailing: UbicacionComprador.instancia.zona == ubicacion
                     ? const Icon(Icons.check_rounded, color: Color(0xFF5C8A63))
                     : null,
                 onTap: () => Navigator.of(context).pop(ubicacion),
@@ -156,7 +145,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
         ),
       ),
     );
-    if (elegida != null) _ubicacionSeleccionada.value = elegida;
+    if (elegida != null) await UbicacionComprador.instancia.elegir(elegida);
   }
 
   Future<void> _mostrarTodasCategorias(BuildContext context) async {
@@ -241,9 +230,9 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                             ),
                             const SizedBox(width: 11),
                             Expanded(
-                              child: ValueListenableBuilder<String>(
-                                valueListenable: _ubicacionSeleccionada,
-                                builder: (context, ubicacion, _) => InkWell(
+                              child: AnimatedBuilder(
+                                animation: UbicacionComprador.instancia,
+                                builder: (context, _) => InkWell(
                                   borderRadius: BorderRadius.circular(12),
                                   onTap: () => _elegirUbicacion(context),
                                   child: Padding(
@@ -274,7 +263,9 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                                             const SizedBox(width: 3),
                                             Flexible(
                                               child: Text(
-                                                ubicacion,
+                                                UbicacionComprador
+                                                    .instancia
+                                                    .etiqueta,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
                                                   color: texto,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../configuracion_aplicacion/modo_local.dart';
 import '../configuracion_aplicacion/configuracion_tema.dart';
 import '../configuracion_aplicacion/controlador_tema.dart';
+import '../funcionalidades/inicio_marketplace/logica/ubicacion_comprador.dart';
 import '../funcionalidades/acceso_upsa/arbol/arbol_acceso_upsa.dart';
 import '../funcionalidades/navegacion_principal/arbol/arbol_navegacion_principal.dart';
 import '../funcionalidades/instalacion_app/logica/controlador_instalacion.dart';
@@ -27,6 +28,7 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
     super.initState();
     tema.cargar();
     ControladorInstalacion.instancia.cargar();
+    UbicacionComprador.instancia.cargar();
   }
 
   @override

@@ -285,7 +285,6 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                       style: TextStyle(fontSize: 12),
                     ),
                     const SizedBox(height: 22),
-                    const _InterruptorCampus(),
 
                     // Solo se muestra a quien tiene un local formal.
                     if (_error case final String mensaje) ...[
@@ -377,57 +376,6 @@ class _DatosInstitucionales extends StatelessWidget {
   }
 }
 
-/// Estado "en campus / fuera": se guarda al instante, sin botón.
-class _InterruptorCampus extends StatefulWidget {
-  const _InterruptorCampus();
-
-  @override
-  State<_InterruptorCampus> createState() => _InterruptorCampusState();
-}
-
-class _InterruptorCampusState extends State<_InterruptorCampus> {
-  late bool _enCampus = SesionUsuario.instancia.perfil?.enCampus ?? false;
-  bool _guardando = false;
-
-  Future<void> _cambiar(bool valor) async {
-    setState(() {
-      _enCampus = valor;
-      _guardando = true;
-    });
-    try {
-      // Es la unica columna de `profiles` con permiso de escritura directa:
-      // un interruptor sin nada que validar.
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'is_on_campus': valor})
-          .eq('id', Supabase.instance.client.auth.currentUser!.id);
-      await SesionUsuario.instancia.cargar(forzar: true);
-    } catch (_) {
-      if (mounted) setState(() => _enCampus = !valor);
-    } finally {
-      if (mounted) setState(() => _guardando = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => SwitchListTile(
-    value: _enCampus,
-    onChanged: _guardando ? null : _cambiar,
-    contentPadding: EdgeInsets.zero,
-    activeThumbColor: const Color(0xFF5C8A63),
-    secondary: const Icon(Icons.location_on_outlined, color: Color(0xFF5C8A63)),
-    title: const Text(
-      'Estoy en el campus',
-      style: TextStyle(fontWeight: FontWeight.w700),
-    ),
-    subtitle: const Text(
-      'Les indica a los compradores que puedes entregar ahora.',
-      style: TextStyle(fontSize: 12),
-    ),
-  );
-}
-
-/// Foto de la persona. Opcional: quien no la sube conserva su inicial.
 class _SelectorFotoPerfil extends StatelessWidget {
   const _SelectorFotoPerfil({
     required this.fotoUrl,
