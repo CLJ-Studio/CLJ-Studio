@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 
+import '../../mi_local/diseno/acciones_publicacion.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
 import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
@@ -59,6 +60,17 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
     } finally {
       if (mounted) setState(() => cargandoPublicaciones = false);
     }
+  }
+
+  /// Gestiona una publicacion propia sin entrar en ella.
+  Future<void> _gestionar(ProductoMarketplace producto) async {
+    final resultado = await mostrarAccionesPublicacion(context, producto);
+    if (resultado == ResultadoAccion.sinCambios || !mounted) return;
+
+    // Se recargan las dos fuentes: la publicacion pudo ser del local o
+    // suelta, y desde aqui no se sabe cual sin volver a preguntar.
+    await widget.controlador.cargar();
+    await _cargarPublicacionesPersonales();
   }
 
   void _abrirConfiguracion() {
@@ -192,6 +204,11 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
                   itemBuilder: (_, indice) => _PublicacionPerfil(
                     producto: productos[indice],
                     local: _localDe(productos[indice]),
+                    // Los favoritos son de otras personas: ahi no hay nada
+                    // que gestionar.
+                    alGestionar: seccion == 2
+                        ? () {}
+                        : () => _gestionar(productos[indice]),
                   ),
                 ),
               ),
@@ -590,10 +607,19 @@ class _MetricaPerfil extends StatelessWidget {
 }
 
 class _PublicacionPerfil extends StatelessWidget {
-  const _PublicacionPerfil({required this.producto, required this.local});
+  const _PublicacionPerfil({
+    required this.producto,
+    required this.local,
+    required this.alGestionar,
+  });
 
   final ProductoMarketplace producto;
   final LocalUniversitario? local;
+
+  /// Manteniendo pulsado se gestiona sin abrir la publicacion. El perfil es
+  /// la unica lista donde estan todas juntas, asi que tener que entrar en
+  /// cada una para editarla obligaba a ir y volver por cada cambio.
+  final VoidCallback alGestionar;
 
   @override
   Widget build(BuildContext context) {
@@ -603,6 +629,7 @@ class _PublicacionPerfil extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: abrir,
+        onLongPress: alGestionar,
         child: Stack(
           fit: StackFit.expand,
           children: [

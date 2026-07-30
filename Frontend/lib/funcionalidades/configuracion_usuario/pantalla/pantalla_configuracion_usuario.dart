@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../instalacion_app/diseno/opcion_instalar_app.dart';
 import '../../instalacion_app/logica/controlador_instalacion.dart';
+import '../diseno/opcion_mis_publicaciones.dart';
 import '../diseno/boton_cerrar_sesion.dart';
 import '../diseno/opcion_acerca_de.dart';
 import '../diseno/opcion_ayuda.dart';
@@ -60,6 +61,10 @@ class _PantallaConfiguracionUsuarioState
                   _GrupoAjustes(
                     titulo: 'Preferencias',
                     opciones: [
+                      // Volvio al menu: la pantalla existia pero se quedo
+                      // sin acceso, asi que la unica forma de ver lo propio
+                      // era el perfil.
+                      const OpcionMisPublicaciones(),
                       const OpcionNotificaciones(),
                       if (ControladorInstalacion.instancia.disponible)
                         const OpcionInstalarApp(),
