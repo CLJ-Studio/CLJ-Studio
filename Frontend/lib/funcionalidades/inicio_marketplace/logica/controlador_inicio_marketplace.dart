@@ -103,8 +103,12 @@ class ControladorInicioMarketplace extends ChangeNotifier {
 
     return _todas.where((publicacion) {
       // La categoria vive en el local que publica.
+      // Por la categoria de la publicacion, no la de su tienda: el espacio
+      // personal nace sin ninguna, asi que antes nada de lo publicado a
+      // titulo propio aparecia jamas al filtrar.
       final coincideCategoria =
-          categoria == 'todas' || publicacion.local?.categoriaId == categoria;
+          categoria == 'todas' ||
+          publicacion.categoriaEfectiva == categoria;
 
       final coincideTexto =
           consulta.isEmpty ||

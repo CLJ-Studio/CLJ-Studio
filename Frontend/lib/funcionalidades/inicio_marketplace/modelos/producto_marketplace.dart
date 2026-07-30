@@ -17,6 +17,7 @@ class ProductoMarketplace {
     this.disponible = true,
     this.imagenes = const [],
     this.vistas = 0,
+    this.categoriaId,
   });
 
   /// Mapea una fila de `products`. Si la consulta unio `stores`, el local
@@ -45,6 +46,7 @@ class ProductoMarketplace {
       imagePath: fila['image_path'] as String?,
       disponible: (fila['is_available'] as bool?) ?? true,
       vistas: (fila['view_count'] as num?)?.toInt() ?? 0,
+      categoriaId: fila['category_id'] as String?,
       imagenes:
           ((fila['product_images'] as List?) ?? const [])
               .cast<Map<String, dynamic>>()
@@ -92,6 +94,13 @@ class ProductoMarketplace {
   /// Galeria adicional (hasta 12), en orden.
   final List<String> imagenes;
   final int vistas;
+
+  /// Categoria propia de la publicacion. Null en lo publicado antes de que
+  /// existiera: entonces manda la del local, que es lo que se usaba.
+  final String? categoriaId;
+
+  /// La que decide en que filtro cae.
+  String get categoriaEfectiva => categoriaId ?? local?.categoriaId ?? '';
 
   String? get imagenUrl => ServicioImagenes.urlPublica(imagePath);
 

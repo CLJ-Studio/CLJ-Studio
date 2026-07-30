@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'selector_categoria_publicacion.dart';
+import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
+import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../../elementos_compartidos/imagenes/selector_galeria.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../datos/borrador_publicacion.dart';
@@ -34,6 +37,8 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   final stock = TextEditingController(text: '1');
 
   List<String> _galeria = const [];
+  List<CategoriaMarketplace> _categorias = const [];
+  String? _categoriaId;
   bool _publicando = false;
   bool _revisandoBorrador = true;
   bool _limpiandoFormulario = false;
@@ -41,6 +46,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   @override
   void initState() {
     super.initState();
+    _cargarCategorias();
     _ofrecerBorrador();
     // Cada cambio se guarda: si el usuario sale a sacar una foto o se le
     // cierra la pestana, al volver encuentra lo que habia escrito.
@@ -127,6 +133,19 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
     );
   }
 
+  /// Las mismas que filtran el inicio: si aqui hubiera otra lista, algo
+  /// publicado podria caer en una categoria que la barra no ofrece.
+  Future<void> _cargarCategorias() async {
+    try {
+      final lista = await const RepositorioInicioMarketplace()
+          .obtenerCategorias();
+      if (mounted) setState(() => _categorias = lista);
+    } catch (_) {
+      // Sin categorias el paso no aparece; publicar sigue funcionando y la
+      // publicacion hereda la del local.
+    }
+  }
+
   Future<void> publicar() async {
     if (!(llave.currentState?.validate() ?? false)) return;
 
@@ -144,6 +163,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         descripcion: descripcion.text,
         esServicio: widget.controlador.esServicio,
         galeria: _galeria,
+        categoriaId: _categoriaId,
       );
 
       if (!mounted) return;
@@ -278,6 +298,29 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                       CampoNombrePublicacion(controlador: nombre),
                       const SizedBox(height: 13),
                       CampoDescripcionPublicacion(controlador: descripcion),
+                      if (_categorias.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '¿En qué categoría entra?',
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SelectorCategoriaPublicacion(
+                          categorias: _categorias,
+                          seleccionada: _categoriaId,
+                          alSeleccionar: (id) =>
+                              setState(() => _categoriaId = id),
+                        ),
+                      ],
                     ],
                   ),
                 ),

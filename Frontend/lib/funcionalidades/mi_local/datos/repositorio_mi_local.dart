@@ -185,6 +185,7 @@ class RepositorioMiLocal {
     String? descripcion,
     bool esServicio = false,
     List<String> galeria = const [],
+    String? categoriaId,
   }) async {
     final creado = await _cliente
         .from('products')
@@ -196,6 +197,7 @@ class RepositorioMiLocal {
           'stock': stock,
           'emoji': emoji,
           'kind': esServicio ? 'servicio' : 'producto',
+          'category_id': ?categoriaId,
           'image_path': ?galeria.firstOrNull,
         })
         .select('id')
