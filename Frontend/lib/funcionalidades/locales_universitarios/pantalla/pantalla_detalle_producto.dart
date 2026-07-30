@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../mi_local/diseno/dialogo_producto.dart';
+import '../../mi_local/datos/repositorio_mi_local.dart';
+import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../carrito_compras/diseno/barra_resumen_carrito.dart';
 import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
@@ -42,17 +46,25 @@ class PantallaDetalleProducto extends StatefulWidget {
 }
 
 class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
+  static const _repositorio = RepositorioMiLocal();
   final _paginas = PageController();
   int _pagina = 0;
   late int _vistas = widget.producto.vistas;
+
+  /// Copia viva: editar desde aqui debe verse sin salir y volver a entrar.
+  late ProductoMarketplace _producto = widget.producto;
+
+  /// Solo quien vende puede gestionar lo suyo. La comprobacion de verdad la
+  /// hace la RLS del servidor; esto solo decide si se enseña el menu.
+  bool get _esMio =>
+      widget.local.duenoId.isNotEmpty &&
+      widget.local.duenoId == Supabase.instance.client.auth.currentUser?.id;
 
   @override
   void initState() {
     super.initState();
     unawaited(
-      ServicioVisualizaciones.registrarProducto(widget.producto.id).then((
-        total,
-      ) {
+      ServicioVisualizaciones.registrarProducto(_producto.id).then((total) {
         if (mounted && total > 0) setState(() => _vistas = total);
       }),
     );
@@ -64,18 +76,17 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
     super.dispose();
   }
 
-  bool get _favorito =>
-      ControladorFavoritos.instancia.contiene(widget.producto);
+  bool get _favorito => ControladorFavoritos.instancia.contiene(_producto);
 
   Future<void> _agregar() async {
     final carrito = ControladorCarritoCompras.instancia;
 
-    if (!widget.producto.hayExistencias) {
-      _avisar('${widget.producto.nombre} está agotado.');
+    if (!_producto.hayExistencias) {
+      _avisar('${_producto.nombre} está agotado.');
       return;
     }
 
-    if (carrito.esDeOtroLocal(widget.producto)) {
+    if (carrito.esDeOtroLocal(_producto)) {
       final reemplazar = await showDialog<bool>(
         context: context,
         builder: (contexto) => AlertDialog(
@@ -102,7 +113,86 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
       if (reemplazar != true) return;
     }
 
-    carrito.agregar(widget.producto, widget.local);
+    carrito.agregar(_producto, widget.local);
+  }
+
+  Future<void> _editar() async {
+    final datos = await mostrarDialogoProducto(context, producto: _producto);
+    if (datos == null) return;
+
+    try {
+      await _repositorio.editarProducto(
+        productoId: _producto.id,
+        nombre: datos.nombre,
+        precio: datos.precio,
+        stock: datos.cantidad,
+        emoji: datos.emoji,
+        descripcion: datos.descripcion,
+        galeria: datos.galeria,
+      );
+      final actualizado = await const RepositorioInicioMarketplace()
+          .obtenerPublicacion(_producto.id);
+      if (!mounted) return;
+      if (actualizado != null) setState(() => _producto = actualizado);
+      _avisar('Publicación actualizada.');
+    } catch (_) {
+      if (mounted) _avisar('No se pudo guardar el cambio.');
+    }
+  }
+
+  Future<void> _alternarVisibilidad() async {
+    final visible = !_producto.disponible;
+    try {
+      await _repositorio.cambiarVisibilidad(_producto.id, visible: visible);
+      if (!mounted) return;
+      setState(() => _producto = _producto.copiarCon(disponible: visible));
+      _avisar(visible ? 'Vuelve a estar visible.' : 'Ya no se muestra.');
+    } catch (_) {
+      if (mounted) _avisar('No se pudo cambiar la visibilidad.');
+    }
+  }
+
+  Future<void> _relanzar() async {
+    try {
+      await _repositorio.relanzarProducto(_producto.id);
+      if (mounted) _avisar('Vuelve al inicio del catálogo.');
+    } catch (_) {
+      if (mounted) _avisar('No se pudo relanzar.');
+    }
+  }
+
+  Future<void> _eliminar() async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (contexto) => AlertDialog(
+        title: const Text('Eliminar publicación'),
+        content: Text(
+          'Se eliminará "${_producto.nombre}" para siempre. '
+          'Si solo quieres dejar de mostrarla, usa "Ocultar".',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(contexto).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(contexto).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB3453B),
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true) return;
+
+    try {
+      await _repositorio.eliminarProducto(_producto.id);
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) _avisar('No se pudo eliminar.');
+    }
   }
 
   void _avisar(String mensaje) {
@@ -115,7 +205,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
 
   @override
   Widget build(BuildContext context) {
-    final fotos = widget.producto.galeriaUrls;
+    final fotos = _producto.galeriaUrls;
     final colorContenido = Theme.of(context).brightness == Brightness.dark
         ? Colors.white
         : Colors.black;
@@ -125,12 +215,70 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
         surfaceTintColor: Colors.transparent,
         foregroundColor: colorContenido,
         actions: [
+          // Solo para quien vende: gestionar lo propio se hacia unicamente
+          // desde Tu local, asi que una publicacion suelta no se podia
+          // editar ni borrar desde ninguna parte.
+          if (_esMio)
+            PopupMenuButton<String>(
+              tooltip: 'Gestionar publicación',
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (opcion) => switch (opcion) {
+                'editar' => _editar(),
+                'ocultar' => _alternarVisibilidad(),
+                'relanzar' => _relanzar(),
+                _ => _eliminar(),
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'editar',
+                  child: ListTile(
+                    leading: Icon(Icons.edit_outlined),
+                    title: Text('Editar'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'ocultar',
+                  child: ListTile(
+                    leading: Icon(
+                      _producto.disponible
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    title: Text(_producto.disponible ? 'Ocultar' : 'Mostrar'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'relanzar',
+                  child: ListTile(
+                    leading: Icon(Icons.arrow_upward_rounded),
+                    title: Text('Relanzar'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'eliminar',
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.delete_outline_rounded,
+                      color: Color(0xFFB3453B),
+                    ),
+                    title: Text(
+                      'Eliminar',
+                      style: TextStyle(color: Color(0xFFB3453B)),
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
           AnimatedBuilder(
             animation: ControladorFavoritos.instancia,
             builder: (context, _) => IconButton(
               tooltip: 'Guardar en favoritos',
               onPressed: () =>
-                  ControladorFavoritos.instancia.alternar(widget.producto),
+                  ControladorFavoritos.instancia.alternar(_producto),
               icon: Icon(
                 _favorito
                     ? Icons.favorite_rounded
@@ -151,7 +299,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
               children: [
                 _Galeria(
                   fotos: fotos,
-                  emoji: widget.producto.emoji,
+                  emoji: _producto.emoji,
                   controlador: _paginas,
                   pagina: _pagina,
                   alCambiarPagina: (i) => setState(() => _pagina = i),
@@ -162,7 +310,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.producto.nombre,
+                        _producto.nombre,
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               color: colorContenido,
@@ -171,7 +319,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Bs ${widget.producto.precio.toStringAsFixed(2)}',
+                        'Bs ${_producto.precio.toStringAsFixed(2)}',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
                           fontSize: 26,
@@ -182,38 +330,36 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                       IndicadorVistas(total: _vistas),
                       const SizedBox(height: 6),
                       Text(
-                        widget.producto.esServicio
+                        _producto.esServicio
                             ? 'Servicio'
-                            : widget.producto.stock > 0
-                            ? '${widget.producto.stock} disponibles'
+                            : _producto.stock > 0
+                            ? '${_producto.stock} disponibles'
                             : 'Agotado',
                         style: TextStyle(
-                          color: widget.producto.hayExistencias
+                          color: _producto.hayExistencias
                               ? colorContenido
                               : const Color(0xFFB3453B),
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      if (widget.producto.descripcion.isNotEmpty) ...[
+                      if (_producto.descripcion.isNotEmpty) ...[
                         const SizedBox(height: 18),
                         Text(
-                          widget.producto.descripcion,
+                          _producto.descripcion,
                           style: TextStyle(color: colorContenido, height: 1.5),
                         ),
                       ],
                       const Divider(height: 36),
                       _Vendedor(
                         local: widget.local,
-                        producto: widget.producto,
+                        producto: _producto,
                         navegable: widget.vendedorNavegable,
                       ),
                       const SizedBox(height: 26),
                       SizedBox(
                         height: 54,
                         child: FilledButton.icon(
-                          onPressed: widget.producto.hayExistencias
-                              ? _agregar
-                              : null,
+                          onPressed: _producto.hayExistencias ? _agregar : null,
                           style: FilledButton.styleFrom(
                             backgroundColor: Theme.of(
                               context,
@@ -222,7 +368,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                           ),
                           icon: const Icon(Icons.add_shopping_cart_rounded),
                           label: Text(
-                            widget.producto.hayExistencias
+                            _producto.hayExistencias
                                 ? 'Agregar al carrito'
                                 : 'Agotado',
                           ),

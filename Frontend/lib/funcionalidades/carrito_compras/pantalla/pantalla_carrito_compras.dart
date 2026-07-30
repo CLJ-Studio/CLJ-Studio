@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../diseno/selector_punto_entrega.dart';
 import '../../pedidos/datos/repositorio_pedidos.dart';
 import '../diseno/boton_continuar_pedido.dart';
 import '../diseno/lista_productos_carrito.dart';
@@ -18,7 +19,17 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
   // Singleton: el carrito se llena desde el catalogo, en otra pantalla.
   final controlador = ControladorCarritoCompras.instancia;
   final _puntoEncuentro = TextEditingController();
+
+  /// Zona del campus elegida en el desplegable.
+  String? _zona;
   bool _enviando = false;
+
+  /// Junta la zona y la referencia en una sola linea legible.
+  String? get _puntoDeEntrega {
+    final detalle = _puntoEncuentro.text.trim();
+    if (_zona == null) return detalle.isEmpty ? null : detalle;
+    return detalle.isEmpty ? _zona : '$_zona · $detalle';
+  }
 
   @override
   void dispose() {
@@ -31,9 +42,9 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
     try {
       final pedidoId = await const RepositorioPedidos().crear(
         items: controlador.aItemsDePedido(),
-        puntoEncuentro: _puntoEncuentro.text.trim().isEmpty
-            ? null
-            : _puntoEncuentro.text.trim(),
+        // Zona y referencia viajan juntas: al vendedor le llega "Mozza ·
+        // mesa del fondo", que es lo que necesita para encontrarte.
+        puntoEncuentro: _puntoDeEntrega,
       );
 
       // El carrito ya cumplio su papel: a partir de aqui manda el pedido.
@@ -122,30 +133,10 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
                 ListaProductosCarrito(controlador: controlador),
                 if (!controlador.estaVacio) ...[
                   const SizedBox(height: 22),
-                  TextField(
-                    controller: _puntoEncuentro,
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : null,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: '¿Dónde te lo entregan?',
-                      hintText: 'Ej. Bloque A - Recepción',
-                      labelStyle:
-                          Theme.of(context).brightness == Brightness.dark
-                          ? const TextStyle(color: Colors.white)
-                          : null,
-                      hintStyle: Theme.of(context).brightness == Brightness.dark
-                          ? const TextStyle(color: Colors.white)
-                          : null,
-                      prefixIcon: Icon(
-                        Icons.place_outlined,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : null,
-                      ),
-                    ),
+                  SelectorPuntoEntrega(
+                    punto: _zona,
+                    referencia: _puntoEncuentro,
+                    alElegirPunto: (valor) => setState(() => _zona = valor),
                   ),
                   const SizedBox(height: 18),
                   ResumenCompra(
