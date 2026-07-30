@@ -4,6 +4,7 @@ import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../elementos_compartidos/imagenes/pantalla_recortar_foto.dart';
 import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../onboarding_usuario/datos/repositorio_onboarding.dart';
@@ -43,8 +44,25 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
   Future<void> _elegirFoto() async {
     setState(() => _subiendoFoto = true);
     try {
-      final ruta = await ServicioImagenes.elegirYSubir(etiqueta: 'perfil');
-      if (ruta != null) setState(() => _avatarPath = ruta);
+      // Se elige, se recorta y solo entonces se sube: subir antes dejaria en
+      // el bucket la version sin recortar cada vez que alguien se arrepiente.
+      final elegida = await ServicioImagenes.elegir();
+      if (elegida == null || !mounted) return;
+
+      // El avatar se pinta redondo, asi que una foto rectangular se recortaba
+      // sola por el centro y solia cortar la cara.
+      final recortada = await Navigator.of(context).push<Uint8List>(
+        MaterialPageRoute<Uint8List>(
+          builder: (_) => PantallaRecortarFoto(original: elegida.bytes),
+        ),
+      );
+      if (recortada == null || !mounted) return;
+
+      final ruta = await ServicioImagenes.subir(
+        bytes: recortada,
+        etiqueta: 'perfil',
+      );
+      if (mounted) setState(() => _avatarPath = ruta);
     } catch (_) {
       if (mounted) setState(() => _error = 'No se pudo subir la foto.');
     } finally {
