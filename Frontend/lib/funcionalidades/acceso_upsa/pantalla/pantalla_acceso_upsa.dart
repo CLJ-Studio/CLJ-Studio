@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import '../datos/codigo_pendiente.dart';
 import '../datos/cuentas_recordadas.dart';
 import '../datos/servicio_autenticacion_correo.dart';
 import '../diseno/boton_acceso_correo.dart';
@@ -28,7 +29,8 @@ class PantallaAccesoUpsa extends StatefulWidget {
   State<PantallaAccesoUpsa> createState() => _PantallaAccesoUpsaState();
 }
 
-class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
+class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
+    with WidgetsBindingObserver {
   bool _cargando = false;
   String _digitos = '';
   String _codigo = '';
@@ -54,18 +56,49 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _cargarCuentas();
+    _recuperarPendiente();
+  }
+
+  /// Al volver de segundo plano se recalcula la espera con la hora real.
+  ///
+  /// El navegador frena los temporizadores de una pestaña que no se ve, asi
+  /// que el contador se quedaba congelado en el segundo en que se salio y
+  /// pedia esperar de nuevo lo que ya habia pasado.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState estado) {
+    if (estado != AppLifecycleState.resumed) return;
+    _recuperarPendiente();
+  }
+
+  /// Vuelve al paso del codigo si habia uno esperando.
+  ///
+  /// Salir a leer el correo devolvia la pantalla al principio: el estado
+  /// vivia solo en memoria y una PWA en segundo plano puede descartarse.
+  /// Al volver parecia que el codigo habia caducado, cuando lo perdido era
+  /// la pantalla.
+  Future<void> _recuperarPendiente() async {
+    final pendiente = await CodigoPendiente.leer();
+    if (pendiente == null || !mounted) return;
+
+    if (_correoPendiente != pendiente.correo) {
+      setState(() => _correoPendiente = pendiente.correo);
+    }
+    _iniciarEspera(pendiente.esperaRestante(_segundosEntreCodigos));
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cronometro?.cancel();
     super.dispose();
   }
 
-  void _iniciarEspera() {
+  void _iniciarEspera([int? desde]) {
     _cronometro?.cancel();
-    setState(() => _esperaReenvio = _segundosEntreCodigos);
+    setState(() => _esperaReenvio = desde ?? _segundosEntreCodigos);
+    if (_esperaReenvio <= 0) return;
 
     _cronometro = Timer.periodic(const Duration(seconds: 1), (cronometro) {
       if (!mounted) {
@@ -126,7 +159,12 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
       }
     });
 
-    if (fallo == null) _iniciarEspera();
+    if (fallo == null) {
+      // Se recuerda el paso para poder volver a el si la aplicacion se
+      // descarta mientras se lee el correo.
+      await CodigoPendiente.guardar(correo);
+      _iniciarEspera();
+    }
   }
 
   /// Canjea el código por una sesión.
@@ -149,6 +187,8 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
       // Solo se recuerda cuando la sesión llegó a abrirse: guardar antes
       // llenaría la lista de correos que ni siquiera existen.
       await CuentasRecordadas.recordar(correo);
+      // Ya se uso: dejarlo guardado devolveria a pedir codigo al salir.
+      await CodigoPendiente.olvidar();
       // No se navega desde aquí: PortonAutenticacion escucha el cambio de
       // sesión y cambia de pantalla solo.
       return;
@@ -160,11 +200,15 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa> {
     });
   }
 
-  void _volverAlCorreo() => setState(() {
-    _correoPendiente = null;
-    _codigo = '';
-    _error = null;
-  });
+  Future<void> _volverAlCorreo() async {
+    await CodigoPendiente.olvidar();
+    if (!mounted) return;
+    setState(() {
+      _correoPendiente = null;
+      _codigo = '';
+      _error = null;
+    });
+  }
 
   Future<void> _olvidarCuenta(String correo) async {
     await CuentasRecordadas.olvidar(correo);
