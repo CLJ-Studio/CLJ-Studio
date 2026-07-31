@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
@@ -18,8 +19,28 @@ class ControladorPedidos extends ChangeNotifier {
 
   /// Ventas pendientes de responder: alimentan el distintivo de la pestaña,
   /// porque es la accion que no puede pasar desapercibida al vendedor.
-  int get ventasPorResponder =>
-      ventas.where((p) => p.estado == EstadoPedido.solicitado).length;
+  ///
+  /// Cuentan tambien las entregas que el comprador dio por hechas y esperan
+  /// la palabra del vendedor: es igual de suya que aceptar el pedido.
+  int get ventasPorResponder => ventas
+      .where(
+        (p) =>
+            p.estado == EstadoPedido.solicitado || p.meTocaConfirmar(_miId()),
+      )
+      .length;
+
+  /// Compras esperando que yo confirme que recibi.
+  ///
+  /// Este es el recordatorio que pidio el usuario: vive en la pantalla, no en
+  /// una notificacion repetida.
+  int get comprasPorConfirmar =>
+      compras.where((p) => p.meTocaConfirmar(_miId())).length;
+
+  /// Se lee cada vez y no se cachea: el controlador sobrevive al cambio de
+  /// sesion y un id guardado dejaria contando lo de la cuenta anterior.
+  String? _miId() => ModoLocal.activo
+      ? null
+      : Supabase.instance.client.auth.currentUser?.id;
 
   /// Un pedido nuevo o una respuesta del vendedor deben aparecer sin que
   /// nadie recargue: es la pantalla donde mas se nota la espera.

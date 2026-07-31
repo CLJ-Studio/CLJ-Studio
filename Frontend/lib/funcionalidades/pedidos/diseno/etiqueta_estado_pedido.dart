@@ -20,8 +20,10 @@ class EtiquetaEstadoPedido extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Mientras espera respuesta gira un indicador: comunica que algo
-        // sigue en curso, en vez de parecer un estado detenido.
-        if (estado == EstadoPedido.solicitado)
+        // sigue en curso, en vez de parecer un estado detenido. Vale igual
+        // para la entrega a medio confirmar: falta que alguien conteste.
+        if (estado == EstadoPedido.solicitado ||
+            estado == EstadoPedido.porConfirmar)
           SizedBox(width: 9, height: 9, child: IndicadorCarga(tamanio: 9))
         else
           Container(

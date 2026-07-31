@@ -55,6 +55,7 @@ class Notificacion {
     'pedido_cancelado' => Icons.remove_shopping_cart_outlined,
     'pedido_vencido' => Icons.schedule_rounded,
     'pedido_entregado' => Icons.done_all_rounded,
+    'entrega_por_confirmar' => Icons.pending_actions_rounded,
     'nuevo_local' => Icons.storefront_rounded,
     'ubicacion_pendiente' => Icons.location_on_outlined,
     _ => Icons.notifications_none_rounded,

@@ -90,37 +90,13 @@ class _PantallaPedidosState extends State<PantallaPedidos>
             indicatorColor: const Color(0xFF5C8A63),
             labelStyle: const TextStyle(fontWeight: FontWeight.w900),
             tabs: [
-              const Tab(text: 'Mis compras'),
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Mis ventas'),
-                    if (controlador.ventasPorResponder > 0) ...[
-                      const SizedBox(width: 6),
-                      // Distintivo: aceptar o rechazar es lo unico que el
-                      // vendedor no puede dejar pasar.
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC98A2B),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${controlador.ventasPorResponder}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+              _PestanaConAviso(
+                titulo: 'Mis compras',
+                pendientes: controlador.comprasPorConfirmar,
+              ),
+              _PestanaConAviso(
+                titulo: 'Mis ventas',
+                pendientes: controlador.ventasPorResponder,
               ),
             ],
           ),
@@ -165,6 +141,46 @@ class _PantallaPedidosState extends State<PantallaPedidos>
   );
 }
 
+/// Pestaña con el número de cosas que esperan a esta persona.
+///
+/// Las dos pestañas lo usan: antes el distintivo era solo para el vendedor,
+/// pero ahora al comprador también le puede tocar confirmar una entrega, y
+/// sin aviso no volvería a entrar a mirar.
+class _PestanaConAviso extends StatelessWidget {
+  const _PestanaConAviso({required this.titulo, required this.pendientes});
+
+  final String titulo;
+  final int pendientes;
+
+  @override
+  Widget build(BuildContext context) => Tab(
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(titulo),
+        if (pendientes > 0) ...[
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFC98A2B),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '$pendientes',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
 class _ListaPedidos extends StatefulWidget {
   const _ListaPedidos({
     required this.pedidos,
@@ -202,10 +218,13 @@ class _ListaPedidosState extends State<_ListaPedidos> {
     }).toList();
   }
 
+  /// Lo vendido incluye lo que está en el aire pero no se cayó: un pedido a
+  /// medio confirmar ya se entregó, solo falta que alguien lo diga.
   double get _totalVendido => widget.pedidos
       .where(
         (pedido) =>
             pedido.estado == EstadoPedido.aceptado ||
+            pedido.estado == EstadoPedido.porConfirmar ||
             pedido.estado == EstadoPedido.entregado,
       )
       .fold(0, (total, pedido) => total + pedido.total);

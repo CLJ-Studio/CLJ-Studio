@@ -85,8 +85,16 @@ class RepositorioPedidos {
     params: {'p_order_id': pedidoId, 'p_motivo': motivo},
   );
 
+  /// Deja el pedido esperando la confirmación de la otra parte.
+  ///
+  /// Ya no lo cierra: quien entrega lo marca, quien recibe lo confirma. Antes
+  /// una sola persona cerraba el pedido por las dos.
   Future<void> marcarEntregado(String pedidoId) =>
       _cliente.rpc('marcar_entregado', params: {'p_order_id': pedidoId});
+
+  /// Cierra el pedido. Solo la acepta quien NO marcó la entrega.
+  Future<void> confirmarEntrega(String pedidoId) =>
+      _cliente.rpc('confirmar_entrega', params: {'p_order_id': pedidoId});
 
   /// Solo funciona si el pedido esta aceptado o entregado; en otro caso el
   /// servidor lanza CONTACTO_NO_DISPONIBLE.

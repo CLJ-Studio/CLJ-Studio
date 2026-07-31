@@ -25,8 +25,9 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
   late Stream<Pedido?> _pedido = _repositorio.escuchar(widget.pedidoId);
   bool _ocupado = false;
 
-  bool _soyElVendedor(Pedido pedido) =>
-      pedido.vendedorId == Supabase.instance.client.auth.currentUser?.id;
+  String? get _miId => Supabase.instance.client.auth.currentUser?.id;
+
+  bool _soyElVendedor(Pedido pedido) => pedido.vendedorId == _miId;
 
   /// Envuelve las acciones para no repetir el bloqueo del boton ni el aviso.
   Future<void> _ejecutar(Future<void> Function() accion) async {
@@ -61,6 +62,9 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
     }
     if (texto.contains('CONTACTO_NO_DISPONIBLE')) {
       return 'El contacto se libera cuando el vendedor acepta.';
+    }
+    if (texto.contains('YA_LO_MARCASTE')) {
+      return 'Ya marcaste la entrega. Falta que la confirme la otra parte.';
     }
     return 'No se pudo completar la acción.';
   }
@@ -212,7 +216,11 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
             shape: const StadiumBorder(),
           ),
           icon: const Icon(Icons.done_all_rounded),
-          label: const Text('Marcar como entregado'),
+          // Lo puede marcar cualquiera de los dos, pero no dicen lo mismo:
+          // uno entrega y el otro recibe.
+          label: Text(
+            soyVendedor ? 'Marcar como entregado' : 'Marcar como recibido',
+          ),
         ),
         if (!soyVendedor) ...[
           const SizedBox(height: 10),
@@ -229,7 +237,131 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
       ];
     }
 
+    // Alguien ya dijo que la entrega está hecha; falta la otra mitad.
+    if (pedido.estado == EstadoPedido.porConfirmar) {
+      return [
+        _AvisoConfirmacion(
+          meToca: pedido.meTocaConfirmar(_miId),
+          soyVendedor: soyVendedor,
+          otro: soyVendedor
+              ? pedido.nombreComprador.split(' ').first
+              : pedido.nombreVendedor.split(' ').first,
+        ),
+        const SizedBox(height: 14),
+        if (pedido.meTocaConfirmar(_miId))
+          FilledButton.icon(
+            onPressed: _ocupado
+                ? null
+                : () =>
+                      _ejecutar(() => _repositorio.confirmarEntrega(pedido.id)),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF5C8A63),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: const StadiumBorder(),
+            ),
+            icon: const Icon(Icons.check_circle_outline_rounded),
+            label: Text(soyVendedor ? 'Sí, lo entregué' : 'Sí, lo recibí'),
+          ),
+        const SizedBox(height: 10),
+        // El contacto sigue abierto: si algo no cuadra, se habla antes de
+        // confirmar. Sin esto la única salida sería no responder.
+        OutlinedButton.icon(
+          onPressed: _ocupado ? null : _abrirWhatsapp,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF25D366),
+            side: const BorderSide(color: Color(0xFF9BE0B7)),
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: const StadiumBorder(),
+          ),
+          icon: const Icon(Icons.chat_outlined),
+          label: Text(
+            soyVendedor
+                ? 'Escribir a ${pedido.nombreComprador.split(' ').first}'
+                : 'Escribir a ${pedido.nombreVendedor.split(' ').first}',
+          ),
+        ),
+      ];
+    }
+
     return const [];
+  }
+}
+
+/// Explica de quién es el turno mientras el pedido espera confirmación.
+///
+/// Es la única insistencia que hay: un aviso en la pantalla. No se manda una
+/// notificación por hora a nadie.
+class _AvisoConfirmacion extends StatelessWidget {
+  const _AvisoConfirmacion({
+    required this.meToca,
+    required this.soyVendedor,
+    required this.otro,
+  });
+
+  final bool meToca;
+  final bool soyVendedor;
+  final String otro;
+
+  @override
+  Widget build(BuildContext context) {
+    final oscuro = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: oscuro ? const Color(0xFF2A2519) : const Color(0xFFFDF3E2),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: oscuro ? const Color(0xFF4A4023) : const Color(0xFFF0DFC0),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.pending_actions_rounded,
+            color: Color(0xFFC98A2B),
+            size: 22,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  !meToca
+                      ? 'Esperando a $otro'
+                      : soyVendedor
+                      ? '¿Entregaste el pedido?'
+                      : '¿Recibiste tu pedido?',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFFC98A2B),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  !meToca
+                      ? 'Ya lo marcaste. Falta que $otro lo confirme.'
+                      : soyVendedor
+                      ? '$otro marcó el pedido como recibido. Confírmalo '
+                            'para cerrarlo.'
+                      : '$otro marcó el pedido como entregado. Confírmalo '
+                            'para cerrarlo.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.35,
+                    color: oscuro
+                        ? const Color(0xFFBFB49A)
+                        : const Color(0xFF8A7550),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
