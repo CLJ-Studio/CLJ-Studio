@@ -21,36 +21,41 @@ Estos pasos se hacen en el navegador, una sola vez.
    - **Plan**: Free.
 3. Espera ~2 minutos a que aprovisione.
 
-### 1.2 Credenciales de Google (Google Cloud Console)
+### 1.2 Correo saliente (SMTP)
 
-1. Ve a <https://console.cloud.google.com/> → crea un proyecto (ej. `clj-studio`).
-2. **APIs y servicios → Pantalla de consentimiento OAuth**:
-   - Tipo: **Externo**.
-   - Nombre de la app, correo de soporte y correo del desarrollador.
-3. **APIs y servicios → Credenciales → Crear credenciales → ID de cliente de OAuth**:
-   - Tipo: **Aplicación web**.
-   - **Orígenes autorizados de JavaScript**:
-     ```
-     http://localhost:5000
-     https://<TU-REF>.supabase.co
-     ```
-   - **URI de redirección autorizados**:
-     ```
-     https://<TU-REF>.supabase.co/auth/v1/callback
-     ```
-4. Copia el **Client ID** y el **Client secret**.
+El acceso es por **código de un solo uso al correo institucional**, así que el
+proyecto necesita poder mandar correos. El SMTP que trae Supabase de fábrica
+tiene un límite muy bajo y no sirve más que para probar.
 
-> `<TU-REF>` es el identificador del proyecto: Supabase → *Project Settings → General → Reference ID*.
+En el dashboard → **Project Settings → Authentication → SMTP Settings**:
 
-### 1.3 Habilitar SOLO Google en Supabase
+- **Enable Custom SMTP**: activado.
+- Host, puerto, usuario y contraseña del proveedor que uses.
+- **Sender email** y **Sender name**: es lo que ve quien recibe el correo.
+
+La contraseña va en `Backend/.env` (ignorado por git), nunca en el repo.
+
+> Los correos desde un dominio genérico caen en spam con facilidad. Un dominio
+> propio con SPF y DKIM lo resuelve; ver las recomendaciones del
+> [README principal](../README.md).
+
+En **Authentication → Email Templates → Magic Link** está el texto del correo.
+El asunto y el cuerpo se editan ahí, no en el código.
+
+### 1.3 Habilitar SOLO el correo en Supabase
 
 En el dashboard → **Authentication → Sign In / Providers**:
 
 | Proveedor | Estado | Motivo |
 |---|---|---|
-| **Google** | ✅ **Enabled** + Client ID y Secret | Único método permitido |
-| **Email** | ❌ **Disabled** | Evita que alguien se registre saltándose el filtro de dominio |
+| **Email** | ✅ **Enabled**, con *Confirm email* activado | Único método permitido |
+| Google | ❌ **Disabled** | Se usó al principio y se retiró: obligaba a tener cuenta de Google y no aportaba nada que el dominio institucional no valide ya |
 | Phone, Anonymous, y el resto | ❌ Disabled | Ídem |
+
+El filtro de dominio **no depende de esta pantalla**: vive en un trigger sobre
+`auth.users` (`20260726120200_validacion_dominio.sql`), que corre antes de crear
+al usuario. Aunque alguien habilitara otro proveedor por error, un correo de
+fuera del campus seguiría sin poder existir.
 
 En **Authentication → URL Configuration**:
 - **Site URL**: `http://localhost:5000`
@@ -85,7 +90,7 @@ npx supabase db execute --file supabase/seed.sql
 
 > El bloque demo del seed (locales y productos) se **omite solo** si aún no hay
 > ningún usuario registrado, porque `stores.owner_id` necesita un usuario real.
-> Inicia sesión una vez con Google en la app y vuelve a correr el seed.
+> Inicia sesión una vez en la app y vuelve a correr el seed.
 
 ---
 
@@ -171,18 +176,26 @@ La categoría `'todas'` **no existe en la base**: es un filtro de UI.
 
 | Widget / pantalla | Llamada al backend |
 |---|---|
-| `BotonContinuarGoogle` | `supabase.auth.signInWithOAuth(Provider.google)` |
+| `BotonAccesoCorreo` | `supabase.auth.signInWithOtp(email)` |
+| `CampoCodigoVerificacion` | `supabase.auth.verifyOTP(token)` |
 | Onboarding (nuevo) | `rpc('completar_onboarding', {...})` |
-| `PantallaInicioMarketplace` | `select` sobre `stores` + `categories` |
+| `PantallaInicioMarketplace` | `select` sobre `locales_publicos` + `categories` |
 | `BarraBusquedaMarketplace` / `FiltrosLocales` | `select` con `ilike` + `category_id` |
 | `PantallaDetalleLocal` | `select` sobre `products where store_id` |
 | Corazón · `ControladorFavoritos` | `insert` / `delete` en `favorites` |
 | `PantallaCrearLocal` (3 pasos) | `insert` en `stores` |
 | `PantallaMiLocal` · inventario | `insert` / `update` en `products` |
+| `PantallaAdministrarLocal` | `rpc('actualizar_local')` / `rpc('cerrar_local')` |
+| `PantallaPublicarProducto` | `insert` en `products` con `category_id` |
+| `AccionesPublicacion` (editar · ocultar · relanzar · eliminar) | `update` / `delete` en `products` |
+| Perfil público · `PantallaPerfilVendedor` | `rpc('favoritos_publicos')` + vistas públicas |
+| Campana · `ControladorNotificaciones` | `select` sobre `notifications` + Realtime |
 | `BotonContinuarPedido` ("Contactar con el vendedor") | `rpc('crear_pedido', {items, ...})` |
 | `PantallaContactandoVendedor` | **Realtime** sobre `orders` filtrando por `id` |
 | ← atrás en esa pantalla | `rpc('cancelar_pedido')` |
 | Vendedor: aceptar / rechazar | `rpc('aceptar_pedido')` / `rpc('rechazar_pedido')` |
+| "Marcar como entregado / recibido" | `rpc('marcar_entregado')` → deja el pedido `por_confirmar` |
+| "Sí, lo recibí / lo entregué" | `rpc('confirmar_entrega')` → solo lo acepta la otra parte |
 | Botón WhatsApp (tras aceptar) | `rpc('get_contacto_pedido')` → devuelve `enlace_whatsapp` |
 
 ---
@@ -210,25 +223,46 @@ que exige ser parte **y** que el pedido esté aceptado.
 **La `anon key` es pública por diseño.** La seguridad real son las RLS.
 La que nunca debe salir del servidor es la `service_role`.
 
+**Una publicación NO es un producto del local.** Cada persona tiene dos
+espacios: el personal (`is_personal = true`) y, si lo abre, su local. Publicar
+desde uno no toca al otro. El índice único es
+`(owner_id, is_personal) where is_active`, no `(owner_id)`.
+
+**La entrega la cierran las dos partes.** `marcar_entregado()` ya no cierra el
+pedido: lo pasa a `por_confirmar` y anota quién marcó. `confirmar_entrega()` la
+llama el otro, y rechaza a quien ya habló. Una tarea horaria cierra en silencio
+lo que lleve más de 24 h esperando.
+
+**Cerrar un local no borra su fila.** `orders.store_id` es `on delete restrict`,
+así que un borrado real fallaría en cuanto el local tuviera un pedido. Se
+desactiva, se cancelan los pedidos vivos, se repone el stock de los que estaban
+aceptados y se avisa a cada comprador.
+
+**Permisos en dos capas.** El proyecto tiene la exposición automática apagada:
+cada objeto nuevo necesita su `grant` explícito además de la RLS. El patrón es
+siempre `revoke all … from public; grant execute … to authenticated;`. Una
+función sin `grant` se crea bien y falla recién al usarse.
+
+**Realtime bajo RLS necesita `REPLICA IDENTITY FULL`.** Sin eso, los `UPDATE`
+llegan sin las columnas viejas y la política no puede evaluarlos: la pantalla
+no se entera de nada.
+
 ---
 
-## 7. Pendientes conocidos del Frontend
+## 7. Estado del frontend
 
-Detectados al leer el código; hay que resolverlos para cerrar el MVP:
+Los siete pendientes que listaba esta sección quedaron resueltos: hay pantalla
+de Pedidos con sus dos pestañas, campana de notificaciones con Web Push, el
+WhatsApp se pide en el onboarding, el costo de entrega se lee del local y el
+acceso pasa por código al correo institucional.
 
-1. **No existe pantalla de Pedidos.** La navegación tiene 4 destinos
-   (Inicio · Locales · Publicar · Configuración). Sin una pestaña de pedidos,
-   el vendedor **no tiene dónde aceptar o rechazar**. Es el hueco más grande.
-2. **No hay campana de notificaciones.** El encabezado solo tiene el carrito.
-3. **Falta el campo WhatsApp** en el onboarding: `UsuarioUpsa` no lo tiene y es
-   obligatorio para coordinar la entrega.
-4. **Dos caminos de publicación que no se hablan**: `publicar_producto`
-   (sin stock) y `mi_local` (con `cantidad`). Deben unificarse: publicar un
-   producto es publicarlo *en tu local*.
-5. **Costo de envío duplicado**: `ControladorCarritoCompras.costoEntrega = 3`
-   está fijo, pero cada local tiene su `costoEntrega`. Debe leerse del local.
-6. **El dominio está quemado en el cliente** (`ControladorAccesoUpsa.dominio`).
-   Con Google Sign-In el correo lo entrega Google: el campo de código de
-   estudiante ya no construye el correo, a lo sumo lo pre-valida visualmente.
-7. **Sin Riverpod ni GoRouter**: hoy usa `ChangeNotifier` + singletons y
-   `Navigator`. Funciona, pero conviene decidirlo antes de cablear Supabase.
+Dos aclaraciones sobre lo que decía antes, porque se decidió al revés:
+
+- **Los dos caminos de publicación NO se unificaron.** Publicar algo suelto y
+  cargar un producto al local son cosas distintas a propósito, y el catálogo lo
+  distingue. Unificarlos habría borrado la diferencia entre "vendo esto una vez"
+  y "esto es mi negocio".
+- **Sigue sin Riverpod ni GoRouter**, con `ChangeNotifier` y `Navigator`. A esta
+  escala funciona bien y cambiarlo ahora sería mover todo sin ganar nada.
+
+Las ideas para lo que viene están en el [README principal](../README.md).
