@@ -7,9 +7,9 @@ import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
-import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../instalacion_app/diseno/aviso_instalacion.dart';
 import '../../locales_universitarios/diseno/carrusel_locales_destacados.dart';
+import '../../locales_universitarios/diseno/lista_productos_local.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_local.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
@@ -161,15 +161,19 @@ class PantallaInicioMarketplace extends StatelessWidget {
                                 PantallaDetalleLocal(local: local),
                           ),
                           const SizedBox(height: 22),
+                          // Hacia abajo y no de costado. En una tira
+                          // horizontal solo se ven tres publicaciones y el
+                          // resto hay que arrastrarlo de derecha a izquierda
+                          // sin saber cuanto falta. Es la misma cuadricula de
+                          // Locales y Favoritos, asi que se recorre igual en
+                          // toda la aplicacion.
                           _TituloSeccion(
-                            titulo: 'Publicaciones populares',
+                            titulo: 'Lo último en el campus',
                             alVerTodo: () =>
                                 controlador.seleccionarCategoria('todas'),
                           ),
                           const SizedBox(height: 10),
-                          _CarruselPublicaciones(
-                            publicaciones: publicacionesHome,
-                          ),
+                          ListaProductosLocal(productos: publicacionesHome),
                           const SizedBox(height: 18),
                           const AvisoInstalacion(),
                         ],
@@ -815,184 +819,6 @@ class _CategoriasInicio extends StatelessWidget {
           ),
         );
       },
-    ),
-  );
-}
-
-/// Recupera el carrusel horizontal de publicaciones que existía en Inicio.
-class _CarruselPublicaciones extends StatelessWidget {
-  const _CarruselPublicaciones({required this.publicaciones});
-
-  final List<ProductoMarketplace> publicaciones;
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 238,
-    child: ListView.separated(
-      scrollDirection: Axis.horizontal,
-      itemCount: publicaciones.length,
-      separatorBuilder: (_, _) => const SizedBox(width: 10),
-      itemBuilder: (_, indice) =>
-          _TarjetaPublicacion(publicacion: publicaciones[indice]),
-    ),
-  );
-}
-
-class _TarjetaPublicacion extends StatelessWidget {
-  const _TarjetaPublicacion({required this.publicacion});
-
-  final ProductoMarketplace publicacion;
-
-  void _abrir(BuildContext context) {
-    final local = publicacion.local;
-    if (local == null) return;
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => PantallaDetalleProducto(
-          producto: publicacion,
-          local: local,
-          vendedorNavegable: true,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 150,
-    child: Material(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _abrir(context),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Theme.of(context).dividerColor.withValues(alpha: .3),
-            ),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 128,
-                width: double.infinity,
-                child: publicacion.imagenUrl == null
-                    ? const _ImagenPublicacionVacia()
-                    : Image.network(
-                        publicacion.imagenUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) =>
-                            const _ImagenPublicacionVacia(),
-                      ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 8, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        publicacion.nombre,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          height: 1.08,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const Spacer(),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Bs ${publicacion.precio.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            color: Color(0xFF16A34A),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          AnimatedBuilder(
-                            animation: ControladorFavoritos.instancia,
-                            builder: (context, _) {
-                              final favorito = ControladorFavoritos.instancia
-                                  .contiene(publicacion);
-                              final colorInactivo =
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black;
-                              return IconButton(
-                                tooltip: favorito
-                                    ? 'Quitar de favoritos'
-                                    : 'Agregar a favoritos',
-                                onPressed: () => ControladorFavoritos.instancia
-                                    .alternar(publicacion),
-                                style: IconButton.styleFrom(
-                                  foregroundColor: favorito
-                                      ? const Color(0xFFE53935)
-                                      : colorInactivo,
-                                  minimumSize: const Size(30, 30),
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                  padding: EdgeInsets.zero,
-                                ),
-                                icon: Icon(
-                                  favorito
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                                  size: 24,
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton.filled(
-                            tooltip: 'Ver publicación',
-                            onPressed: () => _abrir(context),
-                            style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xFF16A34A),
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size(30, 30),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
-                            ),
-                            icon: const Icon(Icons.add_rounded, size: 20),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-class _ImagenPublicacionVacia extends StatelessWidget {
-  const _ImagenPublicacionVacia();
-
-  @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-    child: Icon(
-      Icons.image_not_supported_outlined,
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-      size: 34,
     ),
   );
 }
