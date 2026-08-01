@@ -36,6 +36,22 @@ class PantallaInicioMarketplace extends StatelessWidget {
   final VoidCallback? alVerLocalesDestacados;
   final bool mostrarEncabezado;
 
+  /// Las categorías que hoy tienen algo publicado, en el orden del catálogo.
+  ///
+  /// El banner solo puede ofrecer estas: mandar a alguien a una categoría
+  /// vacía es prometer algo que no está.
+  static List<CategoriaMarketplace> _conContenido(
+    List<CategoriaMarketplace> categorias,
+    List<ProductoMarketplace> publicaciones,
+  ) {
+    final conAlgo = {
+      for (final publicacion in publicaciones) publicacion.categoriaEfectiva,
+    };
+    return categorias
+        .where((categoria) => conAlgo.contains(categoria.id))
+        .toList(growable: false);
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     // Escucha ambos: los filtros del feed y el perfil compartido, para que
@@ -94,22 +110,36 @@ class PantallaInicioMarketplace extends StatelessWidget {
                           mensaje: mensaje,
                           alReintentar: controlador.cargar,
                         ),
-                      EstadoInicioMarketplace(publicaciones: []) => _FeedVacio(
-                        hayFiltro:
-                            estado.categoriaId != 'todas' ||
-                            estado.busqueda.isNotEmpty,
+                      // Las categorías van CON el mensaje de vacío, no solo
+                      // con el contenido. Al filtrar por una categoría sin
+                      // publicaciones desaparecían junto al feed: el cartel
+                      // decía "prueba con otra categoría" y no quedaba
+                      // ninguna en pantalla para tocar. Solo se salía
+                      // recargando.
+                      EstadoInicioMarketplace(publicaciones: []) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _CategoriasInicio(
+                            categorias: estado.categorias,
+                            categoriaId: estado.categoriaId,
+                            alSeleccionar: controlador.seleccionarCategoria,
+                          ),
+                          _FeedVacio(
+                            hayFiltro:
+                                estado.categoriaId != 'todas' ||
+                                estado.busqueda.isNotEmpty,
+                          ),
+                        ],
                       ),
                       _ => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _AnuncioPrincipal(
-                            alExplorar: () =>
-                                controlador.seleccionarCategoria('todas'),
-                            alVerComida: () =>
-                                controlador.seleccionarCategoria('comida'),
-                            alVerServicios: () =>
-                                controlador.seleccionarCategoria('servicios'),
-                            autoPlay: true,
+                            categoriasConContenido: _conContenido(
+                              estado.categorias,
+                              controlador.catalogoCompleto,
+                            ),
+                            alSeleccionar: controlador.seleccionarCategoria,
                           ),
                           const SizedBox(height: 18),
                           _CategoriasInicio(
@@ -256,7 +286,20 @@ class _ResultadosBusqueda extends StatelessWidget {
       }
     }
 
-    final total = localesPorId.length + personas.length;
+    // Lo que se busca en un marketplace es lo que se vende. Faltaba: el panel
+    // solo miraba locales y personas, así que escribir "empanada" no encontraba
+    // una publicación llamada "Empanadas de queso" salvo que el local se
+    // llamara parecido.
+    final publicacionesHalladas = [
+      for (final publicacion in publicaciones)
+        if (publicacion.local != null &&
+            (_coincide(publicacion.nombre, buscado) ||
+                _coincide(publicacion.descripcion, buscado)))
+          publicacion,
+    ];
+
+    final total =
+        publicacionesHalladas.length + localesPorId.length + personas.length;
 
     return Padding(
       padding: const EdgeInsets.only(top: 10, bottom: 24),
@@ -266,6 +309,28 @@ class _ResultadosBusqueda extends StatelessWidget {
           if (total == 0)
             const _BusquedaVacia()
           else ...[
+            // Primero lo que se vende: es lo que casi siempre se busca.
+            if (publicacionesHalladas.isNotEmpty)
+              _SeccionResultados(
+                titulo: 'Publicaciones',
+                children: [
+                  for (final publicacion in publicacionesHalladas)
+                    _ResultadoBusqueda(
+                      icono: Icons.sell_rounded,
+                      titulo: publicacion.nombre,
+                      imagenUrl: publicacion.imagenUrl,
+                      alPresionar: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => PantallaDetalleProducto(
+                            producto: publicacion,
+                            local: publicacion.local!,
+                            vendedorNavegable: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             if (personas.isNotEmpty)
               _SeccionResultados(
                 titulo: 'Personas',
@@ -424,19 +489,21 @@ class _BusquedaVacia extends StatelessWidget {
   );
 }
 
+/// Banner de bienvenida con sus diapositivas armadas desde el catálogo real.
+///
+/// Las categorías que ofrece salen de lo que hay publicado ahora mismo, no de
+/// una lista escrita a mano. Antes decía "Ver comida" siempre: si ese día
+/// nadie vendía comida, el botón llevaba a una pantalla vacía. Un anuncio que
+/// promete algo que no está es peor que no tener anuncio.
 class _AnuncioPrincipal extends StatefulWidget {
   const _AnuncioPrincipal({
-    required this.alExplorar,
-    required this.alVerComida,
-    required this.alVerServicios,
-    this.autoPlay = true,
+    required this.categoriasConContenido,
+    required this.alSeleccionar,
   });
 
-  /// Cada botón conserva una acción independiente de la diapositiva.
-  final VoidCallback alExplorar;
-  final VoidCallback alVerComida;
-  final VoidCallback alVerServicios;
-  final bool autoPlay;
+  /// Solo las categorías que hoy tienen algo que enseñar.
+  final List<CategoriaMarketplace> categoriasConContenido;
+  final ValueChanged<String> alSeleccionar;
 
   @override
   State<_AnuncioPrincipal> createState() => _AnuncioPrincipalState();
@@ -449,28 +516,50 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
   Timer? _temporizadorReanudacion;
   int _paginaActual = 0;
 
+  /// Textos escritos para las categorías que más se usan.
+  ///
+  /// Lo que no esté aquí igual sale, con un texto armado desde su nombre: es
+  /// preferible un anuncio genérico y cierto a uno bonito que no lleva a nada.
+  static const _textos = <String, (String, String)>{
+    'comida': ('Sabores que\nllegan hasta ti.', 'Comida hecha en el campus.'),
+    'servicios': (
+      'Talento de\nnuestra comunidad.',
+      'Servicios de otros estudiantes.',
+    ),
+    'tecnologia': (
+      'Tecnología\nentre pasillos.',
+      'Lo que necesitas para tus clases.',
+    ),
+    'libros': (
+      'Los libros que\nya no usás.',
+      'Material que pasa de mano en mano.',
+    ),
+    'ropa': ('Ropa con\nsegunda vuelta.', 'Lo que otro ya no se pone.'),
+  };
+
+  /// Los dos verdes que acompañan al principal, alternados.
+  static const _colores = [Color(0xFF237A45), Color(0xFF315C3B)];
+
   List<BannerData> get _banners => [
     BannerData(
       titulo: 'Todo lo que\nnecesitas,\nen el campus.',
       subtitulo: 'Compra, vende y descubre.',
       textoBoton: 'Explorar ahora',
       colorDegradado: const Color(0xFF16A34A),
-      accion: widget.alExplorar,
+      accion: () => widget.alSeleccionar('todas'),
     ),
-    BannerData(
-      titulo: 'Sabores que\nllegan hasta ti.',
-      subtitulo: 'Descubre comida hecha en el campus.',
-      textoBoton: 'Ver comida',
-      colorDegradado: const Color(0xFF237A45),
-      accion: widget.alVerComida,
-    ),
-    BannerData(
-      titulo: 'Talento de\nnuestra comunidad.',
-      subtitulo: 'Encuentra servicios de otros estudiantes.',
-      textoBoton: 'Ver servicios',
-      colorDegradado: const Color(0xFF315C3B),
-      accion: widget.alVerServicios,
-    ),
+    // Como mucho dos más: el banner se pasa solo y con más nadie llega al final.
+    for (final (indice, categoria)
+        in widget.categoriasConContenido.take(2).indexed)
+      BannerData(
+        titulo:
+            _textos[categoria.id]?.$1 ??
+            'Hay ${categoria.nombre}\nen el campus.',
+        subtitulo: _textos[categoria.id]?.$2 ?? 'Mirá lo que publicaron.',
+        textoBoton: 'Ver ${categoria.nombre.toLowerCase()}',
+        colorDegradado: _colores[indice % _colores.length],
+        accion: () => widget.alSeleccionar(categoria.id),
+      ),
   ];
 
   @override
@@ -481,7 +570,6 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
 
   /// Avanza periódicamente y vuelve al inicio después de la última página.
   void _iniciarAutoPlay() {
-    if (!widget.autoPlay) return;
     _temporizador?.cancel();
     _temporizador = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!_controlador.hasClients) return;
@@ -502,7 +590,6 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
 
   /// Reanuda el autoplay unos segundos después de terminar la interacción.
   void _reanudarAutoPlay() {
-    if (!widget.autoPlay) return;
     _temporizadorReanudacion?.cancel();
     _temporizadorReanudacion = Timer(
       const Duration(seconds: 7),
@@ -522,6 +609,9 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final banners = _banners;
+    // El catálogo llega por Realtime: si una categoría se queda sin nada, hay
+    // una diapositiva menos y el punto activo apuntaría a una que ya no está.
+    final paginaActual = _paginaActual.clamp(0, banners.length - 1);
     return AspectRatio(
       aspectRatio: 1.55,
       // Un único recorte mantiene inmóvil la silueta exterior del banner.
@@ -555,7 +645,7 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(banners.length, (indice) {
-                    final activo = indice == _paginaActual;
+                    final activo = indice == paginaActual;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 240),
                       curve: Curves.easeOut,
