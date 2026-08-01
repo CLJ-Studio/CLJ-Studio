@@ -67,7 +67,6 @@ flutter:
 
   assets:
     - assets/animations/
-    - assets/images/real/
     - assets/images/virtual/
 
   fonts:

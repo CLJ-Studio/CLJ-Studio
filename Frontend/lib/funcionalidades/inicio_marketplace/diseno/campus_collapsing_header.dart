@@ -194,7 +194,9 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     final progreso = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
     final opacidadSecundaria = (1 - progreso * 1.8).clamp(0.0, 1.0);
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final fondo = oscuro ? Theme.of(context).colorScheme.surface : Colors.white;
+    final fondo = oscuro
+        ? Theme.of(context).colorScheme.surface
+        : Theme.of(context).scaffoldBackgroundColor;
     final texto = oscuro ? Colors.white : const Color(0xFF202220);
     final secundario = oscuro
         ? Colors.white.withValues(alpha: .62)

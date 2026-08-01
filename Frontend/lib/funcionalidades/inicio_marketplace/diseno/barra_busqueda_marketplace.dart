@@ -15,7 +15,7 @@ class BarraBusquedaMarketplace extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CampoBusqueda(
     alCambiar: alCambiar,
-    texto: 'Buscar producto, local o servicio',
+    texto: 'Buscar personas o locales',
     compactProgress: compactProgress,
   );
 }

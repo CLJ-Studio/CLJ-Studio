@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../datos/cuentas_recordadas.dart';
+
 /// Cuentas que ya entraron en este dispositivo.
 ///
 /// Existe para no volver a teclear diez dígitos cada vez que se cierra
@@ -10,32 +12,18 @@ class CuentasGuardadas extends StatelessWidget {
     required this.cuentas,
     required this.alElegir,
     required this.alOlvidar,
-    required this.alAgregar,
     super.key,
   });
 
   final List<String> cuentas;
   final ValueChanged<String> alElegir;
   final ValueChanged<String> alOlvidar;
-  final VoidCallback alAgregar;
 
   @override
   Widget build(BuildContext context) {
     if (cuentas.isEmpty) return const SizedBox.shrink();
-    final tema = Theme.of(context);
-
     return Column(
       children: [
-        Text(
-          '¿Quién va a entrar?',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: tema.textTheme.bodyMedium?.color,
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 16),
         Wrap(
           alignment: WrapAlignment.center,
           spacing: 20,
@@ -47,7 +35,6 @@ class CuentasGuardadas extends StatelessWidget {
                 alElegir: () => alElegir(cuenta),
                 alOlvidar: () => alOlvidar(cuenta),
               ),
-            _AgregarCuenta(alPresionar: alAgregar),
           ],
         ),
         const SizedBox(height: 22),
@@ -86,12 +73,26 @@ class _CuentaCircular extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: alElegir,
-                child: const SizedBox(
+                child: SizedBox(
                   width: 72,
                   height: 72,
-                  child: Image(
-                    image: AssetImage('assets/images/real/user.jpg'),
-                    fit: BoxFit.cover,
+                  child: FutureBuilder<String?>(
+                    future: CuentasRecordadas.leerAvatar(cuenta),
+                    builder: (context, foto) {
+                      final avatarUrl = foto.data;
+                      if (avatarUrl != null && avatarUrl.isNotEmpty) {
+                        return Image.network(
+                          avatarUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => _AvatarSinFoto(
+                            inicial: _registro.substring(0, 1).toUpperCase(),
+                          ),
+                        );
+                      }
+                      return _AvatarSinFoto(
+                        inicial: _registro.substring(0, 1).toUpperCase(),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -128,40 +129,23 @@ class _CuentaCircular extends StatelessWidget {
   );
 }
 
-class _AgregarCuenta extends StatelessWidget {
-  const _AgregarCuenta({required this.alPresionar});
+class _AvatarSinFoto extends StatelessWidget {
+  const _AvatarSinFoto({required this.inicial});
 
-  final VoidCallback alPresionar;
+  final String inicial;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 88,
-    child: Column(
-      children: [
-        Material(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: alPresionar,
-            child: SizedBox(
-              width: 72,
-              height: 72,
-              child: Icon(
-                Icons.add_rounded,
-                size: 38,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          ),
+  Widget build(BuildContext context) => ColoredBox(
+    color: Theme.of(context).colorScheme.primaryContainer,
+    child: Center(
+      child: Text(
+        inicial,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+          fontSize: 28,
+          fontWeight: FontWeight.w900,
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Agregar',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
-        ),
-      ],
+      ),
     ),
   );
 }

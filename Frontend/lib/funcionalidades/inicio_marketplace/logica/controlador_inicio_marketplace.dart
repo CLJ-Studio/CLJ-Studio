@@ -20,6 +20,10 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   /// Catalogo completo sin filtrar; la base de cada filtrado.
   List<ProductoMarketplace> _todas = const [];
 
+  /// Catálogo sin filtros para construir resultados separados.
+  List<ProductoMarketplace> get catalogoCompleto =>
+      _todas.isEmpty ? estado.publicaciones : List.unmodifiable(_todas);
+
   /// Una publicacion nueva de cualquier vendedor debe aparecer sola.
   late final _escuchaProductos = EscuchaTabla(
     tabla: 'products',
@@ -113,7 +117,14 @@ class ControladorInicioMarketplace extends ChangeNotifier {
           consulta.isEmpty ||
           publicacion.nombre.toLowerCase().contains(consulta) ||
           publicacion.descripcion.toLowerCase().contains(consulta) ||
-          (publicacion.local?.nombre.toLowerCase().contains(consulta) ?? false);
+          (publicacion.local?.nombre.toLowerCase().contains(consulta) ??
+              false) ||
+          (publicacion.local?.descripcion.toLowerCase().contains(consulta) ??
+              false) ||
+          (publicacion.local?.categoria.toLowerCase().contains(consulta) ??
+              false) ||
+          (publicacion.local?.vendedorNombre.toLowerCase().contains(consulta) ??
+              false);
 
       return coincideCategoria && coincideTexto;
     }).toList();

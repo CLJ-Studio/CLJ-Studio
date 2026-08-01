@@ -10,13 +10,12 @@ abstract final class ConfiguracionTema {
   // Marca
   static const Color verde = Color(0xFF5C8A63);
   static const Color verdeClaro = Color(0xFF7FA987);
-  static const Color naranja = Color(0xFFFC6011);
 
   // Tema claro
   static const Color texto = Color(0xFF4A4B4D);
   static const Color textoSecundario = Color(0xFF7C7D7E);
   static const Color grisClaro = Color(0xFFF2F2F2);
-  static const Color fondo = Colors.white;
+  static const Color fondo = Color(0xFFF8F4EC);
 
   // Tema oscuro
   static const Color fondoOscuro = Colors.black;
@@ -73,7 +72,7 @@ abstract final class ConfiguracionTema {
         seedColor: verde,
         brightness: brillo,
         primary: esOscuro ? verdeClaro : verde,
-        secondary: naranja,
+        secondary: verde,
         surface: superficie,
         onPrimary: Colors.white,
         onSurface: colorTexto,

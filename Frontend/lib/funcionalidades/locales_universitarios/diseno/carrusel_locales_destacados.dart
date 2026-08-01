@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 
-/// Carrusel centrado inspirado en el selector giratorio de Apple.
+/// Carrusel de locales con una tarjeta central y sus vecinas visibles.
 ///
-/// La tarjeta más cercana al centro crece y recupera toda su opacidad,
-/// mientras las tarjetas laterales retroceden suavemente.
+/// La escala y la opacidad siguen el desplazamiento sin reconstruir la
+/// pantalla completa por cada píxel recorrido.
 class CarruselLocalesDestacados extends StatefulWidget {
   const CarruselLocalesDestacados({
     required this.locales,
@@ -23,7 +23,7 @@ class CarruselLocalesDestacados extends StatefulWidget {
 }
 
 class _CarruselLocalesDestacadosState extends State<CarruselLocalesDestacados> {
-  final _controlador = PageController(viewportFraction: .56);
+  final _controlador = PageController(viewportFraction: .86);
   int _paginaActiva = 0;
 
   @override
@@ -41,99 +41,51 @@ class _CarruselLocalesDestacadosState extends State<CarruselLocalesDestacados> {
     if (visibles.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
-      height: 242,
-      child: Column(
-        children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _controlador,
-              clipBehavior: Clip.none,
-              physics: const PageScrollPhysics(parent: BouncingScrollPhysics()),
-              itemCount: visibles.length,
-              onPageChanged: (pagina) => setState(() => _paginaActiva = pagina),
-              itemBuilder: (context, indice) {
-                final local = visibles[indice];
-                return AnimatedBuilder(
-                  animation: _controlador,
-                  builder: (context, child) {
-                    final pagina = _controlador.hasClients
-                        ? (_controlador.page ?? _paginaActiva.toDouble())
-                        : _paginaActiva.toDouble();
-                    final diferencia = (pagina - indice).clamp(-1.0, 1.0);
-                    final distancia = diferencia.abs();
-                    final escala = 1 - distancia * .17;
-                    final matriz = Matrix4.identity()
-                      ..setEntry(3, 2, .0015)
-                      ..rotateY(diferencia * .48)
-                      ..scaleByDouble(escala, escala, 1, 1);
+      height: 225,
+      child: PageView.builder(
+        controller: _controlador,
+        clipBehavior: Clip.none,
+        physics: const PageScrollPhysics(parent: BouncingScrollPhysics()),
+        itemCount: visibles.length,
+        onPageChanged: (pagina) => setState(() => _paginaActiva = pagina),
+        itemBuilder: (context, indice) {
+          final local = visibles[indice];
+          return AnimatedBuilder(
+            animation: _controlador,
+            builder: (context, child) {
+              final pagina = _controlador.hasClients
+                  ? (_controlador.page ?? _paginaActiva.toDouble())
+                  : _paginaActiva.toDouble();
+              final distancia = (pagina - indice).abs().clamp(0.0, 1.0);
+              final escala = 1 - distancia * .08;
+              final opacidad = 1 - distancia * .28;
 
-                    return Transform.translate(
-                      offset: Offset(diferencia * 12, distancia * 6),
-                      child: Transform(
-                        alignment: diferencia < 0
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        transform: matriz,
-                        child: Opacity(
-                          opacity: 1 - distancia * .3,
-                          child: child,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 5,
-                    ),
-                    child: OpenContainer<void>(
-                      transitionDuration: const Duration(milliseconds: 580),
-                      transitionType: ContainerTransitionType.fade,
-                      closedElevation: 8,
-                      openElevation: 0,
-                      closedColor: Colors.transparent,
-                      openColor: Theme.of(context).scaffoldBackgroundColor,
-                      closedShape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      openShape: const RoundedRectangleBorder(),
-                      closedBuilder: (_, abrir) =>
-                          _TarjetaDestacada(local: local, alAbrir: abrir),
-                      openBuilder: (context, _) =>
-                          widget.construirDetalle(context, local),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 7),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var indice = 0; indice < visibles.length; indice++)
-                GestureDetector(
-                  onTap: () => _controlador.animateToPage(
-                    indice,
-                    duration: const Duration(milliseconds: 420),
-                    curve: Curves.easeOutCubic,
-                  ),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 240),
-                    width: indice == _paginaActiva ? 20 : 7,
-                    height: 7,
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
-                      color: indice == _paginaActiva
-                          ? const Color(0xFF5C8A63)
-                          : const Color(0xFFD7DDD8),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+              return Transform.scale(
+                scale: escala,
+                child: Opacity(opacity: opacidad, child: child),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: OpenContainer<void>(
+                transitionDuration: const Duration(milliseconds: 580),
+                transitionType: ContainerTransitionType.fade,
+                closedElevation: 8,
+                openElevation: 0,
+                closedColor: Colors.transparent,
+                openColor: Theme.of(context).scaffoldBackgroundColor,
+                closedShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9),
                 ),
-            ],
-          ),
-        ],
+                openShape: const RoundedRectangleBorder(),
+                closedBuilder: (_, abrir) =>
+                    _TarjetaDestacada(local: local, alAbrir: abrir),
+                openBuilder: (context, _) =>
+                    widget.construirDetalle(context, local),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -146,97 +98,110 @@ class _TarjetaDestacada extends StatelessWidget {
   final VoidCallback alAbrir;
 
   @override
-  Widget build(BuildContext context) {
-    final oscuro = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: oscuro ? const Color(0xFF262826) : Colors.white,
-      borderRadius: BorderRadius.circular(22),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: alAbrir,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ColoredBox(
-                    color: Color(local.colorHexadecimal),
-                    child: switch (local.portadaUrl) {
-                      final String url => Image.network(
-                        url,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _Emoji(local: local),
+  Widget build(BuildContext context) => Material(
+    color: const Color(0xFF2B292A),
+    borderRadius: BorderRadius.circular(9),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: alAbrir,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // La foto domina la tarjeta, igual que en la referencia.
+          Expanded(
+            child: SizedBox(
+              width: double.infinity,
+              child: ColoredBox(
+                color: Color(local.colorHexadecimal),
+                child: switch (local.portadaUrl) {
+                  final String url when url.isNotEmpty => Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => _Emoji(local: local),
+                  ),
+                  _ => _Emoji(local: local),
+                },
+              ),
+            ),
+          ),
+          // Nombre, vistas y ubicación permanecen en el pie oscuro.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 9),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        local.nombreVisible,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      _ => _Emoji(local: local),
-                    },
-                  ),
-                  Positioned(
-                    top: 9,
-                    left: 9,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.favorite_border_rounded,
-                          color: Colors.black,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 9),
-                        const Icon(
-                          Icons.visibility_rounded,
-                          color: Colors.black,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${local.vistas}',
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
-                ],
-              ),
+                    const Icon(
+                      Icons.visibility_outlined,
+                      color: Colors.white,
+                      size: 17,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${local.vistas}',
+                      style: const TextStyle(
+                        color: Color(0xFFCAC6C8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on_outlined,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 3),
+                    Expanded(
+                      child: Text(
+                        local.ubicacionCampus ?? 'Campus UPSA',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFFCAC6C8),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.schedule_rounded,
+                      color: Colors.white,
+                      size: 15,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      local.tiempoEstimado,
+                      style: const TextStyle(
+                        color: Color(0xFFCAC6C8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(13, 10, 13, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    local.nombre,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${local.categoria} · ${local.estaAbierto ? 'Abierto' : 'Cerrado'}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF7B817D),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _Emoji extends StatelessWidget {

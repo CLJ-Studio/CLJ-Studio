@@ -26,22 +26,15 @@ class InvitacionAbrirLocal extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            right: -8,
-            top: -12,
-            bottom: -12,
-            width: 190,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: ShaderMask(
-                shaderCallback: (rect) => const LinearGradient(
-                  colors: [Colors.transparent, Colors.white],
-                ).createShader(rect),
-                blendMode: BlendMode.dstIn,
-                child: Image.asset(
-                  'assets/images/real/hamburger3.jpg',
-                  fit: BoxFit.cover,
-                ),
-              ),
+            right: 24,
+            top: 0,
+            bottom: 0,
+            child: Icon(
+              Icons.storefront_rounded,
+              size: 92,
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: .2),
             ),
           ),
           Padding(

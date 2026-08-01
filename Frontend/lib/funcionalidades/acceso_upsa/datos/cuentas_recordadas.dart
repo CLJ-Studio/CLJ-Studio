@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// así que la lista ahorra teclear pero no salta ninguna comprobación.
 abstract final class CuentasRecordadas {
   static const _clave = 'cuentas_usadas';
+  static const _prefijoAvatar = 'avatar_cuenta_';
 
   /// Un teléfono compartido no debería acumular una lista interminable.
   static const _maximo = 5;
@@ -35,12 +36,30 @@ abstract final class CuentasRecordadas {
 
   static Future<void> olvidar(String correo) async {
     final prefs = await SharedPreferences.getInstance();
+    final normalizado = correo.trim().toLowerCase();
     final actuales = prefs.getStringList(_clave) ?? const [];
     await prefs.setStringList(
       _clave,
-      actuales
-          .where((cuenta) => cuenta != correo.trim().toLowerCase())
-          .toList(),
+      actuales.where((cuenta) => cuenta != normalizado).toList(),
     );
+    await prefs.remove('$_prefijoAvatar$normalizado');
+  }
+
+  /// Conserva la foto pública del perfil para mostrarla antes de iniciar sesión.
+  static Future<void> guardarAvatar(String correo, String? avatarUrl) async {
+    final normalizado = correo.trim().toLowerCase();
+    if (normalizado.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final clave = '$_prefijoAvatar$normalizado';
+    if (avatarUrl == null || avatarUrl.trim().isEmpty) {
+      await prefs.remove(clave);
+    } else {
+      await prefs.setString(clave, avatarUrl.trim());
+    }
+  }
+
+  static Future<String?> leerAvatar(String correo) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('$_prefijoAvatar${correo.trim().toLowerCase()}');
   }
 }

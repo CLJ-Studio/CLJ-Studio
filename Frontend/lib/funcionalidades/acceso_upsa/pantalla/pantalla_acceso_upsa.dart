@@ -35,7 +35,6 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   String _digitos = '';
   String _codigo = '';
   String? _error;
-  bool _agregandoCuenta = false;
 
   /// Correo al que se mandó el código. Mientras sea null se está en el
   /// primer paso; en cuanto tiene valor, la pantalla pide el código.
@@ -278,12 +277,8 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
                             cuentas: _cuentas,
                             alElegir: _pedirCodigo,
                             alOlvidar: _olvidarCuenta,
-                            alAgregar: () => setState(() {
-                              _agregandoCuenta = true;
-                              _digitos = '';
-                            }),
                           ),
-                          if (_cuentas.isEmpty || _agregandoCuenta)
+                          if (_cuentas.isEmpty)
                             FormularioCorreoUpsa(
                               esValido: _registroCompleto,
                               digitos: _digitos,
@@ -306,9 +301,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
                           ),
                         ],
                         const SizedBox(height: 14),
-                        if (_esperandoCodigo ||
-                            _cuentas.isEmpty ||
-                            _agregandoCuenta)
+                        if (_esperandoCodigo || _cuentas.isEmpty)
                           BotonAccesoCorreo(
                             habilitado: _esperandoCodigo
                                 ? _codigoCompleto

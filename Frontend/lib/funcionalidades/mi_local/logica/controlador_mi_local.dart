@@ -160,25 +160,6 @@ class ControladorMiLocal extends ChangeNotifier {
     required String categoriaId,
     String? logoPath,
   }) async {
-    if (ModoLocal.activo) {
-      negocio = LocalUniversitario(
-        id: 'local-diseno',
-        nombre: nuevoNombre.trim(),
-        categoriaId: categoriaId,
-        categoria: 'Local',
-        descripcion: nuevaDescripcion.trim(),
-        calificacion: 5,
-        tiempoEstimado: '15 min',
-        estaAbierto: true,
-        costoEntrega: 0,
-        emoji: nuevoLogo,
-        colorHexadecimal: 0xFFF1F6F0,
-        logoPath: logoPath,
-      );
-      productos = const [];
-      notifyListeners();
-      return;
-    }
     negocio = await _repositorio.crearLocal(
       nombre: nuevoNombre.trim(),
       descripcion: nuevaDescripcion.trim(),
@@ -215,27 +196,6 @@ class ControladorMiLocal extends ChangeNotifier {
 
     final destino = alLocal ? negocio! : espacioPersonal!;
 
-    if (ModoLocal.activo) {
-      final rutas = List<String>.from(galeria);
-      productos = [
-        ProductoMarketplace(
-          id: 'producto-${DateTime.now().microsecondsSinceEpoch}',
-          localId: destino.id,
-          nombre: nombre.trim(),
-          descripcion: descripcion?.trim() ?? '',
-          precio: precio,
-          emoji: emoji,
-          stock: cantidad,
-          esServicio: esServicio,
-          local: negocio,
-          imagePath: rutas.isEmpty ? null : rutas.first,
-          imagenes: rutas.length <= 1 ? const [] : rutas.sublist(1),
-        ),
-        ...productos,
-      ];
-      notifyListeners();
-      return;
-    }
     await _repositorio.agregarProducto(
       localId: destino.id,
       nombre: nombre.trim(),
