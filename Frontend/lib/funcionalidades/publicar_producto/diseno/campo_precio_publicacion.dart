@@ -14,7 +14,10 @@ class CampoPrecioPublicacion extends StatelessWidget {
     inputFormatters: [
       FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
     ],
-    decoration: const InputDecoration(labelText: 'Precio', prefixText: 'Bs '),
+    decoration: const InputDecoration(
+      hintText: 'Define el precio',
+      prefixText: 'Bs ',
+    ),
     validator: (valor) => double.tryParse(valor ?? '') == null
         ? 'Ingresa un precio valido.'
         : null,

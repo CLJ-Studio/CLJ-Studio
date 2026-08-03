@@ -71,6 +71,7 @@ class ProductoMarketplace {
         disponible: disponible ?? this.disponible,
         imagenes: imagenes,
         vistas: vistas,
+        categoriaId: categoriaId,
       );
 
   final String id;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/menus_aplicacion/elemento_menu_liquido.dart';
+import '../../../elementos_compartidos/menus_aplicacion/menu_vidrio_liquido.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 
 /// Categoría de lo que se publica.
@@ -29,26 +31,34 @@ class SelectorCategoriaPublicacion extends StatelessWidget {
         .toList();
 
     if (elegibles.isEmpty) return const SizedBox.shrink();
-    final tema = Theme.of(context);
+    CategoriaMarketplace? actual;
+    for (final categoria in elegibles) {
+      if (categoria.id == seleccionada) actual = categoria;
+    }
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final categoria in elegibles)
-          ChoiceChip(
-            selected: categoria.id == seleccionada,
-            onSelected: (_) => alSeleccionar(categoria.id),
-            avatar: Icon(
-              categoria.icono,
-              size: 17,
-              color: categoria.id == seleccionada
-                  ? tema.colorScheme.primary
-                  : tema.textTheme.bodyMedium?.color,
-            ),
-            label: Text(categoria.nombre),
+    return LayoutBuilder(
+      builder: (context, restricciones) {
+        final ancho = restricciones.maxWidth > 360
+            ? 360.0
+            : restricciones.maxWidth;
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: MenuVidrioLiquido(
+            ancho: ancho,
+            etiquetaActual: actual?.nombre ?? 'Selecciona una categoría',
+            iconoActual: actual?.icono ?? Icons.category_outlined,
+            elementos: [
+              for (final categoria in elegibles)
+                ElementoMenuLiquido(
+                  icono: categoria.icono,
+                  etiqueta: categoria.nombre,
+                  seleccionado: categoria.id == seleccionada,
+                  alPresionar: () => alSeleccionar(categoria.id),
+                ),
+            ],
           ),
-      ],
+        );
+      },
     );
   }
 }

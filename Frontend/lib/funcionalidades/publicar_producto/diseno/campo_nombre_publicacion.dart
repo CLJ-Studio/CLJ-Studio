@@ -10,7 +10,7 @@ class CampoNombrePublicacion extends StatelessWidget {
   Widget build(BuildContext context) => TextFormField(
     controller: controlador,
     decoration: const InputDecoration(
-      labelText: 'Nombre',
+      hintText: 'Un nombre claro para tu publicación',
       prefixIcon: Icon(Icons.sell_outlined),
     ),
     validator: (valor) => valor == null || valor.trim().length < 3

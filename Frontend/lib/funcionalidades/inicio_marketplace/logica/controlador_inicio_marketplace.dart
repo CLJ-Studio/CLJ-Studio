@@ -19,10 +19,21 @@ class ControladorInicioMarketplace extends ChangeNotifier {
 
   /// Catalogo completo sin filtrar; la base de cada filtrado.
   List<ProductoMarketplace> _todas = const [];
+  List<ProductoMarketplace> _populares = const [];
+  static const _tamanoPagina = 10;
+  int _limiteVisible = _tamanoPagina;
 
   /// Catálogo sin filtros para construir resultados separados.
   List<ProductoMarketplace> get catalogoCompleto =>
       _todas.isEmpty ? estado.publicaciones : List.unmodifiable(_todas);
+
+  /// Ranking global ordenado en la base únicamente por cantidad de vistas.
+  List<ProductoMarketplace> get publicacionesPopulares =>
+      List.unmodifiable(_populares);
+
+  /// Indica si el filtro actual todavía tiene otra tanda de publicaciones.
+  bool get hayMasPublicaciones =>
+      _filtrarTodas().length > estado.publicaciones.length;
 
   /// Una publicacion nueva de cualquier vendedor debe aparecer sola.
   late final _escuchaProductos = EscuchaTabla(
@@ -56,8 +67,13 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     );
 
     try {
-      final categorias = await repositorio.obtenerCategorias();
-      _todas = await repositorio.obtenerPublicaciones();
+      final (categorias, publicaciones, populares) = await (
+        repositorio.obtenerCategorias(),
+        repositorio.obtenerPublicaciones(),
+        repositorio.obtenerPublicacionesPopulares(),
+      ).wait;
+      _todas = publicaciones;
+      _populares = populares;
       await esperaVisual;
       estado = estado.copiarCon(
         categorias: categorias,
@@ -78,7 +94,12 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   /// asi que la lista debe cambiar sin parpadear.
   Future<void> _recargarEnSilencio() async {
     try {
-      _todas = await repositorio.obtenerPublicaciones();
+      final (publicaciones, populares) = await (
+        repositorio.obtenerPublicaciones(),
+        repositorio.obtenerPublicacionesPopulares(),
+      ).wait;
+      _todas = publicaciones;
+      _populares = populares;
       estado = estado.copiarCon(publicaciones: _aplicarFiltros());
       notifyListeners();
     } catch (_) {
@@ -87,7 +108,15 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   }
 
   void seleccionarCategoria(String categoriaId) {
+    _limiteVisible = _tamanoPagina;
     estado = estado.copiarCon(categoriaId: categoriaId);
+    _refiltrar();
+  }
+
+  /// Revela la siguiente tanda sin construir todo el feed en pantalla.
+  void cargarMasPublicaciones() {
+    if (!hayMasPublicaciones) return;
+    _limiteVisible += _tamanoPagina;
     _refiltrar();
   }
 
@@ -102,6 +131,10 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   }
 
   List<ProductoMarketplace> _aplicarFiltros() {
+    return _filtrarTodas().take(_limiteVisible).toList();
+  }
+
+  List<ProductoMarketplace> _filtrarTodas() {
     final categoria = estado.categoriaId;
     final consulta = estado.busqueda;
 

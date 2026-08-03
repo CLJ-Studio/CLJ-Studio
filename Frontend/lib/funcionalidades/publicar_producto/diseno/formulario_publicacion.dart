@@ -11,10 +11,9 @@ import 'boton_confirmar_publicacion.dart';
 import 'campo_descripcion_publicacion.dart';
 import 'campo_nombre_publicacion.dart';
 import 'campo_precio_publicacion.dart';
-import 'selector_tipo_publicacion.dart';
 
-/// Publica un producto o servicio. No exige local: si el estudiante no
-/// tiene, el controlador crea su espacio personal por detras.
+/// Publica un producto. No exige local: si el estudiante no tiene, el
+/// controlador crea su espacio personal por detrás.
 class FormularioPublicacion extends StatefulWidget {
   const FormularioPublicacion({
     required this.controlador,
@@ -34,7 +33,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   final nombre = TextEditingController();
   final descripcion = TextEditingController();
   final precio = TextEditingController();
-  final stock = TextEditingController(text: '1');
+  final stock = TextEditingController();
 
   List<String> _galeria = const [];
   List<CategoriaMarketplace> _categorias = const [];
@@ -46,6 +45,9 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   @override
   void initState() {
     super.initState();
+    // El formulario simplificado publica productos; ya no pide elegir entre
+    // producto y servicio como un paso separado.
+    widget.controlador.seleccionarTipo('Producto');
     _cargarCategorias();
     _ofrecerBorrador();
     // Cada cambio se guarda: si el usuario sale a sacar una foto o se le
@@ -109,7 +111,6 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       descripcion.text = borrador.descripcion;
       precio.text = borrador.precio;
       stock.text = borrador.stock;
-      widget.controlador.seleccionarTipo(borrador.tipo);
       widget.controlador.seleccionarEmoji(borrador.emoji);
       setState(() => _galeria = borrador.galeria);
     } else {
@@ -154,14 +155,12 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       await widget.miLocal.agregarProducto(
         nombre: nombre.text,
         precio: double.parse(precio.text.replaceAll(',', '.')),
-        // Un servicio no lleva inventario: el backend lo trata como
-        // siempre disponible.
-        cantidad: widget.controlador.esServicio
-            ? 0
-            : (int.tryParse(stock.text) ?? 0),
+        // La cantidad es opcional. Una publicación nueva conserva una unidad
+        // disponible cuando el usuario deja el campo vacío.
+        cantidad: int.tryParse(stock.text) ?? 1,
         emoji: widget.controlador.emoji,
         descripcion: descripcion.text,
-        esServicio: widget.controlador.esServicio,
+        esServicio: false,
         galeria: _galeria,
         categoriaId: _categoriaId,
       );
@@ -175,7 +174,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         nombre.clear();
         descripcion.clear();
         precio.clear();
-        stock.text = '1';
+        stock.clear();
         widget.controlador.seleccionarTipo('Producto');
         widget.controlador.seleccionarEmoji('🛍️');
         setState(() => _galeria = const []);
@@ -222,11 +221,8 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
     builder: (_, _) {
       final oscuro = Theme.of(context).brightness == Brightness.dark;
       final pasosObligatorios = [
-        true,
         nombre.text.trim().length >= 3 && descripcion.text.trim().isNotEmpty,
-        double.tryParse(precio.text.replaceAll(',', '.')) != null &&
-            (widget.controlador.esServicio ||
-                (int.tryParse(stock.text) ?? -1) >= 0),
+        double.tryParse(precio.text.replaceAll(',', '.')) != null,
       ];
       final pasoActivo = pasosObligatorios.indexWhere((valor) => !valor);
       final formularioCompleto = pasosObligatorios.every((valor) => valor);
@@ -275,45 +271,14 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                 completo: pasosObligatorios[0],
                 activo: pasoActivo == 0,
                 child: _TarjetaFormulario(
-                  titulo: '¿Qué quieres ofrecer?',
-                  subtitulo: 'Elige el formato de tu anuncio.',
-                  child: SelectorTipoPublicacion(
-                    valor: widget.controlador.tipo,
-                    alCambiar: (valor) {
-                      widget.controlador.seleccionarTipo(valor);
-                      _guardarBorrador();
-                    },
-                  ),
-                ),
-              ),
-              _PasoPublicacion(
-                numero: '02',
-                completo: pasosObligatorios[1],
-                activo: pasoActivo == 1,
-                child: _TarjetaFormulario(
                   titulo: 'Cuéntanos lo esencial',
-                  subtitulo: 'Un nombre claro y una descripción que convenza.',
                   child: Column(
                     children: [
                       CampoNombrePublicacion(controlador: nombre),
                       const SizedBox(height: 13),
                       CampoDescripcionPublicacion(controlador: descripcion),
                       if (_categorias.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            '¿En qué categoría entra?',
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.color,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         SelectorCategoriaPublicacion(
                           categorias: _categorias,
                           seleccionada: _categoriaId,
@@ -326,50 +291,39 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                 ),
               ),
               _PasoPublicacion(
-                numero: '03',
-                completo: pasosObligatorios[2],
-                activo: pasoActivo == 2,
+                numero: '02',
+                completo: pasosObligatorios[1],
+                activo: pasoActivo == 1,
                 child: _TarjetaFormulario(
                   titulo: 'Precio y disponibilidad',
-                  subtitulo: widget.controlador.esServicio
-                      ? 'Define cuánto cuesta tu servicio.'
-                      : 'Define el precio y cuántas unidades tienes.',
                   child: LayoutBuilder(
                     builder: (context, restricciones) {
                       final precioWidget = CampoPrecioPublicacion(
                         controlador: precio,
                       );
-                      final stockWidget = AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 280),
-                        child: widget.controlador.esServicio
-                            ? const SizedBox.shrink(
-                                key: ValueKey('sin-inventario'),
-                              )
-                            : TextFormField(
-                                key: const ValueKey('con-inventario'),
-                                controller: stock,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Cantidad disponible',
-                                  prefixIcon: Icon(Icons.inventory_2_outlined),
-                                ),
-                                validator: (valor) {
-                                  final cantidad = int.tryParse(valor ?? '');
-                                  return cantidad == null || cantidad < 0
-                                      ? 'Ingresa una cantidad válida.'
-                                      : null;
-                                },
-                              ),
+                      final stockWidget = TextFormField(
+                        controller: stock,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          hintText: 'Si quieres, indica la cantidad',
+                          prefixIcon: Icon(Icons.inventory_2_outlined),
+                        ),
+                        validator: (valor) {
+                          if (valor == null || valor.trim().isEmpty) {
+                            return null;
+                          }
+                          final cantidad = int.tryParse(valor);
+                          return cantidad == null || cantidad < 0
+                              ? 'Ingresa una cantidad válida.'
+                              : null;
+                        },
                       );
-                      if (restricciones.maxWidth < 520 ||
-                          widget.controlador.esServicio) {
+                      if (restricciones.maxWidth < 520) {
                         return Column(
                           children: [
                             precioWidget,
-                            if (!widget.controlador.esServicio) ...[
-                              const SizedBox(height: 13),
-                              stockWidget,
-                            ],
+                            const SizedBox(height: 13),
+                            stockWidget,
                           ],
                         );
                       }
@@ -386,14 +340,12 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                 ),
               ),
               _PasoPublicacion(
-                numero: '04',
+                numero: '03',
                 completo: _galeria.isNotEmpty,
                 activo: pasoActivo == -1,
                 ultimo: true,
                 child: _TarjetaFormulario(
                   titulo: 'Fotos opcionales',
-                  subtitulo:
-                      'Puedes agregar fotos reales. La primera será tu portada.',
                   child: SelectorGaleria(
                     rutas: _galeria,
                     alCambiar: (rutas) {
@@ -515,14 +467,9 @@ class _PasoPublicacion extends StatelessWidget {
 }
 
 class _TarjetaFormulario extends StatelessWidget {
-  const _TarjetaFormulario({
-    required this.titulo,
-    required this.subtitulo,
-    required this.child,
-  });
+  const _TarjetaFormulario({required this.titulo, required this.child});
 
   final String titulo;
-  final String subtitulo;
   final Widget child;
 
   @override
@@ -541,17 +488,7 @@ class _TarjetaFormulario extends StatelessWidget {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            subtitulo,
-            style: TextStyle(
-              color: oscuro
-                  ? Colors.white.withValues(alpha: .72)
-                  : const Color(0xFF5E625E),
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           child,
         ],
       ),

@@ -26,6 +26,10 @@ class ControladorLocales extends ChangeNotifier {
 
   List<LocalUniversitario> _todos = const [];
 
+  /// Catálogo base para el panel flotante del buscador.
+  List<LocalUniversitario> get catalogoCompleto =>
+      List.unmodifiable(_todos.where((local) => !local.esPersonal));
+
   late final _escucha = EscuchaTabla(
     tabla: 'stores',
     alCambiar: _recargarEnSilencio,

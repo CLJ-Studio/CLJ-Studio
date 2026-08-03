@@ -23,7 +23,7 @@ class RepositorioMiLocal {
   /// tenia a donde abrirse y quedaba muerta al tocarla: el detalle necesita
   /// saber de quien es lo que estas mirando para poder encargarlo.
   static const _camposProducto =
-      'id, store_id, name, description, price, emoji, stock, kind, '
+      'id, store_id, category_id, name, description, price, emoji, stock, kind, '
       'image_path, is_available, view_count, '
       'product_images(storage_path, position), '
       'stores!inner('

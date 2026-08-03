@@ -11,7 +11,7 @@ class CampoDescripcionPublicacion extends StatelessWidget {
     controller: controlador,
     maxLines: 4,
     decoration: const InputDecoration(
-      labelText: 'Descripcion',
+      hintText: 'Describe lo que ofreces de forma convincente',
       alignLabelWithHint: true,
     ),
     validator: (valor) => valor == null || valor.trim().isEmpty

@@ -7,9 +7,9 @@ import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
+import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../instalacion_app/diseno/aviso_instalacion.dart';
 import '../../locales_universitarios/diseno/carrusel_locales_destacados.dart';
-import '../../locales_universitarios/diseno/lista_productos_local.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_local.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
@@ -36,19 +36,15 @@ class PantallaInicioMarketplace extends StatelessWidget {
   final VoidCallback? alVerLocalesDestacados;
   final bool mostrarEncabezado;
 
-  /// Las categorías que hoy tienen algo publicado, en el orden del catálogo.
-  ///
-  /// El banner solo puede ofrecer estas: mandar a alguien a una categoría
-  /// vacía es prometer algo que no está.
-  static List<CategoriaMarketplace> _conContenido(
+  static List<CategoriaMarketplace> _categoriasConContenido(
     List<CategoriaMarketplace> categorias,
     List<ProductoMarketplace> publicaciones,
   ) {
-    final conAlgo = {
+    final ids = {
       for (final publicacion in publicaciones) publicacion.categoriaEfectiva,
     };
     return categorias
-        .where((categoria) => conAlgo.contains(categoria.id))
+        .where((categoria) => ids.contains(categoria.id))
         .toList(growable: false);
   }
 
@@ -63,11 +59,12 @@ class PantallaInicioMarketplace extends StatelessWidget {
       final publicacionesHome = buscando
           ? controlador.catalogoCompleto
           : estado.publicaciones;
-      final estadoHome = buscando
-          ? estado.copiarCon(busqueda: '', publicaciones: publicacionesHome)
-          : estado;
+      final publicacionesPopulares = controlador.publicacionesPopulares;
       final localesPorId = <String, LocalUniversitario>{};
-      for (final publicacion in publicacionesHome) {
+      // Las categorías pertenecen a las publicaciones. Los locales destacados
+      // deben permanecer estables aunque la categoría elegida no tenga ningún
+      // producto.
+      for (final publicacion in controlador.catalogoCompleto) {
         final local = publicacion.local;
         if (local != null) localesPorId[local.id] = local;
       }
@@ -75,114 +72,115 @@ class PantallaInicioMarketplace extends StatelessWidget {
         ..sort((a, b) => b.vistas.compareTo(a.vistas));
       return Stack(
         children: [
-          CustomScrollView(
-            slivers: [
-              if (mostrarEncabezado)
-                CampusCollapsingHeader(
-                  nombre: SesionUsuario.instancia.primerNombre,
-                  avatarUrl: SesionUsuario.instancia.perfil?.avatarUrl,
-                  categorias: estado.categorias,
-                  categoriaId: estado.categoriaId,
-                  alBuscar: controlador.buscar,
-                  alSeleccionarCategoria: controlador.seleccionarCategoria,
-                  alAbrirCarrito: () => Navigator.of(
-                    context,
-                  ).pushNamed(ConfiguracionRutas.carrito),
-                  alAbrirPedidos: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const PantallaPedidosCompleta(),
+          NotificationListener<ScrollNotification>(
+            onNotification: (notificacion) {
+              if (notificacion is ScrollEndNotification &&
+                  !buscando &&
+                  notificacion.metrics.extentAfter < 500 &&
+                  controlador.hayMasPublicaciones) {
+                controlador.cargarMasPublicaciones();
+              }
+              return false;
+            },
+            child: CustomScrollView(
+              // Mientras el buscador está abierto, el contenido de fondo queda
+              // inmóvil. El panel de resultados conserva su propio scroll.
+              physics: buscando ? const NeverScrollableScrollPhysics() : null,
+              slivers: [
+                if (mostrarEncabezado)
+                  CampusCollapsingHeader(
+                    nombre: SesionUsuario.instancia.primerNombre,
+                    avatarUrl: SesionUsuario.instancia.perfil?.avatarUrl,
+                    categorias: estado.categorias,
+                    categoriaId: estado.categoriaId,
+                    alBuscar: controlador.buscar,
+                    alSeleccionarCategoria: controlador.seleccionarCategoria,
+                    alAbrirCarrito: () => Navigator.of(
+                      context,
+                    ).pushNamed(ConfiguracionRutas.carrito),
+                    alAbrirPedidos: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const PantallaPedidosCompleta(),
+                      ),
+                    ),
+                    mostrarCategorias: false,
+                  ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(14, 16, 14, 120),
+                  sliver: SliverToBoxAdapter(
+                    child: ContenidoCentrado(
+                      anchoMaximo: 1000,
+                      child: switch (estado) {
+                        EstadoInicioMarketplace(cargando: true) =>
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 60),
+                            child: Center(child: IndicadorCarga(tamanio: 140)),
+                          ),
+                        EstadoInicioMarketplace(error: final String mensaje) =>
+                          MensajeCatalogo(
+                            mensaje: mensaje,
+                            alReintentar: controlador.cargar,
+                          ),
+                        _ => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _AnuncioPrincipal(
+                              categoriasConContenido: _categoriasConContenido(
+                                estado.categorias,
+                                controlador.catalogoCompleto,
+                              ),
+                              alSeleccionar: controlador.seleccionarCategoria,
+                            ),
+                            const SizedBox(height: 18),
+                            _CategoriasInicio(
+                              categorias: estado.categorias,
+                              categoriaId: estado.categoriaId,
+                              alSeleccionar: controlador.seleccionarCategoria,
+                            ),
+                            const SizedBox(height: 22),
+                            _TituloSeccion(
+                              titulo: 'Locales más vistos',
+                              alVerTodo:
+                                  alVerLocalesDestacados ??
+                                  () =>
+                                      controlador.seleccionarCategoria('todas'),
+                            ),
+                            const SizedBox(height: 6),
+                            CarruselLocalesDestacados(
+                              locales: localesMasVistos,
+                              construirDetalle: (_, local) =>
+                                  PantallaDetalleLocal(local: local),
+                            ),
+                            const SizedBox(height: 22),
+                            _TituloSeccion(
+                              titulo: 'Populares',
+                              alVerTodo: () =>
+                                  controlador.seleccionarCategoria('todas'),
+                            ),
+                            const SizedBox(height: 10),
+                            _CarruselPublicaciones(
+                              publicaciones: publicacionesPopulares,
+                            ),
+                            const SizedBox(height: 22),
+                            _TituloSeccion(
+                              titulo: 'Publicaciones',
+                              alVerTodo: () =>
+                                  controlador.seleccionarCategoria('todas'),
+                            ),
+                            const SizedBox(height: 10),
+                            _CuadriculaPublicaciones(
+                              publicaciones: publicacionesHome,
+                            ),
+                            const SizedBox(height: 18),
+                            const AvisoInstalacion(),
+                          ],
+                        ),
+                      },
                     ),
                   ),
-                  mostrarCategorias: false,
                 ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(14, 16, 14, 120),
-                sliver: SliverToBoxAdapter(
-                  child: ContenidoCentrado(
-                    anchoMaximo: 1000,
-                    child: switch (estadoHome) {
-                      EstadoInicioMarketplace(cargando: true) => const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 60),
-                        child: Center(child: IndicadorCarga(tamanio: 140)),
-                      ),
-                      EstadoInicioMarketplace(error: final String mensaje) =>
-                        MensajeCatalogo(
-                          mensaje: mensaje,
-                          alReintentar: controlador.cargar,
-                        ),
-                      // Las categorías van CON el mensaje de vacío, no solo
-                      // con el contenido. Al filtrar por una categoría sin
-                      // publicaciones desaparecían junto al feed: el cartel
-                      // decía "prueba con otra categoría" y no quedaba
-                      // ninguna en pantalla para tocar. Solo se salía
-                      // recargando.
-                      EstadoInicioMarketplace(publicaciones: []) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _CategoriasInicio(
-                            categorias: estado.categorias,
-                            categoriaId: estado.categoriaId,
-                            alSeleccionar: controlador.seleccionarCategoria,
-                          ),
-                          _FeedVacio(
-                            hayFiltro:
-                                estado.categoriaId != 'todas' ||
-                                estado.busqueda.isNotEmpty,
-                          ),
-                        ],
-                      ),
-                      _ => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _AnuncioPrincipal(
-                            categoriasConContenido: _conContenido(
-                              estado.categorias,
-                              controlador.catalogoCompleto,
-                            ),
-                            alSeleccionar: controlador.seleccionarCategoria,
-                          ),
-                          const SizedBox(height: 18),
-                          _CategoriasInicio(
-                            categorias: estado.categorias,
-                            categoriaId: estado.categoriaId,
-                            alSeleccionar: controlador.seleccionarCategoria,
-                          ),
-                          const SizedBox(height: 22),
-                          _TituloSeccion(
-                            titulo: 'Locales más vistos',
-                            alVerTodo:
-                                alVerLocalesDestacados ??
-                                () => controlador.seleccionarCategoria('todas'),
-                          ),
-                          const SizedBox(height: 6),
-                          CarruselLocalesDestacados(
-                            locales: localesMasVistos,
-                            construirDetalle: (_, local) =>
-                                PantallaDetalleLocal(local: local),
-                          ),
-                          const SizedBox(height: 22),
-                          // Hacia abajo y no de costado. En una tira
-                          // horizontal solo se ven tres publicaciones y el
-                          // resto hay que arrastrarlo de derecha a izquierda
-                          // sin saber cuanto falta. Es la misma cuadricula de
-                          // Locales y Favoritos, asi que se recorre igual en
-                          // toda la aplicacion.
-                          _TituloSeccion(
-                            titulo: 'Lo último en el campus',
-                            alVerTodo: () =>
-                                controlador.seleccionarCategoria('todas'),
-                          ),
-                          const SizedBox(height: 10),
-                          ListaProductosLocal(productos: publicacionesHome),
-                          const SizedBox(height: 18),
-                          const AvisoInstalacion(),
-                        ],
-                      ),
-                    },
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           // Al tocar fuera de los resultados se cierra la búsqueda y el teclado.
           if (buscando)
@@ -225,6 +223,7 @@ class PantallaInicioMarketplace extends StatelessWidget {
                         child: _ResultadosBusqueda(
                           consulta: estado.busqueda,
                           publicaciones: controlador.catalogoCompleto,
+                          alCerrar: () => controlador.buscar(''),
                         ),
                       ),
                     ),
@@ -244,10 +243,12 @@ class _ResultadosBusqueda extends StatelessWidget {
   const _ResultadosBusqueda({
     required this.consulta,
     required this.publicaciones,
+    required this.alCerrar,
   });
 
   final String consulta;
   final List<ProductoMarketplace> publicaciones;
+  final VoidCallback alCerrar;
 
   /// Simplifica mayúsculas y acentos para encontrar resultados al escribir.
   String _normalizar(String texto) => texto
@@ -290,10 +291,6 @@ class _ResultadosBusqueda extends StatelessWidget {
       }
     }
 
-    // Lo que se busca en un marketplace es lo que se vende. Faltaba: el panel
-    // solo miraba locales y personas, así que escribir "empanada" no encontraba
-    // una publicación llamada "Empanadas de queso" salvo que el local se
-    // llamara parecido.
     final publicacionesHalladas = [
       for (final publicacion in publicaciones)
         if (publicacion.local != null &&
@@ -302,134 +299,89 @@ class _ResultadosBusqueda extends StatelessWidget {
           publicacion,
     ];
 
-    final total =
-        publicacionesHalladas.length + localesPorId.length + personas.length;
+    final resultados = <Widget>[
+      for (final publicacion in publicacionesHalladas)
+        _ResultadoBusqueda(
+          icono: Icons.sell_rounded,
+          titulo: publicacion.nombre,
+          subtitulo: publicacion.local!.nombreVisible,
+          imagenUrl: publicacion.imagenUrl,
+          alPresionar: () {
+            FocusManager.instance.primaryFocus?.unfocus();
+            alCerrar();
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => PantallaDetalleProducto(
+                  producto: publicacion,
+                  local: publicacion.local!,
+                  vendedorNavegable: true,
+                ),
+              ),
+            );
+          },
+        ),
+      for (final persona in personas.values)
+        _ResultadoBusqueda(
+          icono: Icons.person_rounded,
+          titulo: persona.$1.vendedorNombre,
+          subtitulo: 'Persona',
+          imagenUrl: persona.$1.vendedorAvatarUrl,
+          alPresionar: () {
+            FocusManager.instance.primaryFocus?.unfocus();
+            alCerrar();
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => PantallaPerfilPublicoVendedor(
+                  local: persona.$1,
+                  publicacionInicial: persona.$2,
+                ),
+              ),
+            );
+          },
+        ),
+      for (final local in localesPorId.values)
+        _ResultadoBusqueda(
+          icono: Icons.storefront_rounded,
+          titulo: local.nombreVisible,
+          subtitulo: local.categoria,
+          imagenUrl: local.logoUrl,
+          alPresionar: () {
+            FocusManager.instance.primaryFocus?.unfocus();
+            alCerrar();
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => PantallaDetalleLocal(local: local),
+              ),
+            );
+          },
+        ),
+    ];
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 10, bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (total == 0)
-            const _BusquedaVacia()
-          else ...[
-            // Primero lo que se vende: es lo que casi siempre se busca.
-            if (publicacionesHalladas.isNotEmpty)
-              _SeccionResultados(
-                titulo: 'Publicaciones',
-                children: [
-                  for (final publicacion in publicacionesHalladas)
-                    _ResultadoBusqueda(
-                      icono: Icons.sell_rounded,
-                      titulo: publicacion.nombre,
-                      imagenUrl: publicacion.imagenUrl,
-                      alPresionar: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => PantallaDetalleProducto(
-                            producto: publicacion,
-                            local: publicacion.local!,
-                            vendedorNavegable: true,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            if (personas.isNotEmpty)
-              _SeccionResultados(
-                titulo: 'Personas',
-                children: [
-                  for (final persona in personas.values)
-                    _ResultadoBusqueda(
-                      icono: Icons.person_rounded,
-                      titulo: persona.$1.vendedorNombre,
-                      imagenUrl: persona.$1.vendedorAvatarUrl,
-                      alPresionar: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => PantallaPerfilPublicoVendedor(
-                            local: persona.$1,
-                            publicacionInicial: persona.$2,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            if (localesPorId.isNotEmpty)
-              _SeccionResultados(
-                titulo: 'Locales',
-                children: [
-                  for (final local in localesPorId.values)
-                    _ResultadoBusqueda(
-                      icono: Icons.storefront_rounded,
-                      titulo: local.nombreVisible,
-                      alPresionar: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => PantallaDetalleLocal(local: local),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-          ],
+    if (resultados.isEmpty) return const _BusquedaVacia();
+
+    return Column(
+      children: [
+        for (var i = 0; i < resultados.length; i++) ...[
+          resultados[i],
+          if (i < resultados.length - 1) const Divider(height: 1),
         ],
-      ),
+      ],
     );
   }
-}
-
-class _SeccionResultados extends StatelessWidget {
-  const _SeccionResultados({required this.titulo, required this.children});
-
-  final String titulo;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 18),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          titulo,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 8),
-        Material(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(18),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              for (var i = 0; i < children.length; i++) ...[
-                children[i],
-                if (i < children.length - 1)
-                  Divider(
-                    height: 1,
-                    indent: 58,
-                    color: Theme.of(context).dividerColor,
-                  ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 class _ResultadoBusqueda extends StatelessWidget {
   const _ResultadoBusqueda({
     required this.icono,
     required this.titulo,
+    required this.subtitulo,
     required this.alPresionar,
     this.imagenUrl,
   });
 
   final IconData icono;
   final String titulo;
+  final String subtitulo;
   final String? imagenUrl;
   final VoidCallback alPresionar;
 
@@ -438,7 +390,8 @@ class _ResultadoBusqueda extends StatelessWidget {
     onTap: alPresionar,
     leading: _ImagenResultado(icono: icono, imagenUrl: imagenUrl),
     title: Text(titulo, style: const TextStyle(fontWeight: FontWeight.w800)),
-    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 15),
+    subtitle: Text(subtitulo),
+    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF5C8A63)),
   );
 }
 
@@ -493,19 +446,12 @@ class _BusquedaVacia extends StatelessWidget {
   );
 }
 
-/// Banner de bienvenida con sus diapositivas armadas desde el catálogo real.
-///
-/// Las categorías que ofrece salen de lo que hay publicado ahora mismo, no de
-/// una lista escrita a mano. Antes decía "Ver comida" siempre: si ese día
-/// nadie vendía comida, el botón llevaba a una pantalla vacía. Un anuncio que
-/// promete algo que no está es peor que no tener anuncio.
 class _AnuncioPrincipal extends StatefulWidget {
   const _AnuncioPrincipal({
     required this.categoriasConContenido,
     required this.alSeleccionar,
   });
 
-  /// Solo las categorías que hoy tienen algo que enseñar.
   final List<CategoriaMarketplace> categoriasConContenido;
   final ValueChanged<String> alSeleccionar;
 
@@ -520,10 +466,6 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
   Timer? _temporizadorReanudacion;
   int _paginaActual = 0;
 
-  /// Textos escritos para las categorías que más se usan.
-  ///
-  /// Lo que no esté aquí igual sale, con un texto armado desde su nombre: es
-  /// preferible un anuncio genérico y cierto a uno bonito que no lleva a nada.
   static const _textos = <String, (String, String)>{
     'comida': ('Sabores que\nllegan hasta ti.', 'Comida hecha en el campus.'),
     'servicios': (
@@ -534,14 +476,8 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
       'Tecnología\nentre pasillos.',
       'Lo que necesitas para tus clases.',
     ),
-    'libros': (
-      'Los libros que\nya no usás.',
-      'Material que pasa de mano en mano.',
-    ),
-    'ropa': ('Ropa con\nsegunda vuelta.', 'Lo que otro ya no se pone.'),
   };
 
-  /// Los dos verdes que acompañan al principal, alternados.
   static const _colores = [Color(0xFF237A45), Color(0xFF315C3B)];
 
   List<BannerData> get _banners => [
@@ -552,14 +488,13 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
       colorDegradado: const Color(0xFF16A34A),
       accion: () => widget.alSeleccionar('todas'),
     ),
-    // Como mucho dos más: el banner se pasa solo y con más nadie llega al final.
     for (final (indice, categoria)
         in widget.categoriasConContenido.take(2).indexed)
       BannerData(
         titulo:
             _textos[categoria.id]?.$1 ??
             'Hay ${categoria.nombre}\nen el campus.',
-        subtitulo: _textos[categoria.id]?.$2 ?? 'Mirá lo que publicaron.',
+        subtitulo: _textos[categoria.id]?.$2 ?? 'Mira lo que publicaron.',
         textoBoton: 'Ver ${categoria.nombre.toLowerCase()}',
         colorDegradado: _colores[indice % _colores.length],
         accion: () => widget.alSeleccionar(categoria.id),
@@ -613,8 +548,6 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final banners = _banners;
-    // El catálogo llega por Realtime: si una categoría se queda sin nada, hay
-    // una diapositiva menos y el punto activo apuntaría a una que ya no está.
     final paginaActual = _paginaActual.clamp(0, banners.length - 1);
     return AspectRatio(
       aspectRatio: 1.55,
@@ -789,36 +722,354 @@ class _CategoriasInicio extends StatelessWidget {
   final String categoriaId;
   final ValueChanged<String> alSeleccionar;
 
+  static const _idsPrincipales = ['comida', 'tecnologia', 'servicios'];
+
+  Future<void> _mostrarOtrasCategorias(
+    BuildContext context,
+    List<CategoriaMarketplace> categorias,
+  ) async {
+    final elegida = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 520),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 4, 22, 12),
+                child: Text(
+                  'Más categorías',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              ),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 16),
+                  itemCount: categorias.length,
+                  itemBuilder: (_, indice) {
+                    final categoria = categorias[indice];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: const Color(0xFFE3EEE5),
+                        foregroundColor: const Color(0xFF2F4034),
+                        child: Icon(categoria.icono),
+                      ),
+                      title: Text(
+                        categoria.nombre,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      trailing: categoria.id == categoriaId
+                          ? const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF16A34A),
+                            )
+                          : null,
+                      onTap: () => Navigator.of(context).pop(categoria.id),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (elegida != null) alSeleccionar(elegida);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final todas = categorias
+        .where((categoria) => categoria.id == CategoriaMarketplace.todas.id)
+        .toList();
+    final porId = {for (final categoria in categorias) categoria.id: categoria};
+    final principales = [for (final id in _idsPrincipales) ?porId[id]];
+    final categoriaOtros = categorias
+        .where((categoria) => categoria.id == 'otros')
+        .toList();
+    final adicionales = [
+      ...categorias.where(
+        (categoria) =>
+            categoria.id != CategoriaMarketplace.todas.id &&
+            !_idsPrincipales.contains(categoria.id) &&
+            categoria.id != 'otros',
+      ),
+      // La categoría real "Otros" siempre cierra la lista de la hoja.
+      ...categoriaOtros,
+    ];
+    final visibles = [...todas, ...principales];
+    final haySeleccionAdicional = adicionales.any(
+      (categoria) => categoria.id == categoriaId,
+    );
+
+    return SizedBox(
+      height: 62,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: visibles.length + (adicionales.isEmpty ? 0 : 1),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (_, indice) {
+          final esBotonOtros = indice == visibles.length;
+          final categoria = esBotonOtros
+              ? const CategoriaMarketplace(
+                  id: '_mas_categorias',
+                  nombre: 'Otros',
+                  icono: Icons.more_horiz_rounded,
+                )
+              : visibles[indice];
+          final seleccionada = categoria.id == categoriaId;
+          return Tooltip(
+            message: categoria.nombre,
+            child: GestureDetector(
+              onTap: esBotonOtros
+                  ? () => _mostrarOtrasCategorias(context, adicionales)
+                  : () => alSeleccionar(categoria.id),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                width: 62,
+                height: 62,
+                decoration: BoxDecoration(
+                  color: seleccionada || (esBotonOtros && haySeleccionAdicional)
+                      ? const Color(0xFF16A34A)
+                      : const Color(0xFF2F4034),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(categoria.icono, color: Colors.white, size: 28),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Recupera el carrusel horizontal de publicaciones que existía en Inicio.
+class _CarruselPublicaciones extends StatelessWidget {
+  const _CarruselPublicaciones({required this.publicaciones});
+
+  final List<ProductoMarketplace> publicaciones;
+
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 62,
+    height: 238,
     child: ListView.separated(
       scrollDirection: Axis.horizontal,
-      itemCount: categorias.length,
-      separatorBuilder: (_, _) => const SizedBox(width: 12),
-      itemBuilder: (_, indice) {
-        final categoria = categorias[indice];
-        final seleccionada = categoria.id == categoriaId;
-        return Tooltip(
-          message: categoria.nombre,
-          child: GestureDetector(
-            onTap: () => alSeleccionar(categoria.id),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              width: 62,
-              height: 62,
-              decoration: BoxDecoration(
-                color: seleccionada
-                    ? const Color(0xFF16A34A)
-                    : const Color(0xFF2F4034),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Icon(categoria.icono, color: Colors.white, size: 28),
-            ),
+      itemCount: publicaciones.length,
+      separatorBuilder: (_, _) => const SizedBox(width: 10),
+      itemBuilder: (_, indice) =>
+          _TarjetaPublicacion(publicacion: publicaciones[indice]),
+    ),
+  );
+}
+
+/// Las publicaciones normales forman parte del desplazamiento vertical del
+/// inicio. Solo el ranking de populares se conserva como carrusel horizontal.
+class _CuadriculaPublicaciones extends StatelessWidget {
+  const _CuadriculaPublicaciones({required this.publicaciones});
+
+  final List<ProductoMarketplace> publicaciones;
+
+  @override
+  Widget build(BuildContext context) {
+    if (publicaciones.isEmpty) return const SizedBox.shrink();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const anchoMinimo = 150.0;
+        const separacion = 10.0;
+        final columnas =
+            ((constraints.maxWidth + separacion) / (anchoMinimo + separacion))
+                .floor()
+                .clamp(1, 5);
+        final anchoTarjeta =
+            (constraints.maxWidth - separacion * (columnas - 1)) / columnas;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: publicaciones.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columnas,
+            crossAxisSpacing: separacion,
+            mainAxisSpacing: separacion,
+            childAspectRatio: anchoTarjeta / 238,
+          ),
+          itemBuilder: (_, indice) => _TarjetaPublicacion(
+            publicacion: publicaciones[indice],
+            ancho: double.infinity,
           ),
         );
       },
+    );
+  }
+}
+
+class _TarjetaPublicacion extends StatelessWidget {
+  const _TarjetaPublicacion({required this.publicacion, this.ancho = 150});
+
+  final ProductoMarketplace publicacion;
+  final double ancho;
+
+  void _abrir(BuildContext context) {
+    final local = publicacion.local;
+    if (local == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PantallaDetalleProducto(
+          producto: publicacion,
+          local: local,
+          vendedorNavegable: true,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: ancho,
+    child: Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _abrir(context),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Theme.of(context).dividerColor.withValues(alpha: .3),
+            ),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 128,
+                width: double.infinity,
+                child: publicacion.imagenUrl == null
+                    ? const _ImagenPublicacionVacia()
+                    : Image.network(
+                        publicacion.imagenUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            const _ImagenPublicacionVacia(),
+                      ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 8, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        publicacion.nombre,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          height: 1.08,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const Spacer(),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Bs ${publicacion.precio.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: Color(0xFF16A34A),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          AnimatedBuilder(
+                            animation: ControladorFavoritos.instancia,
+                            builder: (context, _) {
+                              final favorito = ControladorFavoritos.instancia
+                                  .contiene(publicacion);
+                              final colorInactivo =
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black;
+                              return IconButton(
+                                tooltip: favorito
+                                    ? 'Quitar de favoritos'
+                                    : 'Agregar a favoritos',
+                                onPressed: () => ControladorFavoritos.instancia
+                                    .alternar(publicacion),
+                                style: IconButton.styleFrom(
+                                  foregroundColor: favorito
+                                      ? const Color(0xFFE53935)
+                                      : colorInactivo,
+                                  minimumSize: const Size(30, 30),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                ),
+                                icon: Icon(
+                                  favorito
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  size: 24,
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton.filled(
+                            tooltip: 'Ver publicación',
+                            onPressed: () => _abrir(context),
+                            style: IconButton.styleFrom(
+                              backgroundColor: const Color(0xFF16A34A),
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(30, 30),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                            ),
+                            icon: const Icon(Icons.add_rounded, size: 20),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _ImagenPublicacionVacia extends StatelessWidget {
+  const _ImagenPublicacionVacia();
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+    child: Icon(
+      Icons.image_not_supported_outlined,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      size: 34,
     ),
   );
 }
@@ -851,41 +1102,5 @@ class _TituloSeccion extends StatelessWidget {
         ),
       ),
     ],
-  );
-}
-
-class _FeedVacio extends StatelessWidget {
-  const _FeedVacio({required this.hayFiltro});
-
-  final bool hayFiltro;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 70),
-    child: Column(
-      children: [
-        const Icon(
-          Icons.storefront_outlined,
-          size: 50,
-          color: Color(0xFFB8BDB8),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          hayFiltro ? 'Nada por aquí todavía' : 'Sé el primero en publicar',
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          hayFiltro
-              ? 'Prueba con otra categoría o busca otra cosa.'
-              : 'Lo que publiques aparecerá aquí para toda la comunidad.',
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Color(0xFF7B817D)),
-        ),
-      ],
-    ),
   );
 }

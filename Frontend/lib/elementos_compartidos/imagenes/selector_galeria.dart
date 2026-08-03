@@ -80,35 +80,6 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Row(
-        children: [
-          Text(
-            'Fotos',
-            style: TextStyle(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : Colors.black,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            '${widget.rutas.length}/${widget.maximo}',
-            style: const TextStyle(fontSize: 12),
-          ),
-        ],
-      ),
-      const SizedBox(height: 4),
-      Text(
-        'La primera es la portada.',
-        style: TextStyle(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white
-              : Colors.black,
-          fontSize: 12,
-        ),
-      ),
-      const SizedBox(height: 10),
       Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -121,7 +92,11 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
               alHacerPortada: i == 0 ? null : () => _hacerPortada(i),
             ),
           if (widget.rutas.length < widget.maximo)
-            _BotonAgregar(subiendo: _subiendo, alPresionar: _agregar),
+            _BotonAgregar(
+              subiendo: _subiendo,
+              alPresionar: _agregar,
+              mostrarIndicacion: widget.rutas.isEmpty,
+            ),
         ],
       ),
     ],
@@ -215,17 +190,22 @@ class _Miniatura extends StatelessWidget {
 }
 
 class _BotonAgregar extends StatelessWidget {
-  const _BotonAgregar({required this.subiendo, required this.alPresionar});
+  const _BotonAgregar({
+    required this.subiendo,
+    required this.alPresionar,
+    required this.mostrarIndicacion,
+  });
 
   final bool subiendo;
   final VoidCallback alPresionar;
+  final bool mostrarIndicacion;
 
   @override
   Widget build(BuildContext context) => InkWell(
     onTap: subiendo ? null : alPresionar,
     borderRadius: BorderRadius.circular(14),
     child: Container(
-      width: 92,
+      width: mostrarIndicacion ? 176 : 92,
       height: 92,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
@@ -238,6 +218,26 @@ class _BotonAgregar extends StatelessWidget {
                 width: 22,
                 height: 22,
                 child: IndicadorCarga(tamanio: 22),
+              )
+            : mostrarIndicacion
+            ? const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add_photo_alternate_outlined,
+                      color: Color(0xFF7C827E),
+                    ),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Agrega fotos reales\nLa primera será portada',
+                        style: TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ],
+                ),
               )
             : const Icon(
                 Icons.add_photo_alternate_outlined,

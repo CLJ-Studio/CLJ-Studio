@@ -12,7 +12,7 @@ class RepositorioInicioMarketplace {
 
   /// Campos de producto compartidos por el catalogo y el detalle.
   static const camposProducto =
-      'id, store_id, name, description, price, emoji, stock, kind, '
+      'id, store_id, category_id, name, description, price, emoji, stock, kind, '
       'image_path, is_available, view_count, '
       'product_images(storage_path, position)';
 
@@ -79,6 +79,32 @@ class RepositorioInicioMarketplace {
         )
         // Sin local es que su vendedor esta inactivo: la vista ya los excluye,
         // y antes ese filtro lo hacia el `stores.is_active` del join.
+        .where((publicacion) => publicacion.local != null)
+        .toList();
+  }
+
+  /// Ranking global: las categorías y la fecha de publicación no intervienen.
+  /// Se consulta por vistas en el servidor para no limitarlo a los 120
+  /// productos recientes que forman el feed principal.
+  Future<List<ProductoMarketplace>> obtenerPublicacionesPopulares() async {
+    final (locales, filas) = await (
+      obtenerLocales(),
+      _cliente
+          .from('products')
+          .select(camposProducto)
+          .eq('is_available', true)
+          .order('view_count', ascending: false)
+          .limit(20),
+    ).wait;
+
+    final porId = {for (final local in locales) local.id: local};
+    return filas
+        .map(
+          (fila) => ProductoMarketplace.desdeMapa(
+            fila,
+            local: porId[fila['store_id'] as String],
+          ),
+        )
         .where((publicacion) => publicacion.local != null)
         .toList();
   }
