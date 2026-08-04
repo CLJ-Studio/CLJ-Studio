@@ -12,7 +12,7 @@ abstract final class VersionAplicacion {
   /// delante y si es posterior al fallo que estás mirando.
   ///
   /// Al subir varias veces el mismo día solo cambia el último número.
-  static const numero = '1.8.2';
+  static const numero = '3.8.1';
 
   /// Mientras la aplicación no esté abierta a todo el campus.
   static const fase = 'beta';

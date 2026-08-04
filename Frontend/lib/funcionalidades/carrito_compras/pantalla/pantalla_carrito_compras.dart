@@ -4,6 +4,7 @@ import '../../pedidos/datos/repositorio_pedidos.dart';
 import '../diseno/boton_continuar_pedido.dart';
 import '../diseno/lista_productos_carrito.dart';
 import '../diseno/resumen_compra.dart';
+import '../diseno/selector_punto_entrega.dart';
 import '../logica/controlador_carrito_compras.dart';
 import 'pantalla_contactando_vendedor.dart';
 
@@ -19,12 +20,31 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
   final controlador = ControladorCarritoCompras.instancia;
   bool _enviando = false;
 
+  /// Zona del campus y detalle exacto, que viajan juntos al pedido.
+  String? _zona;
+  final _referencia = TextEditingController();
+
+  /// "Bloque C · mesas del fondo". La zona normaliza el sitio y la referencia
+  /// aporta lo que de verdad cambia; sin zona no se manda nada, porque un
+  /// detalle suelto no le dice al vendedor adónde ir.
+  String? get _puntoDeEntrega {
+    if (_zona == null) return null;
+    final detalle = _referencia.text.trim();
+    return detalle.isEmpty ? _zona : '$_zona · $detalle';
+  }
+
+  @override
+  void dispose() {
+    _referencia.dispose();
+    super.dispose();
+  }
+
   Future<void> _confirmarPedido() async {
     setState(() => _enviando = true);
     try {
       final pedidoId = await const RepositorioPedidos().crear(
         items: controlador.aItemsDePedido(),
-        puntoEncuentro: null,
+        puntoEncuentro: _puntoDeEntrega,
       );
 
       // El carrito ya cumplio su papel: a partir de aqui manda el pedido.
@@ -142,6 +162,17 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
                     ),
                     child: Column(
                       children: [
+                        // Antes de los números: primero se acuerda dónde, que
+                        // es lo que el vendedor necesita para decidir si puede.
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+                          child: SelectorPuntoEntrega(
+                            punto: _zona,
+                            referencia: _referencia,
+                            alElegirPunto: (valor) =>
+                                setState(() => _zona = valor),
+                          ),
+                        ),
                         ResumenCompra(
                           subtotal: controlador.subtotal,
                           entrega: controlador.costoEntrega,
