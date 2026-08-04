@@ -480,12 +480,19 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
 
   static const _colores = [Color(0xFF237A45), Color(0xFF315C3B)];
 
+  static const _imagenes = <String, String>{
+    'comida': 'assets/images/banners/comida-buho.jpg',
+    'deporte': 'assets/images/banners/deportes-buho.jpg',
+    'deportes': 'assets/images/banners/deportes-buho.jpg',
+  };
+
   List<BannerData> get _banners => [
     BannerData(
       titulo: 'Todo lo que\nnecesitas,\nen el campus.',
       subtitulo: 'Compra, vende y descubre.',
       textoBoton: 'Explorar ahora',
       colorDegradado: const Color(0xFF16A34A),
+      rutaImagen: 'assets/images/banners/comida-buho.jpg',
       accion: () => widget.alSeleccionar('todas'),
     ),
     for (final (indice, categoria)
@@ -497,6 +504,8 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
         subtitulo: _textos[categoria.id]?.$2 ?? 'Mira lo que publicaron.',
         textoBoton: 'Ver ${categoria.nombre.toLowerCase()}',
         colorDegradado: _colores[indice % _colores.length],
+        rutaImagen:
+            _imagenes[categoria.id] ?? 'assets/images/banners/campus-buhos.jpg',
         accion: () => widget.alSeleccionar(categoria.id),
       ),
   ];
@@ -614,6 +623,7 @@ class BannerData {
     required this.subtitulo,
     required this.textoBoton,
     required this.colorDegradado,
+    required this.rutaImagen,
     required this.accion,
   });
 
@@ -621,6 +631,7 @@ class BannerData {
   final String subtitulo;
   final String textoBoton;
   final Color colorDegradado;
+  final String rutaImagen;
   final VoidCallback accion;
 }
 
@@ -638,18 +649,24 @@ class BannerSlide extends StatelessWidget {
     child: Stack(
       fit: StackFit.expand,
       children: [
-        // Fondo neutro: las campañas reales podrán llegar desde el backend.
+        Image.asset(
+          data.rutaImagen,
+          fit: BoxFit.cover,
+          alignment: Alignment.centerRight,
+          filterQuality: FilterQuality.medium,
+        ),
+        // Refuerza el contraste del texto sin ocultar la ilustración.
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: [
-                data.colorDegradado,
                 data.colorDegradado.withValues(alpha: .84),
-                data.colorDegradado.withValues(alpha: .7),
+                data.colorDegradado.withValues(alpha: .48),
+                Colors.transparent,
               ],
-              stops: const [0, .52, 1],
+              stops: const [0, .48, .82],
             ),
           ),
         ),

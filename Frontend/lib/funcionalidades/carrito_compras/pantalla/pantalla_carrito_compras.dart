@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../diseno/selector_punto_entrega.dart';
 import '../../pedidos/datos/repositorio_pedidos.dart';
 import '../diseno/boton_continuar_pedido.dart';
 import '../diseno/lista_productos_carrito.dart';
@@ -18,33 +17,14 @@ class PantallaCarritoCompras extends StatefulWidget {
 class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
   // Singleton: el carrito se llena desde el catalogo, en otra pantalla.
   final controlador = ControladorCarritoCompras.instancia;
-  final _puntoEncuentro = TextEditingController();
-
-  /// Zona del campus elegida en el desplegable.
-  String? _zona;
   bool _enviando = false;
-
-  /// Junta la zona y la referencia en una sola linea legible.
-  String? get _puntoDeEntrega {
-    final detalle = _puntoEncuentro.text.trim();
-    if (_zona == null) return detalle.isEmpty ? null : detalle;
-    return detalle.isEmpty ? _zona : '$_zona · $detalle';
-  }
-
-  @override
-  void dispose() {
-    _puntoEncuentro.dispose();
-    super.dispose();
-  }
 
   Future<void> _confirmarPedido() async {
     setState(() => _enviando = true);
     try {
       final pedidoId = await const RepositorioPedidos().crear(
         items: controlador.aItemsDePedido(),
-        // Zona y referencia viajan juntas: al vendedor le llega "Mozza ·
-        // mesa del fondo", que es lo que necesita para encontrarte.
-        puntoEncuentro: _puntoDeEntrega,
+        puntoEncuentro: null,
       );
 
       // El carrito ya cumplio su papel: a partir de aqui manda el pedido.
@@ -96,70 +76,89 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: controlador,
     builder: (context, _) => Scaffold(
+      backgroundColor: const Color(0xFFF1F2F3),
       appBar: AppBar(
+        backgroundColor: const Color(0xFFF1F2F3),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         centerTitle: true,
+        leadingWidth: 76,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 6, bottom: 6),
+          child: Material(
+            color: Colors.white,
+            shape: const CircleBorder(),
+            child: IconButton(
+              onPressed: () => Navigator.maybePop(context),
+              icon: const Icon(Icons.chevron_left_rounded, size: 30),
+            ),
+          ),
+        ),
         title: const Text(
           'Carrito',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(
+            color: Color(0xFF171717),
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+          ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 20, top: 6, bottom: 6),
+            child: Material(
+              color: Colors.white,
+              shape: const CircleBorder(),
+              child: PopupMenuButton<void>(
+                tooltip: 'Opciones',
+                icon: const Icon(Icons.more_horiz_rounded),
+                itemBuilder: (_) => [
+                  PopupMenuItem<void>(
+                    enabled: !controlador.estaVacio,
+                    onTap: controlador.vaciar,
+                    child: const Text('Vaciar carrito'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(22, 18, 22, 130),
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (controlador.local case final local?) ...[
-                  Row(
-                    children: [
-                      Text(local.emoji, style: const TextStyle(fontSize: 22)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          local.nombre,
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                ],
                 ListaProductosCarrito(controlador: controlador),
                 if (!controlador.estaVacio) ...[
-                  const SizedBox(height: 22),
-                  SelectorPuntoEntrega(
-                    punto: _zona,
-                    referencia: _puntoEncuentro,
-                    alElegirPunto: (valor) => setState(() => _zona = valor),
-                  ),
-                  const SizedBox(height: 18),
-                  ResumenCompra(
-                    subtotal: controlador.subtotal,
-                    entrega: controlador.costoEntrega,
-                    total: controlador.total,
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.only(bottom: 18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Column(
+                      children: [
+                        ResumenCompra(
+                          subtotal: controlador.subtotal,
+                          entrega: controlador.costoEntrega,
+                          total: controlador.total,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: BotonContinuarPedido(
+                            habilitado: !_enviando,
+                            alPresionar: _confirmarPedido,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ],
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(20, 8, 20, 14),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: BotonContinuarPedido(
-              habilitado: !controlador.estaVacio && !_enviando,
-              total: controlador.total,
-              alPresionar: _confirmarPedido,
             ),
           ),
         ),

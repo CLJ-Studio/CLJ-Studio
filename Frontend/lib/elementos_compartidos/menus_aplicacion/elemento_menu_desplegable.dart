@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 
-/// Opción configurable de un menú líquido.
-class ElementoMenuLiquido {
-  const ElementoMenuLiquido({
+/// Opción inmutable y configurable de un menú desplegable de la aplicación.
+class ElementoMenuDesplegable {
+  const ElementoMenuDesplegable({
     required this.icono,
     required this.etiqueta,
     required this.alPresionar,

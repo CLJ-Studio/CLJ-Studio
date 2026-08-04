@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'arbol_aplicacion/arbol_aplicacion.dart';
@@ -10,7 +9,6 @@ import 'configuracion_aplicacion/configuracion_supabase.dart';
 /// Punto de entrada de UPSA Eat.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidGlassWidgets.initialize();
 
   // La app dibuja detras de la barra de estado y la de navegacion, como
   // cualquier app nativa. Sin esto quedaba una franja del color del sistema
@@ -28,12 +26,7 @@ void main() async {
     );
   }
 
-  runApp(
-    LiquidGlassWidgets.wrap(
-      child: const ArbolAplicacion(),
-      adaptiveQuality: true,
-    ),
-  );
+  runApp(const ArbolAplicacion());
 }
 
 /// Acceso corto al cliente ya inicializado, usado por los repositorios.

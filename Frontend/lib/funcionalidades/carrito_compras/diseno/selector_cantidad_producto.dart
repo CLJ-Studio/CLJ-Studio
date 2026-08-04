@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Selector táctil para modificar la cantidad.
 class SelectorCantidadProducto extends StatelessWidget {
   const SelectorCantidadProducto({
     required this.cantidad,
@@ -11,45 +10,44 @@ class SelectorCantidadProducto extends StatelessWidget {
   final int cantidad;
   final VoidCallback alDisminuir;
   final VoidCallback alAumentar;
+
   @override
   Widget build(BuildContext context) => Container(
-    width: 58,
-    height: 76,
+    width: 132,
+    height: 48,
     decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: Theme.of(context).dividerColor),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(color: const Color(0xFFE4E4E4)),
     ),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    child: Row(
       children: [
-        InkWell(
-          onTap: alAumentar,
-          child: const SizedBox(
-            width: 38,
-            height: 20,
-            child: Icon(Icons.add_rounded, size: 16, color: Color(0xFF5C8A63)),
+        Expanded(
+          child: InkWell(
+            onTap: alDisminuir,
+            borderRadius: BorderRadius.circular(24),
+            child: const Icon(Icons.remove_rounded, color: Color(0xFF171717)),
           ),
         ),
         Text(
           '$cantidad',
-          style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : const Color(0xFF202221),
-            fontWeight: FontWeight.w900,
-            fontSize: 15,
+          style: const TextStyle(
+            color: Color(0xFF171717),
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
           ),
         ),
-        InkWell(
-          onTap: alDisminuir,
-          child: const SizedBox(
-            width: 38,
-            height: 20,
-            child: Icon(
-              Icons.remove_rounded,
-              size: 16,
-              color: Color(0xFF5C8A63),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(3),
+            child: Material(
+              color: const Color(0xFFFF633C),
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: alAumentar,
+                customBorder: const CircleBorder(),
+                child: const Icon(Icons.add_rounded, color: Colors.white),
+              ),
             ),
           ),
         ),

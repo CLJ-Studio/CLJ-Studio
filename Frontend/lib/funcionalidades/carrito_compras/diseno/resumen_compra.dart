@@ -39,31 +39,28 @@ class ResumenCompra extends StatelessWidget {
   );
   @override
   Widget build(BuildContext context) {
-    final colorTexto = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : const Color(0xFF202221);
+    const colorTexto = Color(0xFF242424);
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(18),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
         child: Column(
           children: [
             fila(
-              'Importe',
+              'Subtotal',
               'Bs ${subtotal.toStringAsFixed(2)}',
               colorTexto: colorTexto,
             ),
             fila(
-              'Costo de entrega',
+              'Envío',
               'Bs ${entrega.toStringAsFixed(2)}',
               colorTexto: colorTexto,
             ),
-            fila('Método de pago', 'Al recoger', colorTexto: colorTexto),
-            Divider(color: Theme.of(context).dividerColor),
+            const Divider(color: Color(0xFFDADADA)),
             fila(
               'Total',
               'Bs ${total.toStringAsFixed(2)}',

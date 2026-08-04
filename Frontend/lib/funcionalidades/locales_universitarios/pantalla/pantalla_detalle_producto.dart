@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../elementos_compartidos/imagenes/visor_imagen_producto/visor_imagen_producto.dart';
 import '../../mi_local/diseno/dialogo_producto.dart';
 import '../../mi_local/datos/repositorio_mi_local.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
-import '../../carrito_compras/diseno/barra_resumen_carrito.dart';
 import '../../carrito_compras/logica/controlador_carrito_compras.dart';
+import '../../carrito_compras/pantalla/pantalla_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
@@ -116,6 +117,10 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
     carrito.agregar(_producto, widget.local);
   }
 
+  void _abrirCarrito() => Navigator.of(context).push(
+    MaterialPageRoute<void>(builder: (_) => const PantallaCarritoCompras()),
+  );
+
   Future<void> _editar() async {
     final datos = await mostrarDialogoProducto(context, producto: _producto);
     if (datos == null) return;
@@ -206,175 +211,329 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
   @override
   Widget build(BuildContext context) {
     final fotos = _producto.galeriaUrls;
-    final colorContenido = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
 
     return Scaffold(
-      appBar: AppBar(
-        surfaceTintColor: Colors.transparent,
-        foregroundColor: colorContenido,
-        actions: [
-          // Solo para quien vende: gestionar lo propio se hacia unicamente
-          // desde Tu local, asi que una publicacion suelta no se podia
-          // editar ni borrar desde ninguna parte.
-          if (_esMio)
-            PopupMenuButton<String>(
-              tooltip: 'Gestionar publicación',
-              icon: const Icon(Icons.more_vert_rounded),
-              onSelected: (opcion) => switch (opcion) {
-                'editar' => _editar(),
-                'ocultar' => _alternarVisibilidad(),
-                'relanzar' => _relanzar(),
-                _ => _eliminar(),
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(
-                  value: 'editar',
-                  child: ListTile(
-                    leading: Icon(Icons.edit_outlined),
-                    title: Text('Editar'),
-                    contentPadding: EdgeInsets.zero,
+      extendBody: true,
+      backgroundColor: Colors.white,
+      bottomNavigationBar: AnimatedBuilder(
+        animation: ControladorCarritoCompras.instancia,
+        builder: (context, _) {
+          final carrito = ControladorCarritoCompras.instancia;
+          final indice = carrito.elementos.indexWhere(
+            (elemento) => elemento.producto.id == _producto.id,
+          );
+          if (indice < 0) return const SizedBox.shrink();
+          final cantidad = carrito.elementos[indice].cantidad;
+
+          return SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+              child: Center(
+                heightFactor: 1,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 580),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 56,
+                          child: FilledButton(
+                            onPressed: _abrirCarrito,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF185D4E),
+                              shape: const StadiumBorder(),
+                            ),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    'Ver carrito',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Bs ${carrito.total.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        width: 126,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(color: const Color(0xFFE1E1E1)),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x18000000),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: IconButton(
+                                tooltip: cantidad == 1
+                                    ? 'Eliminar del carrito'
+                                    : 'Disminuir cantidad',
+                                onPressed: () => cantidad == 1
+                                    ? carrito.eliminar(indice)
+                                    : carrito.disminuir(indice),
+                                icon: const Icon(
+                                  Icons.remove_rounded,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '$cantidad',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Expanded(
+                              child: IconButton(
+                                tooltip: 'Aumentar cantidad',
+                                onPressed: _producto.hayExistencias
+                                    ? () => carrito.aumentar(indice)
+                                    : null,
+                                icon: const Icon(
+                                  Icons.add_rounded,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                PopupMenuItem(
-                  value: 'ocultar',
-                  child: ListTile(
-                    leading: Icon(
-                      _producto.disponible
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    title: Text(_producto.disponible ? 'Ocultar' : 'Mostrar'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'relanzar',
-                  child: ListTile(
-                    leading: Icon(Icons.arrow_upward_rounded),
-                    title: Text('Relanzar'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'eliminar',
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.delete_outline_rounded,
-                      color: Color(0xFFB3453B),
-                    ),
-                    title: Text(
-                      'Eliminar',
-                      style: TextStyle(color: Color(0xFFB3453B)),
-                    ),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-          AnimatedBuilder(
-            animation: ControladorFavoritos.instancia,
-            builder: (context, _) => IconButton(
-              tooltip: 'Guardar en favoritos',
-              onPressed: () =>
-                  ControladorFavoritos.instancia.alternar(_producto),
-              icon: Icon(
-                _favorito
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                color: const Color(0xFFE53935),
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
-      bottomNavigationBar: BarraResumenCarrito(localId: widget.local.id),
       body: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _Galeria(
-                  fotos: fotos,
-                  emoji: _producto.emoji,
-                  controlador: _paginas,
-                  pagina: _pagina,
-                  alCambiarPagina: (i) => setState(() => _pagina = i),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _producto.nombre,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              color: colorContenido,
-                              fontWeight: FontWeight.w900,
+                Stack(
+                  children: [
+                    _Galeria(
+                      fotos: fotos,
+                      emoji: _producto.emoji,
+                      prefijoHero: _producto.id,
+                      controlador: _paginas,
+                      pagina: _pagina,
+                      alCambiarPagina: (i) => setState(() => _pagina = i),
+                    ),
+                    Positioned(
+                      top: MediaQuery.paddingOf(context).top + 12,
+                      left: 18,
+                      child: _BotonCircular(
+                        icono: Icons.arrow_back_rounded,
+                        etiqueta: 'Volver',
+                        alPresionar: () => Navigator.maybePop(context),
+                      ),
+                    ),
+                    if (fotos.isNotEmpty)
+                      Positioned(
+                        top: MediaQuery.paddingOf(context).top + 68,
+                        right: 18,
+                        child: Semantics(
+                          button: true,
+                          label: 'Ampliar imagen del producto',
+                          child: _BotonCircular(
+                            icono: Icons.fullscreen_rounded,
+                            etiqueta: 'Ver imagen a pantalla completa',
+                            alPresionar: () async {
+                              final indice = await VisorImagenProducto.abrir(
+                                context: context,
+                                imagenes: fotos,
+                                indiceInicial: _pagina,
+                                prefijoHero: _producto.id,
+                                etiquetaSemantica: _producto.nombre,
+                              );
+                              if (!mounted || indice == null) return;
+                              setState(() => _pagina = indice);
+                              if (_paginas.hasClients) {
+                                _paginas.jumpToPage(indice);
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      top: MediaQuery.paddingOf(context).top + 12,
+                      right: 18,
+                      child: Row(
+                        children: [
+                          if (_esMio) ...[
+                            _MenuGestionProducto(
+                              disponible: _producto.disponible,
+                              alSeleccionar: (opcion) => switch (opcion) {
+                                'editar' => _editar(),
+                                'ocultar' => _alternarVisibilidad(),
+                                'relanzar' => _relanzar(),
+                                _ => _eliminar(),
+                              },
                             ),
+                            const SizedBox(width: 10),
+                          ],
+                          AnimatedBuilder(
+                            animation: ControladorFavoritos.instancia,
+                            builder: (_, _) => _BotonCircular(
+                              icono: _favorito
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              colorIcono: _favorito
+                                  ? const Color(0xFFE53935)
+                                  : const Color(0xFF222222),
+                              etiqueta: 'Guardar en favoritos',
+                              alPresionar: () => ControladorFavoritos.instancia
+                                  .alternar(_producto),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Bs ${_producto.precio.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
+                    ),
+                  ],
+                ),
+                Transform.translate(
+                  offset: const Offset(0, -22),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(24, 14, 24, 110),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(32),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Spacer(),
+                            IndicadorVistas(total: _vistas),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 7),
-                      IndicadorVistas(total: _vistas),
-                      const SizedBox(height: 6),
-                      Text(
-                        _producto.esServicio
-                            ? 'Servicio'
-                            : _producto.stock > 0
-                            ? '${_producto.stock} disponibles'
-                            : 'Agotado',
-                        style: TextStyle(
-                          color: _producto.hayExistencias
-                              ? colorContenido
-                              : const Color(0xFFB3453B),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (_producto.descripcion.isNotEmpty) ...[
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 8),
                         Text(
-                          _producto.descripcion,
-                          style: TextStyle(color: colorContenido, height: 1.5),
+                          _producto.nombre,
+                          style: const TextStyle(
+                            color: Color(0xFF111111),
+                            fontSize: 30,
+                            fontWeight: FontWeight.w900,
+                            height: 1.05,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Text(
+                              'Bs ${_producto.precio.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Color(0xFF185D4E),
+                                fontSize: 25,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              _producto.esServicio
+                                  ? 'Servicio'
+                                  : _producto.stock > 0
+                                  ? '${_producto.stock} disponibles'
+                                  : 'Agotado',
+                              style: TextStyle(
+                                color: _producto.hayExistencias
+                                    ? const Color(0xFF185D4E)
+                                    : const Color(0xFFB3453B),
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 54,
+                          child: FilledButton(
+                            onPressed: _producto.hayExistencias
+                                ? _agregar
+                                : null,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF185D4E),
+                              disabledBackgroundColor: const Color(0xFFB8C7C2),
+                              shape: const StadiumBorder(),
+                            ),
+                            child: Text(
+                              _producto.hayExistencias
+                                  ? 'Agregar al carrito'
+                                  : 'Agotado',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Divider(height: 38, color: Color(0xFFE5E5E5)),
+                        const Text(
+                          'Acerca de este producto',
+                          style: TextStyle(
+                            color: Color(0xFF171717),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _DescripcionProducto(
+                          texto: _producto.descripcion.isEmpty
+                              ? 'El vendedor no añadió una descripción para este producto.'
+                              : _producto.descripcion,
+                        ),
+                        const SizedBox(height: 26),
+                        const Text(
+                          'Publicado por',
+                          style: TextStyle(
+                            color: Color(0xFF171717),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _Vendedor(
+                          local: widget.local,
+                          producto: _producto,
+                          navegable: widget.vendedorNavegable,
                         ),
                       ],
-                      const Divider(height: 36),
-                      _Vendedor(
-                        local: widget.local,
-                        producto: _producto,
-                        navegable: widget.vendedorNavegable,
-                      ),
-                      const SizedBox(height: 26),
-                      SizedBox(
-                        height: 54,
-                        child: FilledButton.icon(
-                          onPressed: _producto.hayExistencias ? _agregar : null,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
-                            shape: const StadiumBorder(),
-                          ),
-                          icon: const Icon(Icons.add_shopping_cart_rounded),
-                          label: Text(
-                            _producto.hayExistencias
-                                ? 'Agregar al carrito'
-                                : 'Agotado',
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -386,10 +545,157 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
   }
 }
 
+class _DescripcionProducto extends StatefulWidget {
+  const _DescripcionProducto({required this.texto});
+
+  final String texto;
+
+  @override
+  State<_DescripcionProducto> createState() => _DescripcionProductoState();
+}
+
+class _DescripcionProductoState extends State<_DescripcionProducto> {
+  bool _expandida = false;
+
+  static const _estilo = TextStyle(
+    color: Color(0xFF666666),
+    fontSize: 15,
+    height: 1.5,
+  );
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final medidor = TextPainter(
+        text: TextSpan(text: widget.texto, style: _estilo),
+        textDirection: Directionality.of(context),
+        maxLines: 9,
+      )..layout(maxWidth: constraints.maxWidth);
+      final superaNueveLineas = medidor.didExceedMaxLines;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.texto,
+            maxLines: _expandida ? null : 9,
+            overflow: _expandida ? TextOverflow.visible : TextOverflow.ellipsis,
+            style: _estilo,
+          ),
+          if (superaNueveLineas || _expandida)
+            GestureDetector(
+              onTap: () => setState(() => _expandida = !_expandida),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  _expandida ? 'Ver menos' : '… más',
+                  style: const TextStyle(
+                    color: Color(0xFF185D4E),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    },
+  );
+}
+
+class _BotonCircular extends StatelessWidget {
+  const _BotonCircular({
+    required this.icono,
+    required this.etiqueta,
+    required this.alPresionar,
+    this.colorIcono = const Color(0xFF222222),
+  });
+
+  final IconData icono;
+  final String etiqueta;
+  final VoidCallback alPresionar;
+  final Color colorIcono;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    shape: const CircleBorder(),
+    elevation: 1,
+    child: IconButton(
+      tooltip: etiqueta,
+      onPressed: alPresionar,
+      icon: Icon(icono, color: colorIcono),
+    ),
+  );
+}
+
+class _MenuGestionProducto extends StatelessWidget {
+  const _MenuGestionProducto({
+    required this.disponible,
+    required this.alSeleccionar,
+  });
+
+  final bool disponible;
+  final ValueChanged<String> alSeleccionar;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    shape: const CircleBorder(),
+    elevation: 1,
+    child: PopupMenuButton<String>(
+      tooltip: 'Gestionar publicación',
+      icon: const Icon(Icons.more_horiz_rounded),
+      onSelected: alSeleccionar,
+      itemBuilder: (_) => [
+        const PopupMenuItem(
+          value: 'editar',
+          child: ListTile(
+            leading: Icon(Icons.edit_outlined),
+            title: Text('Editar'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        PopupMenuItem(
+          value: 'ocultar',
+          child: ListTile(
+            leading: Icon(
+              disponible
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+            ),
+            title: Text(disponible ? 'Ocultar' : 'Mostrar'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'relanzar',
+          child: ListTile(
+            leading: Icon(Icons.arrow_upward_rounded),
+            title: Text('Relanzar'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'eliminar',
+          child: ListTile(
+            leading: Icon(
+              Icons.delete_outline_rounded,
+              color: Color(0xFFB3453B),
+            ),
+            title: Text('Eliminar', style: TextStyle(color: Color(0xFFB3453B))),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 class _Galeria extends StatelessWidget {
   const _Galeria({
     required this.fotos,
     required this.emoji,
+    required this.prefijoHero,
     required this.controlador,
     required this.pagina,
     required this.alCambiarPagina,
@@ -397,6 +703,7 @@ class _Galeria extends StatelessWidget {
 
   final List<String> fotos;
   final String emoji;
+  final String prefijoHero;
   final PageController controlador;
   final int pagina;
   final ValueChanged<int> alCambiarPagina;
@@ -405,8 +712,8 @@ class _Galeria extends StatelessWidget {
   Widget build(BuildContext context) {
     if (fotos.isEmpty) {
       return Container(
-        height: 320,
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
+        height: 330,
+        color: const Color(0xFFFFE9DE),
         alignment: Alignment.center,
         child: Text(emoji, style: const TextStyle(fontSize: 110)),
       );
@@ -416,20 +723,21 @@ class _Galeria extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       children: [
         SizedBox(
-          height: 320,
+          height: 330,
           child: PageView.builder(
             controller: controlador,
             onPageChanged: alCambiarPagina,
             itemCount: fotos.length,
-            itemBuilder: (_, i) => Image.network(
-              fotos[i],
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => ColoredBox(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: .12),
-                child: Center(
-                  child: Text(emoji, style: const TextStyle(fontSize: 90)),
+            itemBuilder: (_, i) => Hero(
+              tag: '$prefijoHero-imagen-producto-$i',
+              child: Image.network(
+                fotos[i],
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => ColoredBox(
+                  color: const Color(0xFFFFE9DE),
+                  child: Center(
+                    child: Text(emoji, style: const TextStyle(fontSize: 90)),
+                  ),
                 ),
               ),
             ),

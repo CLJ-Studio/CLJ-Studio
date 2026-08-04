@@ -179,20 +179,6 @@ class _TarjetaDestacada extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Icon(
-                      Icons.schedule_rounded,
-                      color: Colors.white,
-                      size: 15,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      local.tiempoEstimado,
-                      style: const TextStyle(
-                        color: Color(0xFFCAC6C8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
                   ],
                 ),
               ],

@@ -55,7 +55,7 @@ class EncabezadoDetalleLocal extends StatelessWidget {
               Text(
                 local.esPersonal
                     ? 'Vendedor independiente'
-                    : '${local.tiempoEstimado}  ·  Entrega Bs ${local.costoEntrega.toStringAsFixed(0)}',
+                    : 'Entrega Bs ${local.costoEntrega.toStringAsFixed(0)}',
               ),
               // Donde esta ahora quien vende. Se guardaba desde hace varias
               // versiones y no lo veia nadie: era justo el dato que hacia

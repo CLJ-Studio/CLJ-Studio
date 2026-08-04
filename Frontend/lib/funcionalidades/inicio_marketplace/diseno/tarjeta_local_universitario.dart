@@ -170,7 +170,7 @@ class TarjetaLocalUniversitario extends StatelessWidget {
                           size: 20,
                         ),
                         Text(
-                          ' ${local.vistas}  ·  ${local.tiempoEstimado}',
+                          ' ${local.vistas}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,

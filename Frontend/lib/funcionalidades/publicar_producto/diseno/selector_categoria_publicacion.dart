@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../elementos_compartidos/menus_aplicacion/elemento_menu_liquido.dart';
-import '../../../elementos_compartidos/menus_aplicacion/menu_vidrio_liquido.dart';
+import '../../../elementos_compartidos/menus_aplicacion/elemento_menu_desplegable.dart';
+import '../../../elementos_compartidos/menus_aplicacion/menu_desplegable_aplicacion.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 
 /// Categoría de lo que se publica.
@@ -43,13 +43,13 @@ class SelectorCategoriaPublicacion extends StatelessWidget {
             : restricciones.maxWidth;
         return Align(
           alignment: Alignment.centerLeft,
-          child: MenuVidrioLiquido(
+          child: MenuDesplegableAplicacion(
             ancho: ancho,
             etiquetaActual: actual?.nombre ?? 'Selecciona una categoría',
             iconoActual: actual?.icono ?? Icons.category_outlined,
             elementos: [
               for (final categoria in elegibles)
-                ElementoMenuLiquido(
+                ElementoMenuDesplegable(
                   icono: categoria.icono,
                   etiqueta: categoria.nombre,
                   seleccionado: categoria.id == seleccionada,
