@@ -13,7 +13,7 @@ class EscuchaTabla {
     required this.tabla,
     required this.alCambiar,
     this.filtro,
-    this.respaldo = const Duration(seconds: 3),
+    this.respaldo = const Duration(seconds: 12),
   });
 
   /// Nombre de la tabla en el esquema public.
@@ -30,7 +30,6 @@ class EscuchaTabla {
 
   RealtimeChannel? _canal;
   Timer? _sondeo;
-  bool _recibioEvento = false;
 
   void iniciar() {
     detener();
@@ -43,18 +42,15 @@ class EscuchaTabla {
           table: tabla,
           filter: filtro,
           callback: (_) {
-            _recibioEvento = true;
             alCambiar();
           },
         )
         .subscribe();
 
-    // Mientras el canal no de senales de vida, se refresca por sondeo. En
-    // cuanto llega el primer evento el sondeo se espacia, para no castigar
-    // la base cuando el tiempo real ya funciona.
-    _sondeo = Timer.periodic(respaldo, (_) {
-      if (!_recibioEvento) alCambiar();
-    });
+    // El sondeo permanece como respaldo. Antes se desactivaba para siempre
+    // tras recibir un solo evento; si luego se perdia una actualizacion, la
+    // pantalla quedaba congelada hasta recargar el navegador.
+    _sondeo = Timer.periodic(respaldo, (_) => alCambiar());
   }
 
   void detener() {
@@ -64,6 +60,5 @@ class EscuchaTabla {
       Supabase.instance.client.removeChannel(_canal!);
       _canal = null;
     }
-    _recibioEvento = false;
   }
 }

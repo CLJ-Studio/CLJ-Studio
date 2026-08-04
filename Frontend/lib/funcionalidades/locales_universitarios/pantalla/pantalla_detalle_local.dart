@@ -9,6 +9,7 @@ import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../../visualizaciones/servicio_visualizaciones.dart';
+import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../diseno/encabezado_detalle_local.dart';
 import '../diseno/lista_productos_local.dart';
 
@@ -47,7 +48,15 @@ class _PantallaDetalleLocalState extends State<PantallaDetalleLocal> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            EncabezadoDetalleLocal(local: widget.local),
+            EncabezadoDetalleLocal(
+              local: widget.local,
+              alAbrirPerfil: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      PantallaPerfilPublicoVendedor(local: widget.local),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
               child: FutureBuilder<List<ProductoMarketplace>>(

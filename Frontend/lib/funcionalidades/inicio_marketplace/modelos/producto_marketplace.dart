@@ -56,7 +56,7 @@ class ProductoMarketplace {
     );
   }
 
-  ProductoMarketplace copiarCon({int? stock, bool? disponible}) =>
+  ProductoMarketplace copiarCon({int? stock, bool? disponible, int? vistas}) =>
       ProductoMarketplace(
         id: id,
         localId: localId,
@@ -70,7 +70,7 @@ class ProductoMarketplace {
         imagePath: imagePath,
         disponible: disponible ?? this.disponible,
         imagenes: imagenes,
-        vistas: vistas,
+        vistas: vistas ?? this.vistas,
         categoriaId: categoriaId,
       );
 

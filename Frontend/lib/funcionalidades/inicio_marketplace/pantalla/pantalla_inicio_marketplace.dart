@@ -30,11 +30,13 @@ class PantallaInicioMarketplace extends StatelessWidget {
     required this.controlador,
     this.alVerLocalesDestacados,
     this.mostrarEncabezado = true,
+    this.mostrarUbicacion = false,
     super.key,
   });
   final ControladorInicioMarketplace controlador;
   final VoidCallback? alVerLocalesDestacados;
   final bool mostrarEncabezado;
+  final bool mostrarUbicacion;
 
   static List<CategoriaMarketplace> _categoriasConContenido(
     List<CategoriaMarketplace> categorias,
@@ -60,16 +62,7 @@ class PantallaInicioMarketplace extends StatelessWidget {
           ? controlador.catalogoCompleto
           : estado.publicaciones;
       final publicacionesPopulares = controlador.publicacionesPopulares;
-      final localesPorId = <String, LocalUniversitario>{};
-      // Las categorías pertenecen a las publicaciones. Los locales destacados
-      // deben permanecer estables aunque la categoría elegida no tenga ningún
-      // producto.
-      for (final publicacion in controlador.catalogoCompleto) {
-        final local = publicacion.local;
-        if (local != null) localesPorId[local.id] = local;
-      }
-      final localesMasVistos = localesPorId.values.toList(growable: false)
-        ..sort((a, b) => b.vistas.compareTo(a.vistas));
+      final localesMasVistos = controlador.localesMasVistos;
       return Stack(
         children: [
           NotificationListener<ScrollNotification>(
@@ -104,6 +97,7 @@ class PantallaInicioMarketplace extends StatelessWidget {
                       ),
                     ),
                     mostrarCategorias: false,
+                    mostrarUbicacion: mostrarUbicacion,
                   ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(14, 16, 14, 120),
@@ -486,29 +480,54 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
     'deportes': 'assets/images/banners/deportes-buho.jpg',
   };
 
-  List<BannerData> get _banners => [
-    BannerData(
-      titulo: 'Todo lo que\nnecesitas,\nen el campus.',
-      subtitulo: 'Compra, vende y descubre.',
-      textoBoton: 'Explorar ahora',
-      colorDegradado: const Color(0xFF16A34A),
-      rutaImagen: 'assets/images/banners/comida-buho.jpg',
-      accion: () => widget.alSeleccionar('todas'),
-    ),
-    for (final (indice, categoria)
-        in widget.categoriasConContenido.take(2).indexed)
+  List<BannerData> get _banners {
+    final categorias = widget.categoriasConContenido;
+    final indiceDeportes = categorias.indexWhere(
+      (categoria) =>
+          categoria.id.toLowerCase().contains('deporte') ||
+          categoria.nombre.toLowerCase().contains('deporte'),
+    );
+    final categoriaDeportes = indiceDeportes < 0
+        ? null
+        : categorias[indiceDeportes];
+    final otrasCategorias = categorias
+        .where((categoria) => categoria != categoriaDeportes)
+        .take(2);
+
+    return [
       BannerData(
-        titulo:
-            _textos[categoria.id]?.$1 ??
-            'Hay ${categoria.nombre}\nen el campus.',
-        subtitulo: _textos[categoria.id]?.$2 ?? 'Mira lo que publicaron.',
-        textoBoton: 'Ver ${categoria.nombre.toLowerCase()}',
-        colorDegradado: _colores[indice % _colores.length],
-        rutaImagen:
-            _imagenes[categoria.id] ?? 'assets/images/banners/campus-buhos.jpg',
-        accion: () => widget.alSeleccionar(categoria.id),
+        titulo: 'Todo lo que\nnecesitas,\nen el campus.',
+        subtitulo: 'Compra, vende y descubre.',
+        textoBoton: 'Explorar ahora',
+        colorDegradado: const Color(0xFF16A34A),
+        rutaImagen: 'assets/images/banners/comida-buho.jpg',
+        accion: () => widget.alSeleccionar('todas'),
       ),
-  ];
+      for (final (indice, categoria) in otrasCategorias.indexed)
+        BannerData(
+          titulo:
+              _textos[categoria.id]?.$1 ??
+              'Hay ${categoria.nombre}\nen el campus.',
+          subtitulo: _textos[categoria.id]?.$2 ?? 'Mira lo que publicaron.',
+          textoBoton: 'Ver ${categoria.nombre.toLowerCase()}',
+          colorDegradado: _colores[indice % _colores.length],
+          rutaImagen:
+              _imagenes[categoria.id] ??
+              'assets/images/banners/campus-buhos.jpg',
+          accion: () => widget.alSeleccionar(categoria.id),
+        ),
+      BannerData(
+        titulo: 'Hay Deportes\nen el campus.',
+        subtitulo: 'Mira lo que publicaron.',
+        textoBoton: 'Ver deportes',
+        colorDegradado: const Color(0xFF237A45),
+        rutaImagen: 'assets/images/banners/deportes-buho.jpg',
+        accion: () => widget.alSeleccionar(
+          categoriaDeportes?.id ?? CategoriaMarketplace.todas.id,
+        ),
+      ),
+    ];
+  }
 
   @override
   void initState() {

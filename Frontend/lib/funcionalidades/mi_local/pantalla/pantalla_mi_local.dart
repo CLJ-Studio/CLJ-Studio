@@ -84,30 +84,44 @@ class PantallaMiLocal extends StatelessWidget {
     final elegida = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (hoja) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
-              child: Text(
-                '¿Dónde estás ahora?',
-                style: Theme.of(
-                  hoja,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(hoja).height * .82,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+                child: Text(
+                  '¿Dónde estás ahora?',
+                  style: Theme.of(
+                    hoja,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
               ),
-            ),
-            for (final punto in ControladorMiLocal.ubicacionesCampus)
-              ListTile(
-                leading: const Icon(Icons.location_on_outlined),
-                title: Text(punto),
-                trailing: controlador.ubicacion == punto
-                    ? const Icon(Icons.check_rounded)
-                    : null,
-                onTap: () => Navigator.of(hoja).pop(punto),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.only(bottom: 8),
+                  itemCount: ControladorMiLocal.ubicacionesCampus.length,
+                  itemBuilder: (_, indice) {
+                    final punto = ControladorMiLocal.ubicacionesCampus[indice];
+                    return ListTile(
+                      leading: const Icon(Icons.location_on_outlined),
+                      title: Text(punto),
+                      trailing: controlador.ubicacion == punto
+                          ? const Icon(Icons.check_rounded)
+                          : null,
+                      onTap: () => Navigator.of(hoja).pop(punto),
+                    );
+                  },
+                ),
               ),
-            const SizedBox(height: 8),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -129,54 +143,6 @@ class PantallaMiLocal extends StatelessWidget {
     }
   }
 
-  /// Cerrar el local no borra su fila: `orders.store_id` es `on delete
-  /// restrict` para que el historial del comprador no desaparezca porque el
-  /// vendedor cierre. Sale del catalogo y sus pedidos vivos se cancelan.
-  Future<void> _confirmarCierre(BuildContext context) async {
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (contexto) => AlertDialog(
-        title: const Text('Cerrar el local'),
-        content: const Text(
-          'Tu local sale del catálogo y sus publicaciones dejan de verse. '
-          'Los pedidos que estén esperando respuesta se cancelan y se avisa '
-          'a quienes los hicieron.\n\n'
-          'Lo que ya entregaste se conserva en tu historial y en el de tus '
-          'compradores. Lo que publiques por tu cuenta no se toca.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(contexto).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(contexto).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFB3453B),
-            ),
-            child: const Text('Cerrar el local'),
-          ),
-        ],
-      ),
-    );
-    if (confirmado != true) return;
-
-    try {
-      await controlador.cerrarLocal();
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Tu local se cerró.')));
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo cerrar el local.')),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: controlador,
@@ -187,10 +153,7 @@ class PantallaMiLocal extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Encabezado(
-              controlador: controlador,
-              alCerrar: () => _confirmarCierre(context),
-            ),
+            _Encabezado(controlador: controlador),
             const SizedBox(height: 18),
             _TarjetaUbicacion(
               ubicacion: controlador.ubicacion,
@@ -314,10 +277,9 @@ class _TarjetaUbicacion extends StatelessWidget {
 }
 
 class _Encabezado extends StatelessWidget {
-  const _Encabezado({required this.controlador, required this.alCerrar});
+  const _Encabezado({required this.controlador});
 
   final ControladorMiLocal controlador;
-  final VoidCallback alCerrar;
 
   @override
   Widget build(BuildContext context) {
@@ -401,35 +363,6 @@ class _Encabezado extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          PopupMenuButton<String>(
-            tooltip: 'Opciones del local',
-            icon: const Icon(Icons.more_horiz_rounded),
-            color: oscuro ? const Color(0xFF202320) : const Color(0xFFF9FAF8),
-            elevation: 18,
-            surfaceTintColor: Colors.transparent,
-            menuPadding: const EdgeInsets.all(8),
-            offset: const Offset(-12, 8),
-            constraints: const BoxConstraints.tightFor(width: 240),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            onSelected: (opcion) {
-              if (opcion == 'cerrar') alCerrar();
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: 'cerrar',
-                height: 60,
-                padding: EdgeInsets.zero,
-                child: _AccionMenuInventario(
-                  icono: Icons.storefront_outlined,
-                  titulo: 'Cerrar el local',
-                  descripcion: 'Retíralo del catálogo',
-                  destructiva: true,
-                ),
-              ),
-            ],
           ),
         ],
       ),

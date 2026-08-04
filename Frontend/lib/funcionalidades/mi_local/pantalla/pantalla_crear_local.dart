@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
+import '../../../elementos_compartidos/imagenes/pantalla_recortar_portada.dart';
 import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import '../logica/controlador_mi_local.dart';
 
@@ -99,140 +100,156 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    // El teclado se superpone al contenido: el boton permanece anclado abajo
+    // y no salta hacia arriba al enfocar un campo.
+    resizeToAvoidBottomInset: false,
     appBar: AppBar(
       backgroundColor: Colors.transparent,
       title: const Text('Abre tu local'),
     ),
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),
-            child: Column(
-              children: [
-                Row(
-                  children: List.generate(
-                    _ultimaPagina + 1,
-                    (indice) => Expanded(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 240),
-                        height: 5,
-                        margin: EdgeInsets.only(
-                          right: indice == _ultimaPagina ? 0 : 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: indice <= _pagina
-                              ? const Color(0xFF6F9A76)
-                              : const Color(0xFFDDE3DD),
-                          borderRadius: BorderRadius.circular(8),
+    body: GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),
+              child: Column(
+                children: [
+                  Row(
+                    children: List.generate(
+                      _ultimaPagina + 1,
+                      (indice) => Expanded(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 240),
+                          height: 5,
+                          margin: EdgeInsets.only(
+                            right: indice == _ultimaPagina ? 0 : 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: indice <= _pagina
+                                ? const Color(0xFF6F9A76)
+                                : const Color(0xFFDDE3DD),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: PageView(
-                    controller: _paginas,
-                    physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (valor) => setState(() => _pagina = valor),
-                    children: [
-                      _PasoFormulario(
-                        icono: Icons.storefront_rounded,
-                        titulo: '¿Cómo se llamará tu local?',
-                        descripcion:
-                            'Este será el nombre que verán los estudiantes.',
-                        child: TextField(
-                          controller: _nombre,
-                          onChanged: (_) => setState(() {}),
-                          textCapitalization: TextCapitalization.words,
-                          style: const TextStyle(color: Color(0xFF263029)),
-                          cursorColor: const Color(0xFF5C8A63),
-                          decoration: const InputDecoration(
-                            labelText: 'Nombre del local',
-                            hintText: 'Ej. Sabor Campus',
-                            filled: true,
-                            fillColor: Color(0xFFF0F2EF),
-                            labelStyle: TextStyle(color: Color(0xFF68716B)),
-                            hintStyle: TextStyle(color: Color(0xFF8B928D)),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: PageView(
+                      controller: _paginas,
+                      physics: const NeverScrollableScrollPhysics(),
+                      onPageChanged: (valor) => setState(() => _pagina = valor),
+                      children: [
+                        _PasoFormulario(
+                          icono: Icons.storefront_rounded,
+                          titulo: '¿Cómo se llamará tu local?',
+                          descripcion:
+                              'Este será el nombre que verán los estudiantes.',
+                          child: TextField(
+                            controller: _nombre,
+                            onChanged: (_) => setState(() {}),
+                            textInputAction: TextInputAction.next,
+                            onSubmitted: (_) {
+                              FocusManager.instance.primaryFocus?.unfocus();
+                              _continuar();
+                            },
+                            textCapitalization: TextCapitalization.words,
+                            style: const TextStyle(color: Color(0xFF263029)),
+                            cursorColor: const Color(0xFF5C8A63),
+                            decoration: const InputDecoration(
+                              labelText: 'Nombre del local',
+                              hintText: 'Ej. Sabor Campus',
+                              filled: true,
+                              fillColor: Color(0xFFF0F2EF),
+                              labelStyle: TextStyle(color: Color(0xFF68716B)),
+                              hintStyle: TextStyle(color: Color(0xFF8B928D)),
+                            ),
                           ),
                         ),
-                      ),
-                      _PasoFormulario(
-                        icono: Icons.notes_rounded,
-                        titulo: 'Cuéntanos qué ofreces',
-                        descripcion:
-                            'Una descripción breve ayuda a encontrar tu local.',
-                        child: TextField(
-                          controller: _descripcion,
-                          onChanged: (_) => setState(() {}),
-                          maxLines: 5,
-                          maxLength: 180,
-                          decoration: const InputDecoration(
-                            labelText: 'Descripción',
-                            hintText: 'Comida fresca preparada en el campus...',
-                            alignLabelWithHint: true,
+                        _PasoFormulario(
+                          icono: Icons.notes_rounded,
+                          titulo: 'Cuéntanos qué ofreces',
+                          descripcion:
+                              'Una descripción breve ayuda a encontrar tu local.',
+                          child: TextField(
+                            controller: _descripcion,
+                            onChanged: (_) => setState(() {}),
+                            maxLines: 5,
+                            maxLength: 180,
+                            decoration: const InputDecoration(
+                              labelText: 'Descripción',
+                              hintText:
+                                  'Comida fresca preparada en el campus...',
+                              alignLabelWithHint: true,
+                            ),
                           ),
                         ),
-                      ),
-                      _PasoFormulario(
-                        titulo: 'Sube el logo de tu local',
-                        descripcion: 'Elige una imagen desde tu dispositivo.',
-                        child: _LogoSubido(
-                          logoUrl: ServicioImagenes.urlPublica(_logoPath),
-                          subiendo: _subiendoLogo,
-                          alElegir: () async {
-                            setState(() => _subiendoLogo = true);
-                            try {
-                              final ruta = await ServicioImagenes.elegirYSubir(
-                                etiqueta: 'logo',
-                              );
-                              if (ruta != null) {
-                                setState(() => _logoPath = ruta);
-                              }
-                            } catch (_) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('No se pudo subir el logo.'),
-                                  ),
+                        _PasoFormulario(
+                          titulo: 'Sube el logo de tu local',
+                          descripcion: 'Elige una imagen desde tu dispositivo.',
+                          child: _LogoSubido(
+                            logoUrl: ServicioImagenes.urlPublica(_logoPath),
+                            subiendo: _subiendoLogo,
+                            alElegir: () async {
+                              setState(() => _subiendoLogo = true);
+                              try {
+                                final ruta = await elegirRecortarYSubirPortada(
+                                  context,
+                                  etiqueta: 'logo',
                                 );
+                                if (ruta != null) {
+                                  setState(() => _logoPath = ruta);
+                                }
+                              } catch (_) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'No se pudo subir el logo.',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() => _subiendoLogo = false);
+                                }
                               }
-                            } finally {
-                              if (mounted) {
-                                setState(() => _subiendoLogo = false);
-                              }
-                            }
-                          },
-                          alQuitar: () => setState(() => _logoPath = null),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _guardando ? null : _continuar,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF5C8A63),
-                      padding: const EdgeInsets.symmetric(vertical: 17),
-                    ),
-                    child: _guardando
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: IndicadorCarga(tamanio: 22),
-                          )
-                        : Text(
-                            _pagina == _ultimaPagina
-                                ? 'Crear mi local'
-                                : 'Continuar',
+                            },
+                            alQuitar: () => setState(() => _logoPath = null),
                           ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _guardando ? null : _continuar,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF5C8A63),
+                        padding: const EdgeInsets.symmetric(vertical: 17),
+                      ),
+                      child: _guardando
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: IndicadorCarga(tamanio: 22),
+                            )
+                          : Text(
+                              _pagina == _ultimaPagina
+                                  ? 'Crear mi local'
+                                  : 'Continuar',
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -263,14 +280,14 @@ class _PasoFormulario extends StatelessWidget {
         icono: icono,
         titulo: titulo,
         descripcion: descripcion,
-        puntaArriba: compacto,
+        puntaAbajo: compacto,
         child: child,
       );
 
       return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(10, 8, 10, 26),
         child: compacto
-            ? Column(children: [buho, const SizedBox(height: 2), burbuja])
+            ? Column(children: [burbuja, const SizedBox(height: 2), buho])
             : Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -297,6 +314,7 @@ class _BuhoGuia extends StatelessWidget {
       fit: BoxFit.contain,
       repeat: true,
       frameRate: FrameRate.composition,
+      backgroundLoading: true,
     ),
   );
 }
@@ -307,14 +325,14 @@ class _BurbujaPregunta extends StatelessWidget {
     this.icono,
     required this.titulo,
     required this.descripcion,
-    required this.puntaArriba,
+    required this.puntaAbajo,
     required this.child,
   });
 
   final IconData? icono;
   final String titulo;
   final String descripcion;
-  final bool puntaArriba;
+  final bool puntaAbajo;
   final Widget child;
 
   @override
@@ -322,8 +340,9 @@ class _BurbujaPregunta extends StatelessWidget {
     clipBehavior: Clip.none,
     children: [
       Positioned(
-        left: puntaArriba ? 52 : -9,
-        top: puntaArriba ? -9 : 54,
+        left: puntaAbajo ? 52 : -9,
+        top: puntaAbajo ? null : 54,
+        bottom: puntaAbajo ? -9 : null,
         child: Transform.rotate(
           angle: .785,
           child: Container(

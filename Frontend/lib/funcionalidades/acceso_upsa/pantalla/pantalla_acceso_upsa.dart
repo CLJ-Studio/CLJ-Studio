@@ -438,6 +438,7 @@ class _BuhosAnimados extends StatelessWidget {
                           repeat: true,
                           frameRate: const FrameRate(24),
                           filterQuality: FilterQuality.low,
+                          backgroundLoading: true,
                         ),
                       ),
                     ),

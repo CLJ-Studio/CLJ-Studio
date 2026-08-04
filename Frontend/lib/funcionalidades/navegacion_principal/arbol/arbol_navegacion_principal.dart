@@ -82,11 +82,20 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
   }
 
   /// Con negocio abierto lleva a administrarlo; sin el, al alta.
+  void _alCerrarLocal(String localId) {
+    locales.quitarLocal(localId);
+    // Los productos del negocio tambien deben desaparecer de Inicio.
+    inicio.cargar();
+  }
+
   void _abrirLocal() {
     if (miLocal.tieneLocalFormal) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => PantallaAdministrarLocal(controlador: miLocal),
+          builder: (_) => PantallaAdministrarLocal(
+            controlador: miLocal,
+            alCerrarLocal: _alCerrarLocal,
+          ),
         ),
       );
       return;
@@ -103,7 +112,10 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
             // Recien creado, se abre directo su administracion.
             Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => PantallaAdministrarLocal(controlador: miLocal),
+                builder: (_) => PantallaAdministrarLocal(
+                  controlador: miLocal,
+                  alCerrarLocal: _alCerrarLocal,
+                ),
               ),
             );
           },
@@ -119,6 +131,7 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
       final pantallas = <Widget>[
         PantallaInicioMarketplace(
           controlador: inicio,
+          mostrarUbicacion: miLocal.tieneLocalFormal,
           alVerLocalesDestacados: () {
             locales.mostrarSoloDestacados();
             controlador.seleccionarIndice(1);
@@ -129,6 +142,7 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
           // Un espacio personal no cuenta: la invitacion a abrir un local
           // formal debe seguir visible para el vendedor casual.
           yaTieneLocal: miLocal.tieneLocalFormal,
+          mostrarUbicacion: miLocal.tieneLocalFormal,
           controladorExterno: locales,
         ),
         ArbolPublicarProducto(miLocal: miLocal),

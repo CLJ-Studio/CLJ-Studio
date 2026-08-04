@@ -13,9 +13,58 @@ import 'pantalla_mi_local.dart';
 /// inventario dentro de una pestaña de publicar. Se llega desde Locales,
 /// que es donde uno piensa en su tienda.
 class PantallaAdministrarLocal extends StatelessWidget {
-  const PantallaAdministrarLocal({required this.controlador, super.key});
+  const PantallaAdministrarLocal({
+    required this.controlador,
+    this.alCerrarLocal,
+    super.key,
+  });
 
   final ControladorMiLocal controlador;
+  final ValueChanged<String>? alCerrarLocal;
+
+  Future<void> _confirmarCierre(BuildContext context) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogo) => AlertDialog(
+        title: const Text('Eliminar mi local'),
+        content: const Text(
+          'El local y sus publicaciones dejarán de aparecer en el catálogo. '
+          'Los pedidos activos se cancelarán, pero el historial entregado se '
+          'conservará.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogo).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogo).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB3453B),
+            ),
+            child: const Text('Eliminar local'),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true) return;
+
+    final localId = controlador.local?.id;
+    try {
+      await controlador.cerrarLocal();
+      if (localId != null) alCerrarLocal?.call(localId);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Tu local fue eliminado.')));
+      Navigator.of(context).pop();
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo eliminar el local.')),
+      );
+    }
+  }
 
   void _editarIdentidad(BuildContext context) {
     showModalBottomSheet<void>(
@@ -35,9 +84,14 @@ class PantallaAdministrarLocal extends StatelessWidget {
             18,
             MediaQuery.viewInsetsOf(hoja).bottom + 24,
           ),
-          child: const ContenidoCentrado(
+          child: ContenidoCentrado(
             anchoMaximo: 620,
-            child: EditorNegocio(),
+            child: EditorNegocio(
+              alEliminar: () {
+                Navigator.of(hoja).pop();
+                _confirmarCierre(context);
+              },
+            ),
           ),
         ),
       ),

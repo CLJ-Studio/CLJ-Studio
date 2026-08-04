@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../estados_aplicacion/indicador_carga.dart';
+import 'pantalla_recortar_portada.dart';
 import 'servicio_imagenes.dart';
 
 /// Galeria de fotos de una publicacion, al estilo de un marketplace.
@@ -50,7 +51,10 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
 
     setState(() => _subiendo = true);
     try {
-      final ruta = await ServicioImagenes.elegirYSubir(etiqueta: 'producto');
+      final ruta = await elegirRecortarYSubirPortada(
+        context,
+        etiqueta: 'producto',
+      );
       if (ruta != null) widget.alCambiar([...widget.rutas, ruta]);
     } catch (_) {
       if (mounted) {

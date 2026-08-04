@@ -110,4 +110,27 @@ class LocalUniversitario {
   /// Imagen de la tarjeta: el logo manda; si no hay, una foto de producto.
   String? get portadaUrl =>
       ServicioImagenes.urlPublica(logoPath ?? portadaPath);
+
+  LocalUniversitario copiarCon({int? vistas}) => LocalUniversitario(
+    id: id,
+    nombre: nombre,
+    categoriaId: categoriaId,
+    categoria: categoria,
+    descripcion: descripcion,
+    calificacion: calificacion,
+    tiempoEstimado: tiempoEstimado,
+    estaAbierto: estaAbierto,
+    costoEntrega: costoEntrega,
+    emoji: emoji,
+    colorHexadecimal: colorHexadecimal,
+    esPersonal: esPersonal,
+    logoPath: logoPath,
+    portadaPath: portadaPath,
+    vendedorNombre: vendedorNombre,
+    vendedorAvatarPath: vendedorAvatarPath,
+    vistas: vistas ?? this.vistas,
+    muestraVistas: muestraVistas,
+    ubicacionCampus: ubicacionCampus,
+    duenoId: duenoId,
+  );
 }

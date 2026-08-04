@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'arbol_aplicacion/arbol_aplicacion.dart';
 import 'configuracion_aplicacion/modo_local.dart';
 import 'configuracion_aplicacion/configuracion_supabase.dart';
+import 'elementos_compartidos/animaciones/precargador_animaciones.dart';
 
 /// Punto de entrada de UPSA Eat.
 void main() async {
@@ -27,6 +28,7 @@ void main() async {
   }
 
   runApp(const ArbolAplicacion());
+  PrecargadorAnimaciones.iniciar();
 }
 
 /// Acceso corto al cliente ya inicializado, usado por los repositorios.

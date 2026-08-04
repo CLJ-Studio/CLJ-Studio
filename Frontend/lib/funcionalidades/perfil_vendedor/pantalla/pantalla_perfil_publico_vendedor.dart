@@ -10,12 +10,12 @@ import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
 class PantallaPerfilPublicoVendedor extends StatefulWidget {
   const PantallaPerfilPublicoVendedor({
     required this.local,
-    required this.publicacionInicial,
+    this.publicacionInicial,
     super.key,
   });
 
   final LocalUniversitario local;
-  final ProductoMarketplace publicacionInicial;
+  final ProductoMarketplace? publicacionInicial;
 
   @override
   State<PantallaPerfilPublicoVendedor> createState() =>
@@ -76,7 +76,11 @@ class _PantallaPerfilPublicoVendedorState
     final dueno = widget.local.duenoId;
 
     if (dueno.isEmpty) {
-      return _ContenidoPerfil(personales: [widget.publicacionInicial]);
+      return _ContenidoPerfil(
+        personales: [
+          if (widget.publicacionInicial != null) widget.publicacionInicial!,
+        ],
+      );
     }
 
     try {
@@ -101,7 +105,9 @@ class _PantallaPerfilPublicoVendedorState
       );
     } catch (_) {
       return _ContenidoPerfil(
-        personales: [widget.publicacionInicial],
+        personales: [
+          if (widget.publicacionInicial != null) widget.publicacionInicial!,
+        ],
         nombre: widget.local.vendedorNombre,
       );
     }
@@ -129,7 +135,12 @@ class _PantallaPerfilPublicoVendedorState
         builder: (context, snapshot) {
           final datos =
               snapshot.data ??
-              _ContenidoPerfil(personales: [widget.publicacionInicial]);
+              _ContenidoPerfil(
+                personales: [
+                  if (widget.publicacionInicial != null)
+                    widget.publicacionInicial!,
+                ],
+              );
           final vistas = datos.vistas;
           // Cada pestaña con lo suyo: sueltas, del local y me gusta.
           final productos = seccion == 0 ? datos.personales : datos.favoritos;

@@ -83,6 +83,7 @@ class _PantallaContactandoVendedorState
                         fit: BoxFit.contain,
                         repeat: true,
                         frameRate: FrameRate.composition,
+                        backgroundLoading: true,
                       ),
                     ),
                     const SizedBox(height: 18),

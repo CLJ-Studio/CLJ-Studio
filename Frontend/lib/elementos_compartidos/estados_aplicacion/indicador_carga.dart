@@ -18,6 +18,7 @@ class IndicadorCarga extends StatelessWidget {
         repeat: true,
         frameRate: const FrameRate(30),
         filterQuality: FilterQuality.medium,
+        backgroundLoading: true,
       ),
     ),
   );

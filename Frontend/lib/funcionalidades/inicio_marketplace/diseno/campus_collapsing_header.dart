@@ -19,6 +19,7 @@ class CampusCollapsingHeader extends StatelessWidget {
     required this.alAbrirPedidos,
     this.avatarUrl,
     this.mostrarCategorias = true,
+    this.mostrarUbicacion = false,
     super.key,
   });
 
@@ -31,6 +32,7 @@ class CampusCollapsingHeader extends StatelessWidget {
   final VoidCallback alAbrirPedidos;
   final String? avatarUrl;
   final bool mostrarCategorias;
+  final bool mostrarUbicacion;
 
   @override
   Widget build(BuildContext context) => SliverPersistentHeader(
@@ -45,6 +47,7 @@ class CampusCollapsingHeader extends StatelessWidget {
       alAbrirPedidos: alAbrirPedidos,
       avatarUrl: avatarUrl,
       mostrarCategorias: mostrarCategorias,
+      mostrarUbicacion: mostrarUbicacion,
     ),
   );
 }
@@ -61,6 +64,7 @@ class CampusFixedHeader extends StatelessWidget {
     required this.alAbrirPedidos,
     this.avatarUrl,
     this.mostrarCategorias = true,
+    this.mostrarUbicacion = false,
     super.key,
   });
 
@@ -73,6 +77,7 @@ class CampusFixedHeader extends StatelessWidget {
   final VoidCallback alAbrirPedidos;
   final String? avatarUrl;
   final bool mostrarCategorias;
+  final bool mostrarUbicacion;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -87,6 +92,7 @@ class CampusFixedHeader extends StatelessWidget {
       alAbrirPedidos: alAbrirPedidos,
       avatarUrl: avatarUrl,
       mostrarCategorias: mostrarCategorias,
+      mostrarUbicacion: mostrarUbicacion,
     ).build(context, 0, false),
   );
 }
@@ -102,6 +108,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.alAbrirPedidos,
     this.avatarUrl,
     this.mostrarCategorias = true,
+    this.mostrarUbicacion = false,
   });
 
   final String nombre;
@@ -113,6 +120,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   final VoidCallback alAbrirPedidos;
   final String? avatarUrl;
   final bool mostrarCategorias;
+  final bool mostrarUbicacion;
 
   Future<void> _elegirUbicacion(BuildContext context) async {
     final elegida = await showModalBottomSheet<String>(
@@ -231,64 +239,69 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                               avatarUrl: avatarUrl,
                             ),
                             const SizedBox(width: 11),
-                            Expanded(
-                              child: AnimatedBuilder(
-                                animation: UbicacionComprador.instancia,
-                                builder: (context, _) => InkWell(
-                                  borderRadius: BorderRadius.circular(12),
-                                  onTap: () => _elegirUbicacion(context),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 7,
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Ubicación',
-                                          style: TextStyle(
-                                            color: secundario,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.location_on_outlined,
-                                              color: Color(0xFF5C8A63),
-                                              size: 17,
+                            if (mostrarUbicacion)
+                              Expanded(
+                                child: AnimatedBuilder(
+                                  animation: UbicacionComprador.instancia,
+                                  builder: (context, _) => InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () => _elegirUbicacion(context),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 7,
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Ubicación',
+                                            style: TextStyle(
+                                              color: secundario,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
                                             ),
-                                            const SizedBox(width: 3),
-                                            Flexible(
-                                              child: Text(
-                                                UbicacionComprador
-                                                    .instancia
-                                                    .etiqueta,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  color: texto,
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w800,
+                                          ),
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.location_on_outlined,
+                                                color: Color(0xFF5C8A63),
+                                                size: 17,
+                                              ),
+                                              const SizedBox(width: 3),
+                                              Flexible(
+                                                child: Text(
+                                                  UbicacionComprador
+                                                      .instancia
+                                                      .etiqueta,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    color: texto,
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            const Icon(
-                                              Icons.keyboard_arrow_down_rounded,
-                                              color: Color(0xFF5C8A63),
-                                              size: 19,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                              const Icon(
+                                                Icons
+                                                    .keyboard_arrow_down_rounded,
+                                                color: Color(0xFF5C8A63),
+                                                size: 19,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
+                              )
+                            else
+                              const Spacer(),
                             const BotonCampana(),
                             const SizedBox(width: 5),
                             _AccionCircular(
@@ -374,7 +387,8 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
       oldDelegate.categorias != categorias ||
       oldDelegate.nombre != nombre ||
       oldDelegate.avatarUrl != avatarUrl ||
-      oldDelegate.mostrarCategorias != mostrarCategorias;
+      oldDelegate.mostrarCategorias != mostrarCategorias ||
+      oldDelegate.mostrarUbicacion != mostrarUbicacion;
 }
 
 class _AvatarEncabezado extends StatelessWidget {

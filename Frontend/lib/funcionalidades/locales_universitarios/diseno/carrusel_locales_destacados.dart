@@ -40,53 +40,67 @@ class _CarruselLocalesDestacadosState extends State<CarruselLocalesDestacados> {
 
     if (visibles.isEmpty) return const SizedBox.shrink();
 
-    return SizedBox(
-      height: 225,
-      child: PageView.builder(
-        controller: _controlador,
-        clipBehavior: Clip.none,
-        physics: const PageScrollPhysics(parent: BouncingScrollPhysics()),
-        itemCount: visibles.length,
-        onPageChanged: (pagina) => setState(() => _paginaActiva = pagina),
-        itemBuilder: (context, indice) {
-          final local = visibles[indice];
-          return AnimatedBuilder(
-            animation: _controlador,
-            builder: (context, child) {
-              final pagina = _controlador.hasClients
-                  ? (_controlador.page ?? _paginaActiva.toDouble())
-                  : _paginaActiva.toDouble();
-              final distancia = (pagina - indice).abs().clamp(0.0, 1.0);
-              final escala = 1 - distancia * .08;
-              final opacidad = 1 - distancia * .28;
+    return LayoutBuilder(
+      builder: (context, restricciones) {
+        // Cada pagina ocupa el 86 % del carrusel y lleva 6 px por lado.
+        // La foto usa exactamente el mismo 4:3 del editor (1200 x 900);
+        // el pie oscuro se suma por fuera y no altera ni recorta la portada.
+        final anchoTarjeta = restricciones.maxWidth * .86 - 12;
+        // 68 deja margen para escalado de texto y redondeos fraccionarios
+        // del navegador, sin alterar el marco 4:3 de la fotografía.
+        final alto = anchoTarjeta * 3 / 4 + 68;
+        return SizedBox(
+          height: alto,
+          child: PageView.builder(
+            controller: _controlador,
+            clipBehavior: Clip.none,
+            physics: const PageScrollPhysics(parent: BouncingScrollPhysics()),
+            itemCount: visibles.length,
+            onPageChanged: (pagina) => setState(() => _paginaActiva = pagina),
+            itemBuilder: (context, indice) {
+              final local = visibles[indice];
+              return AnimatedBuilder(
+                animation: _controlador,
+                builder: (context, child) {
+                  final pagina = _controlador.hasClients
+                      ? (_controlador.page ?? _paginaActiva.toDouble())
+                      : _paginaActiva.toDouble();
+                  final distancia = (pagina - indice).abs().clamp(0.0, 1.0);
+                  final escala = 1 - distancia * .08;
+                  final opacidad = 1 - distancia * .28;
 
-              return Transform.scale(
-                scale: escala,
-                child: Opacity(opacity: opacidad, child: child),
+                  return Transform.scale(
+                    scale: escala,
+                    child: Opacity(opacity: opacidad, child: child),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
+                  child: OpenContainer<void>(
+                    transitionDuration: const Duration(milliseconds: 580),
+                    transitionType: ContainerTransitionType.fade,
+                    closedElevation: 8,
+                    openElevation: 0,
+                    closedColor: Colors.transparent,
+                    openColor: Theme.of(context).scaffoldBackgroundColor,
+                    closedShape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    openShape: const RoundedRectangleBorder(),
+                    closedBuilder: (_, abrir) =>
+                        _TarjetaDestacada(local: local, alAbrir: abrir),
+                    openBuilder: (context, _) =>
+                        widget.construirDetalle(context, local),
+                  ),
+                ),
               );
             },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              child: OpenContainer<void>(
-                transitionDuration: const Duration(milliseconds: 580),
-                transitionType: ContainerTransitionType.fade,
-                closedElevation: 8,
-                openElevation: 0,
-                closedColor: Colors.transparent,
-                openColor: Theme.of(context).scaffoldBackgroundColor,
-                closedShape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                openShape: const RoundedRectangleBorder(),
-                closedBuilder: (_, abrir) =>
-                    _TarjetaDestacada(local: local, alAbrir: abrir),
-                openBuilder: (context, _) =>
-                    widget.construirDetalle(context, local),
-              ),
-            ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -108,20 +122,18 @@ class _TarjetaDestacada extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // La foto domina la tarjeta, igual que en la referencia.
-          Expanded(
-            child: SizedBox(
-              width: double.infinity,
-              child: ColoredBox(
-                color: Color(local.colorHexadecimal),
-                child: switch (local.portadaUrl) {
-                  final String url when url.isNotEmpty => Image.network(
-                    url,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => _Emoji(local: local),
-                  ),
-                  _ => _Emoji(local: local),
-                },
-              ),
+          AspectRatio(
+            aspectRatio: 4 / 3,
+            child: ColoredBox(
+              color: Color(local.colorHexadecimal),
+              child: switch (local.portadaUrl) {
+                final String url when url.isNotEmpty => Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => _Emoji(local: local),
+                ),
+                _ => _Emoji(local: local),
+              },
             ),
           ),
           // Nombre, vistas y ubicación permanecen en el pie oscuro.

@@ -25,6 +25,8 @@ class ListaLocalesUniversitarios extends StatelessWidget {
     return LayoutBuilder(
       builder: (_, restricciones) {
         final columnas = restricciones.maxWidth >= 980 ? 2 : 1;
+        final anchoTarjeta =
+            (restricciones.maxWidth - 18 * (columnas - 1)) / columnas;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -32,7 +34,7 @@ class ListaLocalesUniversitarios extends StatelessWidget {
             crossAxisCount: columnas,
             crossAxisSpacing: 18,
             mainAxisSpacing: 18,
-            mainAxisExtent: columnas == 1 ? 355 : 330,
+            mainAxisExtent: anchoTarjeta * 3 / 4 + 68,
           ),
           itemCount: locales.length,
           itemBuilder: (_, indice) {
@@ -45,7 +47,7 @@ class ListaLocalesUniversitarios extends StatelessWidget {
               closedColor: Colors.transparent,
               openColor: Theme.of(context).scaffoldBackgroundColor,
               closedShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(34),
+                borderRadius: BorderRadius.circular(9),
               ),
               openShape: const RoundedRectangleBorder(),
               closedBuilder: (_, abrir) =>

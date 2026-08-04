@@ -114,6 +114,15 @@ class ControladorLocales extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Retira inmediatamente un negocio que acaba de cerrarse en este cliente.
+  /// La recarga de Supabase lo confirma después, pero la interfaz no conserva
+  /// una tarjeta obsoleta mientras llega el evento en tiempo real.
+  void quitarLocal(String localId) {
+    _todos = _todos.where((local) => local.id != localId).toList();
+    locales = _filtrar();
+    notifyListeners();
+  }
+
   List<LocalUniversitario> _filtrar() {
     final resultado = _todos.where((local) {
       // Los espacios personales no son negocios: quedan fuera de esta seccion,

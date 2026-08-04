@@ -12,7 +12,6 @@ import '../../carrito_compras/pantalla/pantalla_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
-import 'pantalla_detalle_local.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../../visualizaciones/indicador_vistas.dart';
 import '../../visualizaciones/servicio_visualizaciones.dart';
@@ -781,11 +780,9 @@ class _Vendedor extends StatelessWidget {
   /// Cuando es falso se pinta igual pero sin responder al toque.
   final bool navegable;
 
-  /// Quien vende siempre tiene nombre y cara. Si es un negocio manda la
-  /// marca y debajo va la persona detras; si vende por su cuenta manda su
-  /// nombre y no hace falta segunda linea.
-  String? get _subtitulo =>
-      local.esPersonal ? 'Vende por su cuenta' : local.personaDetras;
+  /// El bloque siempre representa a la persona; la marca queda como contexto.
+  String get _subtitulo =>
+      local.esPersonal ? 'Vende por su cuenta' : local.nombreVisible;
 
   @override
   Widget build(BuildContext context) {
@@ -795,21 +792,14 @@ class _Vendedor extends StatelessWidget {
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      // Cada cosa lleva a lo suyo: si el producto es de un negocio, se abre
-      // el local con su catalogo; si lo vende alguien por su cuenta, no hay
-      // local que abrir y se va a su perfil. Antes siempre iba al perfil,
-      // asi que tocar el nombre de una tienda llevaba a una pantalla de
-      // persona que no tenia ni carrera ni sentido.
       onTap: !navegable
           ? null
           : () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => local.esPersonal
-                    ? PantallaPerfilPublicoVendedor(
-                        local: local,
-                        publicacionInicial: producto,
-                      )
-                    : PantallaDetalleLocal(local: local),
+                builder: (_) => PantallaPerfilPublicoVendedor(
+                  local: local,
+                  publicacionInicial: producto,
+                ),
               ),
             ),
       child: Padding(
@@ -850,23 +840,18 @@ class _Vendedor extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Manda la marca si hay negocio, y la persona si vende
-                  // por su cuenta. Al reves salia el nombre de la persona
-                  // dos veces y la tienda no aparecia por ningun lado.
                   Text(
-                    local.nombreVisible,
+                    local.vendedorNombre,
                     style: TextStyle(
                       color: colorContenido,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  if (_subtitulo case final String texto) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      texto,
-                      style: TextStyle(color: colorContenido, fontSize: 12),
-                    ),
-                  ],
+                  const SizedBox(height: 2),
+                  Text(
+                    _subtitulo,
+                    style: TextStyle(color: colorContenido, fontSize: 12),
+                  ),
                 ],
               ),
             ),

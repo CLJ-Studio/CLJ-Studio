@@ -43,6 +43,34 @@ class RepositorioInicioMarketplace {
     return filas.map(LocalUniversitario.desdeMapa).toList();
   }
 
+  /// Solo negocios formales, ordenados por visitantes unicos del dia.
+  Future<List<LocalUniversitario>> obtenerLocalesMasVistos() async {
+    final locales = await obtenerLocales();
+    List<dynamic> ranking;
+    try {
+      ranking = await _cliente.rpc<List<dynamic>>(
+        'locales_mas_vistos_hoy',
+        params: {'p_limite': 20},
+      );
+    } on PostgrestException {
+      // Compatibilidad mientras la migracion diaria aun no fue desplegada.
+      final formales = locales.where((local) => !local.esPersonal).toList()
+        ..sort((a, b) => b.vistas.compareTo(a.vistas));
+      return formales.take(20).toList(growable: false);
+    }
+    final porId = {for (final local in locales) local.id: local};
+    return ranking
+        .cast<Map<String, dynamic>>()
+        .map(
+          (fila) => porId[fila['id'] as String]?.copiarCon(
+            vistas: (fila['vistas'] as num).toInt(),
+          ),
+        )
+        .whereType<LocalUniversitario>()
+        .where((local) => !local.esPersonal)
+        .toList(growable: false);
+  }
+
   /// Todo lo publicado en el campus, de todos los vendedores.
   ///
   /// El inicio muestra publicaciones y no locales: con locales, quien
@@ -87,24 +115,58 @@ class RepositorioInicioMarketplace {
   /// Se consulta por vistas en el servidor para no limitarlo a los 120
   /// productos recientes que forman el feed principal.
   Future<List<ProductoMarketplace>> obtenerPublicacionesPopulares() async {
-    final (locales, filas) = await (
-      obtenerLocales(),
-      _cliente
+    final locales = await obtenerLocales();
+    List<dynamic> ranking;
+    try {
+      ranking = await _cliente.rpc<List<dynamic>>(
+        'productos_populares_hoy',
+        params: {'p_limite': 20},
+      );
+    } on PostgrestException {
+      // La portada sigue funcionando con el contador anterior hasta que la
+      // migracion del ranking diario este disponible en Supabase.
+      final filas = await _cliente
           .from('products')
           .select(camposProducto)
           .eq('is_available', true)
           .order('view_count', ascending: false)
-          .limit(20),
-    ).wait;
+          .limit(20);
+      final porId = {for (final local in locales) local.id: local};
+      return filas
+          .map(
+            (fila) => ProductoMarketplace.desdeMapa(
+              fila,
+              local: porId[fila['store_id'] as String],
+            ),
+          )
+          .where((publicacion) => publicacion.local != null)
+          .toList(growable: false);
+    }
+
+    final filasRanking = ranking.cast<Map<String, dynamic>>();
+    if (filasRanking.isEmpty) return const [];
+    final ids = filasRanking.map((fila) => fila['id'] as String).toList();
+    final vistasPorId = {
+      for (final fila in filasRanking)
+        fila['id'] as String: (fila['vistas'] as num).toInt(),
+    };
+    final filas = await _cliente
+        .from('products')
+        .select(camposProducto)
+        .inFilter('id', ids)
+        .eq('is_available', true);
 
     final porId = {for (final local in locales) local.id: local};
-    return filas
-        .map(
-          (fila) => ProductoMarketplace.desdeMapa(
-            fila,
-            local: porId[fila['store_id'] as String],
-          ),
-        )
+    final porProducto = {
+      for (final fila in filas)
+        fila['id'] as String: ProductoMarketplace.desdeMapa(
+          fila,
+          local: porId[fila['store_id'] as String],
+        ).copiarCon(vistas: vistasPorId[fila['id'] as String]),
+    };
+    return ids
+        .map((id) => porProducto[id])
+        .whereType<ProductoMarketplace>()
         .where((publicacion) => publicacion.local != null)
         .toList();
   }

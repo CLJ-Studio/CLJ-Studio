@@ -4,16 +4,22 @@ import '../../inicio_marketplace/modelos/local_universitario.dart';
 
 /// Hero visual del detalle del local: su logo real o un lienzo con su emoji.
 class EncabezadoDetalleLocal extends StatelessWidget {
-  const EncabezadoDetalleLocal({required this.local, super.key});
+  const EncabezadoDetalleLocal({
+    required this.local,
+    required this.alAbrirPerfil,
+    super.key,
+  });
   final LocalUniversitario local;
+  final VoidCallback alAbrirPerfil;
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      SizedBox(
-        height: 210,
-        width: double.infinity,
+      AspectRatio(
+        // Es el mismo marco usado antes de subir la portada (1200 x 900).
+        // Así el detalle muestra exactamente el encuadre que eligió la persona.
+        aspectRatio: 4 / 3,
         child: switch (local.logoUrl) {
           final String url => Image.network(
             url,
@@ -37,19 +43,9 @@ class EncabezadoDetalleLocal extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              // El nombre de la persona detras del negocio: en un campus la
-              // confianza viene de saber a quien le estas comprando.
-              if (!local.esPersonal && local.vendedorNombre.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  'Por ${local.vendedorNombre}',
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
+              _AccesoVendedor(local: local, alAbrir: alAbrirPerfil),
+              const SizedBox(height: 10),
               Text(local.descripcion),
               const SizedBox(height: 10),
               Text(
@@ -70,6 +66,58 @@ class EncabezadoDetalleLocal extends StatelessWidget {
         ),
       ),
     ],
+  );
+}
+
+class _AccesoVendedor extends StatelessWidget {
+  const _AccesoVendedor({required this.local, required this.alAbrir});
+
+  final LocalUniversitario local;
+  final VoidCallback alAbrir;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: alAbrir,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: .12),
+                shape: BoxShape.circle,
+              ),
+              child: switch (local.vendedorAvatarUrl) {
+                final String url => Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Center(child: Text(local.emoji)),
+                ),
+                _ => Center(child: Text(local.emoji)),
+              },
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Text(
+                local.vendedorNombre,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded),
+          ],
+        ),
+      ),
+    ),
   );
 }
 

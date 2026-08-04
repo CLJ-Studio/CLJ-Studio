@@ -20,6 +20,7 @@ class PantallaLocalesUniversitarios extends StatefulWidget {
     required this.yaTieneLocal,
     this.controladorExterno,
     this.mostrarEncabezado = true,
+    this.mostrarUbicacion = false,
     super.key,
   });
 
@@ -27,6 +28,7 @@ class PantallaLocalesUniversitarios extends StatefulWidget {
   final bool yaTieneLocal;
   final ControladorLocales? controladorExterno;
   final bool mostrarEncabezado;
+  final bool mostrarUbicacion;
 
   @override
   State<PantallaLocalesUniversitarios> createState() =>
@@ -71,6 +73,7 @@ class _PantallaLocalesUniversitariosState
                   nombre: SesionUsuario.instancia.primerNombre,
                   avatarUrl: SesionUsuario.instancia.perfil?.avatarUrl,
                   mostrarCategorias: false,
+                  mostrarUbicacion: widget.mostrarUbicacion,
                   categorias: controlador.categorias,
                   categoriaId: controlador.categoriaId,
                   alBuscar: controlador.buscar,
@@ -85,16 +88,19 @@ class _PantallaLocalesUniversitariosState
                   ),
                 ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(18, 24, 18, 120),
+                padding: const EdgeInsets.fromLTRB(18, 4, 18, 120),
                 sliver: SliverToBoxAdapter(
                   child: ContenidoCentrado(
                     anchoMaximo: 1000,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        InvitacionAbrirLocal(
-                          alPresionar: widget.alCrearLocal,
-                          yaTieneLocal: widget.yaTieneLocal,
+                        Transform.translate(
+                          offset: const Offset(-18, 0),
+                          child: InvitacionAbrirLocal(
+                            alPresionar: widget.alCrearLocal,
+                            yaTieneLocal: widget.yaTieneLocal,
+                          ),
                         ),
                         if (controlador.soloDestacados) ...[
                           const SizedBox(height: 28),
@@ -290,28 +296,34 @@ class _SinLocales extends StatelessWidget {
   const _SinLocales();
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 60),
-    child: Column(
-      children: [
-        const Icon(
-          Icons.storefront_outlined,
-          size: 46,
-          color: Color(0xFFB8BDB8),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          'Todavía no hay locales aquí',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Puedes ser el primero en abrir el tuyo.',
-          style: TextStyle(color: Color(0xFF7B817D)),
-        ),
-      ],
+  Widget build(BuildContext context) => SizedBox(
+    width: double.infinity,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 60),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.storefront_outlined,
+            size: 46,
+            color: Color(0xFFB8BDB8),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Todavía no hay locales aquí',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Puedes ser el primero en abrir el tuyo.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xFF7B817D)),
+          ),
+        ],
+      ),
     ),
   );
 }

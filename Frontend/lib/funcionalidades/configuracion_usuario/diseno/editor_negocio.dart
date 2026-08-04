@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../elementos_compartidos/imagenes/pantalla_recortar_portada.dart';
 import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import '../../mi_local/datos/repositorio_mi_local.dart';
 
@@ -12,7 +13,9 @@ import '../../mi_local/datos/repositorio_mi_local.dart';
 /// casual (su espacio personal) no ve nada de esto: no tiene marca que
 /// mantener, y llenarle la pantalla de campos vacios seria ruido.
 class EditorNegocio extends StatefulWidget {
-  const EditorNegocio({super.key});
+  const EditorNegocio({this.alEliminar, super.key});
+
+  final VoidCallback? alEliminar;
 
   @override
   State<EditorNegocio> createState() => _EditorNegocioState();
@@ -67,7 +70,7 @@ class _EditorNegocioState extends State<EditorNegocio> {
   Future<void> _elegirLogo() async {
     setState(() => _subiendoLogo = true);
     try {
-      final ruta = await ServicioImagenes.elegirYSubir(etiqueta: 'logo');
+      final ruta = await elegirRecortarYSubirPortada(context, etiqueta: 'logo');
       if (ruta != null) setState(() => _logoPath = ruta);
     } catch (_) {
       if (mounted) setState(() => _aviso = 'No se pudo subir el logo.');
@@ -169,11 +172,13 @@ class _EditorNegocioState extends State<EditorNegocio> {
           ),
         ],
         const SizedBox(height: 14),
-        OutlinedButton.icon(
+        FilledButton.icon(
           onPressed: _guardando ? null : _guardar,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF55785A),
-            side: const BorderSide(color: Color(0xFF6F9D76), width: 1.4),
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: const Color(0xFF343434),
+            disabledForegroundColor: Colors.white70,
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(vertical: 13),
           ),
@@ -189,6 +194,24 @@ class _EditorNegocioState extends State<EditorNegocio> {
             style: TextStyle(fontWeight: FontWeight.w800),
           ),
         ),
+        if (widget.alEliminar != null) ...[
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _guardando ? null : widget.alEliminar,
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFFB3453B),
+              side: const BorderSide(color: Color(0xFFE1E1E1)),
+              shape: const StadiumBorder(),
+              padding: const EdgeInsets.symmetric(vertical: 13),
+            ),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text(
+              'Eliminar mi local',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ),
+        ],
       ],
     );
   }

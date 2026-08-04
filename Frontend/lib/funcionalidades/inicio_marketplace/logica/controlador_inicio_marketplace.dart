@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../datos/repositorio_inicio_marketplace.dart';
 import '../modelos/producto_marketplace.dart';
+import '../modelos/local_universitario.dart';
 import 'estado_inicio_marketplace.dart';
 
 /// Feed de publicaciones del campus, con busqueda y filtro por categoria.
@@ -20,6 +21,7 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   /// Catalogo completo sin filtrar; la base de cada filtrado.
   List<ProductoMarketplace> _todas = const [];
   List<ProductoMarketplace> _populares = const [];
+  List<LocalUniversitario> _localesMasVistos = const [];
   static const _tamanoPagina = 10;
   int _limiteVisible = _tamanoPagina;
 
@@ -27,9 +29,11 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   List<ProductoMarketplace> get catalogoCompleto =>
       _todas.isEmpty ? estado.publicaciones : List.unmodifiable(_todas);
 
-  /// Ranking global ordenado en la base únicamente por cantidad de vistas.
+  /// Ranking del dia, ordenado en la base por visitantes unicos.
   List<ProductoMarketplace> get publicacionesPopulares =>
       List.unmodifiable(_populares);
+  List<LocalUniversitario> get localesMasVistos =>
+      List.unmodifiable(_localesMasVistos);
 
   /// Indica si el filtro actual todavía tiene otra tanda de publicaciones.
   bool get hayMasPublicaciones =>
@@ -67,13 +71,15 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     );
 
     try {
-      final (categorias, publicaciones, populares) = await (
+      final (categorias, publicaciones, populares, localesMasVistos) = await (
         repositorio.obtenerCategorias(),
         repositorio.obtenerPublicaciones(),
         repositorio.obtenerPublicacionesPopulares(),
+        repositorio.obtenerLocalesMasVistos(),
       ).wait;
       _todas = publicaciones;
       _populares = populares;
+      _localesMasVistos = localesMasVistos;
       await esperaVisual;
       estado = estado.copiarCon(
         categorias: categorias,
@@ -94,12 +100,14 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   /// asi que la lista debe cambiar sin parpadear.
   Future<void> _recargarEnSilencio() async {
     try {
-      final (publicaciones, populares) = await (
+      final (publicaciones, populares, localesMasVistos) = await (
         repositorio.obtenerPublicaciones(),
         repositorio.obtenerPublicacionesPopulares(),
+        repositorio.obtenerLocalesMasVistos(),
       ).wait;
       _todas = publicaciones;
       _populares = populares;
+      _localesMasVistos = localesMasVistos;
       estado = estado.copiarCon(publicaciones: _aplicarFiltros());
       notifyListeners();
     } catch (_) {
@@ -139,12 +147,19 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     final consulta = estado.busqueda;
 
     return _todas.where((publicacion) {
-      // La categoria vive en el local que publica.
-      // Por la categoria de la publicacion, no la de su tienda: el espacio
-      // personal nace sin ninguna, asi que antes nada de lo publicado a
-      // titulo propio aparecia jamas al filtrar.
-      final coincideCategoria =
-          categoria == 'todas' || publicacion.categoriaEfectiva == categoria;
+      final local = publicacion.local;
+      // "Comida" es tambien un agrupador de restaurantes: debe enseñar todo
+      // su catalogo, aunque un producto concreto haya quedado bajo "Otros".
+      // A la vez conserva las publicaciones personales marcadas como comida.
+      final coincideCategoria = switch (categoria) {
+        'todas' => true,
+        'comida' =>
+          publicacion.categoriaEfectiva == 'comida' ||
+              (local != null &&
+                  !local.esPersonal &&
+                  local.categoriaId == 'comida'),
+        _ => publicacion.categoriaEfectiva == categoria,
+      };
 
       final coincideTexto =
           consulta.isEmpty ||
