@@ -26,6 +26,7 @@ class _PantallaContactandoVendedorState
   static const _repositorio = RepositorioPedidos();
 
   late final Stream<Pedido?> _pedido = _repositorio.escuchar(widget.pedidoId);
+  bool _cancelandoSolicitud = false;
 
   /// Salir NO cancela nada: el pedido sigue vivo esperando respuesta. Para
   /// cancelar de verdad esta el boton en Pedidos.
@@ -41,6 +42,56 @@ class _PantallaContactandoVendedorState
         builder: (_) => PantallaDetallePedido(pedidoId: pedidoId),
       ),
     );
+  }
+
+  Future<void> _cancelarSolicitud() async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(
+          Icons.close_rounded,
+          color: Color(0xFFB3453B),
+          size: 30,
+        ),
+        title: const Text('¿Cancelar solicitud?', textAlign: TextAlign.center),
+        content: const Text(
+          'El vendedor dejará de recibir este pedido.',
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Volver'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB3453B),
+            ),
+            child: const Text('Sí, cancelar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmado != true || !mounted) return;
+    setState(() => _cancelandoSolicitud = true);
+    try {
+      await _repositorio.cancelar(widget.pedidoId);
+      if (mounted) _volver();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _cancelandoSolicitud = false);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo cancelar. Intenta nuevamente.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    }
   }
 
   @override
@@ -61,7 +112,9 @@ class _PantallaContactandoVendedorState
 
           // El vendedor ya respondio: se pasa al detalle, que muestra el
           // resultado y habilita WhatsApp si fue aceptado.
-          if (pedido != null && pedido.estado != EstadoPedido.solicitado) {
+          if (!_cancelandoSolicitud &&
+              pedido != null &&
+              pedido.estado != EstadoPedido.solicitado) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _abrirDetalle(pedido.id);
             });
@@ -69,15 +122,15 @@ class _PantallaContactandoVendedorState
 
           return Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+              padding: const EdgeInsets.fromLTRB(24, 4, 24, 32),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 500),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(
-                      width: 310,
-                      height: 310,
+                      width: 240,
+                      height: 240,
                       child: Lottie.asset(
                         'assets/animations/contactando-vendedor.json',
                         fit: BoxFit.contain,
@@ -86,9 +139,9 @@ class _PantallaContactandoVendedorState
                         backgroundLoading: true,
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 8),
                     Text(
-                      'Contactando con el vendedor',
+                      'Esperando al vendedor',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
@@ -96,10 +149,9 @@ class _PantallaContactandoVendedorState
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     const Text(
-                      'Enviamos tu pedido y estamos esperando que el vendedor '
-                      'lo acepte.',
+                      'Tu solicitud ya fue enviada.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Color(0xFF747B76),
@@ -107,31 +159,54 @@ class _PantallaContactandoVendedorState
                         height: 1.45,
                       ),
                     ),
+                    const SizedBox(height: 24),
+                    _EstadoSolicitud(venceEn: pedido?.venceEn),
                     const SizedBox(height: 28),
-                    const _IndicadorEspera(),
-                    if (pedido != null) ...[
-                      const SizedBox(height: 16),
-                      _CuentaRegresiva(venceEn: pedido.venceEn),
-                    ],
-                    const SizedBox(height: 26),
-                    // Deja claro que salir no pierde el pedido: antes el
-                    // boton de atras lo cancelaba y nadie se atrevia a tocarlo.
-                    const Text(
-                      'Puedes seguir usando la app mientras tanto. Tu pedido '
-                      'te espera en Pedidos.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xFF9AA29C), fontSize: 13),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton.icon(
+                        onPressed: _volver,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF5C8A63),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        icon: const Icon(Icons.explore_outlined, size: 20),
+                        label: const Text(
+                          'Seguir explorando',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 10),
-                    TextButton.icon(
-                      onPressed: _volver,
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF55785A),
-                      ),
-                      icon: const Icon(Icons.explore_outlined, size: 18),
-                      label: const Text(
-                        'Seguir explorando',
-                        style: TextStyle(fontWeight: FontWeight.w800),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: TextButton(
+                        onPressed: _cancelandoSolicitud
+                            ? null
+                            : _cancelarSolicitud,
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFB3453B),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: _cancelandoSolicitud
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFFB3453B),
+                                ),
+                              )
+                            : const Text(
+                                'Cancelar solicitud',
+                                style: TextStyle(fontWeight: FontWeight.w800),
+                              ),
                       ),
                     ),
                   ],
@@ -145,27 +220,47 @@ class _PantallaContactandoVendedorState
   );
 }
 
-/// Refuerza visualmente que la solicitud continúa pendiente.
-class _IndicadorEspera extends StatelessWidget {
-  const _IndicadorEspera();
+/// Reune estado y tiempo de respuesta sin repetir explicaciones.
+class _EstadoSolicitud extends StatelessWidget {
+  const _EstadoSolicitud({this.venceEn});
+
+  final DateTime? venceEn;
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .1),
+      ),
     ),
-    child: const Row(
-      mainAxisSize: MainAxisSize.min,
+    child: Row(
       children: [
-        SizedBox(width: 17, height: 17, child: IndicadorCarga(tamanio: 17)),
-        SizedBox(width: 10),
-        Text(
-          'Esperando confirmación',
-          style: TextStyle(
-            color: Color(0xFF527A59),
-            fontWeight: FontWeight.w800,
+        const SizedBox(
+          width: 19,
+          height: 19,
+          child: IndicadorCarga(tamanio: 19),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Esperando confirmación',
+                style: TextStyle(
+                  color: Color(0xFF527A59),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (venceEn != null) ...[
+                const SizedBox(height: 2),
+                _CuentaRegresiva(venceEn: venceEn!),
+              ],
+            ],
           ),
         ),
       ],
@@ -184,14 +279,14 @@ class _CuentaRegresiva extends StatelessWidget {
     final restante = venceEn.difference(DateTime.now());
     if (restante.isNegative) {
       return const Text(
-        'El tiempo de respuesta terminó.',
-        style: TextStyle(fontSize: 12),
+        'Tiempo de respuesta finalizado',
+        style: TextStyle(color: Color(0xFF747B76), fontSize: 12),
       );
     }
 
     return Text(
-      'El vendedor tiene ${restante.inMinutes + 1} min para responder.',
-      style: const TextStyle(fontSize: 12),
+      '${restante.inMinutes + 1} min restantes',
+      style: const TextStyle(color: Color(0xFF747B76), fontSize: 12),
     );
   }
 }

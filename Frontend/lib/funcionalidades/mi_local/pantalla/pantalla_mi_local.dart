@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../finanzas_local/pantalla/pantalla_finanzas_local.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../../visualizaciones/indicador_vistas.dart';
 import '../diseno/dialogo_producto.dart';
@@ -153,6 +154,16 @@ class PantallaMiLocal extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (controlador.local case final local?) ...[
+              _AccesoFinanzas(
+                alTocar: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => PantallaFinanzasLocal(localId: local.id),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 22),
+            ],
             _Encabezado(controlador: controlador),
             const SizedBox(height: 18),
             _TarjetaUbicacion(
@@ -198,6 +209,63 @@ class PantallaMiLocal extends StatelessWidget {
                   alEliminar: () => _confirmarBorrado(context, indice),
                 ),
               ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _AccesoFinanzas extends StatelessWidget {
+  const _AccesoFinanzas({required this.alTocar});
+
+  final VoidCallback alTocar;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: const Color(0xFF173B2A),
+    borderRadius: BorderRadius.circular(22),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: alTocar,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(17, 16, 13, 16),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(
+                Icons.insights_rounded,
+                color: Color(0xFF9AD6A5),
+              ),
+            ),
+            const SizedBox(width: 13),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Mis finanzas',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    'Ventas, rendimiento y visitas',
+                    style: TextStyle(color: Color(0xBFFFFFFF), fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Colors.white70),
           ],
         ),
       ),

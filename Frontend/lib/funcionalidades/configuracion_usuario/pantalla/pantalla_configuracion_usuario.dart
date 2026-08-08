@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../instalacion_app/diseno/opcion_instalar_app.dart';
 import '../../instalacion_app/logica/controlador_instalacion.dart';
 import '../diseno/opcion_mis_publicaciones.dart';
@@ -76,7 +75,7 @@ class _PantallaConfiguracionUsuarioState
                   const SizedBox(height: 24),
                   BotonCerrarSesion(
                     alPresionar: () {
-                      if (ModoLocal.activo) {
+                      if (widget.alCerrarSesion != null) {
                         widget.alCerrarSesion?.call();
                         return;
                       }

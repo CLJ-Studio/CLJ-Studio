@@ -4,7 +4,6 @@ import '../../pedidos/datos/repositorio_pedidos.dart';
 import '../diseno/boton_continuar_pedido.dart';
 import '../diseno/lista_productos_carrito.dart';
 import '../diseno/resumen_compra.dart';
-import '../diseno/selector_punto_entrega.dart';
 import '../logica/controlador_carrito_compras.dart';
 import 'pantalla_contactando_vendedor.dart';
 
@@ -19,24 +18,33 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
   // Singleton: el carrito se llena desde el catalogo, en otra pantalla.
   final controlador = ControladorCarritoCompras.instancia;
   bool _enviando = false;
-
-  /// Zona del campus y detalle exacto, que viajan juntos al pedido.
-  String? _zona;
-  final _referencia = TextEditingController();
-
-  /// "Bloque C · mesas del fondo". La zona normaliza el sitio y la referencia
-  /// aporta lo que de verdad cambia; sin zona no se manda nada, porque un
-  /// detalle suelto no le dice al vendedor adónde ir.
-  String? get _puntoDeEntrega {
-    if (_zona == null) return null;
-    final detalle = _referencia.text.trim();
-    return detalle.isEmpty ? _zona : '$_zona · $detalle';
-  }
+  bool _buscandoSolicitud = true;
 
   @override
-  void dispose() {
-    _referencia.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _recuperarSolicitudPendiente();
+  }
+
+  /// Si el usuario salió de la espera para explorar, entrar al carrito debe
+  /// devolverlo a la misma solicitud y no mostrarle un carrito vacío.
+  Future<void> _recuperarSolicitudPendiente() async {
+    try {
+      final pedido = await const RepositorioPedidos()
+          .solicitudPendienteComprador();
+      if (!mounted) return;
+      if (pedido != null) {
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => PantallaContactandoVendedor(pedidoId: pedido.id),
+          ),
+        );
+        return;
+      }
+    } catch (_) {
+      // Si la consulta falla, el carrito sigue siendo util y se muestra.
+    }
+    if (mounted) setState(() => _buscandoSolicitud = false);
   }
 
   Future<void> _confirmarPedido() async {
@@ -44,7 +52,7 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
     try {
       final pedidoId = await const RepositorioPedidos().crear(
         items: controlador.aItemsDePedido(),
-        puntoEncuentro: _puntoDeEntrega,
+        puntoEncuentro: null,
       );
 
       // El carrito ya cumplio su papel: a partir de aqui manda el pedido.
@@ -143,57 +151,52 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ListaProductosCarrito(controlador: controlador),
-                if (!controlador.estaVacio) ...[
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.only(bottom: 18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Column(
-                      children: [
-                        // Antes de los números: primero se acuerda dónde, que
-                        // es lo que el vendedor necesita para decidir si puede.
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
-                          child: SelectorPuntoEntrega(
-                            punto: _zona,
-                            referencia: _referencia,
-                            alElegirPunto: (valor) =>
-                                setState(() => _zona = valor),
+      body: _buscandoSolicitud
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF5C8A63)),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 620),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ListaProductosCarrito(controlador: controlador),
+                      if (!controlador.estaVacio) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.only(bottom: 18),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
                           ),
-                        ),
-                        ResumenCompra(
-                          subtotal: controlador.subtotal,
-                          entrega: controlador.costoEntrega,
-                          total: controlador.total,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: BotonContinuarPedido(
-                            habilitado: !_enviando,
-                            alPresionar: _confirmarPedido,
+                          child: Column(
+                            children: [
+                              ResumenCompra(
+                                subtotal: controlador.subtotal,
+                                entrega: controlador.costoEntrega,
+                                total: controlador.total,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                child: BotonContinuarPedido(
+                                  habilitado: !_enviando,
+                                  alPresionar: _confirmarPedido,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                ],
-              ],
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
     ),
   );
 }

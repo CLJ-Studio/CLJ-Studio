@@ -145,69 +145,77 @@ class _BarraLigera extends StatelessWidget {
 
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-      child: Container(
-        height: 76,
-        decoration: BoxDecoration(
-          // Del tema: fija en gris claro, la barra quedaba blanca flotando
-          // sobre el fondo oscuro.
-          color: esOscuro ? const Color(0xFF303230) : Colors.white,
-          borderRadius: BorderRadius.circular(38),
-          border: Border.all(
-            color: esOscuro ? const Color(0xFF484A48) : const Color(0xFFE1E1E1),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: esOscuro
-                  ? const Color(0x40000000)
-                  : const Color(0x33000000),
-              blurRadius: 16,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: LayoutBuilder(
-          builder: (context, restricciones) {
-            final items = destinos;
-            final anchoItem = restricciones.maxWidth / items.length;
-            // Un unico margen para los cuatro lados. Antes iban por separado
-            // (4 a los costados, 5 arriba, alto fijo) y la capsula quedaba
-            // descuadrada respecto al icono.
-            const margen = 5.0;
-            return Stack(
-              children: [
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 360),
-                  curve: Curves.easeOutBack,
-                  left: indice * anchoItem + margen,
-                  top: margen,
-                  width: anchoItem - margen * 2,
-                  height: restricciones.maxHeight - margen * 2,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: esOscuro
-                          ? tema.colorScheme.primary.withValues(alpha: .18)
-                          : Colors.black,
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                  ),
-                ),
-                Row(
-                  children: [
-                    for (var i = 0; i < items.length; i++)
-                      Expanded(
-                        child: _DestinoBarra(
-                          icono: items[i].$1,
-                          iconoActivo: items[i].$2,
-                          etiqueta: items[i].$3,
-                          activo: indice == i,
-                          alPresionar: () => alSeleccionar(i),
-                        ),
-                      ),
-                  ],
+      child: Center(
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: Container(
+            height: 76,
+            decoration: BoxDecoration(
+              // Del tema: fija en gris claro, la barra quedaba blanca flotando
+              // sobre el fondo oscuro.
+              color: esOscuro ? const Color(0xFF303230) : Colors.white,
+              borderRadius: BorderRadius.circular(38),
+              border: Border.all(
+                color: esOscuro
+                    ? const Color(0xFF484A48)
+                    : const Color(0xFFE1E1E1),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: esOscuro
+                      ? const Color(0x40000000)
+                      : const Color(0x33000000),
+                  blurRadius: 16,
+                  offset: const Offset(0, 5),
                 ),
               ],
-            );
-          },
+            ),
+            child: LayoutBuilder(
+              builder: (context, restricciones) {
+                final items = destinos;
+                final anchoItem = restricciones.maxWidth / items.length;
+                // Un unico margen para los cuatro lados. Antes iban por separado
+                // (4 a los costados, 5 arriba, alto fijo) y la capsula quedaba
+                // descuadrada respecto al icono.
+                const margen = 5.0;
+                return Stack(
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 360),
+                      curve: Curves.easeOutBack,
+                      left: indice * anchoItem + margen,
+                      top: margen,
+                      width: anchoItem - margen * 2,
+                      height: restricciones.maxHeight - margen * 2,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: esOscuro
+                              ? tema.colorScheme.primary.withValues(alpha: .18)
+                              : Colors.black,
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        for (var i = 0; i < items.length; i++)
+                          Expanded(
+                            child: _DestinoBarra(
+                              icono: items[i].$1,
+                              iconoActivo: items[i].$2,
+                              etiqueta: items[i].$3,
+                              activo: indice == i,
+                              alPresionar: () => alSeleccionar(i),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

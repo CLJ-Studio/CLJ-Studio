@@ -156,11 +156,7 @@ class PantallaInicioMarketplace extends StatelessWidget {
                               publicaciones: publicacionesPopulares,
                             ),
                             const SizedBox(height: 22),
-                            _TituloSeccion(
-                              titulo: 'Publicaciones',
-                              alVerTodo: () =>
-                                  controlador.seleccionarCategoria('todas'),
-                            ),
+                            _TituloSeccion(titulo: 'Publicaciones'),
                             const SizedBox(height: 10),
                             _CuadriculaPublicaciones(
                               publicaciones: publicacionesHome,
@@ -1111,10 +1107,10 @@ class _ImagenPublicacionVacia extends StatelessWidget {
 }
 
 class _TituloSeccion extends StatelessWidget {
-  const _TituloSeccion({required this.titulo, required this.alVerTodo});
+  const _TituloSeccion({required this.titulo, this.alVerTodo});
 
   final String titulo;
-  final VoidCallback alVerTodo;
+  final VoidCallback? alVerTodo;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -1127,16 +1123,17 @@ class _TituloSeccion extends StatelessWidget {
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
       ),
-      TextButton(
-        onPressed: alVerTodo,
-        child: const Text(
-          'Ver todo',
-          style: TextStyle(
-            color: Color(0xFF5C8A63),
-            fontWeight: FontWeight.w800,
+      if (alVerTodo != null)
+        TextButton(
+          onPressed: alVerTodo,
+          child: const Text(
+            'Ver todo',
+            style: TextStyle(
+              color: Color(0xFF5C8A63),
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
-      ),
     ],
   );
 }

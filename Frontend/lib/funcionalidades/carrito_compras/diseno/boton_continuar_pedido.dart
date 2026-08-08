@@ -11,7 +11,7 @@ class BotonContinuarPedido extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: habilitado ? const Color(0xFFFF633C) : const Color(0xFFFFB7A5),
+    color: habilitado ? const Color(0xFF5C8A63) : const Color(0xFFB9CEBD),
     borderRadius: BorderRadius.circular(28),
     child: InkWell(
       onTap: habilitado ? alPresionar : null,

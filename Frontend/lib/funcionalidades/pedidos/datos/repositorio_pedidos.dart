@@ -32,6 +32,23 @@ class RepositorioPedidos {
   /// Compras del usuario (es el comprador).
   Future<List<Pedido>> misCompras() => _consultar('buyer_id');
 
+  /// Solicitud que todavía espera respuesta del vendedor.
+  ///
+  /// El carrito la consulta al abrirse para recuperar la pantalla de espera
+  /// aunque el comprador haya seguido explorando la aplicación.
+  Future<Pedido?> solicitudPendienteComprador() async {
+    final filas = await _cliente
+        .from('pedidos_detallados')
+        .select()
+        .eq('buyer_id', _usuarioId)
+        .eq('status', 'solicitado')
+        .order('created_at', ascending: false)
+        .limit(1);
+
+    if (filas.isEmpty) return null;
+    return Pedido.desdeMapa(filas.first);
+  }
+
   /// Ventas del usuario (es el vendedor).
   Future<List<Pedido>> misVentas() => _consultar('seller_id');
 

@@ -131,6 +131,10 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
 
   /// Pide el código al buzón institucional.
   Future<void> _pedirCodigo([String? correoDirecto]) async {
+    // Una pulsacion adicional mientras la red responde no debe iniciar otra
+    // solicitud ni mandar varios codigos al mismo correo.
+    if (_cargando) return;
+
     final correo =
         correoDirecto ?? ServicioAutenticacionCorreo.normalizarCorreo(_digitos);
     if (correo == null) return;
@@ -144,6 +148,10 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
     setState(() {
       _cargando = true;
       _error = null;
+      // La pantalla de ingreso del codigo aparece en el primer toque; no
+      // espera a que termine la llamada de red para dar respuesta visual.
+      _correoPendiente = correo;
+      _codigo = '';
     });
 
     final fallo = await widget.repositorio.enviarCodigo(correo);
@@ -152,10 +160,9 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
     setState(() {
       _cargando = false;
       _error = fallo;
-      if (fallo == null) {
-        _correoPendiente = correo;
-        _codigo = '';
-      }
+      // Si no pudo enviarse, se vuelve al selector para poder intentarlo de
+      // nuevo. Durante la espera, los toques repetidos ya fueron ignorados.
+      if (fallo != null) _correoPendiente = null;
     });
 
     if (fallo == null) {
@@ -169,7 +176,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   /// Canjea el código por una sesión.
   Future<void> _verificar() async {
     final correo = _correoPendiente;
-    if (correo == null || !_codigoCompleto) return;
+    if (_cargando || correo == null || !_codigoCompleto) return;
 
     setState(() {
       _cargando = true;
@@ -214,146 +221,171 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
     await _cargarCuentas();
   }
 
+  Widget _marca() => const Text(
+    'UPSA Eat',
+    textAlign: TextAlign.center,
+    style: TextStyle(
+      color: Colors.black,
+      fontFamily: 'Metropolis',
+      fontSize: 34,
+      fontWeight: FontWeight.w900,
+      letterSpacing: -1.2,
+    ),
+  );
+
+  Widget _contenidoAcceso({required bool escritorio}) => MediaQuery(
+    data: MediaQuery.of(
+      context,
+    ).copyWith(textScaler: TextScaler.linear(escritorio ? 1.12 : 1)),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const EncabezadoAccesoUpsa(),
+        SizedBox(height: escritorio ? 22 : 28),
+        if (_esperandoCodigo) ...[
+          _AvisoCodigoEnviado(correo: _correoPendiente!),
+          const SizedBox(height: 16),
+          CampoCodigoVerificacion(
+            esValido: _codigoCompleto,
+            hayError: _error != null,
+            alCambiar: (valor) => setState(() => _codigo = valor),
+            alEnviar: _verificar,
+          ),
+        ] else ...[
+          CuentasGuardadas(
+            cuentas: _cuentas,
+            alElegir: _pedirCodigo,
+            alOlvidar: _olvidarCuenta,
+          ),
+          if (_cuentas.isEmpty)
+            FormularioCorreoUpsa(
+              esValido: _registroCompleto,
+              digitos: _digitos,
+              alCambiar: (valor) => setState(
+                () => _digitos = valor.replaceAll(RegExp(r'\D'), ''),
+              ),
+            ),
+        ],
+        if (_error case final String mensaje) ...[
+          const SizedBox(height: 12),
+          Text(
+            mensaje,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ],
+        const SizedBox(height: 14),
+        if (_esperandoCodigo || _cuentas.isEmpty)
+          BotonAccesoCorreo(
+            habilitado: _esperandoCodigo ? _codigoCompleto : _registroCompleto,
+            cargando: _cargando,
+            texto: _esperandoCodigo
+                ? 'Verificar e ingresar'
+                : _accesoDirecto
+                ? 'Ingresar'
+                : 'Enviarme el código',
+            icono: _esperandoCodigo
+                ? Icons.login_rounded
+                : _accesoDirecto
+                ? Icons.login_rounded
+                : Icons.mark_email_unread_outlined,
+            alPresionar: _esperandoCodigo ? _verificar : _pedirCodigo,
+          ),
+        if (_esperandoCodigo) ...[
+          const SizedBox(height: 4),
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: [
+              TextButton(
+                onPressed: _cargando ? null : _volverAlCorreo,
+                child: const Text('Cambiar de cuenta'),
+              ),
+              TextButton(
+                onPressed: _cargando || _esperaReenvio > 0
+                    ? null
+                    : () => _pedirCodigo(_correoPendiente),
+                child: Text(
+                  _esperaReenvio > 0
+                      ? 'Reenviar en ${_esperaReenvio}s'
+                      : 'Reenviar código',
+                ),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 18),
+        const MensajeAccesoExclusivo(),
+        const SizedBox(height: 24),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
       child: LayoutBuilder(
-        builder: (context, restricciones) => Stack(
-          children: [
-            const _FormasDecorativas(),
-            SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: restricciones.maxHeight,
-                  maxWidth: double.infinity,
+        builder: (context, restricciones) {
+          final escritorio = restricciones.maxWidth >= 900;
+          return Stack(
+            children: [
+              const _FormasDecorativas(),
+              if (escritorio) ...[
+                Positioned(
+                  top: 25,
+                  left: 0,
+                  right: 0,
+                  child: _BuhosAnimados(ancho: restricciones.maxWidth),
                 ),
-                child: Center(
-                  child: SizedBox(
-                    width: 430,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(
-                          height: 25,
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Positioned(
-                                left: 0,
-                                top: -30,
-                                child: Text(
-                                  'UPSA Eat',
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontFamily: 'Metropolis',
-                                    fontSize: 34,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: -1.2,
+                Positioned(top: 18, left: 40, right: 40, child: _marca()),
+                Positioned(
+                  left: restricciones.maxWidth * .07,
+                  top: restricciones.maxHeight * .24,
+                  width: (restricciones.maxWidth * .38).clamp(430, 560),
+                  bottom: 16,
+                  child: SingleChildScrollView(
+                    child: _contenidoAcceso(escritorio: true),
+                  ),
+                ),
+              ] else
+                SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: restricciones.maxHeight,
+                      maxWidth: double.infinity,
+                    ),
+                    child: Center(
+                      child: SizedBox(
+                        width: 430,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(
+                              height: 25,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Positioned(
+                                    left: 0,
+                                    top: -30,
+                                    child: _marca(),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            _BuhosAnimados(ancho: restricciones.maxWidth),
+                            const SizedBox(height: 4),
+                            _contenidoAcceso(escritorio: false),
+                          ],
                         ),
-                        _BuhosAnimados(ancho: restricciones.maxWidth),
-                        const SizedBox(height: 4),
-                        const EncabezadoAccesoUpsa(),
-                        const SizedBox(height: 28),
-                        // Los dos pasos comparten el mismo hueco de la
-                        // pantalla: solo cambia lo que se pide.
-                        if (_esperandoCodigo) ...[
-                          _AvisoCodigoEnviado(correo: _correoPendiente!),
-                          const SizedBox(height: 16),
-                          CampoCodigoVerificacion(
-                            esValido: _codigoCompleto,
-                            hayError: _error != null,
-                            alCambiar: (valor) =>
-                                setState(() => _codigo = valor),
-                            alEnviar: _verificar,
-                          ),
-                        ] else ...[
-                          CuentasGuardadas(
-                            cuentas: _cuentas,
-                            alElegir: _pedirCodigo,
-                            alOlvidar: _olvidarCuenta,
-                          ),
-                          if (_cuentas.isEmpty)
-                            FormularioCorreoUpsa(
-                              esValido: _registroCompleto,
-                              digitos: _digitos,
-                              alCambiar: (valor) => setState(
-                                () => _digitos = valor.replaceAll(
-                                  RegExp(r'\D'),
-                                  '',
-                                ),
-                              ),
-                            ),
-                        ],
-                        if (_error case final String mensaje) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            mensaje,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 14),
-                        if (_esperandoCodigo || _cuentas.isEmpty)
-                          BotonAccesoCorreo(
-                            habilitado: _esperandoCodigo
-                                ? _codigoCompleto
-                                : _registroCompleto,
-                            cargando: _cargando,
-                            texto: _esperandoCodigo
-                                ? 'Verificar e ingresar'
-                                : _accesoDirecto
-                                ? 'Ingresar'
-                                : 'Enviarme el código',
-                            icono: _esperandoCodigo
-                                ? Icons.login_rounded
-                                : _accesoDirecto
-                                ? Icons.login_rounded
-                                : Icons.mark_email_unread_outlined,
-                            alPresionar: _esperandoCodigo
-                                ? _verificar
-                                : _pedirCodigo,
-                          ),
-                        if (_esperandoCodigo) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              TextButton(
-                                onPressed: _cargando ? null : _volverAlCorreo,
-                                child: const Text('Cambiar de cuenta'),
-                              ),
-                              TextButton(
-                                onPressed: _cargando || _esperaReenvio > 0
-                                    ? null
-                                    : () => _pedirCodigo(_correoPendiente),
-                                child: Text(
-                                  _esperaReenvio > 0
-                                      ? 'Reenviar en ${_esperaReenvio}s'
-                                      : 'Reenviar código',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        const SizedBox(height: 18),
-                        const MensajeAccesoExclusivo(),
-                        const SizedBox(height: 24),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     ),
   );

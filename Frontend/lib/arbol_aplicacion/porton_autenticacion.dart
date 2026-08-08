@@ -121,7 +121,16 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           ServicioPush.estaActivo().then((activo) {
             if (activo) ServicioPush.activar();
           });
-          return const ArbolNavegacionPrincipal();
+          return ArbolNavegacionPrincipal(
+            alCerrarSesion: () async {
+              // Ajustes vive dentro de rutas apiladas sobre la navegacion
+              // principal. Se cierran primero para que el acceso aparezca
+              // inmediatamente cuando Supabase notifique el cierre.
+              Navigator.of(context).popUntil((ruta) => ruta.isFirst);
+              await Supabase.instance.client.auth.signOut();
+              if (mounted) setState(() {});
+            },
+          );
         }
         return ArbolOnboarding(
           alCompletar: () {
