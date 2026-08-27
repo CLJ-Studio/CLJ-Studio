@@ -1,54 +1,186 @@
-# CLJ Studio · UPSA Eat
+# UPSA Eat
 
-Marketplace interno para la comunidad UPSA: los estudiantes publican lo que
-venden y coordinan la entrega dentro del campus. **No hay pasarela de pagos**:
-el pago se acuerda entre las partes por WhatsApp.
+**El mercado que ya existe en el campus, con un lugar donde vivir.**
+
+Marketplace para la Universidad Privada de Santa Cruz de la Sierra. Los
+estudiantes publican lo que venden, quien compra encarga desde la aplicación y
+la entrega se coordina entre los dos, dentro del campus.
+
+Hecho por **CLJ Studio**.
+
+---
+
+## La problemática
+
+En la UPSA ya se vende. Empanadas antes del primer parcial, cuñapés a media
+mañana, el libro de Cálculo del semestre pasado, clases particulares, uñas,
+tortas por encargo. Todo eso pasa hoy, todos los días, sin ninguna herramienta
+detrás.
+
+El canal es el estado de WhatsApp y la historia de Instagram. Y ese canal tiene
+cinco problemas que nadie puede resolver publicando más:
+
+**Se borra en 24 horas.** Quien vende vuelve a subir la misma foto cada mañana.
+Lo que no se vio ese día, no existió.
+
+**Solo llega a los contactos.** Si no te tiene agendado, no se entera. Alguien
+que vende en el Bloque C y alguien con hambre en el Bloque C pueden no cruzarse
+nunca, estando a treinta metros.
+
+**No se puede buscar.** Nadie puede preguntar *"¿quién está vendiendo algo
+salado ahora?"*. Hay que acordarse de quién vende qué, y revisar historias una
+por una.
+
+**No hay stock.** Escribes, esperas veinte minutos, y te contestan que ya se
+acabó. El vendedor recibe diez mensajes por tres porciones y tiene que decirle
+que no a siete personas, a mano.
+
+**No hay ninguna señal de confianza.** Nadie sabe si esa persona entrega, si
+llega a tiempo, si el producto se parece a la foto. Y para vender hay que dar
+el número de teléfono a desconocidos.
+
+El resultado es un mercado real, activo y con demanda comprobada, funcionando
+con las herramientas equivocadas. Quien vende no puede crecer más allá de su
+agenda de contactos; quien compra no puede encontrar lo que ya está a treinta
+metros suyo.
+
+---
+
+## Qué es UPSA Eat
+
+Una aplicación **exclusiva de la comunidad UPSA** donde ese mercado tiene
+catálogo, buscador, stock, pedidos y un registro de lo que pasó.
+
+Se entra con el correo institucional. Nadie de afuera puede entrar, ni
+registrarse, ni ver lo que hay adentro.
+
+Y hay tres cosas que **deliberadamente no hace**:
+
+| No es | Por qué |
+|---|---|
+| Una app de delivery | No hay repartidores. Se entregan entre ellos, en el campus, donde ya están los dos |
+| Una pasarela de pagos | El pago se acuerda entre las partes, como ya lo hacen. Sin comisiones, sin intermediario, sin encarecer una empanada de 5 Bs |
+| Una red social | No hay muro, ni seguidores, ni likes públicos. Se viene a comprar y a vender |
+
+Lo que resuelve es lo que falta: **que se encuentren, que sepan qué hay, y que
+lo que se acordó quede escrito.**
+
+---
+
+## Cómo funciona
+
+**Quien vende** elige entre dos formas, y no son la misma:
+
+- **Publicación personal** — vendo mi calculadora, una vez. No monta un negocio
+- **Local** — mi emprendimiento, con nombre, descripción, ubicación en el
+  campus y catálogo propio
+
+Publica con foto, precio, cantidad y categoría. Dice en qué bloque está. Cuando
+llega un pedido, lo acepta o lo rechaza; al aceptarlo, el stock se descuenta
+solo.
+
+**Quien compra** entra y ve todo lo publicado hoy en el campus. Busca por
+producto, por local o por persona. Filtra por categoría. Guarda favoritos.
+Encarga eligiendo el punto de entrega — Bloque A, Mozza, Jatata — y espera la
+respuesta en pantalla, en tiempo real.
+
+**Cuando se aceptó**, recién ahí se libera el WhatsApp de la contraparte, para
+que cuadren la hora. Se encuentran, se entregan, y **los dos confirman**.
+
+---
+
+## Qué lo hace distinto
+
+No es "otro marketplace". Estas siete decisiones son las que lo separan de
+poner un catálogo en Instagram, y cada una responde a un problema real:
+
+**1 · La identidad la respalda la universidad, no un formulario.**
+El correo institucional se valida en un *trigger* de la base de datos, antes de
+que el usuario exista. Un `@gmail.com` no es que sea rechazado: nunca llega a
+crearse. Eso convierte un mercado abierto de desconocidos en un mercado cerrado
+de compañeros — que es exactamente lo que hace razonable encontrarse con alguien
+para darle comida y recibir dinero.
+
+**2 · El pago fuera de la aplicación, a propósito.**
+Meter una pasarela obligaría a constituir una empresa, cobrar comisión y
+encarecer un producto de 5 Bs. Aquí la aplicación resuelve el descubrimiento y
+el compromiso; el dinero sigue el camino que ya funciona.
+
+**3 · La entrega la cierran los dos.**
+En casi cualquier marketplace, el vendedor marca "entregado" y el pedido se
+cierra. Aquí uno marca y **el otro tiene que confirmar**. Queda guardado quién
+dijo qué. Es lo que hará que una calificación futura signifique algo, en vez de
+ser una estrella que se pone sola.
+
+**4 · El teléfono no es público.**
+No aparece en ningún perfil. Se libera únicamente a la contraparte de un pedido
+ya aceptado. Vender sin repartir tu número es algo que el estado de WhatsApp no
+puede ofrecer.
+
+**5 · El stock lo lleva el servidor, no la buena fe.**
+El descuento es atómico: si dos personas aceptan a la vez la última porción,
+solo una gana. Nadie vende lo que ya no tiene.
+
+**6 · El filtro entiende cómo se insulta aquí.**
+No es una lista de groserías de España bajada de internet. Reconoce jerga
+local, diminutivos, aumentativos, abreviaturas y letras cambiadas — *petecitos*,
+*OGT*, *marikon*, *put0*. Y está afinado para no bloquear a nadie que venda
+**pito de cañahua** o **peras**, que es el error que hace inservible a un filtro
+en un campus boliviano.
+
+**7 · Se instala sin pasar por ninguna tienda.**
+Es una PWA: se abre con un enlace y se agrega a la pantalla de inicio. Sin
+descarga de 100 MB, sin Play Store, sin App Store, sin revisión de nadie. En un
+campus donde los datos móviles se cuidan y los teléfonos son de todo tipo, eso
+es la diferencia entre que la usen y que no.
+
+---
+
+## Qué hace hoy
+
+**Dos espacios de venta separados de verdad.** Publicar desde el local no
+mezcla con lo personal ni al revés, y el catálogo lo dice en cada tarjeta.
+
+**Acceso con código al correo institucional.** Seis dígitos, sin contraseña que
+recordar ni cuenta de Google que hacerse. El dispositivo recuerda las cuentas
+usadas y el código sobrevive a que salgas de la app a leer el correo.
+
+**Pedidos completos.** Carrito, punto de entrega, aceptar o rechazar, stock
+atómico, vencimiento automático si nadie responde, y confirmación de entrega
+por las dos partes.
+
+**Notificaciones que llevan a algún lado.** Web Push real y campana dentro de
+la app. Cada aviso sabe a dónde va: tocarlo abre el pedido, el local o la
+publicación de la que habla.
+
+**Catálogo con buscador.** Búsqueda por producto, local, persona y categoría,
+tolerante a acentos. Favoritos. Vistas únicas por usuario, no por recarga.
+Catorce categorías. Paginación.
+
+**Fotos.** Galería por publicación, visor con zoom, y foto de perfil con
+recorte circular antes de subir.
+
+**Perfiles públicos** con biografía, publicaciones y dos interruptores de
+privacidad: mostrar vistas y mostrar favoritos.
+
+**Instalable en Android y iOS**, y modo oscuro en toda la aplicación.
+
+---
+
+## Estado
+
+**Beta abierta**, en uso real dentro del campus.
+
+Versión actual: **3.8.2 beta**. El número es la fecha — día.mes.entrega — así
+que `3.8.2` es la segunda entrega del 3 de agosto. Se ve dentro de la app, en
+Ajustes, para poder distinguir *"el arreglo no funciona"* de *"el arreglo
+todavía no llegó a este teléfono"*.
 
 ```
 CLJ Studio/
 ├── Frontend/   PWA en Flutter Web  →  Netlify
 └── Backend/    Supabase (PostgreSQL, Auth, Realtime, Storage, Edge Functions)
 ```
-
-Versión actual: **30.7.1 beta** · el número es la fecha (día.mes.entrega), así
-que `30.7.1` es la primera entrega del 30 de julio. Se ve dentro de la app, en
-Ajustes, para poder distinguir *"el arreglo no funciona"* de *"el arreglo
-todavía no llegó a este teléfono"*.
-
----
-
-## Qué hace hoy
-
-**Dos formas de vender, separadas de verdad.** Se puede publicar algo suelto
-(*uso personal*) o abrir un local con nombre, descripción y ubicación. Son dos
-espacios distintos: publicar desde el local no mezcla con lo personal ni al
-revés, y el catálogo lo dice en cada tarjeta.
-
-**Acceso por correo institucional con código.** Se escribe el correo `@upsa`,
-llega un código de 6 dígitos y se entra. El dominio se valida en un trigger
-sobre `auth.users`, antes de crear al usuario: un `@gmail.com` nunca llega a
-existir. El dispositivo recuerda las cuentas usadas y el código sobrevive a que
-salgas de la app a leer el correo.
-
-**Pedidos con entrega cerrada por las dos partes.** Uno marca la entrega, el
-otro la confirma, y recién ahí se cierra. Queda guardado quién marcó y quién
-confirmó. Si nadie contesta en 24 h se cierra solo y en silencio.
-
-**Notificaciones que llevan a algún lado.** Web Push real (VAPID + Edge
-Function) y campana dentro de la app. Cada aviso guarda a dónde va, así que
-tocarlo abre el pedido, el local o la publicación de la que habla.
-
-**Instalable en Android y iOS.** Android usa el `beforeinstallprompt` nativo;
-iOS no lo tiene, así que la app explica el paso de *Compartir → Añadir a
-pantalla de inicio*.
-
-**Fotos.** Galería por publicación y foto de perfil con recorte circular antes
-de subir, en Supabase Storage.
-
-**Y además:** favoritos, vistas únicas por usuario (no por recarga), catorce
-categorías, buscador, punto de entrega elegible entre los puntos del campus,
-modo oscuro, perfiles públicos con biografía, y dos interruptores de privacidad
-(mostrar vistas, mostrar favoritos).
 
 ---
 
@@ -119,6 +251,9 @@ para correr la app.
 ---
 
 ## Cómo está armado
+
+Las decisiones de arriba, vistas por dentro. Aquí no está el *por qué importa*
+sino el *cómo se sostiene*, que es lo que hay que entender antes de tocar nada.
 
 **Un pedido = un local.** El carrito no mezcla vendedores: simplifica la entrega
 y evita que alguien vea ítems que no le corresponden.
@@ -232,4 +367,5 @@ escrito se olvida justo cuando hay apuro.
 
 ---
 
-*Hecho por CLJ Studio para la comunidad UPSA.*
+**UPSA Eat** · Universidad Privada de Santa Cruz de la Sierra
+Un proyecto de **CLJ Studio**.
