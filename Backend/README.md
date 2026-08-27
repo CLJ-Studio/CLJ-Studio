@@ -42,7 +42,7 @@ La contraseña va en `Backend/.env` (ignorado por git), nunca en el repo.
 ### 1.2.1 Las plantillas del correo · SON DOS
 
 En **Authentication → Emails** hay que pegar la misma plantilla
-([`supabase/plantillas_correo/codigo_de_acceso.html`](supabase/plantillas_correo/codigo_de_acceso.html))
+([`supabase/plantillas_correo/`](supabase/plantillas_correo/), con sus pasos)
 en **dos** sitios:
 
 | Plantilla | Cuándo la manda Supabase |
