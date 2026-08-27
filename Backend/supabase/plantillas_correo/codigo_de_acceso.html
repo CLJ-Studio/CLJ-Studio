@@ -1,0 +1,75 @@
+<!--
+  Plantilla del correo con el codigo de acceso.
+
+  Va PEGADA EN LAS DOS plantillas del panel de Supabase:
+
+      Authentication -> Emails -> Confirm signup
+      Authentication -> Emails -> Magic Link
+
+  Las dos, no una. `signInWithOtp()` no siempre manda el mismo correo:
+
+    · Si la persona NUNCA entro, para Supabase es un alta -> Confirm signup
+    · Si ya existe, es un reingreso                        -> Magic Link
+
+  Tener solo una personalizada es justo el fallo que hubo: quien ya tenia
+  cuenta recibia su codigo y quien entraba por primera vez recibia la
+  plantilla de fabrica, en ingles y con un enlace en vez de seis digitos.
+  O sea que fallaba SOLO con gente nueva, que es la que peor momento es
+  para fallar.
+
+  Asunto para las dos (el campo Subject, encima del cuerpo):
+
+      Tu codigo de UPSA Eat
+
+  Sin "verificacion", sin "confirma", sin signos de admiracion: son las
+  palabras que mas peso tienen en el filtro de spam de Gmail.
+-->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background:#f8f4ec;padding:32px 16px;font-family:
+              -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <tr>
+    <td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="max-width:460px;background:#ffffff;border-radius:18px;
+                    padding:36px 32px;">
+        <tr>
+          <td>
+            <p style="margin:0 0 6px;font-size:15px;color:#5c8a63;
+                      font-weight:800;">UPSA Eat</p>
+
+            <h1 style="margin:0 0 18px;font-size:22px;line-height:1.3;
+                       color:#202220;font-weight:800;">
+              Tu codigo para entrar
+            </h1>
+
+            <p style="margin:0 0 22px;font-size:15px;line-height:1.55;
+                      color:#5f645f;">
+              Escribilo en la aplicacion para entrar con tu correo de la
+              universidad.
+            </p>
+
+            <!-- El codigo. Es lo unico que la persona necesita leer. -->
+            <p style="margin:0 0 22px;font-size:34px;letter-spacing:10px;
+                      font-weight:800;color:#202220;text-align:center;
+                      background:#f1f6f0;border-radius:14px;padding:18px 0;">
+              {{ .Token }}
+            </p>
+
+            <p style="margin:0 0 6px;font-size:13px;line-height:1.55;
+                      color:#8a8f8a;">
+              Vence en una hora y solo sirve una vez.
+            </p>
+            <p style="margin:0;font-size:13px;line-height:1.55;color:#8a8f8a;">
+              Si no lo pediste vos, no hagas nada: sin el codigo nadie puede
+              entrar a tu cuenta.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:18px 0 0;font-size:12px;color:#9aa09a;">
+        UPSA Eat · Universidad Privada de Santa Cruz de la Sierra
+      </p>
+    </td>
+  </tr>
+</table>

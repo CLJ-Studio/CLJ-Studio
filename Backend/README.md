@@ -39,8 +39,43 @@ La contraseña va en `Backend/.env` (ignorado por git), nunca en el repo.
 > propio con SPF y DKIM lo resuelve; ver las recomendaciones del
 > [README principal](../README.md).
 
-En **Authentication → Email Templates → Magic Link** está el texto del correo.
-El asunto y el cuerpo se editan ahí, no en el código.
+### 1.2.1 Las plantillas del correo · SON DOS
+
+En **Authentication → Emails** hay que pegar la misma plantilla
+([`supabase/plantillas_correo/codigo_de_acceso.html`](supabase/plantillas_correo/codigo_de_acceso.html))
+en **dos** sitios:
+
+| Plantilla | Cuándo la manda Supabase |
+|---|---|
+| **Confirm signup** | La persona entra por **primera vez**: para Supabase es un alta |
+| **Magic Link** | La persona **ya tenía cuenta**: es un reingreso |
+
+`signInWithOtp()` elige una u otra sin que el código pueda intervenir. Esto ya
+falló una vez: solo estaba personalizada *Magic Link*, así que quien ya tenía
+cuenta recibía su código y **quien entraba por primera vez recibía la plantilla
+de fábrica, en inglés y con un enlace en lugar de seis dígitos**. Fallaba solo
+con gente nueva, que es el peor momento posible para fallar.
+
+El código va en la plantilla como `{{ .Token }}`. Si esa variable no está, no
+hay código que valga: el correo sale con un enlace y la app sigue pidiendo seis
+dígitos que nunca llegan.
+
+El asunto de las dos: **`Tu codigo de UPSA Eat`**.
+
+### 1.2.2 Que no caiga en spam
+
+Mandar desde una cuenta `@gmail.com` por SMTP es lo que más pesa: Gmail ve un
+remitente que dice ser de Gmail pero llega por otra vía, y lo marca. Ordenado
+de más a menos efectivo:
+
+1. **Dominio propio con SPF y DKIM.** ~12 USD al año. Es el único arreglo de
+   verdad; el resto son parches.
+2. **Sender email idéntico** a la cuenta que autentica el SMTP. Si no coinciden,
+   el castigo es automático.
+3. **Asunto sin palabras marcadas.** Nada de "verifica", "confirma", "urgente"
+   ni signos de admiración.
+4. Mientras tanto, decirle a la gente que mire en Spam y marque *No es spam*:
+   cada vez que alguien lo hace, la reputación del remitente mejora.
 
 ### 1.3 Habilitar SOLO el correo en Supabase
 
