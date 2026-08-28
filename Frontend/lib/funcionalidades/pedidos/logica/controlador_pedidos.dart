@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
+import '../datos/repositorio_chat_pedido.dart';
 import '../datos/repositorio_pedidos.dart';
 import '../modelos/pedido.dart';
 
@@ -12,8 +13,15 @@ class ControladorPedidos extends ChangeNotifier {
 
   final RepositorioPedidos _repositorio;
 
+  static const _chat = RepositorioChatPedido();
+
   List<Pedido> compras = const [];
   List<Pedido> ventas = const [];
+
+  /// Mensajes sin leer por pedido. Alimenta el distintivo de cada tarjeta.
+  Map<String, int> sinLeer = const {};
+
+  int mensajesSinLeerDe(String pedidoId) => sinLeer[pedidoId] ?? 0;
   bool cargando = true;
   String? error;
 
@@ -25,7 +33,9 @@ class ControladorPedidos extends ChangeNotifier {
   int get ventasPorResponder => ventas
       .where(
         (p) =>
-            p.estado == EstadoPedido.solicitado || p.meTocaConfirmar(_miId()),
+            p.estado == EstadoPedido.solicitado ||
+            p.meTocaConfirmar(_miId()) ||
+            mensajesSinLeerDe(p.id) > 0,
       )
       .length;
 
@@ -33,14 +43,14 @@ class ControladorPedidos extends ChangeNotifier {
   ///
   /// Este es el recordatorio que pidio el usuario: vive en la pantalla, no en
   /// una notificacion repetida.
-  int get comprasPorConfirmar =>
-      compras.where((p) => p.meTocaConfirmar(_miId())).length;
+  int get comprasPorConfirmar => compras
+      .where((p) => p.meTocaConfirmar(_miId()) || mensajesSinLeerDe(p.id) > 0)
+      .length;
 
   /// Se lee cada vez y no se cachea: el controlador sobrevive al cambio de
   /// sesion y un id guardado dejaria contando lo de la cuenta anterior.
-  String? _miId() => ModoLocal.activo
-      ? null
-      : Supabase.instance.client.auth.currentUser?.id;
+  String? _miId() =>
+      ModoLocal.activo ? null : Supabase.instance.client.auth.currentUser?.id;
 
   /// Un pedido nuevo o una respuesta del vendedor deben aparecer sin que
   /// nadie recargue: es la pantalla donde mas se nota la espera.
@@ -49,13 +59,22 @@ class ControladorPedidos extends ChangeNotifier {
     alCambiar: _recargarEnSilencio,
   );
 
+  /// Un mensaje nuevo tiene que encender el distintivo sin que nadie recargue.
+  late final _escuchaMensajes = EscuchaTabla(
+    tabla: 'mensajes_pedido',
+    alCambiar: _recargarEnSilencio,
+  );
+
   void iniciarTiempoReal() {
-    if (!ModoLocal.activo) _escucha.iniciar();
+    if (ModoLocal.activo) return;
+    _escucha.iniciar();
+    _escuchaMensajes.iniciar();
   }
 
   @override
   void dispose() {
     _escucha.detener();
+    _escuchaMensajes.detener();
     super.dispose();
   }
 
@@ -82,12 +101,14 @@ class ControladorPedidos extends ChangeNotifier {
   Future<void> _recargarEnSilencio() async {
     if (ModoLocal.activo) return;
     try {
-      final resultados = await Future.wait([
+      final (nuevasCompras, nuevasVentas, nuevosSinLeer) = await (
         _repositorio.misCompras(),
         _repositorio.misVentas(),
-      ]);
-      compras = resultados[0];
-      ventas = resultados[1];
+        _chat.sinLeerPorPedido(),
+      ).wait;
+      compras = nuevasCompras;
+      ventas = nuevasVentas;
+      sinLeer = nuevosSinLeer;
       notifyListeners();
     } catch (_) {
       // Se reintenta en el siguiente evento o sondeo.
@@ -108,13 +129,15 @@ class ControladorPedidos extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // En paralelo: son dos consultas independientes.
-      final resultados = await Future.wait([
+      // En paralelo: son consultas independientes entre si.
+      final (nuevasCompras, nuevasVentas, nuevosSinLeer) = await (
         _repositorio.misCompras(),
         _repositorio.misVentas(),
-      ]);
-      compras = resultados[0];
-      ventas = resultados[1];
+        _chat.sinLeerPorPedido(),
+      ).wait;
+      compras = nuevasCompras;
+      ventas = nuevasVentas;
+      sinLeer = nuevosSinLeer;
     } catch (_) {
       error = 'No se pudieron cargar tus pedidos.';
     } finally {

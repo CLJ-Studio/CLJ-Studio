@@ -167,6 +167,7 @@ class Pedido {
 
   /// Si ya marqué yo y espero al otro.
   bool esperandoAlOtro(String? miId) =>
-      estado == EstadoPedido.porConfirmar && miId != null &&
+      estado == EstadoPedido.porConfirmar &&
+      miId != null &&
       marcadoPorId == miId;
 }

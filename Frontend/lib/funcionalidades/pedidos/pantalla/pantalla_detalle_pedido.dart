@@ -8,6 +8,7 @@ import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart'
 import '../datos/repositorio_pedidos.dart';
 import '../diseno/etiqueta_estado_pedido.dart';
 import '../modelos/pedido.dart';
+import 'pantalla_chat_pedido.dart';
 
 /// Detalle de un pedido con las acciones que permite su estado.
 class PantallaDetallePedido extends StatefulWidget {
@@ -67,6 +68,24 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
       return 'Ya marcaste la entrega. Falta que la confirme la otra parte.';
     }
     return 'No se pudo completar la acción.';
+  }
+
+  /// Abre la conversación de este pedido.
+  ///
+  /// El chat vive dentro de la aplicación y se cierra solo cuando la entrega
+  /// queda confirmada: lo acordado se queda junto al pedido en vez de
+  /// perderse en un hilo de WhatsApp, y nadie tiene que dar su teléfono.
+  void _abrirChat(Pedido pedido, bool soyVendedor) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PantallaChatPedido(
+          pedidoId: pedido.id,
+          contraparte: soyVendedor
+              ? pedido.nombreComprador
+              : pedido.nombreVendedor,
+        ),
+      ),
+    );
   }
 
   Future<void> _abrirWhatsapp() => _ejecutar(() async {
@@ -191,19 +210,35 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
     if (pedido.estado == EstadoPedido.aceptado) {
       return [
         FilledButton.icon(
-          onPressed: _ocupado ? null : _abrirWhatsapp,
+          onPressed: _ocupado ? null : () => _abrirChat(pedido, soyVendedor),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF25D366),
+            backgroundColor: const Color(0xFF5C8A63),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: const StadiumBorder(),
           ),
-          icon: const Icon(Icons.chat_rounded),
+          icon: const Icon(Icons.forum_rounded),
           label: Text(
             soyVendedor
                 ? 'Coordinar con ${pedido.nombreComprador.split(' ').first}'
                 : 'Coordinar con ${pedido.nombreVendedor.split(' ').first}',
           ),
+        ),
+        const SizedBox(height: 10),
+        // WhatsApp queda de respaldo, no de camino principal. En iPhone las
+        // notificaciones solo llegan con la aplicacion instalada en la
+        // pantalla de inicio: sin esta salida, alguien que no responde en el
+        // chat porque no se entero se quedaria incomunicado.
+        OutlinedButton.icon(
+          onPressed: _ocupado ? null : _abrirWhatsapp,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF25D366),
+            side: const BorderSide(color: Color(0xFF9BE0B7)),
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: const StadiumBorder(),
+          ),
+          icon: const Icon(Icons.phone_outlined),
+          label: const Text('¿No responde? WhatsApp'),
         ),
         const SizedBox(height: 10),
         FilledButton.icon(
@@ -266,14 +301,14 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
         // El contacto sigue abierto: si algo no cuadra, se habla antes de
         // confirmar. Sin esto la única salida sería no responder.
         OutlinedButton.icon(
-          onPressed: _ocupado ? null : _abrirWhatsapp,
+          onPressed: _ocupado ? null : () => _abrirChat(pedido, soyVendedor),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF25D366),
-            side: const BorderSide(color: Color(0xFF9BE0B7)),
+            foregroundColor: const Color(0xFF5C8A63),
+            side: const BorderSide(color: Color(0xFFAECBB3)),
             padding: const EdgeInsets.symmetric(vertical: 15),
             shape: const StadiumBorder(),
           ),
-          icon: const Icon(Icons.chat_outlined),
+          icon: const Icon(Icons.forum_outlined),
           label: Text(
             soyVendedor
                 ? 'Escribir a ${pedido.nombreComprador.split(' ').first}'

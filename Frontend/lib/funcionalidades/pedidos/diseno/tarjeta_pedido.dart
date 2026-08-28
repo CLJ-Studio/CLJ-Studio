@@ -9,6 +9,7 @@ class TarjetaPedido extends StatelessWidget {
     required this.soyVendedor,
     required this.alAbrir,
     this.alCancelar,
+    this.mensajesSinLeer = 0,
     super.key,
   });
 
@@ -18,6 +19,9 @@ class TarjetaPedido extends StatelessWidget {
 
   /// Solo se ofrece al comprador de un pedido aun sin responder.
   final VoidCallback? alCancelar;
+
+  /// Mensajes del chat que todavia no se han visto.
+  final int mensajesSinLeer;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -46,22 +50,60 @@ class TarjetaPedido extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: 92,
-                  height: 92,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF242824)
-                        : const Color(0xFFF3F4F2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    pedido.items.isEmpty
-                        ? pedido.emojiLocal
-                        : pedido.items.first.emoji,
-                    style: const TextStyle(fontSize: 42),
-                  ),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 92,
+                      height: 92,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF242824)
+                            : const Color(0xFFF3F4F2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        pedido.items.isEmpty
+                            ? pedido.emojiLocal
+                            : pedido.items.first.emoji,
+                        style: const TextStyle(fontSize: 42),
+                      ),
+                    ),
+                    if (mensajesSinLeer > 0)
+                      Positioned(
+                        top: -4,
+                        right: -4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5C8A63),
+                            borderRadius: BorderRadius.circular(20),
+                            // El borde del color de la tarjeta despega el
+                            // distintivo del emoji que tiene detras.
+                            border: Border.all(
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? const Color(0xFF171A17)
+                                  : Colors.white,
+                              width: 2,
+                            ),
+                          ),
+                          child: Text(
+                            '$mensajesSinLeer',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: 14),
                 Expanded(

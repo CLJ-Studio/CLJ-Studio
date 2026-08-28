@@ -119,6 +119,7 @@ class _PantallaPedidosState extends State<PantallaPedidos>
                     vacio: 'Todavía no has hecho ningún pedido.',
                     alRefrescar: controlador.cargar,
                     alAbrir: _abrir,
+                    sinLeerDe: controlador.mensajesSinLeerDe,
                     // Solo el comprador puede cancelar, y solo mientras el
                     // vendedor no haya respondido.
                     alCancelar: _cancelar,
@@ -130,6 +131,7 @@ class _PantallaPedidosState extends State<PantallaPedidos>
                     vacio: 'Aún no has recibido pedidos en tu local.',
                     alRefrescar: controlador.cargar,
                     alAbrir: _abrir,
+                    sinLeerDe: controlador.mensajesSinLeerDe,
                   ),
                 ],
               ),
@@ -190,6 +192,7 @@ class _ListaPedidos extends StatefulWidget {
     required this.alAbrir,
     this.alCancelar,
     this.mostrarTotalVendido = false,
+    this.sinLeerDe,
   });
 
   final List<Pedido> pedidos;
@@ -199,6 +202,9 @@ class _ListaPedidos extends StatefulWidget {
   final void Function(Pedido) alAbrir;
   final void Function(Pedido)? alCancelar;
   final bool mostrarTotalVendido;
+
+  /// Mensajes sin leer de un pedido, para su distintivo.
+  final int Function(String)? sinLeerDe;
 
   @override
   State<_ListaPedidos> createState() => _ListaPedidosState();
@@ -298,6 +304,7 @@ class _ListaPedidosState extends State<_ListaPedidos> {
                       TarjetaPedido(
                         pedido: pedido,
                         soyVendedor: widget.soyVendedor,
+                        mensajesSinLeer: widget.sinLeerDe?.call(pedido.id) ?? 0,
                         alAbrir: () => widget.alAbrir(pedido),
                         alCancelar:
                             widget.alCancelar != null &&
