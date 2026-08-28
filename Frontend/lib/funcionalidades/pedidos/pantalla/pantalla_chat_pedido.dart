@@ -52,6 +52,10 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
   bool _abriendoWhatsapp = false;
   int _cuantosHabia = 0;
 
+  /// Dónde quedaron en encontrarse. Es lo que se está coordinando, así que
+  /// tenerlo a la vista ahorra la mitad de los mensajes.
+  String? _puntoEntrega;
+
   /// Si lo ultimo que se dijo es mio y ya lleva rato sin respuesta.
   ///
   /// Se recalcula en cada emision del hilo, que llega cada pocos segundos por
@@ -85,6 +89,18 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
     super.initState();
     // Entrar ya cuenta como haber visto lo que llegó antes.
     _repositorio.marcarLeidos(widget.pedidoId).catchError((_) {});
+    _cargarPuntoEntrega();
+  }
+
+  Future<void> _cargarPuntoEntrega() async {
+    try {
+      final pedido = await _pedidos.obtener(widget.pedidoId);
+      if (mounted && pedido?.puntoEncuentro != null) {
+        setState(() => _puntoEntrega = pedido!.puntoEncuentro);
+      }
+    } catch (_) {
+      // Sin punto la conversación funciona igual: es un dato de apoyo.
+    }
   }
 
   @override
@@ -198,6 +214,7 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
 
         return Column(
           children: [
+            if (_puntoEntrega case final punto?) _PuntoEntrega(punto: punto),
             Expanded(
               child: mensajes.isEmpty
                   ? _ChatVacio(contraparte: widget.contraparte)
@@ -540,6 +557,55 @@ class _RespaldoWhatsapp extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Punto de entrega
+// ---------------------------------------------------------------------------
+/// Recuerda dónde quedaron, sin tener que subir a buscarlo al pedido.
+///
+/// Es lo que más se pregunta en estos chats — "¿dónde estás?", "¿qué bloque?"
+/// — así que tenerlo fijo arriba ahorra la mitad de la conversación.
+class _PuntoEntrega extends StatelessWidget {
+  const _PuntoEntrega({required this.punto});
+
+  final String punto;
+
+  @override
+  Widget build(BuildContext context) {
+    final oscuro = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+      color: oscuro ? const Color(0xFF16261C) : const Color(0xFFEBF7EF),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.place_outlined,
+            size: 15,
+            color: oscuro ? const Color(0xFF7FC79C) : const Color(0xFF2F7A50),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              punto,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                color: oscuro
+                    ? const Color(0xFFA9C9B5)
+                    : const Color(0xFF2F7A50),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

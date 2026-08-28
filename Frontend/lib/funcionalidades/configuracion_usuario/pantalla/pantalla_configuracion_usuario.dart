@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../instalacion_app/diseno/opcion_instalar_app.dart';
 import '../../instalacion_app/logica/controlador_instalacion.dart';
+import '../diseno/opcion_chats.dart';
 import '../diseno/opcion_mis_publicaciones.dart';
 import '../diseno/boton_cerrar_sesion.dart';
 import '../diseno/opcion_acerca_de.dart';
@@ -64,6 +65,7 @@ class _PantallaConfiguracionUsuarioState
                       // sin acceso, asi que la unica forma de ver lo propio
                       // era el perfil.
                       const OpcionMisPublicaciones(),
+                      const OpcionChats(),
                       const OpcionNotificaciones(),
                       if (ControladorInstalacion.instancia.disponible)
                         const OpcionInstalarApp(),
