@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import 'selector_categoria_publicacion.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
@@ -96,7 +97,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
           FilledButton(
             onPressed: () => Navigator.of(contexto).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5C8A63),
+              backgroundColor: ConfiguracionTema.verdeMarca,
             ),
             child: const Text('Continuar'),
           ),
@@ -241,7 +242,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                   filled: true,
                   fillColor: oscuro
                       ? const Color(0xFF090B09)
-                      : const Color(0xFFF1F3F1),
+                      : const Color(0xFFF1F5F2),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
                     borderSide: BorderSide.none,
@@ -253,7 +254,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
                     borderSide: const BorderSide(
-                      color: Color(0xFF5F9368),
+                      color: ConfiguracionTema.verdeMarca,
                       width: 1.5,
                     ),
                   ),
@@ -401,7 +402,7 @@ class _PasoPublicacion extends StatelessWidget {
             width: 5,
             decoration: BoxDecoration(
               color: completo
-                  ? const Color(0xFF5F9368)
+                  ? ConfiguracionTema.verdeMarca
                   : const Color(0xFFDFE4DF),
               borderRadius: BorderRadius.circular(4),
             ),
@@ -421,17 +422,17 @@ class _PasoPublicacion extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: completo
-                    ? const Color(0xFF5F9368)
+                    ? ConfiguracionTema.verdeMarca
                     : activo
                     ? Colors.white
                     : const Color(0xFFDFE4DF),
                 shape: BoxShape.circle,
                 border: activo
-                    ? Border.all(color: const Color(0xFF5F9368), width: 4)
+                    ? Border.all(color: ConfiguracionTema.verdeMarca, width: 4)
                     : null,
                 boxShadow: activo
                     ? const [
-                        BoxShadow(color: Color(0x445F9368), blurRadius: 12),
+                        BoxShadow(color: Color(0x44138A5B), blurRadius: 12),
                       ]
                     : null,
               ),
@@ -449,7 +450,7 @@ class _PasoPublicacion extends StatelessWidget {
                         key: ValueKey(numero),
                         style: TextStyle(
                           color: activo
-                              ? const Color(0xFF5F9368)
+                              ? ConfiguracionTema.verdeMarca
                               : Theme.of(context).brightness == Brightness.dark
                               ? Colors.white
                               : Colors.black,
@@ -475,8 +476,13 @@ class _TarjetaFormulario extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(6, 8, 4, 22),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(2, 4, 2, 18),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: oscuro ? const Color(0xFF19161B) : Colors.white,
+        borderRadius: BorderRadius.circular(26),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

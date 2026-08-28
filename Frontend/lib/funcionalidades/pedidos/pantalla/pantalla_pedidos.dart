@@ -85,9 +85,9 @@ class _PantallaPedidosState extends State<PantallaPedidos>
           const SizedBox(height: 12),
           TabBar(
             controller: _pestanas,
-            labelColor: const Color(0xFF55785A),
+            labelColor: const Color(0xFF0C6843),
             unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
-            indicatorColor: const Color(0xFF5C8A63),
+            indicatorColor: const Color(0xFF138A5B),
             labelStyle: const TextStyle(fontWeight: FontWeight.w900),
             tabs: [
               _PestanaConAviso(
@@ -346,7 +346,7 @@ class _ResumenMovimiento extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
-      color: esVenta ? const Color(0xFF5C8A63) : const Color(0xFF171917),
+      color: esVenta ? const Color(0xFF138A5B) : const Color(0xFF171917),
       borderRadius: BorderRadius.circular(26),
       boxShadow: const [
         BoxShadow(

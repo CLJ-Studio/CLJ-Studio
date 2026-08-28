@@ -121,7 +121,7 @@ class _EditorNegocioState extends State<EditorNegocio> {
             const Icon(
               Icons.storefront_rounded,
               size: 19,
-              color: Color(0xFF5C8A63),
+              color: Color(0xFF138A5B),
             ),
             const SizedBox(width: 8),
             Text(

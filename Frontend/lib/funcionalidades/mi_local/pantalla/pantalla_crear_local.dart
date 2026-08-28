@@ -160,7 +160,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                             },
                             textCapitalization: TextCapitalization.words,
                             style: const TextStyle(color: Color(0xFF263029)),
-                            cursorColor: const Color(0xFF5C8A63),
+                            cursorColor: const Color(0xFF138A5B),
                             decoration: const InputDecoration(
                               labelText: 'Nombre del local',
                               hintText: 'Ej. Sabor Campus',
@@ -232,7 +232,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                     child: FilledButton(
                       onPressed: _guardando ? null : _continuar,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF5C8A63),
+                        backgroundColor: const Color(0xFF138A5B),
                         padding: const EdgeInsets.symmetric(vertical: 17),
                       ),
                       child: _guardando
@@ -385,7 +385,7 @@ class _BurbujaPregunta extends StatelessWidget {
                 backgroundColor: Theme.of(
                   context,
                 ).colorScheme.primary.withValues(alpha: .12),
-                foregroundColor: const Color(0xFF5C8A63),
+                foregroundColor: const Color(0xFF138A5B),
                 child: Icon(icono, size: 22),
               ),
               const SizedBox(height: 16),
@@ -455,7 +455,7 @@ class _LogoSubido extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: subiendo ? null : alElegir,
       style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF55785A),
+        foregroundColor: const Color(0xFF0C6843),
         side: const BorderSide(color: Color(0xFF6F9D76), width: 1.4),
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),

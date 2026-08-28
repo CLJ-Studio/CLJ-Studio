@@ -173,7 +173,7 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
       ),
       body: _buscandoSolicitud
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF5C8A63)),
+              child: CircularProgressIndicator(color: Color(0xFF138A5B)),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),

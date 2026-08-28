@@ -71,7 +71,7 @@ class _OpcionNotificacionesState extends State<OpcionNotificaciones> {
   @override
   Widget build(BuildContext context) => SwitchListTile(
     activeThumbColor: Colors.white,
-    activeTrackColor: const Color(0xFF5F9368),
+    activeTrackColor: const Color(0xFF138A5B),
     inactiveThumbColor: Colors.white,
     inactiveTrackColor: const Color(0xFFD2D5D2),
     secondary: _trabajando

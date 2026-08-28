@@ -4,18 +4,22 @@ import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 
 /// Identidad visual de la aplicación, en claro y en oscuro.
 ///
-/// El verde es el color de la marca (el búho) y manda en ambos temas. El
-/// El modo oscuro usa negro real, texto blanco y controles verdes.
+/// La interfaz del marketplace usa una marca vibrante y superficies limpias.
+/// El verde se conserva como color auxiliar del búho y de estados positivos.
 abstract final class ConfiguracionTema {
   // Marca
-  static const Color verde = Color(0xFF5C8A63);
-  static const Color verdeClaro = Color(0xFF7FA987);
+  static const Color verde = Color(0xFF168A58);
+  static const Color verdeClaro = Color(0xFF66C493);
+  static const Color verdeMarca = Color(0xFF138A5B);
+  static const Color verdeMarcaOscuro = Color(0xFF0C6843);
+  static const Color azulPetroleo = Color(0xFF164A56);
+  static const Color tinta = Color(0xFF17231D);
 
   // Tema claro
-  static const Color texto = Color(0xFF4A4B4D);
-  static const Color textoSecundario = Color(0xFF7C7D7E);
-  static const Color grisClaro = Color(0xFFF2F2F2);
-  static const Color fondo = Color(0xFFF8F4EC);
+  static const Color texto = tinta;
+  static const Color textoSecundario = Color(0xFF6D7872);
+  static const Color grisClaro = Color(0xFFF1F5F2);
+  static const Color fondo = Color(0xFFF9FCFA);
 
   // Tema oscuro
   static const Color fondoOscuro = Colors.black;
@@ -69,10 +73,10 @@ abstract final class ConfiguracionTema {
       fontFamily: 'Nunito',
       scaffoldBackgroundColor: fondoBase,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: verde,
+        seedColor: verdeMarca,
         brightness: brillo,
-        primary: esOscuro ? verdeClaro : verde,
-        secondary: verde,
+        primary: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
+        secondary: esOscuro ? const Color(0xFF72BAC3) : azulPetroleo,
         surface: superficie,
         onPrimary: Colors.white,
         onSurface: colorTexto,
@@ -105,17 +109,17 @@ abstract final class ConfiguracionTema {
         hintStyle: TextStyle(color: colorTextoSecundario),
         labelStyle: TextStyle(color: colorTextoSecundario),
         border: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(28)),
+          borderRadius: BorderRadius.all(Radius.circular(24)),
           borderSide: BorderSide.none,
         ),
         enabledBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(28)),
+          borderRadius: BorderRadius.all(Radius.circular(24)),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(28)),
+          borderRadius: const BorderRadius.all(Radius.circular(24)),
           borderSide: BorderSide(
-            color: esOscuro ? verdeClaro : verde,
+            color: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
             width: 2,
           ),
         ),
@@ -124,13 +128,13 @@ abstract final class ConfiguracionTema {
         color: superficie,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          borderRadius: const BorderRadius.all(Radius.circular(24)),
           side: BorderSide(color: borde),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: esOscuro ? verdeClaro : verde,
+          backgroundColor: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
           foregroundColor: esOscuro ? const Color(0xFF11251A) : Colors.white,
           disabledBackgroundColor: esOscuro
               ? const Color(0xFF142719)
@@ -142,8 +146,8 @@ abstract final class ConfiguracionTema {
       chipTheme: ChipThemeData(
         backgroundColor: superficieAlta,
         selectedColor: esOscuro
-            ? const Color(0xFF2E4636)
-            : const Color(0xFFE7F2E8),
+            ? const Color(0xFF174232)
+            : const Color(0xFFE3F3EA),
         side: BorderSide.none,
         shape: const StadiumBorder(),
         labelStyle: TextStyle(color: colorTexto, fontWeight: FontWeight.w600),
@@ -204,10 +208,10 @@ abstract final class ConfiguracionTema {
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: esOscuro ? verdeClaro : verde,
+        color: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: esOscuro ? verdeClaro : verde,
+        backgroundColor: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
         foregroundColor: esOscuro ? const Color(0xFF11251A) : Colors.white,
         shape: const CircleBorder(),
       ),

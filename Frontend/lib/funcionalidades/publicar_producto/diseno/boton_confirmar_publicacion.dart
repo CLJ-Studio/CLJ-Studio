@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
+
 /// Envía la publicación. Se deshabilita pasando `null` mientras se guarda.
 class BotonConfirmarPublicacion extends StatelessWidget {
   const BotonConfirmarPublicacion({required this.alPresionar, super.key});
@@ -14,7 +16,7 @@ class BotonConfirmarPublicacion extends StatelessWidget {
       child: FilledButton(
         onPressed: alPresionar,
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF5F9368),
+          backgroundColor: ConfiguracionTema.verdeMarca,
           disabledBackgroundColor: const Color(0xFFD5D8D5),
           disabledForegroundColor: const Color(0xFF777C79),
           foregroundColor: Colors.white,
@@ -22,7 +24,7 @@ class BotonConfirmarPublicacion extends StatelessWidget {
             borderRadius: BorderRadius.circular(22),
           ),
           elevation: 5,
-          shadowColor: const Color(0x665F9368),
+          shadowColor: const Color(0x66138A5B),
         ),
         child: const Row(
           children: [

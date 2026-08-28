@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../logica/ubicacion_comprador.dart';
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../notificaciones/diseno/boton_campana.dart';
+import '../logica/ubicacion_comprador.dart';
 import '../modelos/categoria_marketplace.dart';
 import 'barra_busqueda_marketplace.dart';
-import 'barra_categorias_marketplace.dart';
 import 'boton_carrito_compras.dart';
 
-/// Cabecera compartida por Inicio y Locales inspirada en una app de delivery.
+/// Cabecera compartida por Inicio y Locales.
+///
+/// Mantiene las acciones existentes, pero adopta la composición de una app de
+/// marketplace: ubicación y accesos arriba, buscador blanco dentro de un
+/// bloque de marca que se contrae al hacer scroll.
 class CampusCollapsingHeader extends StatelessWidget {
   const CampusCollapsingHeader({
     required this.nombre,
@@ -52,7 +56,8 @@ class CampusCollapsingHeader extends StatelessWidget {
   );
 }
 
-/// Versión fija situada por encima del PageView principal.
+/// Versión fija usada cuando una pantalla compone el encabezado por fuera del
+/// scroll principal.
 class CampusFixedHeader extends StatelessWidget {
   const CampusFixedHeader({
     required this.nombre,
@@ -81,7 +86,7 @@ class CampusFixedHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: mostrarCategorias ? 264 : 154,
+    height: mostrarCategorias ? 218 : 158,
     child: CampusHeaderDelegate(
       nombre: nombre,
       categorias: categorias,
@@ -133,19 +138,23 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
           children: [
             const ListTile(
               title: Text(
-                'Elige una ubicación',
+                '¿Dónde quieres encontrarte?',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
               ),
+              subtitle: Text('Elige una zona del campus UPSA.'),
             ),
             for (final ubicacion in UbicacionComprador.zonas)
               ListTile(
                 leading: const Icon(
                   Icons.location_on_outlined,
-                  color: Color(0xFF5C8A63),
+                  color: ConfiguracionTema.verdeMarca,
                 ),
                 title: Text(ubicacion),
                 trailing: UbicacionComprador.instancia.zona == ubicacion
-                    ? const Icon(Icons.check_rounded, color: Color(0xFF5C8A63))
+                    ? const Icon(
+                        Icons.check_circle_rounded,
+                        color: ConfiguracionTema.verdeMarca,
+                      )
                     : null,
                 onTap: () => Navigator.of(context).pop(ubicacion),
               ),
@@ -156,39 +165,8 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     if (elegida != null) await UbicacionComprador.instancia.elegir(elegida);
   }
 
-  Future<void> _mostrarTodasCategorias(BuildContext context) async {
-    final elegida = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.only(bottom: 14),
-          children: [
-            const ListTile(
-              title: Text(
-                'Todas las categorías',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-              ),
-            ),
-            for (final categoria in categorias)
-              ListTile(
-                leading: Icon(categoria.icono, color: const Color(0xFF5C8A63)),
-                title: Text(categoria.nombre),
-                trailing: categoria.id == categoriaId
-                    ? const Icon(Icons.check_rounded, color: Color(0xFF5C8A63))
-                    : null,
-                onTap: () => Navigator.of(context).pop(categoria.id),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (elegida != null) alSeleccionarCategoria(elegida);
-  }
-
   @override
-  double get maxExtent => mostrarCategorias ? 264 : 154;
+  double get maxExtent => mostrarCategorias ? 218 : 158;
 
   @override
   double get minExtent => 72;
@@ -199,181 +177,143 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    final progreso = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
-    final opacidadSecundaria = (1 - progreso * 1.8).clamp(0.0, 1.0);
-    final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final fondo = oscuro
-        ? Theme.of(context).colorScheme.surface
-        : Theme.of(context).scaffoldBackgroundColor;
-    final texto = oscuro ? Colors.white : const Color(0xFF202220);
-    final secundario = oscuro
-        ? Colors.white.withValues(alpha: .62)
-        : const Color(0xFF8A8E8A);
+    final recorrido = (maxExtent - minExtent).clamp(1, double.infinity);
+    final progreso = (shrinkOffset / recorrido).clamp(0.0, 1.0);
+    final opacidadBuscador = (1 - progreso * 1.75).clamp(0.0, 1.0);
 
-    return ColoredBox(
-      color: fondo,
-      child: ClipRect(
-        child: OverflowBox(
-          alignment: Alignment.topCenter,
-          minHeight: maxExtent,
-          maxHeight: maxExtent,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: 1200,
-                  minHeight: maxExtent,
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 68,
-                      child: Transform.scale(
-                        scale: 1 - progreso * .1,
-                        alignment: Alignment.center,
-                        child: Row(
-                          children: [
-                            _AvatarEncabezado(
-                              nombre: nombre,
-                              avatarUrl: avatarUrl,
-                            ),
-                            const SizedBox(width: 11),
-                            if (mostrarUbicacion)
-                              Expanded(
-                                child: AnimatedBuilder(
-                                  animation: UbicacionComprador.instancia,
-                                  builder: (context, _) => InkWell(
-                                    borderRadius: BorderRadius.circular(12),
-                                    onTap: () => _elegirUbicacion(context),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 7,
+    return Material(
+      color: ConfiguracionTema.verdeMarca,
+      elevation: overlapsContent ? 6 : 0,
+      shadowColor: const Color(0x33000000),
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 66,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: AnimatedBuilder(
+                          animation: UbicacionComprador.instancia,
+                          builder: (context, _) => InkWell(
+                            onTap: () => _elegirUbicacion(context),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'ENTREGA EN',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: .72,
                                       ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Ubicación',
-                                            style: TextStyle(
-                                              color: secundario,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.location_on_outlined,
-                                                color: Color(0xFF5C8A63),
-                                                size: 17,
-                                              ),
-                                              const SizedBox(width: 3),
-                                              Flexible(
-                                                child: Text(
-                                                  UbicacionComprador
-                                                      .instancia
-                                                      .etiqueta,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    color: texto,
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w800,
-                                                  ),
-                                                ),
-                                              ),
-                                              const Icon(
-                                                Icons
-                                                    .keyboard_arrow_down_rounded,
-                                                color: Color(0xFF5C8A63),
-                                                size: 19,
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: .8,
                                     ),
                                   ),
-                                ),
-                              )
-                            else
-                              const Spacer(),
-                            const BotonCampana(),
-                            const SizedBox(width: 5),
-                            _AccionCircular(
-                              tooltip: 'Mis pedidos',
-                              icono: Icons.local_shipping_rounded,
-                              alPresionar: alAbrirPedidos,
+                                  const SizedBox(height: 1),
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          UbicacionComprador.instancia.elegida
+                                              ? UbicacionComprador
+                                                    .instancia
+                                                    .etiqueta
+                                              : 'Campus UPSA',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Colors.white,
+                                        size: 21,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(width: 5),
-                            BotonCarritoCompras(alPresionar: alAbrirCarrito),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                    IgnorePointer(
-                      ignoring: opacidadSecundaria < .15,
+                      BotonCarritoCompras(
+                        alPresionar: alAbrirCarrito,
+                        sobreFondoMarca: true,
+                      ),
+                      _AccionEncabezado(
+                        tooltip: 'Mis pedidos',
+                        icono: Icons.receipt_long_outlined,
+                        alPresionar: alAbrirPedidos,
+                      ),
+                      const BotonCampana(sobreFondoMarca: true),
+                      const SizedBox(width: 4),
+                      _AvatarEncabezado(nombre: nombre, avatarUrl: avatarUrl),
+                    ],
+                  ),
+                ),
+                ClipRect(
+                  child: Align(
+                    heightFactor: opacidadBuscador,
+                    child: IgnorePointer(
+                      ignoring: opacidadBuscador < .1,
                       child: Opacity(
-                        opacity: opacidadSecundaria,
+                        opacity: opacidadBuscador,
                         child: BarraBusquedaMarketplace(alCambiar: alBuscar),
                       ),
                     ),
-                    const SizedBox(height: 7),
-                    if (mostrarCategorias) ...[
-                      Opacity(
-                        opacity: opacidadSecundaria,
-                        child: SizedBox(
-                          height: 34,
+                  ),
+                ),
+                if (mostrarCategorias)
+                  ClipRect(
+                    child: Align(
+                      heightFactor: opacidadBuscador,
+                      child: Opacity(
+                        opacity: opacidadBuscador,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 10),
                           child: Row(
                             children: [
-                              Expanded(
-                                child: Text(
-                                  'Explora categorías',
-                                  style: TextStyle(
-                                    color: texto,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w900,
-                                  ),
+                              const Text(
+                                'Compra y vende dentro del campus',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              TextButton(
-                                onPressed: () =>
-                                    _mostrarTodasCategorias(context),
-                                child: const Text(
-                                  'Ver todo',
-                                  style: TextStyle(
-                                    color: Color(0xFF5C8A63),
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                              const Spacer(),
+                              Text(
+                                '${categorias.length} categorías',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: .76),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: IgnorePointer(
-                          ignoring: opacidadSecundaria < .15,
-                          child: Opacity(
-                            opacity: opacidadSecundaria,
-                            child: BarraCategoriasMarketplace(
-                              categorias: categorias,
-                              categoriaId: categoriaId,
-                              alSeleccionar: alSeleccionarCategoria,
-                              compactProgress: progreso,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ] else
-                      const Spacer(),
-                  ],
-                ),
-              ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -391,52 +331,8 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
       oldDelegate.mostrarUbicacion != mostrarUbicacion;
 }
 
-class _AvatarEncabezado extends StatelessWidget {
-  const _AvatarEncabezado({required this.nombre, this.avatarUrl});
-
-  final String nombre;
-  final String? avatarUrl;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 43,
-    height: 43,
-    clipBehavior: Clip.antiAlias,
-    alignment: Alignment.center,
-    decoration: const BoxDecoration(
-      color: Color(0xFF5C8A63),
-      shape: BoxShape.circle,
-    ),
-    child: avatarUrl == null || avatarUrl!.isEmpty
-        ? _InicialAvatar(nombre: nombre)
-        : Image.network(
-            avatarUrl!,
-            width: 43,
-            height: 43,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => _InicialAvatar(nombre: nombre),
-          ),
-  );
-}
-
-class _InicialAvatar extends StatelessWidget {
-  const _InicialAvatar({required this.nombre});
-
-  final String nombre;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    nombre.isEmpty ? 'U' : nombre[0].toUpperCase(),
-    style: const TextStyle(
-      color: Colors.white,
-      fontSize: 18,
-      fontWeight: FontWeight.w900,
-    ),
-  );
-}
-
-class _AccionCircular extends StatelessWidget {
-  const _AccionCircular({
+class _AccionEncabezado extends StatelessWidget {
+  const _AccionEncabezado({
     required this.tooltip,
     required this.icono,
     required this.alPresionar,
@@ -450,11 +346,66 @@ class _AccionCircular extends StatelessWidget {
   Widget build(BuildContext context) => IconButton(
     tooltip: tooltip,
     onPressed: alPresionar,
-    style: IconButton.styleFrom(
-      foregroundColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.white
-          : const Color(0xFF202220),
-    ),
-    icon: Icon(icono, size: 27, weight: 700),
+    style: IconButton.styleFrom(foregroundColor: Colors.white),
+    icon: Icon(icono, size: 26, weight: 700),
   );
+}
+
+class _AvatarEncabezado extends StatelessWidget {
+  const _AvatarEncabezado({required this.nombre, this.avatarUrl});
+
+  final String nombre;
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = avatarUrl?.trim();
+    final inicial = nombre.trim().isEmpty
+        ? null
+        : nombre.trim()[0].toUpperCase();
+
+    Widget respaldo() => ColoredBox(
+      color: const Color(0xFFE1F2E8),
+      child: Center(
+        child: inicial == null
+            ? const Icon(
+                Icons.person_rounded,
+                color: ConfiguracionTema.verdeMarcaOscuro,
+                size: 23,
+              )
+            : Text(
+                inicial,
+                style: const TextStyle(
+                  color: ConfiguracionTema.verdeMarcaOscuro,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+      ),
+    );
+
+    return Semantics(
+      label: 'Foto de perfil',
+      image: true,
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: .82),
+            width: 2,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: url == null || url.isEmpty
+            ? respaldo()
+            : Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => respaldo(),
+              ),
+      ),
+    );
+  }
 }

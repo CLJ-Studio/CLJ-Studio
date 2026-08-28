@@ -155,7 +155,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
               ? null
               : () => _ejecutar(() => _repositorio.aceptar(pedido.id)),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF5C8A63),
+            backgroundColor: const Color(0xFF138A5B),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: const StadiumBorder(),
           ),
@@ -203,7 +203,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
         FilledButton.icon(
           onPressed: _ocupado ? null : () => _abrirChat(pedido, soyVendedor),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF5C8A63),
+            backgroundColor: const Color(0xFF138A5B),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: const StadiumBorder(),
@@ -266,7 +266,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
                 : () =>
                       _ejecutar(() => _repositorio.confirmarEntrega(pedido.id)),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5C8A63),
+              backgroundColor: const Color(0xFF138A5B),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: const StadiumBorder(),
             ),
@@ -279,7 +279,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
         OutlinedButton.icon(
           onPressed: _ocupado ? null : () => _abrirChat(pedido, soyVendedor),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF5C8A63),
+            foregroundColor: const Color(0xFF138A5B),
             side: const BorderSide(color: Color(0xFFAECBB3)),
             padding: const EdgeInsets.symmetric(vertical: 15),
             shape: const StadiumBorder(),

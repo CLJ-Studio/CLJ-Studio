@@ -28,7 +28,7 @@ class MenuDesplegableAplicacion extends StatefulWidget {
 }
 
 class _MenuDesplegableAplicacionState extends State<MenuDesplegableAplicacion> {
-  static const _verde = Color(0xFF5F9368);
+  static const _verde = Color(0xFF138A5B);
   static const _altoFila = 52.0;
   static const _umbralBusqueda = 8;
 

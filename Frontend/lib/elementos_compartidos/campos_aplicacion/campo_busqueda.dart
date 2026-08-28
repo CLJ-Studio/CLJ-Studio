@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
+import '../../configuracion_aplicacion/configuracion_tema.dart';
+
 /// Buscador visual compartido por inicio y locales.
 class CampoBusqueda extends StatefulWidget {
   const CampoBusqueda({
@@ -40,14 +42,14 @@ class _CampoBusquedaState extends State<CampoBusqueda> {
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final colorTexto = oscuro ? Colors.white : const Color(0xFF202220);
-    final radio = lerpDouble(17, 15, widget.compactProgress)!;
+    final colorTexto = oscuro ? Colors.white : ConfiguracionTema.tinta;
+    final radio = lerpDouble(28, 22, widget.compactProgress)!;
     final borde = OutlineInputBorder(
       borderRadius: BorderRadius.circular(radio),
       borderSide: BorderSide.none,
     );
     return SizedBox(
-      height: lerpDouble(48, 42, widget.compactProgress),
+      height: lerpDouble(54, 44, widget.compactProgress),
       child: TextField(
         controller: _controladorTexto,
         onChanged: _alCambiar,
@@ -63,19 +65,26 @@ class _CampoBusquedaState extends State<CampoBusqueda> {
                 : const Color(0xFF9A9D9A),
           ),
           filled: true,
-          fillColor: oscuro ? const Color(0xFF24272A) : const Color(0xFFEEEDEB),
+          fillColor: oscuro ? const Color(0xFF272329) : Colors.white,
           isDense: true,
           contentPadding: EdgeInsets.symmetric(
             horizontal: lerpDouble(16, 13, widget.compactProgress)!,
             vertical: lerpDouble(13, 10, widget.compactProgress)!,
           ),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: oscuro ? const Color(0xFF9CA1A6) : const Color(0xFF646A67),
-            size: lerpDouble(22, 20, widget.compactProgress),
-          ),
           suffixIcon: _controladorTexto.text.isEmpty
-              ? null
+              ? Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: ConfiguracionTema.verdeMarca,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.search_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
               : IconButton(
                   tooltip: 'Borrar búsqueda',
                   onPressed: _limpiar,
@@ -83,7 +92,7 @@ class _CampoBusquedaState extends State<CampoBusqueda> {
                     Icons.close_rounded,
                     color: oscuro
                         ? const Color(0xFFB9BDBA)
-                        : const Color(0xFF646A67),
+                        : ConfiguracionTema.verdeMarca,
                   ),
                 ),
           border: borde,

@@ -303,7 +303,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                       child: FilledButton(
                         onPressed: _guardando ? null : _guardar,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF5C8A63),
+                          backgroundColor: const Color(0xFF138A5B),
                           shape: const StadiumBorder(),
                         ),
                         child: _guardando
@@ -346,7 +346,7 @@ class _DatosInstitucionales extends StatelessWidget {
               const Icon(
                 Icons.verified_rounded,
                 size: 18,
-                color: Color(0xFF5C8A63),
+                color: Color(0xFF138A5B),
               ),
               const SizedBox(width: 8),
               Text(
@@ -427,7 +427,7 @@ class _SelectorFotoPerfil extends StatelessWidget {
                   },
           ),
           Material(
-            color: const Color(0xFF5C8A63),
+            color: const Color(0xFF138A5B),
             shape: const CircleBorder(),
             child: InkWell(
               onTap: subiendo ? null : alElegir,
@@ -462,7 +462,7 @@ class _InicialGrande extends StatelessWidget {
     child: Text(
       inicial,
       style: const TextStyle(
-        color: Color(0xFF55785A),
+        color: Color(0xFF0C6843),
         fontSize: 38,
         fontWeight: FontWeight.w900,
       ),

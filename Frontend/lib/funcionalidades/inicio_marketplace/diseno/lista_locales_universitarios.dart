@@ -34,7 +34,7 @@ class ListaLocalesUniversitarios extends StatelessWidget {
             crossAxisCount: columnas,
             crossAxisSpacing: 18,
             mainAxisSpacing: 18,
-            mainAxisExtent: anchoTarjeta * 3 / 4 + 68,
+            mainAxisExtent: anchoTarjeta * 3 / 4 + 76,
           ),
           itemCount: locales.length,
           itemBuilder: (_, indice) {
@@ -47,7 +47,7 @@ class ListaLocalesUniversitarios extends StatelessWidget {
               closedColor: Colors.transparent,
               openColor: Theme.of(context).scaffoldBackgroundColor,
               closedShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(24),
               ),
               openShape: const RoundedRectangleBorder(),
               closedBuilder: (_, abrir) =>

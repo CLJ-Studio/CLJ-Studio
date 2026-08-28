@@ -77,7 +77,7 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
 
           final grupos = _agrupar(controlador.notificaciones);
           return RefreshIndicator.adaptive(
-            color: const Color(0xFF5C8A63),
+            color: const Color(0xFF138A5B),
             onRefresh: controlador.cargar,
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(
@@ -185,7 +185,7 @@ class _Encabezado extends StatelessWidget {
                     label: const Text('Leer todas'),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFF527A59),
-                      backgroundColor: const Color(0x185C8A63),
+                      backgroundColor: const Color(0x18138A5B),
                       textStyle: const TextStyle(fontWeight: FontWeight.w800),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 13,
@@ -361,7 +361,7 @@ class _TarjetaNotificacion extends StatelessWidget {
     'pedido_vencido' || 'entrega_por_confirmar' => const Color(0xFFC08335),
     'nuevo_local' => const Color(0xFF6B70B5),
     'ubicacion_pendiente' => const Color(0xFF3E8291),
-    _ => const Color(0xFF5C8A63),
+    _ => const Color(0xFF138A5B),
   };
 
   @override
@@ -521,10 +521,10 @@ class _SinNotificaciones extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0x265C8A63), Color(0x0D5C8A63)],
+                colors: [Color(0x26138A5B), Color(0x0D138A5B)],
               ),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0x225C8A63)),
+              border: Border.all(color: const Color(0x22138A5B)),
             ),
             child: const Icon(
               Icons.notifications_none_rounded,

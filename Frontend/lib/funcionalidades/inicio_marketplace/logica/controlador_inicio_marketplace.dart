@@ -158,6 +158,13 @@ class ControladorInicioMarketplace extends ChangeNotifier {
               (local != null &&
                   !local.esPersonal &&
                   local.categoriaId == 'comida'),
+        // Agrupador exclusivo de la interfaz: reúne las publicaciones que no
+        // son comida sin exigir una nueva categoría en la base de datos.
+        'productos' =>
+          publicacion.categoriaEfectiva != 'comida' &&
+              (local == null ||
+                  local.esPersonal ||
+                  local.categoriaId != 'comida'),
         _ => publicacion.categoriaEfectiva == categoria,
       };
 

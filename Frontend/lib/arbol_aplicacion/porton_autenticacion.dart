@@ -183,7 +183,7 @@ class _PantallaErrorSesion extends StatelessWidget {
               FilledButton(
                 onPressed: alReintentar,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5C8A63),
+                  backgroundColor: const Color(0xFF138A5B),
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Reintentar'),

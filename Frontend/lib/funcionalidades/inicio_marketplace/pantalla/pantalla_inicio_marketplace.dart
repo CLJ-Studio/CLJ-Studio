@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
@@ -128,12 +129,19 @@ class PantallaInicioMarketplace extends StatelessWidget {
                             const SizedBox(height: 18),
                             _CategoriasInicio(
                               categorias: estado.categorias,
+                              publicaciones: controlador.catalogoCompleto,
                               categoriaId: estado.categoriaId,
                               alSeleccionar: controlador.seleccionarCategoria,
                             ),
-                            const SizedBox(height: 22),
+                            const SizedBox(height: 26),
+                            _EscaparatePopular(
+                              publicaciones: publicacionesPopulares,
+                              alVerTodo: () =>
+                                  controlador.seleccionarCategoria('todas'),
+                            ),
+                            const SizedBox(height: 28),
                             _TituloSeccion(
-                              titulo: 'Locales más vistos',
+                              titulo: 'Los mejores del campus',
                               alVerTodo:
                                   alVerLocalesDestacados ??
                                   () =>
@@ -145,18 +153,8 @@ class PantallaInicioMarketplace extends StatelessWidget {
                               construirDetalle: (_, local) =>
                                   PantallaDetalleLocal(local: local),
                             ),
-                            const SizedBox(height: 22),
-                            _TituloSeccion(
-                              titulo: 'Populares',
-                              alVerTodo: () =>
-                                  controlador.seleccionarCategoria('todas'),
-                            ),
-                            const SizedBox(height: 10),
-                            _CarruselPublicaciones(
-                              publicaciones: publicacionesPopulares,
-                            ),
-                            const SizedBox(height: 22),
-                            _TituloSeccion(titulo: 'Publicaciones'),
+                            const SizedBox(height: 28),
+                            _TituloSeccion(titulo: 'Descubre algo nuevo'),
                             const SizedBox(height: 10),
                             _CuadriculaPublicaciones(
                               publicaciones: publicacionesHome,
@@ -175,7 +173,7 @@ class PantallaInicioMarketplace extends StatelessWidget {
           // Al tocar fuera de los resultados se cierra la búsqueda y el teclado.
           if (buscando)
             Positioned.fill(
-              top: mostrarEncabezado ? 118 : 0,
+              top: mostrarEncabezado ? 124 : 0,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: () {
@@ -186,7 +184,7 @@ class PantallaInicioMarketplace extends StatelessWidget {
             ),
           // El panel se conserva mientras se anima para comprimirse al cerrar.
           Positioned(
-            top: mostrarEncabezado ? 118 : 0,
+            top: mostrarEncabezado ? 124 : 0,
             left: 14,
             right: 14,
             child: IgnorePointer(
@@ -381,7 +379,7 @@ class _ResultadoBusqueda extends StatelessWidget {
     leading: _ImagenResultado(icono: icono, imagenUrl: imagenUrl),
     title: Text(titulo, style: const TextStyle(fontWeight: FontWeight.w800)),
     subtitle: Text(subtitulo),
-    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF5C8A63)),
+    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF138A5B)),
   );
 }
 
@@ -394,7 +392,7 @@ class _ImagenResultado extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CircleAvatar(
     radius: 22,
-    backgroundColor: const Color(0xFF16A34A),
+    backgroundColor: const Color(0xFF138A5B),
     foregroundColor: Colors.white,
     child: imagenUrl == null || imagenUrl!.isEmpty
         ? Icon(icono, size: 21)
@@ -423,7 +421,7 @@ class _BusquedaVacia extends StatelessWidget {
     ),
     child: const Column(
       children: [
-        Icon(Icons.search_off_rounded, size: 42, color: Color(0xFF5C8A63)),
+        Icon(Icons.search_off_rounded, size: 42, color: Color(0xFF138A5B)),
         SizedBox(height: 10),
         Text(
           'No encontramos resultados',
@@ -457,7 +455,7 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
   int _paginaActual = 0;
 
   static const _textos = <String, (String, String)>{
-    'comida': ('Sabores que\nllegan hasta ti.', 'Comida hecha en el campus.'),
+    'comida': ('Antojos entre\nclases.', 'Comida hecha en el campus.'),
     'servicios': (
       'Talento de\nnuestra comunidad.',
       'Servicios de otros estudiantes.',
@@ -468,7 +466,7 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
     ),
   };
 
-  static const _colores = [Color(0xFF237A45), Color(0xFF315C3B)];
+  static const _colores = [ConfiguracionTema.azulPetroleo, Color(0xFF2B7A73)];
 
   static const _imagenes = <String, String>{
     'comida': 'assets/images/banners/comida-buho.jpg',
@@ -492,10 +490,10 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
 
     return [
       BannerData(
-        titulo: 'Todo lo que\nnecesitas,\nen el campus.',
-        subtitulo: 'Compra, vende y descubre.',
-        textoBoton: 'Explorar ahora',
-        colorDegradado: const Color(0xFF16A34A),
+        titulo: 'Todo el campus\nen un solo lugar.',
+        subtitulo: 'Compra, vende y descubre sin salir de la UPSA.',
+        textoBoton: 'Explorar',
+        colorDegradado: ConfiguracionTema.verdeMarca,
         rutaImagen: 'assets/images/banners/comida-buho.jpg',
         accion: () => widget.alSeleccionar('todas'),
       ),
@@ -516,7 +514,7 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
         titulo: 'Hay Deportes\nen el campus.',
         subtitulo: 'Mira lo que publicaron.',
         textoBoton: 'Ver deportes',
-        colorDegradado: const Color(0xFF237A45),
+        colorDegradado: ConfiguracionTema.azulPetroleo,
         rutaImagen: 'assets/images/banners/deportes-buho.jpg',
         accion: () => widget.alSeleccionar(
           categoriaDeportes?.id ?? CategoriaMarketplace.todas.id,
@@ -574,10 +572,10 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
     final banners = _banners;
     final paginaActual = _paginaActual.clamp(0, banners.length - 1);
     return AspectRatio(
-      aspectRatio: 1.55,
+      aspectRatio: 1.68,
       // Un único recorte mantiene inmóvil la silueta exterior del banner.
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(30),
         child: Listener(
           onPointerDown: (_) => _pausarAutoPlay(),
           onPointerUp: (_) => _reanudarAutoPlay(),
@@ -660,15 +658,19 @@ class BannerSlide extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ClipRRect(
     // Cada tarjeta recorta únicamente su propio contenido y sus esquinas.
-    borderRadius: BorderRadius.circular(22),
+    borderRadius: BorderRadius.circular(30),
     child: Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          data.rutaImagen,
-          fit: BoxFit.cover,
-          alignment: Alignment.centerRight,
-          filterQuality: FilterQuality.medium,
+        ColoredBox(color: data.colorDegradado),
+        Positioned.fill(
+          left: MediaQuery.sizeOf(context).width < 430 ? 115 : 210,
+          child: Image.asset(
+            data.rutaImagen,
+            fit: BoxFit.cover,
+            alignment: Alignment.centerRight,
+            filterQuality: FilterQuality.medium,
+          ),
         ),
         // Refuerza el contraste del texto sin ocultar la ilustración.
         DecoratedBox(
@@ -677,19 +679,19 @@ class BannerSlide extends StatelessWidget {
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: [
-                data.colorDegradado.withValues(alpha: .84),
-                data.colorDegradado.withValues(alpha: .48),
-                Colors.transparent,
+                data.colorDegradado,
+                data.colorDegradado.withValues(alpha: .95),
+                data.colorDegradado.withValues(alpha: .1),
               ],
-              stops: const [0, .48, .82],
+              stops: const [0, .48, .88],
             ),
           ),
         ),
         // Este bloque pertenece a la página y se desliza con su imagen.
         Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(22, 22, 18, 24),
           child: FractionallySizedBox(
-            widthFactor: .62,
+            widthFactor: .64,
             alignment: Alignment.centerLeft,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,8 +701,8 @@ class BannerSlide extends StatelessWidget {
                   data.titulo,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 27,
-                    height: .98,
+                    fontSize: 25,
+                    height: 1.02,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -714,17 +716,15 @@ class BannerSlide extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 13),
                 FilledButton.icon(
                   onPressed: data.accion,
                   style: FilledButton.styleFrom(
-                    backgroundColor: oscuro
-                        ? const Color(0xFF20251F)
-                        : const Color(0xFF292A23),
-                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.white,
+                    foregroundColor: data.colorDegradado,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 17,
-                      vertical: 11,
+                      vertical: 10,
                     ),
                   ),
                   iconAlignment: IconAlignment.end,
@@ -746,15 +746,23 @@ class BannerSlide extends StatelessWidget {
 class _CategoriasInicio extends StatelessWidget {
   const _CategoriasInicio({
     required this.categorias,
+    required this.publicaciones,
     required this.categoriaId,
     required this.alSeleccionar,
   });
 
   final List<CategoriaMarketplace> categorias;
+  final List<ProductoMarketplace> publicaciones;
   final String categoriaId;
   final ValueChanged<String> alSeleccionar;
 
-  static const _idsPrincipales = ['comida', 'tecnologia', 'servicios'];
+  static const _categoriaProductos = CategoriaMarketplace(
+    id: 'productos',
+    nombre: 'Productos',
+    icono: Icons.shopping_bag_rounded,
+  );
+
+  static const _idsPrincipales = ['comida', 'productos'];
 
   Future<void> _mostrarOtrasCategorias(
     BuildContext context,
@@ -789,8 +797,8 @@ class _CategoriasInicio extends StatelessWidget {
                     final categoria = categorias[indice];
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: const Color(0xFFE3EEE5),
-                        foregroundColor: const Color(0xFF2F4034),
+                        backgroundColor: const Color(0xFFE1F2E8),
+                        foregroundColor: const Color(0xFF164A56),
                         child: Icon(categoria.icono),
                       ),
                       title: Text(
@@ -800,7 +808,7 @@ class _CategoriasInicio extends StatelessWidget {
                       trailing: categoria.id == categoriaId
                           ? const Icon(
                               Icons.check_circle_rounded,
-                              color: Color(0xFF16A34A),
+                              color: Color(0xFF138A5B),
                             )
                           : null,
                       onTap: () => Navigator.of(context).pop(categoria.id),
@@ -819,14 +827,8 @@ class _CategoriasInicio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final todas = categorias
-        .where((categoria) => categoria.id == CategoriaMarketplace.todas.id)
-        .toList();
     final porId = {for (final categoria in categorias) categoria.id: categoria};
-    final principales = [for (final id in _idsPrincipales) ?porId[id]];
-    final categoriaOtros = categorias
-        .where((categoria) => categoria.id == 'otros')
-        .toList();
+    final principales = [?porId['comida'], _categoriaProductos];
     final adicionales = [
       ...categorias.where(
         (categoria) =>
@@ -834,73 +836,388 @@ class _CategoriasInicio extends StatelessWidget {
             !_idsPrincipales.contains(categoria.id) &&
             categoria.id != 'otros',
       ),
-      // La categoría real "Otros" siempre cierra la lista de la hoja.
-      ...categoriaOtros,
+      ...categorias.where((categoria) => categoria.id == 'otros'),
     ];
-    final visibles = [...todas, ...principales];
-    final haySeleccionAdicional = adicionales.any(
-      (categoria) => categoria.id == categoriaId,
-    );
+    final visibles = principales.take(2).toList(growable: false);
+    final secundarias = [...principales.skip(2), ...adicionales.take(5)];
 
-    return SizedBox(
-      height: 62,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: visibles.length + (adicionales.isEmpty ? 0 : 1),
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemBuilder: (_, indice) {
-          final esBotonOtros = indice == visibles.length;
-          final categoria = esBotonOtros
-              ? const CategoriaMarketplace(
-                  id: '_mas_categorias',
-                  nombre: 'Otros',
-                  icono: Icons.more_horiz_rounded,
-                )
-              : visibles[indice];
-          final seleccionada = categoria.id == categoriaId;
-          return Tooltip(
-            message: categoria.nombre,
-            child: GestureDetector(
-              onTap: esBotonOtros
-                  ? () => _mostrarOtrasCategorias(context, adicionales)
-                  : () => alSeleccionar(categoria.id),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                width: 62,
-                height: 62,
-                decoration: BoxDecoration(
-                  color: seleccionada || (esBotonOtros && haySeleccionAdicional)
-                      ? const Color(0xFF16A34A)
-                      : const Color(0xFF2F4034),
-                  shape: BoxShape.circle,
+    String? imagenDe(CategoriaMarketplace categoria) {
+      for (final publicacion in publicaciones) {
+        final local = publicacion.local;
+        final esComida =
+            publicacion.categoriaEfectiva == 'comida' ||
+            (local != null &&
+                !local.esPersonal &&
+                local.categoriaId == 'comida');
+        final coincide = categoria.id == 'productos'
+            ? !esComida
+            : publicacion.categoriaEfectiva == categoria.id;
+        if (coincide && publicacion.imagenUrl?.isNotEmpty == true) {
+          return publicacion.imagenUrl;
+        }
+      }
+      return null;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '¿Qué estás buscando?',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-                alignment: Alignment.center,
-                child: Icon(categoria.icono, color: Colors.white, size: 28),
               ),
             ),
-          );
-        },
-      ),
+            TextButton(
+              onPressed: () => _mostrarOtrasCategorias(context, categorias),
+              child: const Text(
+                'Ver todo',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (visibles.isNotEmpty)
+          Row(
+            children: [
+              for (final (indice, categoria) in visibles.indexed) ...[
+                Expanded(
+                  child: _TarjetaCategoriaGrande(
+                    categoria: categoria,
+                    imagenUrl: imagenDe(categoria),
+                    seleccionada: categoria.id == categoriaId,
+                    alPresionar: () => alSeleccionar(categoria.id),
+                  ),
+                ),
+                if (indice < visibles.length - 1) const SizedBox(width: 12),
+              ],
+            ],
+          ),
+        if (secundarias.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 116,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: secundarias.length + 1,
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              itemBuilder: (_, indice) {
+                if (indice == secundarias.length) {
+                  return _TarjetaCategoriaCompacta(
+                    categoria: const CategoriaMarketplace(
+                      id: '_mas_categorias',
+                      nombre: 'Más',
+                      icono: Icons.more_horiz_rounded,
+                    ),
+                    alPresionar: () =>
+                        _mostrarOtrasCategorias(context, categorias),
+                  );
+                }
+                final categoria = secundarias[indice];
+                return _TarjetaCategoriaCompacta(
+                  categoria: categoria,
+                  imagenUrl: imagenDe(categoria),
+                  seleccionada: categoria.id == categoriaId,
+                  alPresionar: () => alSeleccionar(categoria.id),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
 
-/// Recupera el carrusel horizontal de publicaciones que existía en Inicio.
-class _CarruselPublicaciones extends StatelessWidget {
-  const _CarruselPublicaciones({required this.publicaciones});
+class _TarjetaCategoriaGrande extends StatelessWidget {
+  const _TarjetaCategoriaGrande({
+    required this.categoria,
+    required this.alPresionar,
+    this.imagenUrl,
+    this.seleccionada = false,
+  });
 
-  final List<ProductoMarketplace> publicaciones;
+  final CategoriaMarketplace categoria;
+  final VoidCallback alPresionar;
+  final String? imagenUrl;
+  final bool seleccionada;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 238,
-    child: ListView.separated(
-      scrollDirection: Axis.horizontal,
-      itemCount: publicaciones.length,
-      separatorBuilder: (_, _) => const SizedBox(width: 10),
-      itemBuilder: (_, indice) =>
-          _TarjetaPublicacion(publicacion: publicaciones[indice]),
+  Widget build(BuildContext context) => Material(
+    color: seleccionada ? const Color(0xFFE1F3E9) : const Color(0xFFF1F5F2),
+    borderRadius: BorderRadius.circular(24),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: alPresionar,
+      child: SizedBox(
+        height: 142,
+        child: Stack(
+          children: [
+            Positioned(
+              right: -8,
+              top: 6,
+              bottom: 28,
+              width: 116,
+              child: imagenUrl == null
+                  ? Icon(
+                      categoria.icono,
+                      size: 72,
+                      color: ConfiguracionTema.verdeMarca.withValues(
+                        alpha: .75,
+                      ),
+                    )
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(22),
+                      child: Image.network(
+                        imagenUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Icon(
+                          categoria.icono,
+                          size: 72,
+                          color: ConfiguracionTema.verdeMarca,
+                        ),
+                      ),
+                    ),
+            ),
+            Positioned(
+              left: 16,
+              right: 12,
+              bottom: 14,
+              child: Text(
+                categoria.nombre,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: ConfiguracionTema.tinta,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     ),
+  );
+}
+
+class _TarjetaCategoriaCompacta extends StatelessWidget {
+  const _TarjetaCategoriaCompacta({
+    required this.categoria,
+    required this.alPresionar,
+    this.imagenUrl,
+    this.seleccionada = false,
+  });
+
+  final CategoriaMarketplace categoria;
+  final VoidCallback alPresionar;
+  final String? imagenUrl;
+  final bool seleccionada;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: seleccionada ? const Color(0xFFE1F3E9) : const Color(0xFFF1F5F2),
+    borderRadius: BorderRadius.circular(20),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: alPresionar,
+      child: SizedBox(
+        width: 106,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 10, 8, 9),
+          child: Column(
+            children: [
+              Expanded(
+                child: imagenUrl == null
+                    ? Icon(
+                        categoria.icono,
+                        size: 42,
+                        color: ConfiguracionTema.verdeMarca,
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.network(
+                          imagenUrl!,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Icon(
+                            categoria.icono,
+                            size: 42,
+                            color: ConfiguracionTema.verdeMarca,
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                categoria.nombre,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: ConfiguracionTema.tinta,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Escaparate de alto contraste que reúne las publicaciones más consultadas.
+class _EscaparatePopular extends StatelessWidget {
+  const _EscaparatePopular({
+    required this.publicaciones,
+    required this.alVerTodo,
+  });
+
+  final List<ProductoMarketplace> publicaciones;
+  final VoidCallback alVerTodo;
+
+  @override
+  Widget build(BuildContext context) {
+    if (publicaciones.isEmpty) return const SizedBox.shrink();
+
+    return LayoutBuilder(
+      builder: (context, restricciones) {
+        final anchoAplicacion = MediaQuery.sizeOf(context).width;
+        final anchoCarrusel = anchoAplicacion > restricciones.maxWidth
+            ? anchoAplicacion
+            : restricciones.maxWidth;
+        final margenExterior = (anchoCarrusel - restricciones.maxWidth) / 2;
+
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // El panel es solo la capa decorativa inferior. El carrusel tiene
+            // el ancho completo de la app y se pinta por encima de sus bordes.
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: ConfiguracionTema.azulPetroleo,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 20, 0, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 18, right: 16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'UPSA EAT',
+                                  style: TextStyle(
+                                    color: ConfiguracionTema.azulPetroleo,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              const Text(
+                                'Lo que todos quieren\nen el campus',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 23,
+                                  height: 1.05,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: alVerTodo,
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text(
+                            'Ver todo',
+                            style: TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 246,
+                    child: OverflowBox(
+                      alignment: Alignment.center,
+                      minWidth: anchoCarrusel,
+                      maxWidth: anchoCarrusel,
+                      child: _CarruselPublicaciones(
+                        publicaciones: publicaciones,
+                        margenHorizontal: margenExterior + 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Carrusel horizontal de publicaciones. El recorte del viewport hace que las
+/// tarjetas se oculten progresivamente detrás de los laterales, en vez de
+/// dibujarse fuera y desaparecer de golpe cuando Flutter las recicla.
+class _CarruselPublicaciones extends StatelessWidget {
+  const _CarruselPublicaciones({
+    required this.publicaciones,
+    required this.margenHorizontal,
+  });
+
+  final List<ProductoMarketplace> publicaciones;
+  final double margenHorizontal;
+
+  @override
+  Widget build(BuildContext context) => ListView.separated(
+    clipBehavior: Clip.hardEdge,
+    physics: const BouncingScrollPhysics(
+      parent: AlwaysScrollableScrollPhysics(),
+    ),
+    scrollDirection: Axis.horizontal,
+    // El margen pertenece al contenido inicial, no al viewport. Así las
+    // tarjetas pueden atravesar el panel y solo se ocultan al salir de la
+    // pared exterior de la aplicación.
+    padding: EdgeInsets.symmetric(horizontal: margenHorizontal),
+    itemCount: publicaciones.length,
+    separatorBuilder: (_, _) => const SizedBox(width: 10),
+    itemBuilder: (_, indice) =>
+        _TarjetaPublicacion(publicacion: publicaciones[indice]),
   );
 }
 
@@ -947,7 +1264,7 @@ class _CuadriculaPublicaciones extends StatelessWidget {
 }
 
 class _TarjetaPublicacion extends StatelessWidget {
-  const _TarjetaPublicacion({required this.publicacion, this.ancho = 150});
+  const _TarjetaPublicacion({required this.publicacion, this.ancho = 164});
 
   final ProductoMarketplace publicacion;
   final double ancho;
@@ -971,22 +1288,22 @@ class _TarjetaPublicacion extends StatelessWidget {
     width: ancho,
     child: Material(
       color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(22),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => _abrir(context),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Theme.of(context).dividerColor.withValues(alpha: .3),
-            ),
-            borderRadius: BorderRadius.circular(18),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF1C181E)
+                : const Color(0xFFF1F4F2),
+            borderRadius: BorderRadius.circular(22),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                height: 128,
+                height: 132,
                 width: double.infinity,
                 child: publicacion.imagenUrl == null
                     ? const _ImagenPublicacionVacia()
@@ -999,7 +1316,7 @@ class _TarjetaPublicacion extends StatelessWidget {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 8, 8),
+                  padding: const EdgeInsets.fromLTRB(12, 10, 10, 9),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1008,7 +1325,7 @@ class _TarjetaPublicacion extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 14,
                           height: 1.08,
                           fontWeight: FontWeight.w800,
                         ),
@@ -1019,7 +1336,7 @@ class _TarjetaPublicacion extends StatelessWidget {
                         child: Text(
                           'Bs ${publicacion.precio.toStringAsFixed(2)}',
                           style: const TextStyle(
-                            color: Color(0xFF16A34A),
+                            color: ConfiguracionTema.verdeMarca,
                             fontSize: 15,
                             fontWeight: FontWeight.w900,
                           ),
@@ -1069,7 +1386,7 @@ class _TarjetaPublicacion extends StatelessWidget {
                             tooltip: 'Ver publicación',
                             onPressed: () => _abrir(context),
                             style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xFF16A34A),
+                              backgroundColor: ConfiguracionTema.verdeMarca,
                               foregroundColor: Colors.white,
                               minimumSize: const Size(30, 30),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1129,7 +1446,7 @@ class _TituloSeccion extends StatelessWidget {
           child: const Text(
             'Ver todo',
             style: TextStyle(
-              color: Color(0xFF5C8A63),
+              color: ConfiguracionTema.verdeMarca,
               fontWeight: FontWeight.w800,
             ),
           ),

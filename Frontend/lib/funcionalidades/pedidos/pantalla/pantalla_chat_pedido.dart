@@ -237,7 +237,7 @@ class _Burbuja extends StatelessWidget {
     // ajeno, que es lo que mantiene el chat legible en modo oscuro sin
     // inventar una paleta aparte.
     final fondo = mensaje.mio
-        ? const Color(0xFF5C8A63)
+        ? const Color(0xFF138A5B)
         : (oscuro ? const Color(0xFF24272A) : const Color(0xFFEFF1EF));
     final color = mensaje.mio
         ? Colors.white
@@ -440,7 +440,7 @@ class _Redaccion extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Material(
-              color: const Color(0xFF5C8A63),
+              color: const Color(0xFF138A5B),
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),

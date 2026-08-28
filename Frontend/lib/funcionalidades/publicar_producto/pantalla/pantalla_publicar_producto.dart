@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
@@ -34,7 +35,7 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: widget.miLocal,
     builder: (context, _) => SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(18, 22, 18, 120),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 120),
       child: ContenidoCentrado(
         anchoMaximo: 720,
         child: Column(
@@ -46,6 +47,8 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
                 child: Center(child: IndicadorCarga(tamanio: 140)),
               )
             else ...[
+              const _EncabezadoPublicar(),
+              const SizedBox(height: 22),
               FormularioPublicacion(
                 controlador: controlador,
                 miLocal: widget.miLocal,
@@ -54,6 +57,71 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
           ],
         ),
       ),
+    ),
+  );
+}
+
+class _EncabezadoPublicar extends StatelessWidget {
+  const _EncabezadoPublicar();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.fromLTRB(22, 24, 18, 24),
+    decoration: BoxDecoration(
+      color: ConfiguracionTema.verdeMarca,
+      borderRadius: BorderRadius.circular(30),
+    ),
+    child: const Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'PUBLICA EN MINUTOS',
+                style: TextStyle(
+                  color: Color(0xCCFFFFFF),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: .8,
+                ),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Convierte una idea\nen tu próxima venta',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 25,
+                  height: 1.05,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              SizedBox(height: 7),
+              Text(
+                'Agrega los datos, el precio y una buena foto.',
+                style: TextStyle(color: Color(0xE6FFFFFF), height: 1.3),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: 14),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+          ),
+          child: SizedBox(
+            width: 76,
+            height: 76,
+            child: Icon(
+              Icons.add_photo_alternate_rounded,
+              color: ConfiguracionTema.verdeMarca,
+              size: 38,
+            ),
+          ),
+        ),
+      ],
     ),
   );
 }

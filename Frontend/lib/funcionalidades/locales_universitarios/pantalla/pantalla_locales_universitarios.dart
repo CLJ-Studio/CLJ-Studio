@@ -118,7 +118,7 @@ class _PantallaLocalesUniversitariosState
                                 child: const Text(
                                   'Quitar filtro',
                                   style: TextStyle(
-                                    color: Color(0xFF5C8A63),
+                                    color: Color(0xFF138A5B),
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
@@ -155,7 +155,7 @@ class _PantallaLocalesUniversitariosState
           ),
           if (buscando)
             Positioned.fill(
-              top: widget.mostrarEncabezado ? 118 : 0,
+              top: widget.mostrarEncabezado ? 124 : 0,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: () {
@@ -165,7 +165,7 @@ class _PantallaLocalesUniversitariosState
               ),
             ),
           Positioned(
-            top: widget.mostrarEncabezado ? 118 : 0,
+            top: widget.mostrarEncabezado ? 124 : 0,
             left: 14,
             right: 14,
             child: IgnorePointer(
@@ -264,8 +264,8 @@ class _ResultadosBusquedaLocales extends StatelessWidget {
         final local = resultados[indice];
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: const Color(0xFFE3EEE5),
-            foregroundColor: const Color(0xFF2F4034),
+            backgroundColor: const Color(0xFFE1F2E8),
+            foregroundColor: const Color(0xFF164A56),
             backgroundImage: local.logoUrl == null
                 ? null
                 : NetworkImage(local.logoUrl!),

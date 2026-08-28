@@ -63,7 +63,7 @@ class BarraResumenCarrito extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Material(
-                              color: const Color(0xFF5F9368),
+                              color: const Color(0xFF138A5B),
                               borderRadius: BorderRadius.circular(28),
                               elevation: 10,
                               shadowColor: Colors.black38,

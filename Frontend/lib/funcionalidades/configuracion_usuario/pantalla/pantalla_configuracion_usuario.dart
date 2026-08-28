@@ -138,7 +138,7 @@ class _GrupoAjustes extends StatelessWidget {
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.selected)
-              ? const Color(0xFF5F9368)
+              ? const Color(0xFF138A5B)
               : const Color(0xFFD0D4D8),
         ),
       ),

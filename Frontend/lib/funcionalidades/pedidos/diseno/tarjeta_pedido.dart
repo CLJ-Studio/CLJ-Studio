@@ -80,7 +80,7 @@ class TarjetaPedido extends StatelessWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF5C8A63),
+                            color: const Color(0xFF138A5B),
                             borderRadius: BorderRadius.circular(20),
                             // El borde del color de la tarjeta despega el
                             // distintivo del emoji que tiene detras.

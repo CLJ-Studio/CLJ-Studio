@@ -49,7 +49,7 @@ class _PantallaFinanzasLocalState extends State<PantallaFinanzasLocal> {
         }
         return RefreshIndicator.adaptive(
           onRefresh: _actualizar,
-          color: const Color(0xFF5C8A63),
+          color: const Color(0xFF138A5B),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
@@ -88,7 +88,7 @@ class _ContenidoFinanzas extends StatelessWidget {
               icono: Icons.today_rounded,
               etiqueta: 'Ventas de hoy',
               valor: _dinero(resumen.ingresosHoy),
-              color: const Color(0xFF5C8A63),
+              color: const Color(0xFF138A5B),
             ),
           ),
           const SizedBox(width: 12),
@@ -120,7 +120,7 @@ class _ContenidoFinanzas extends StatelessWidget {
         etiqueta: 'Más vendido',
         nombre: resumen.nombreProductoMasVendido,
         detalle: '${resumen.unidadesProductoMasVendido} unidades',
-        color: const Color(0xFF5C8A63),
+        color: const Color(0xFF138A5B),
       ),
       const SizedBox(height: 10),
       _TarjetaProducto(
@@ -349,7 +349,7 @@ class _GraficoSemanal extends StatelessWidget {
                             Text(
                               punto.ingresos.toStringAsFixed(0),
                               style: const TextStyle(
-                                color: Color(0xFF5C8A63),
+                                color: Color(0xFF138A5B),
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -364,7 +364,7 @@ class _GraficoSemanal extends StatelessWidget {
                               gradient: const LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [Color(0xFF5C8A63), Color(0xFF9AB9A0)],
+                                colors: [Color(0xFF138A5B), Color(0xFF9AB9A0)],
                               ),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -555,7 +555,7 @@ class _DatoRendimiento extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icono, color: const Color(0xFF5C8A63), size: 18),
+            Icon(icono, color: const Color(0xFF138A5B), size: 18),
             const SizedBox(width: 7),
             Expanded(
               child: Text(
@@ -659,7 +659,7 @@ class _ErrorFinanzas extends StatelessWidget {
           const Icon(
             Icons.query_stats_rounded,
             size: 48,
-            color: Color(0xFF5C8A63),
+            color: Color(0xFF138A5B),
           ),
           const SizedBox(height: 14),
           const Text('No pudimos cargar tus finanzas.'),

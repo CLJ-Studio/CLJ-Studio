@@ -18,7 +18,7 @@ class OpcionFavoritos extends StatelessWidget {
         ),
         leading: const Icon(
           Icons.favorite_border_rounded,
-          color: Color(0xFF5C8A63),
+          color: Color(0xFF138A5B),
         ),
         title: const Text('Favoritos'),
         subtitle: Text(
@@ -41,7 +41,7 @@ class OpcionFavoritos extends StatelessWidget {
                 child: Text(
                   '${controlador.cantidad}',
                   style: const TextStyle(
-                    color: Color(0xFF5C8A63),
+                    color: Color(0xFF138A5B),
                     fontWeight: FontWeight.w900,
                   ),
                 ),

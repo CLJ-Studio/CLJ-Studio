@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
+
 /// Invitación gastronómica visible únicamente dentro de Restaurantes.
 class InvitacionAbrirLocal extends StatelessWidget {
   const InvitacionAbrirLocal({
@@ -22,7 +24,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
       child: Ink(
         height: 180,
         decoration: BoxDecoration(
-          color: const Color(0xFFE4E9DC),
+          color: ConfiguracionTema.azulPetroleo,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Stack(
@@ -44,13 +46,13 @@ class InvitacionAbrirLocal extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                     colors: [
-                      Color(0xFFF2F3E9),
-                      Color(0xE6F2F3E9),
-                      Color(0x00F2F3E9),
+                      ConfiguracionTema.azulPetroleo,
+                      ConfiguracionTema.azulPetroleo.withValues(alpha: .94),
+                      ConfiguracionTema.azulPetroleo.withValues(alpha: .08),
                     ],
                     stops: [0, .48, .74],
                   ),
@@ -70,9 +72,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                           ? 'Administra tu local aquí'
                           : '¿Quieres abrir tu propio local?',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black,
+                        color: Colors.white,
                         fontWeight: FontWeight.w900,
                         height: 1.05,
                       ),
@@ -86,9 +86,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                                 'solo sitio.'
                           : 'Crea tu perfil y empieza a publicar tus productos.',
                       style: TextStyle(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black,
+                        color: Colors.white.withValues(alpha: .9),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -101,7 +99,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                         Text(
                           yaTieneLocal ? 'Administrar' : 'Comenzar',
                           style: const TextStyle(
-                            color: Color(0xFF4D7955),
+                            color: Colors.white,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -109,7 +107,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                         const Icon(
                           Icons.arrow_forward_rounded,
                           size: 18,
-                          color: Color(0xFF4D7955),
+                          color: Colors.white,
                         ),
                       ],
                     ),

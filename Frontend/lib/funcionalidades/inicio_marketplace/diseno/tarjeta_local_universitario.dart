@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../modelos/local_universitario.dart';
 
 /// Tarjeta de local compartida visualmente con "Locales más vistos".
 ///
-/// La portada conserva su marco 4:3, sin desenfoque ni texto superpuesto; la
-/// información vive en un pie oscuro separado para que siempre sea legible.
+/// La fotografía domina y la información vive en un pie blanco y limpio.
 class TarjetaLocalUniversitario extends StatelessWidget {
   const TarjetaLocalUniversitario({
     required this.local,
@@ -21,18 +21,16 @@ class TarjetaLocalUniversitario extends StatelessWidget {
     button: true,
     label: 'Abrir ${local.nombreVisible}',
     child: Material(
-      color: const Color(0xFF2B292A),
-      borderRadius: BorderRadius.circular(9),
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(24),
       clipBehavior: Clip.antiAlias,
-      elevation: 7,
-      shadowColor: const Color(0x55000000),
+      elevation: 0,
       child: InkWell(
         onTap: alAbrir,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 4 / 3,
+            Expanded(
               child: ColoredBox(
                 color: Color(local.colorHexadecimal),
                 child: switch (local.portadaUrl) {
@@ -46,7 +44,7 @@ class TarjetaLocalUniversitario extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 11),
+              padding: const EdgeInsets.fromLTRB(14, 11, 14, 12),
               child: Column(
                 children: [
                   Row(
@@ -56,8 +54,8 @@ class TarjetaLocalUniversitario extends StatelessWidget {
                           local.nombreVisible,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                           ),
@@ -65,14 +63,14 @@ class TarjetaLocalUniversitario extends StatelessWidget {
                       ),
                       const Icon(
                         Icons.visibility_outlined,
-                        color: Colors.white,
+                        color: ConfiguracionTema.verdeMarca,
                         size: 18,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${local.vistas}',
-                        style: const TextStyle(
-                          color: Color(0xFFCAC6C8),
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
@@ -84,7 +82,7 @@ class TarjetaLocalUniversitario extends StatelessWidget {
                     children: [
                       const Icon(
                         Icons.location_on_outlined,
-                        color: Colors.white,
+                        color: ConfiguracionTema.verdeMarca,
                         size: 17,
                       ),
                       const SizedBox(width: 4),
@@ -93,8 +91,10 @@ class TarjetaLocalUniversitario extends StatelessWidget {
                           local.ubicacionCampus ?? 'Campus UPSA',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFFCAC6C8),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color,
                             fontSize: 13,
                           ),
                         ),

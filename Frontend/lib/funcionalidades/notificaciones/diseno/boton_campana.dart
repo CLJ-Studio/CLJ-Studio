@@ -5,7 +5,9 @@ import '../pantalla/pantalla_notificaciones.dart';
 
 /// Campana del encabezado con el contador de no leidas.
 class BotonCampana extends StatelessWidget {
-  const BotonCampana({super.key});
+  const BotonCampana({this.sobreFondoMarca = false, super.key});
+
+  final bool sobreFondoMarca;
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
@@ -18,7 +20,9 @@ class BotonCampana extends StatelessWidget {
         child: IconButton(
           tooltip: 'Notificaciones',
           style: IconButton.styleFrom(
-            foregroundColor: Theme.of(context).brightness == Brightness.dark
+            foregroundColor: sobreFondoMarca
+                ? Colors.white
+                : Theme.of(context).brightness == Brightness.dark
                 ? Colors.white
                 : const Color(0xFF202220),
           ),

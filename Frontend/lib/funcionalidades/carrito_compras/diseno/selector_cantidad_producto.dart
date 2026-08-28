@@ -41,7 +41,7 @@ class SelectorCantidadProducto extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(3),
             child: Material(
-              color: const Color(0xFF5C8A63),
+              color: const Color(0xFF138A5B),
               shape: const CircleBorder(),
               child: InkWell(
                 onTap: alAumentar,

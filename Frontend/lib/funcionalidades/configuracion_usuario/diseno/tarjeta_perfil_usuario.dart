@@ -49,7 +49,7 @@ class TarjetaPerfilUsuario extends StatelessWidget {
               right: -3,
               bottom: 5,
               child: Material(
-                color: esOscuro ? const Color(0xFF5F9368) : Colors.white,
+                color: esOscuro ? const Color(0xFF138A5B) : Colors.white,
                 shape: const CircleBorder(),
                 elevation: 2,
                 child: InkWell(

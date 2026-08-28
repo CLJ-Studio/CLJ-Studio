@@ -21,7 +21,7 @@ class BotonCategoriaMarketplace extends StatelessWidget {
     final tema = Theme.of(context);
     final esOscuro = tema.brightness == Brightness.dark;
     final tamanio = 48 - (6 * compactProgress);
-    final verde = const Color(0xFF5C8A63);
+    final verde = const Color(0xFF138A5B);
 
     return Semantics(
       button: true,
@@ -56,7 +56,7 @@ class BotonCategoriaMarketplace extends StatelessWidget {
                   boxShadow: seleccionado
                       ? const [
                           BoxShadow(
-                            color: Color(0x305C8A63),
+                            color: Color(0x30138A5B),
                             blurRadius: 12,
                             offset: Offset(0, 5),
                           ),

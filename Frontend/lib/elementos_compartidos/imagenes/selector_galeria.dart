@@ -139,7 +139,7 @@ class _Miniatura extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF5C8A63),
+                color: const Color(0xFF138A5B),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(

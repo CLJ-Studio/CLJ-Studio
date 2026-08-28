@@ -86,7 +86,7 @@ class _Resumen extends StatelessWidget {
       children: [
         const CircleAvatar(
           radius: 29,
-          child: Icon(Icons.person_rounded, color: Color(0xFF5C8A63)),
+          child: Icon(Icons.person_rounded, color: Color(0xFF138A5B)),
         ),
         const SizedBox(width: 15),
         const Expanded(
@@ -107,7 +107,7 @@ class _Resumen extends StatelessWidget {
         Text(
           '$cantidad',
           style: const TextStyle(
-            color: Color(0xFF5C8A63),
+            color: Color(0xFF138A5B),
             fontSize: 26,
             fontWeight: FontWeight.w900,
           ),

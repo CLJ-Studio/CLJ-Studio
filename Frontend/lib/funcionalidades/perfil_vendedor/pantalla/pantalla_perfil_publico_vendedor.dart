@@ -324,27 +324,176 @@ class _AvatarVendedor extends StatelessWidget {
 
   final LocalUniversitario local;
 
+  String get _tagHero {
+    final identidad = local.duenoId.isEmpty ? local.id : local.duenoId;
+    return 'avatar-perfil-publico-$identidad';
+  }
+
+  void _abrirAvatar(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: const Color(0x52000000),
+        barrierLabel: 'Cerrar foto de perfil',
+        transitionDuration: const Duration(milliseconds: 360),
+        reverseTransitionDuration: const Duration(milliseconds: 280),
+        pageBuilder: (_, _, _) =>
+            _VisorAvatarVendedor(local: local, tagHero: _tagHero),
+        transitionsBuilder: (_, animacion, _, child) => FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animacion,
+            curve: Curves.easeOut,
+            reverseCurve: Curves.easeIn,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: 'Ver foto de perfil de ${local.vendedorNombre}',
+    child: Tooltip(
+      message: 'Ver foto de perfil',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _abrirAvatar(context),
+        child: Hero(
+          tag: _tagHero,
+          transitionOnUserGestures: true,
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: _ImagenAvatarVendedor(local: local, dimension: 122),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _VisorAvatarVendedor extends StatelessWidget {
+  const _VisorAvatarVendedor({required this.local, required this.tagHero});
+
+  final LocalUniversitario local;
+  final String tagHero;
+
+  @override
+  Widget build(BuildContext context) {
+    final ladoMenor = MediaQuery.sizeOf(context).shortestSide;
+    final dimension = (ladoMenor - 56).clamp(190.0, 420.0).toDouble();
+
+    return Material(
+      color: Colors.transparent,
+      child: SafeArea(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Navigator.of(context).pop(),
+            ),
+            Center(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {},
+                child: Hero(
+                  tag: tagHero,
+                  transitionOnUserGestures: true,
+                  child: Material(
+                    color: Colors.transparent,
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: SizedBox.square(
+                      dimension: dimension,
+                      child: InteractiveViewer(
+                        minScale: 1,
+                        maxScale: 5,
+                        panEnabled: true,
+                        scaleEnabled: true,
+                        boundaryMargin: EdgeInsets.all(dimension),
+                        child: _ImagenAvatarVendedor(
+                          local: local,
+                          dimension: dimension,
+                          borde: 4,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: IconButton.filled(
+                tooltip: 'Cerrar',
+                onPressed: () => Navigator.of(context).pop(),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.black.withValues(alpha: .42),
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ),
+            Positioned(
+              left: 24,
+              right: 24,
+              bottom: 24,
+              child: Text(
+                'Pellizca para ampliar',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: .9),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ImagenAvatarVendedor extends StatelessWidget {
+  const _ImagenAvatarVendedor({
+    required this.local,
+    required this.dimension,
+    this.borde = 3,
+  });
+
+  final LocalUniversitario local;
+  final double dimension;
+  final double borde;
+
   @override
   Widget build(BuildContext context) => Container(
-    width: 122,
-    height: 122,
+    width: dimension,
+    height: dimension,
     clipBehavior: Clip.antiAlias,
     alignment: Alignment.center,
     decoration: BoxDecoration(
       color: Color(local.colorHexadecimal),
       shape: BoxShape.circle,
-      border: Border.all(color: Colors.white, width: 3),
+      border: Border.all(color: Colors.white, width: borde),
     ),
     child: switch (local.vendedorAvatarUrl) {
-      final String url => Image.network(
+      final String url when url.trim().isNotEmpty => Image.network(
         url,
-        width: 122,
-        height: 122,
+        width: dimension,
+        height: dimension,
         fit: BoxFit.cover,
+        gaplessPlayback: true,
         errorBuilder: (_, _, _) =>
-            Text(local.emoji, style: const TextStyle(fontSize: 48)),
+            Text(local.emoji, style: TextStyle(fontSize: dimension * .39)),
       ),
-      _ => Text(local.emoji, style: const TextStyle(fontSize: 48)),
+      _ => Text(local.emoji, style: TextStyle(fontSize: dimension * .39)),
     },
   );
 }

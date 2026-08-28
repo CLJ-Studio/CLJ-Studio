@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../mi_local/diseno/acciones_publicacion.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
 import '../../../configuracion_aplicacion/modo_local.dart';
@@ -152,7 +153,7 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
             SliverToBoxAdapter(
               child: SafeArea(
                 bottom: false,
-                child: _EncabezadoPerfil(
+                child: _EncabezadoPerfilMarketplace(
                   perfil: perfil,
                   publicaciones: totalPublicaciones,
                   vistas: publicacionesUnicas.fold(
@@ -192,14 +193,14 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(3, 3, 3, 120),
+                padding: const EdgeInsets.fromLTRB(14, 3, 14, 120),
                 sliver: SliverGrid.builder(
                   itemCount: productos.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    mainAxisSpacing: 3,
-                    crossAxisSpacing: 3,
-                    childAspectRatio: .72,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: .76,
                   ),
                   itemBuilder: (_, indice) => _PublicacionPerfil(
                     producto: productos[indice],
@@ -219,6 +220,238 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
   );
 }
 
+class _EncabezadoPerfilMarketplace extends StatelessWidget {
+  const _EncabezadoPerfilMarketplace({
+    required this.perfil,
+    required this.publicaciones,
+    required this.vistas,
+    required this.meGusta,
+    required this.alAbrirConfiguracion,
+    required this.alEditarPerfil,
+    required this.seccion,
+    required this.alCambiarSeccion,
+  });
+
+  final UsuarioUpsa? perfil;
+  final int publicaciones;
+  final int vistas;
+  final int meGusta;
+  final VoidCallback alAbrirConfiguracion;
+  final VoidCallback alEditarPerfil;
+  final int seccion;
+  final ValueChanged<int> alCambiarSeccion;
+
+  static String _abreviar(int valor) {
+    if (valor >= 1000000) {
+      return '${(valor / 1000000).toStringAsFixed(1)}M';
+    }
+    if (valor >= 1000) return '${(valor / 1000).toStringAsFixed(1)}K';
+    return '$valor';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final nombre = perfil?.nombre.trim();
+    final correo = perfil?.correo.trim();
+    final carrera = perfil?.carrera.trim();
+    final oscuro = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(18, 6, 18, 42),
+          decoration: const BoxDecoration(
+            color: ConfiguracionTema.verdeMarca,
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+          ),
+          child: Column(
+            children: [
+              SizedBox(
+                height: 52,
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Mi perfil',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Configuración',
+                      onPressed: alAbrirConfiguracion,
+                      style: IconButton.styleFrom(
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: const Icon(Icons.settings_outlined),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _AvatarPerfil(perfil: perfil, alEditar: alEditarPerfil),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          nombre == null || nombre.isEmpty
+                              ? 'Vendedor UPSA'
+                              : nombre,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            height: 1.05,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          carrera == null || carrera.isEmpty
+                              ? 'Comunidad UPSA'
+                              : carrera,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: .82),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 11),
+                        OutlinedButton.icon(
+                          onPressed: alEditarPerfil,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: ConfiguracionTema.verdeMarca,
+                            backgroundColor: Colors.white,
+                            side: BorderSide.none,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 9,
+                            ),
+                            shape: const StadiumBorder(),
+                          ),
+                          icon: const Icon(Icons.edit_outlined, size: 15),
+                          label: const Text(
+                            'Editar perfil',
+                            style: TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Transform.translate(
+          offset: const Offset(0, -22),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: oscuro ? const Color(0xFF201B22) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x18000000),
+                    blurRadius: 18,
+                    offset: Offset(0, 7),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _MetricaMarketplace(
+                    valor: '$publicaciones',
+                    etiqueta: 'Publicaciones',
+                  ),
+                  _MetricaMarketplace(
+                    valor: _abreviar(vistas),
+                    etiqueta: 'Vistas',
+                  ),
+                  _MetricaMarketplace(
+                    valor: _abreviar(meGusta),
+                    etiqueta: 'Favoritos',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (correo != null && correo.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+            child: Text(
+              correo,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        if (perfil?.biografia case final String bio when bio.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+            child: Text(bio, textAlign: TextAlign.center),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18, 6, 18, 0),
+          child: _SelectorPerfil(
+            seleccionado: seccion,
+            alSeleccionar: alCambiarSeccion,
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+}
+
+class _MetricaMarketplace extends StatelessWidget {
+  const _MetricaMarketplace({required this.valor, required this.etiqueta});
+
+  final String valor;
+  final String etiqueta;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      Text(
+        valor,
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+      ),
+      const SizedBox(height: 2),
+      Text(
+        etiqueta,
+        style: TextStyle(
+          color: Theme.of(context).textTheme.bodyMedium?.color,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    ],
+  );
+}
+
+// Conserva temporalmente la composición anterior para facilitar una posible
+// comparación visual durante la transición del diseño.
+// ignore: unused_element
 class _EncabezadoPerfil extends StatelessWidget {
   const _EncabezadoPerfil({
     required this.perfil,
@@ -456,7 +689,7 @@ class _SelectorPerfil extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: colorContenido,
+                    color: ConfiguracionTema.verdeMarca,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -475,9 +708,11 @@ class _SelectorPerfil extends StatelessWidget {
                         child: Icon(
                           iconos[indice].$1,
                           size: 25,
-                          color: indice == 2
+                          color: indice == seleccionado
+                              ? ConfiguracionTema.verdeMarca
+                              : indice == 2
                               ? const Color(0xFFE53935)
-                              : colorContenido,
+                              : colorContenido.withValues(alpha: .48),
                         ),
                       ),
                     ),
@@ -625,7 +860,7 @@ class _PublicacionPerfil extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget tarjeta(VoidCallback? abrir) => Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: abrir,
@@ -698,7 +933,7 @@ class _PublicacionPerfil extends StatelessWidget {
       closedColor: Colors.transparent,
       openColor: Theme.of(context).scaffoldBackgroundColor,
       closedShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
       ),
       openShape: const RoundedRectangleBorder(),
       closedBuilder: (_, abrir) => tarjeta(abrir),

@@ -184,7 +184,7 @@ class PantallaMiLocal extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: () => _agregar(context),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF5C8A63),
+                    backgroundColor: const Color(0xFF138A5B),
                   ),
                   icon: const Icon(Icons.add_rounded),
                   label: const Text('Producto'),
@@ -609,7 +609,7 @@ class _FilaProducto extends StatelessWidget {
                             child: Text(
                               'OCULTA',
                               style: TextStyle(
-                                color: Color(0xFF5C8A63),
+                                color: Color(0xFF138A5B),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: .8,
@@ -724,7 +724,7 @@ class _AccionMenuInventarioState extends State<_AccionMenuInventario> {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final acento = widget.destructiva
         ? const Color(0xFFD9584F)
-        : const Color(0xFF5C8A63);
+        : const Color(0xFF138A5B);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _encima = true),

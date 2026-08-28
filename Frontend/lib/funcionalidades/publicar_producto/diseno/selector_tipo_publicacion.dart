@@ -62,7 +62,7 @@ class _OpcionTipo extends StatelessWidget {
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
-        color: activo ? const Color(0xFF5F9368) : Colors.transparent,
+        color: activo ? const Color(0xFF138A5B) : Colors.transparent,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Material(

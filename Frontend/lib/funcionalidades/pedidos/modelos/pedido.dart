@@ -35,7 +35,7 @@ enum EstadoPedido {
 
   Color get color => switch (this) {
     EstadoPedido.solicitado => const Color(0xFFC98A2B),
-    EstadoPedido.aceptado => const Color(0xFF5C8A63),
+    EstadoPedido.aceptado => const Color(0xFF138A5B),
     EstadoPedido.porConfirmar => const Color(0xFFC98A2B),
     EstadoPedido.entregado => const Color(0xFF4A7C93),
     _ => const Color(0xFF9A9A9A),

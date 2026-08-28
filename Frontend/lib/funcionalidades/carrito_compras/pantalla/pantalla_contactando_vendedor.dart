@@ -168,7 +168,7 @@ class _PantallaContactandoVendedorState
                       child: FilledButton.icon(
                         onPressed: _volver,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF5C8A63),
+                          backgroundColor: const Color(0xFF138A5B),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),

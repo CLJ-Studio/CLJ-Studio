@@ -105,7 +105,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
             FilledButton(
               onPressed: () => Navigator.of(contexto).pop(true),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF55785A),
+                backgroundColor: const Color(0xFF0C6843),
               ),
               child: const Text('Vaciar y agregar'),
             ),

@@ -98,7 +98,7 @@ class PantallaOnboarding extends StatelessWidget {
                               if (await controlador.enviar()) alCompletar();
                             },
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF5C8A63),
+                        backgroundColor: const Color(0xFF138A5B),
                         shape: const StadiumBorder(),
                       ),
                       child: controlador.enviando
@@ -170,7 +170,7 @@ class _CampoNombre extends StatelessWidget {
               prefixIcon: Icon(Icons.badge_outlined),
               suffixIcon: Icon(
                 Icons.verified_rounded,
-                color: Color(0xFF5C8A63),
+                color: Color(0xFF138A5B),
                 size: 21,
               ),
             ),
