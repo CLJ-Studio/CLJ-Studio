@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../datos/repositorio_chat_pedido.dart';
+import '../datos/repositorio_pedidos.dart';
 import '../modelos/mensaje_pedido.dart';
 
 /// Conversación de un pedido.
@@ -27,6 +29,17 @@ class PantallaChatPedido extends StatefulWidget {
 
 class _PantallaChatPedidoState extends State<PantallaChatPedido> {
   static const _repositorio = RepositorioChatPedido();
+  static const _pedidos = RepositorioPedidos();
+
+  /// Cuanto se espera antes de ofrecer WhatsApp.
+  ///
+  /// El chat es el camino normal y el telefono el ultimo recurso, asi que la
+  /// salida no puede estar ahi desde el principio: si esta, se usa siempre y
+  /// la conversacion vuelve a irse de la aplicacion. Pero tampoco puede no
+  /// estar: en iPhone las notificaciones solo llegan con la aplicacion
+  /// instalada en la pantalla de inicio, o sea que la otra persona puede no
+  /// haberse enterado de nada.
+  static const _esperaAntesDeWhatsapp = Duration(minutes: 2);
 
   late final Stream<List<MensajePedido>> _mensajes = _repositorio.escuchar(
     widget.pedidoId,
@@ -35,7 +48,36 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
   final _desplazamiento = ScrollController();
 
   bool _enviando = false;
+  bool _abriendoWhatsapp = false;
   int _cuantosHabia = 0;
+
+  /// Si lo ultimo que se dijo es mio y ya lleva rato sin respuesta.
+  ///
+  /// Se recalcula en cada emision del hilo, que llega cada pocos segundos por
+  /// el sondeo de respaldo: no hace falta un temporizador aparte.
+  bool _esperaLarga(List<MensajePedido> mensajes) {
+    if (mensajes.isEmpty) return false;
+    final ultimo = mensajes.last;
+    if (!ultimo.mio) return false;
+    return DateTime.now().difference(ultimo.creadoEn) > _esperaAntesDeWhatsapp;
+  }
+
+  Future<void> _abrirWhatsapp() async {
+    setState(() => _abriendoWhatsapp = true);
+    try {
+      final contacto = await _pedidos.obtenerContacto(widget.pedidoId);
+      if (!await launchUrl(
+        Uri.parse(contacto.enlace),
+        mode: LaunchMode.externalApplication,
+      )) {
+        throw Exception('No se pudo abrir WhatsApp');
+      }
+    } catch (_) {
+      if (mounted) _avisar('No se pudo abrir WhatsApp.');
+    } finally {
+      if (mounted) setState(() => _abriendoWhatsapp = false);
+    }
+  }
 
   @override
   void initState() {
@@ -130,44 +172,49 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
         ],
       ),
     ),
-    body: Column(
-      children: [
-        Expanded(
-          child: StreamBuilder<List<MensajePedido>>(
-            stream: _mensajes,
-            builder: (context, snapshot) {
-              if (snapshot.hasError) return const _ChatCerrado();
-              if (!snapshot.hasData) {
-                return const Center(child: IndicadorCarga());
-              }
+    // Un solo StreamBuilder para todo el cuerpo. Con dos sobre el mismo
+    // stream, el segundo lo encontraria ya escuchado y la pantalla reventaria
+    // al abrirse: `escuchar()` no emite en difusion, y no tiene por que.
+    body: StreamBuilder<List<MensajePedido>>(
+      stream: _mensajes,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return const _ChatCerrado();
+        if (!snapshot.hasData) return const Center(child: IndicadorCarga());
 
-              final mensajes = snapshot.data!;
-              if (mensajes.length != _cuantosHabia) {
-                final primeraCarga = _cuantosHabia == 0;
-                _cuantosHabia = mensajes.length;
-                _irAlFinal(animado: !primeraCarga);
-                // Lo que llega con la pantalla abierta ya está visto.
-                _repositorio.marcarLeidos(widget.pedidoId).catchError((_) {});
-              }
+        final mensajes = snapshot.data!;
+        if (mensajes.length != _cuantosHabia) {
+          final primeraCarga = _cuantosHabia == 0;
+          _cuantosHabia = mensajes.length;
+          _irAlFinal(animado: !primeraCarga);
+          // Lo que llega con la pantalla abierta ya esta visto.
+          _repositorio.marcarLeidos(widget.pedidoId).catchError((_) {});
+        }
 
-              if (mensajes.isEmpty) {
-                return _ChatVacio(contraparte: widget.contraparte);
-              }
-
-              return ListView.builder(
-                controller: _desplazamiento,
-                padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
-                itemCount: mensajes.length,
-                itemBuilder: (_, indice) => _Burbuja(
-                  mensaje: mensajes[indice],
-                  anterior: indice == 0 ? null : mensajes[indice - 1],
-                ),
-              );
-            },
-          ),
-        ),
-        _Redaccion(campo: _campo, enviando: _enviando, alEnviar: _enviar),
-      ],
+        return Column(
+          children: [
+            Expanded(
+              child: mensajes.isEmpty
+                  ? _ChatVacio(contraparte: widget.contraparte)
+                  : ListView.builder(
+                      controller: _desplazamiento,
+                      padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
+                      itemCount: mensajes.length,
+                      itemBuilder: (_, indice) => _Burbuja(
+                        mensaje: mensajes[indice],
+                        anterior: indice == 0 ? null : mensajes[indice - 1],
+                      ),
+                    ),
+            ),
+            if (_esperaLarga(mensajes))
+              _RespaldoWhatsapp(
+                contraparte: widget.contraparte,
+                ocupado: _abriendoWhatsapp,
+                alPresionar: _abrirWhatsapp,
+              ),
+            _Redaccion(campo: _campo, enviando: _enviando, alEnviar: _enviar),
+          ],
+        );
+      },
     ),
   );
 }
@@ -412,6 +459,70 @@ class _Redaccion extends StatelessWidget {
                           size: 22,
                         ),
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Respaldo por WhatsApp
+// ---------------------------------------------------------------------------
+/// Aparece solo cuando la otra persona lleva dos minutos sin contestar.
+///
+/// Antes estaba siempre a la vista, en el detalle del pedido, y eso hacia que
+/// se usara de primera: la conversacion volvia a irse de la aplicacion sin
+/// haberle dado una oportunidad al chat.
+class _RespaldoWhatsapp extends StatelessWidget {
+  const _RespaldoWhatsapp({
+    required this.contraparte,
+    required this.ocupado,
+    required this.alPresionar,
+  });
+
+  final String contraparte;
+  final bool ocupado;
+  final VoidCallback alPresionar;
+
+  @override
+  Widget build(BuildContext context) {
+    final oscuro = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+        decoration: BoxDecoration(
+          color: oscuro ? const Color(0xFF16261C) : const Color(0xFFEBF7EF),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${contraparte.split(' ').first} no responde hace un rato.',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  height: 1.3,
+                  color: oscuro
+                      ? const Color(0xFFA9C9B5)
+                      : const Color(0xFF3F6B4F),
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: ocupado ? null : alPresionar,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF1EA855),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+              ),
+              icon: const Icon(Icons.phone_outlined, size: 17),
+              label: const Text(
+                'WhatsApp',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
               ),
             ),
           ],

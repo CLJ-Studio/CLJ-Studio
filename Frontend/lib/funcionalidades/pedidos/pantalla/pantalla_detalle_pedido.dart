@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../datos/repositorio_pedidos.dart';
@@ -87,14 +86,6 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
       ),
     );
   }
-
-  Future<void> _abrirWhatsapp() => _ejecutar(() async {
-    final contacto = await _repositorio.obtenerContacto(widget.pedidoId);
-    final url = Uri.parse(contacto.enlace);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('No se pudo abrir WhatsApp');
-    }
-  });
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -224,22 +215,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
                 : 'Coordinar con ${pedido.nombreVendedor.split(' ').first}',
           ),
         ),
-        const SizedBox(height: 10),
-        // WhatsApp queda de respaldo, no de camino principal. En iPhone las
-        // notificaciones solo llegan con la aplicacion instalada en la
-        // pantalla de inicio: sin esta salida, alguien que no responde en el
-        // chat porque no se entero se quedaria incomunicado.
-        OutlinedButton.icon(
-          onPressed: _ocupado ? null : _abrirWhatsapp,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF25D366),
-            side: const BorderSide(color: Color(0xFF9BE0B7)),
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: const StadiumBorder(),
-          ),
-          icon: const Icon(Icons.phone_outlined),
-          label: const Text('¿No responde? WhatsApp'),
-        ),
+
         const SizedBox(height: 10),
         FilledButton.icon(
           onPressed: _ocupado
