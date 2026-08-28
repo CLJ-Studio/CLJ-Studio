@@ -364,6 +364,20 @@ class _ChatVacio extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(color: Color(0xFF858585), height: 1.4),
           ),
+          const SizedBox(height: 14),
+          // Se dice claro: el hilo se conserva y alguien puede leerlo si hay
+          // una disputa por ese pedido. Dejar creer que es privado seria
+          // mentir, y es justo lo que haria que alguien escribiera algo que
+          // no escribiria sabiendolo.
+          const Text(
+            'Se guarda por si hay algún problema con el pedido.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF9AA09A),
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
         ],
       ),
     ),
