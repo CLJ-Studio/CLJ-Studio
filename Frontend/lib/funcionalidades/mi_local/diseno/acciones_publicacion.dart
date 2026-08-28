@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../datos/repositorio_mi_local.dart';
+import 'dialogo_ajustar_stock.dart';
 import 'dialogo_producto.dart';
 
 /// Qué se hizo con la publicación, para que quien llamó sepa si refrescar.
-enum ResultadoAccion { sinCambios, editada, ocultada, relanzada, eliminada }
+enum ResultadoAccion {
+  sinCambios,
+  editada,
+  ocultada,
+  relanzada,
+  eliminada,
+  stockAjustado,
+}
 
 /// Menú de gestión de una publicación propia.
 ///
@@ -43,6 +51,12 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
             leading: const Icon(Icons.edit_outlined),
             title: const Text('Editar'),
             onTap: () => Navigator.of(hoja).pop('editar'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.tag_outlined),
+            title: const Text('Ajustar unidades'),
+            subtitle: Text('Quedan ${producto.stock}'),
+            onTap: () => Navigator.of(hoja).pop('stock'),
           ),
           ListTile(
             leading: Icon(
@@ -98,6 +112,12 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
           galeria: datos.galeria,
         );
         return ResultadoAccion.editada;
+
+      case 'stock':
+        final cambiado = await mostrarDialogoAjustarStock(context, producto);
+        return cambiado
+            ? ResultadoAccion.stockAjustado
+            : ResultadoAccion.sinCambios;
 
       case 'ocultar':
         await repositorio.cambiarVisibilidad(

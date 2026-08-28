@@ -62,7 +62,47 @@ dígitos que nunca llegan.
 
 El asunto de las dos: **`Tu codigo de UPSA Eat`**.
 
-### 1.2.2 Que no caiga en spam
+### 1.2.2 Frenar el abuso del envio
+
+Cualquiera con el enlace puede pedir un codigo. Eso no se puede evitar del
+todo, pero si acotar. Hoy hay dos frenos y falta un tercero:
+
+**Ya activo · el dominio.** El trigger `validar_dominio_institucional` corre
+antes de crear al usuario, asi que solo se pueden pedir codigos para direcciones
+`@estudiantes.upsa.edu.bo`. No se puede usar la aplicacion para mandar correo a
+cualquier parte: el dano posible se limita a molestar a gente de la UPSA y a
+gastar la cuota de envio.
+
+**Hay que revisarlo · el limite de Supabase.** En **Authentication → Rate
+Limits**:
+
+| Ajuste | Que hace |
+|---|---|
+| *Rate limit for sending emails* | Techo de correos por hora en todo el proyecto |
+| *Rate limit for OTP / magic links* | Cuantas veces se puede pedir un codigo |
+
+Con SMTP propio el valor de fabrica ronda los 30 por hora. Conviene mirarlo y
+subirlo antes de abrirlo a todo el campus, porque **cuenta los intentos, no los
+envios logrados**: si alguien lo agota, nadie mas puede entrar hasta la hora
+siguiente. Ese es el ataque barato que queda abierto.
+
+**Falta · CAPTCHA.** Es lo unico que distingue a una persona de un script. Se
+activa en **Authentication → Settings → Enable Captcha protection** (hCaptcha o
+Cloudflare Turnstile) y ademas hay que mandar el token desde la aplicacion:
+`signInWithOtp()` acepta `captchaToken`, y el servidor rechaza la peticion si
+falta.
+
+Lo que NO esta hecho es la mitad del cliente: renderizar el widget en Flutter
+Web pide `dart:ui_web` y un *view factory*, y esa implementacion **no sirve
+para Android nativo**, donde hace falta otra. Como el plan es empaquetar la
+aplicacion, tiene mas sentido escribirla una sola vez, en el momento del salto,
+que dos veces.
+
+Mientras tanto, la cuenta del limite de arriba es la proteccion real. Si se
+activa el CAPTCHA en el panel **sin** mandar el token desde la aplicacion,
+nadie puede entrar: son las dos mitades o ninguna.
+
+### 1.2.3 Que no caiga en spam
 
 Mandar desde una cuenta `@gmail.com` por SMTP es lo que más pesa: Gmail ve un
 remitente que dice ser de Gmail pero llega por otra vía, y lo marca. Ordenado

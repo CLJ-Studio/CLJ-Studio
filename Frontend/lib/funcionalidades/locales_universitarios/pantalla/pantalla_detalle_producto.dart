@@ -10,6 +10,8 @@ import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../carrito_compras/pantalla/pantalla_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
+import '../../mi_local/diseno/dialogo_ajustar_stock.dart';
+import '../diseno/hoja_reportar_publicacion.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
@@ -142,6 +144,19 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
     } catch (_) {
       if (mounted) _avisar('No se pudo guardar el cambio.');
     }
+  }
+
+  /// Corrige las unidades tras una venta hecha en persona, sin abrir el
+  /// diálogo completo de edición.
+  Future<void> _ajustarStock() async {
+    final cambiado = await mostrarDialogoAjustarStock(context, _producto);
+    if (!cambiado || !mounted) return;
+
+    final actualizado = await const RepositorioInicioMarketplace()
+        .obtenerPublicacion(_producto.id);
+    if (!mounted) return;
+    if (actualizado != null) setState(() => _producto = actualizado);
+    _avisar('Unidades actualizadas.');
   }
 
   Future<void> _alternarVisibilidad() async {
@@ -390,11 +405,24 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                       right: 18,
                       child: Row(
                         children: [
+                          if (!_esMio) ...[
+                            _BotonCircular(
+                              icono: Icons.flag_outlined,
+                              etiqueta: 'Reportar publicación',
+                              alPresionar: () => mostrarHojaReportar(
+                                context,
+                                productoId: _producto.id,
+                                nombreProducto: _producto.nombre,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
                           if (_esMio) ...[
                             _MenuGestionProducto(
                               disponible: _producto.disponible,
                               alSeleccionar: (opcion) => switch (opcion) {
                                 'editar' => _editar(),
+                                'stock' => _ajustarStock(),
                                 'ocultar' => _alternarVisibilidad(),
                                 'relanzar' => _relanzar(),
                                 _ => _eliminar(),
@@ -651,6 +679,14 @@ class _MenuGestionProducto extends StatelessWidget {
           child: ListTile(
             leading: Icon(Icons.edit_outlined),
             title: Text('Editar'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'stock',
+          child: ListTile(
+            leading: Icon(Icons.tag_outlined),
+            title: Text('Ajustar unidades'),
             contentPadding: EdgeInsets.zero,
           ),
         ),
