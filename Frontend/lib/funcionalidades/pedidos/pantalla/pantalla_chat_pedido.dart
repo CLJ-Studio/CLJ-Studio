@@ -45,6 +45,7 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
     widget.pedidoId,
   );
   final _campo = TextEditingController();
+  final _foco = FocusNode();
   final _desplazamiento = ScrollController();
 
   bool _enviando = false;
@@ -89,6 +90,7 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
   @override
   void dispose() {
     _campo.dispose();
+    _foco.dispose();
     _desplazamiento.dispose();
     super.dispose();
   }
@@ -121,6 +123,10 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
     try {
       await _repositorio.enviar(widget.pedidoId, texto);
       _campo.clear();
+      // Sin esto hay que volver a tocar el campo para escribir otra vez: en
+      // una conversacion se manda una linea detras de otra, y perder el
+      // teclado en cada envio la corta entera.
+      if (mounted) _foco.requestFocus();
       _irAlFinal();
     } catch (error) {
       if (mounted) _avisar(_mensajeDeError(error));
@@ -211,7 +217,12 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
                 ocupado: _abriendoWhatsapp,
                 alPresionar: _abrirWhatsapp,
               ),
-            _Redaccion(campo: _campo, enviando: _enviando, alEnviar: _enviar),
+            _Redaccion(
+              campo: _campo,
+              foco: _foco,
+              enviando: _enviando,
+              alEnviar: _enviar,
+            ),
           ],
         );
       },
@@ -382,11 +393,13 @@ class _ChatCerrado extends StatelessWidget {
 class _Redaccion extends StatelessWidget {
   const _Redaccion({
     required this.campo,
+    required this.foco,
     required this.enviando,
     required this.alEnviar,
   });
 
   final TextEditingController campo;
+  final FocusNode foco;
   final bool enviando;
   final VoidCallback alEnviar;
 
@@ -404,7 +417,7 @@ class _Redaccion extends StatelessWidget {
             Expanded(
               child: TextField(
                 controller: campo,
-                enabled: !enviando,
+                focusNode: foco,
                 minLines: 1,
                 maxLines: 4,
                 maxLength: 1000,

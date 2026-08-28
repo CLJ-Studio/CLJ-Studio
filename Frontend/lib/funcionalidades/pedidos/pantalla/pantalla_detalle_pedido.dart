@@ -69,6 +69,46 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
     return 'No se pudo completar la acción.';
   }
 
+  /// Pregunta antes de cancelar.
+  ///
+  /// Es la única acción del pedido que no se puede deshacer y que deja a la
+  /// otra parte peor de lo que estaba: quien esperaba se queda sin nada.
+  Future<void> _confirmarCancelacion(Pedido pedido) async {
+    final soyVendedor = _soyElVendedor(pedido);
+    final otro = soyVendedor
+        ? pedido.nombreComprador.split(' ').first
+        : pedido.nombreVendedor.split(' ').first;
+
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (contexto) => AlertDialog(
+        title: const Text('Cancelar pedido'),
+        content: Text(
+          soyVendedor
+              ? 'Se avisará a $otro de que no vas a poder entregarlo, y las '
+                    'unidades vuelven a tu stock.'
+              : 'Se avisará a $otro de que ya no lo quieres.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(contexto).pop(false),
+            child: const Text('Volver'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(contexto).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB3453B),
+            ),
+            child: const Text('Sí, cancelar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true || !mounted) return;
+
+    await _ejecutar(() => _repositorio.cancelar(pedido.id));
+  }
+
   /// Abre la conversación de este pedido.
   ///
   /// El chat vive dentro de la aplicación y se cierra solo cuando la entrega
@@ -233,18 +273,14 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
             soyVendedor ? 'Marcar como entregado' : 'Marcar como recibido',
           ),
         ),
-        if (!soyVendedor) ...[
-          const SizedBox(height: 10),
-          TextButton(
-            onPressed: _ocupado
-                ? null
-                : () => _ejecutar(() => _repositorio.cancelar(pedido.id)),
-            child: const Text(
-              'Cancelar pedido',
-              style: TextStyle(color: Color(0xFFB3453B)),
-            ),
+        const SizedBox(height: 10),
+        TextButton(
+          onPressed: _ocupado ? null : () => _confirmarCancelacion(pedido),
+          child: const Text(
+            'Cancelar pedido',
+            style: TextStyle(color: Color(0xFFB3453B)),
           ),
-        ],
+        ),
       ];
     }
 

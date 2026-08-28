@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../modelos/mensaje_pedido.dart';
+import '../modelos/resumen_chat.dart';
 
 /// Mensajes de un pedido.
 ///
@@ -23,6 +24,15 @@ class RepositorioChatPedido {
     return (filas as List)
         .cast<Map<String, dynamic>>()
         .map(MensajePedido.desdeMapa)
+        .toList();
+  }
+
+  /// Todas las conversaciones abiertas, la más reciente primero.
+  Future<List<ResumenChat>> listarChats() async {
+    final filas = await _cliente.rpc('listar_chats');
+    return (filas as List)
+        .cast<Map<String, dynamic>>()
+        .map(ResumenChat.desdeMapa)
         .toList();
   }
 

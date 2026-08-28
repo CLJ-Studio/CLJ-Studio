@@ -21,6 +21,7 @@ class CampusCollapsingHeader extends StatelessWidget {
     required this.alSeleccionarCategoria,
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
+    required this.alAbrirChats,
     this.avatarUrl,
     this.mostrarCategorias = true,
     this.mostrarUbicacion = false,
@@ -34,6 +35,7 @@ class CampusCollapsingHeader extends StatelessWidget {
   final ValueChanged<String> alSeleccionarCategoria;
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
+  final VoidCallback alAbrirChats;
   final String? avatarUrl;
   final bool mostrarCategorias;
   final bool mostrarUbicacion;
@@ -49,6 +51,7 @@ class CampusCollapsingHeader extends StatelessWidget {
       alSeleccionarCategoria: alSeleccionarCategoria,
       alAbrirCarrito: alAbrirCarrito,
       alAbrirPedidos: alAbrirPedidos,
+      alAbrirChats: alAbrirChats,
       avatarUrl: avatarUrl,
       mostrarCategorias: mostrarCategorias,
       mostrarUbicacion: mostrarUbicacion,
@@ -67,6 +70,7 @@ class CampusFixedHeader extends StatelessWidget {
     required this.alSeleccionarCategoria,
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
+    required this.alAbrirChats,
     this.avatarUrl,
     this.mostrarCategorias = true,
     this.mostrarUbicacion = false,
@@ -80,6 +84,7 @@ class CampusFixedHeader extends StatelessWidget {
   final ValueChanged<String> alSeleccionarCategoria;
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
+  final VoidCallback alAbrirChats;
   final String? avatarUrl;
   final bool mostrarCategorias;
   final bool mostrarUbicacion;
@@ -95,6 +100,7 @@ class CampusFixedHeader extends StatelessWidget {
       alSeleccionarCategoria: alSeleccionarCategoria,
       alAbrirCarrito: alAbrirCarrito,
       alAbrirPedidos: alAbrirPedidos,
+      alAbrirChats: alAbrirChats,
       avatarUrl: avatarUrl,
       mostrarCategorias: mostrarCategorias,
       mostrarUbicacion: mostrarUbicacion,
@@ -111,6 +117,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.alSeleccionarCategoria,
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
+    required this.alAbrirChats,
     this.avatarUrl,
     this.mostrarCategorias = true,
     this.mostrarUbicacion = false,
@@ -123,6 +130,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   final ValueChanged<String> alSeleccionarCategoria;
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
+  final VoidCallback alAbrirChats;
   final String? avatarUrl;
   final bool mostrarCategorias;
   final bool mostrarUbicacion;
@@ -262,6 +270,11 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                         tooltip: 'Mis pedidos',
                         icono: Icons.receipt_long_outlined,
                         alPresionar: alAbrirPedidos,
+                      ),
+                      _AccionEncabezado(
+                        tooltip: 'Chats',
+                        icono: Icons.forum_outlined,
+                        alPresionar: alAbrirChats,
                       ),
                       const BotonCampana(sobreFondoMarca: true),
                       const SizedBox(width: 4),

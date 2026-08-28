@@ -7,6 +7,7 @@ import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../inicio_marketplace/diseno/campus_collapsing_header.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
+import '../../pedidos/pantalla/pantalla_chats.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../diseno/invitacion_abrir_local.dart';
 import '../diseno/lista_locales.dart';
@@ -84,6 +85,11 @@ class _PantallaLocalesUniversitariosState
                   alAbrirPedidos: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const PantallaPedidosCompleta(),
+                    ),
+                  ),
+                  alAbrirChats: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const PantallaChats(),
                     ),
                   ),
                 ),
