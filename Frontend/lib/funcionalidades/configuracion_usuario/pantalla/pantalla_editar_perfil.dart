@@ -303,7 +303,7 @@ class _PantallaEditarPerfilState extends State<PantallaEditarPerfil> {
                       child: FilledButton(
                         onPressed: _guardando ? null : _guardar,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF138A5B),
+                          backgroundColor: const Color(0xFF474646),
                           shape: const StadiumBorder(),
                         ),
                         child: _guardando
@@ -346,7 +346,7 @@ class _DatosInstitucionales extends StatelessWidget {
               const Icon(
                 Icons.verified_rounded,
                 size: 18,
-                color: Color(0xFF138A5B),
+                color: Color(0xFF474646),
               ),
               const SizedBox(width: 8),
               Text(
@@ -362,7 +362,7 @@ class _DatosInstitucionales extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             perfil.correo,
-            style: const TextStyle(color: Color(0xFF7C827E), fontSize: 13),
+            style: const TextStyle(color: Color(0xFF848381), fontSize: 13),
           ),
           const SizedBox(height: 10),
           const Text(
@@ -427,7 +427,7 @@ class _SelectorFotoPerfil extends StatelessWidget {
                   },
           ),
           Material(
-            color: const Color(0xFF138A5B),
+            color: const Color(0xFF474646),
             shape: const CircleBorder(),
             child: InkWell(
               onTap: subiendo ? null : alElegir,
@@ -437,7 +437,7 @@ class _SelectorFotoPerfil extends StatelessWidget {
                 child: Icon(
                   Icons.photo_camera_outlined,
                   size: 18,
-                  color: Colors.white,
+                  color: Color(0xFFE6E1D5),
                 ),
               ),
             ),
@@ -462,7 +462,7 @@ class _InicialGrande extends StatelessWidget {
     child: Text(
       inicial,
       style: const TextStyle(
-        color: Color(0xFF0C6843),
+        color: Color(0xFF474646),
         fontSize: 38,
         fontWeight: FontWeight.w900,
       ),

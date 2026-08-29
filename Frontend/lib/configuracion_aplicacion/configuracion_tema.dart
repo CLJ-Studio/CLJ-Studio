@@ -2,42 +2,54 @@ import 'package:flutter/material.dart';
 // SystemUiOverlayStyle vive aqui, no en material.
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 
-/// Identidad visual de la aplicación, en claro y en oscuro.
+/// Identidad visual terrosa y editorial de la aplicación.
 ///
-/// La interfaz del marketplace usa una marca vibrante y superficies limpias.
-/// El verde se conserva como color auxiliar del búho y de estados positivos.
+/// La interfaz deriva de crema, gris cálido, salvia, salvia clara, grafito y
+/// terracota. El azul noche identifica la cabecera, el amarillo dorado los
+/// banners de búhos y el naranja coral la navegación seleccionada.
 abstract final class ConfiguracionTema {
-  // Marca
-  static const Color verde = Color(0xFF168A58);
-  static const Color verdeClaro = Color(0xFF66C493);
-  static const Color verdeMarca = Color(0xFF138A5B);
-  static const Color verdeMarcaOscuro = Color(0xFF0C6843);
-  static const Color azulPetroleo = Color(0xFF164A56);
-  static const Color tinta = Color(0xFF17231D);
+  // Paleta base
+  static const Color crema = Color(0xFFE6E1D5);
+  static const Color cremaSuperficie = Color(0xFFF5F4F0);
+  static const Color grisCalido = Color(0xFF848381);
+  static const Color salvia = Color(0xFF969A82);
+  static const Color salviaClara = Color(0xFFBBBCA7);
+  static const Color grafito = Color(0xFF474646);
+  static const Color terracota = Color(0xFFAE7960);
+  static const Color azulNoche = Color.fromARGB(255, 34, 39, 91);
+  static const Color amarilloDorado = Color.fromARGB(255, 246, 182, 72);
+  static const Color naranjaCoral = Color(0xFFFF724C);
+  static const Color blancoSuave = Color(0xFFF4F4F8);
+  static const Color moradoPromocional = Color(0xFF4A08A1);
+
+  // Roles de marca
+  static const Color primario = grafito;
+  static const Color secundario = salvia;
+  static const Color acento = terracota;
 
   // Tema claro
-  static const Color texto = tinta;
-  static const Color textoSecundario = Color(0xFF6D7872);
-  static const Color grisClaro = Color(0xFFF1F5F2);
-  static const Color fondo = Color(0xFFF9FCFA);
+  static const Color texto = grafito;
+  static const Color textoSecundario = grisCalido;
+  static const Color superficieClara = cremaSuperficie;
+  static const Color fondo = Color(0xFFFFFFFF);
 
   // Tema oscuro
-  static const Color fondoOscuro = Colors.black;
-  static const Color superficieOscura = Color(0xFF050805);
-  static const Color superficieOscuraAlta = Color(0xFF0B120D);
-  static const Color textoOscuro = Colors.white;
-  static const Color textoSecundarioOscuro = Color(0xFFC8D0C9);
+  static const Color fondoOscuro = grafito;
+  static const Color superficieOscura = grafito;
+  static const Color superficieOscuraAlta = grisCalido;
+  static const Color textoOscuro = crema;
+  static const Color textoSecundarioOscuro = salviaClara;
 
   static ThemeData get temaClaro => _construir(
     brillo: Brightness.light,
     fondoBase: fondo,
-    superficie: Colors.white,
-    superficieAlta: grisClaro,
+    superficie: superficieClara,
+    superficieAlta: cremaSuperficie,
     colorTexto: texto,
     colorTextoSecundario: textoSecundario,
-    borde: const Color(0xFFEEEEEE),
-    divisor: const Color(0xFFEDEDED),
-    relleno: grisClaro,
+    borde: grisCalido,
+    divisor: salvia,
+    relleno: cremaSuperficie,
   );
 
   static ThemeData get temaOscuro => _construir(
@@ -47,8 +59,8 @@ abstract final class ConfiguracionTema {
     superficieAlta: superficieOscuraAlta,
     colorTexto: textoOscuro,
     colorTextoSecundario: textoSecundarioOscuro,
-    borde: const Color(0xFF18301E),
-    divisor: const Color(0xFF142719),
+    borde: salvia,
+    divisor: grisCalido,
     relleno: superficieOscuraAlta,
   );
 
@@ -73,13 +85,18 @@ abstract final class ConfiguracionTema {
       fontFamily: 'Nunito',
       scaffoldBackgroundColor: fondoBase,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: verdeMarca,
+        seedColor: primario,
         brightness: brillo,
-        primary: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
-        secondary: esOscuro ? const Color(0xFF72BAC3) : azulPetroleo,
+        primary: esOscuro ? salviaClara : primario,
+        secondary: acento,
+        tertiary: secundario,
         surface: superficie,
-        onPrimary: Colors.white,
+        onPrimary: esOscuro ? grafito : crema,
+        onSecondary: grafito,
+        onTertiary: grafito,
         onSurface: colorTexto,
+        error: terracota,
+        onError: grafito,
       ),
       textTheme: TextTheme(
         headlineLarge: TextStyle(
@@ -119,7 +136,7 @@ abstract final class ConfiguracionTema {
         focusedBorder: OutlineInputBorder(
           borderRadius: const BorderRadius.all(Radius.circular(24)),
           borderSide: BorderSide(
-            color: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
+            color: esOscuro ? salviaClara : primario,
             width: 2,
           ),
         ),
@@ -134,20 +151,16 @@ abstract final class ConfiguracionTema {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
-          foregroundColor: esOscuro ? const Color(0xFF11251A) : Colors.white,
-          disabledBackgroundColor: esOscuro
-              ? const Color(0xFF142719)
-              : const Color(0xFFB6B7B7),
+          backgroundColor: esOscuro ? salviaClara : primario,
+          foregroundColor: esOscuro ? grafito : crema,
+          disabledBackgroundColor: grisCalido,
           shape: const StadiumBorder(),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: superficieAlta,
-        selectedColor: esOscuro
-            ? const Color(0xFF174232)
-            : const Color(0xFFE3F3EA),
+        selectedColor: esOscuro ? salvia : salviaClara,
         side: BorderSide.none,
         shape: const StadiumBorder(),
         labelStyle: TextStyle(color: colorTexto, fontWeight: FontWeight.w600),
@@ -161,10 +174,8 @@ abstract final class ConfiguracionTema {
         surfaceTintColor: Colors.transparent,
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: esOscuro
-            ? superficieOscuraAlta
-            : const Color(0xFF2E3330),
-        contentTextStyle: const TextStyle(color: Colors.white),
+        backgroundColor: grafito,
+        contentTextStyle: const TextStyle(color: crema),
         behavior: SnackBarBehavior.floating,
       ),
       appBarTheme: AppBarTheme(
@@ -196,23 +207,23 @@ abstract final class ConfiguracionTema {
       ),
       listTileTheme: ListTileThemeData(
         textColor: colorTexto,
-        iconColor: esOscuro ? verdeClaro : verde,
+        iconColor: esOscuro ? salviaClara : acento,
         subtitleTextStyle: TextStyle(color: colorTextoSecundario, fontSize: 13),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((estados) => Colors.white),
+        thumbColor: WidgetStateProperty.resolveWith((estados) => crema),
         trackColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.selected)
-              ? (esOscuro ? verdeClaro : verde)
-              : (esOscuro ? const Color(0xFF142719) : const Color(0xFFD2D5D2)),
+              ? (esOscuro ? salviaClara : secundario)
+              : grisCalido,
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
+        color: esOscuro ? salviaClara : primario,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: esOscuro ? const Color(0xFF65D29A) : verdeMarca,
-        foregroundColor: esOscuro ? const Color(0xFF11251A) : Colors.white,
+        backgroundColor: esOscuro ? salviaClara : primario,
+        foregroundColor: esOscuro ? grafito : crema,
         shape: const CircleBorder(),
       ),
       dividerColor: divisor,

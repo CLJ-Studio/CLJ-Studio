@@ -81,11 +81,11 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
           ListTile(
             leading: const Icon(
               Icons.delete_outline_rounded,
-              color: Color(0xFFB3453B),
+              color: Color(0xFFAE7960),
             ),
             title: const Text(
               'Eliminar',
-              style: TextStyle(color: Color(0xFFB3453B)),
+              style: TextStyle(color: Color(0xFFAE7960)),
             ),
             onTap: () => Navigator.of(hoja).pop('eliminar'),
           ),
@@ -148,7 +148,7 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
               FilledButton(
                 onPressed: () => Navigator.of(contexto).pop(true),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFB3453B),
+                  backgroundColor: const Color(0xFFAE7960),
                 ),
                 child: const Text('Eliminar'),
               ),

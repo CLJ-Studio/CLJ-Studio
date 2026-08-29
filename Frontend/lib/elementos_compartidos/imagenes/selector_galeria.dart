@@ -139,13 +139,13 @@ class _Miniatura extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF138A5B),
+                color: const Color(0xFF474646),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
                 'Portada',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFFE6E1D5),
                   fontSize: 9,
                   fontWeight: FontWeight.w900,
                 ),
@@ -157,7 +157,7 @@ class _Miniatura extends StatelessWidget {
             left: 4,
             bottom: 4,
             child: Material(
-              color: Colors.black54,
+              color: Color(0x8A474646),
               borderRadius: BorderRadius.circular(8),
               child: InkWell(
                 onTap: alHacerPortada,
@@ -166,7 +166,7 @@ class _Miniatura extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   child: Text(
                     'Portada',
-                    style: TextStyle(color: Colors.white, fontSize: 9),
+                    style: TextStyle(color: Color(0xFFE6E1D5), fontSize: 9),
                   ),
                 ),
               ),
@@ -176,14 +176,18 @@ class _Miniatura extends StatelessWidget {
           top: 2,
           right: 2,
           child: Material(
-            color: Colors.black54,
+            color: Color(0x8A474646),
             shape: const CircleBorder(),
             child: InkWell(
               onTap: alQuitar,
               customBorder: const CircleBorder(),
               child: const Padding(
                 padding: EdgeInsets.all(4),
-                child: Icon(Icons.close_rounded, size: 14, color: Colors.white),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 14,
+                  color: Color(0xFFE6E1D5),
+                ),
               ),
             ),
           ),
@@ -213,7 +217,7 @@ class _BotonAgregar extends StatelessWidget {
       height: 92,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-        border: Border.all(color: const Color(0xFFC9CEC9)),
+        border: Border.all(color: const Color(0xFFE6E1D5)),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Center(
@@ -231,7 +235,7 @@ class _BotonAgregar extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.add_photo_alternate_outlined,
-                      color: Color(0xFF7C827E),
+                      color: Color(0xFF848381),
                     ),
                     SizedBox(width: 8),
                     Flexible(
@@ -245,7 +249,7 @@ class _BotonAgregar extends StatelessWidget {
               )
             : const Icon(
                 Icons.add_photo_alternate_outlined,
-                color: Color(0xFF7C827E),
+                color: Color(0xFF848381),
               ),
       ),
     ),

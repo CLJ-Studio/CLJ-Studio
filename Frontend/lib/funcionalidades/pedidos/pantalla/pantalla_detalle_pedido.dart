@@ -195,7 +195,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
               ? null
               : () => _ejecutar(() => _repositorio.aceptar(pedido.id)),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF138A5B),
+            backgroundColor: const Color(0xFF474646),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: const StadiumBorder(),
           ),
@@ -208,8 +208,8 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
               ? null
               : () => _ejecutar(() => _repositorio.rechazar(pedido.id)),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFFB3453B),
-            side: const BorderSide(color: Color(0xFFE0BDB9)),
+            foregroundColor: const Color(0xFFAE7960),
+            side: const BorderSide(color: Color(0xFFBBBCA7)),
             padding: const EdgeInsets.symmetric(vertical: 15),
             shape: const StadiumBorder(),
           ),
@@ -227,8 +227,8 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
               ? null
               : () => _ejecutar(() => _repositorio.cancelar(pedido.id)),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFFB3453B),
-            side: const BorderSide(color: Color(0xFFE0BDB9)),
+            foregroundColor: const Color(0xFFAE7960),
+            side: const BorderSide(color: Color(0xFFBBBCA7)),
             padding: const EdgeInsets.symmetric(vertical: 15),
             shape: const StadiumBorder(),
           ),
@@ -243,8 +243,8 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
         FilledButton.icon(
           onPressed: _ocupado ? null : () => _abrirChat(pedido, soyVendedor),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF138A5B),
-            foregroundColor: Colors.white,
+            backgroundColor: const Color(0xFF474646),
+            foregroundColor: Color(0xFFE6E1D5),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: const StadiumBorder(),
           ),
@@ -262,7 +262,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
               ? null
               : () => _ejecutar(() => _repositorio.marcarEntregado(pedido.id)),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF4A7C93),
+            backgroundColor: const Color(0xFF848381),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: const StadiumBorder(),
           ),
@@ -278,7 +278,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
           onPressed: _ocupado ? null : () => _confirmarCancelacion(pedido),
           child: const Text(
             'Cancelar pedido',
-            style: TextStyle(color: Color(0xFFB3453B)),
+            style: TextStyle(color: Color(0xFFAE7960)),
           ),
         ),
       ];
@@ -302,7 +302,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
                 : () =>
                       _ejecutar(() => _repositorio.confirmarEntrega(pedido.id)),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF138A5B),
+              backgroundColor: const Color(0xFF474646),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: const StadiumBorder(),
             ),
@@ -315,8 +315,8 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
         OutlinedButton.icon(
           onPressed: _ocupado ? null : () => _abrirChat(pedido, soyVendedor),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF138A5B),
-            side: const BorderSide(color: Color(0xFFAECBB3)),
+            foregroundColor: const Color(0xFF474646),
+            side: const BorderSide(color: Color(0xFFBBBCA7)),
             padding: const EdgeInsets.symmetric(vertical: 15),
             shape: const StadiumBorder(),
           ),
@@ -356,10 +356,10 @@ class _AvisoConfirmacion extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: oscuro ? const Color(0xFF2A2519) : const Color(0xFFFDF3E2),
+        color: oscuro ? const Color(0xFF474646) : const Color(0xFFE6E1D5),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: oscuro ? const Color(0xFF4A4023) : const Color(0xFFF0DFC0),
+          color: oscuro ? const Color(0xFF474646) : const Color(0xFFE6E1D5),
         ),
       ),
       child: Row(
@@ -367,7 +367,7 @@ class _AvisoConfirmacion extends StatelessWidget {
         children: [
           const Icon(
             Icons.pending_actions_rounded,
-            color: Color(0xFFC98A2B),
+            color: Color(0xFFAE7960),
             size: 22,
           ),
           const SizedBox(width: 12),
@@ -383,7 +383,7 @@ class _AvisoConfirmacion extends StatelessWidget {
                       : '¿Recibiste tu pedido?',
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFFC98A2B),
+                    color: Color(0xFFAE7960),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -399,8 +399,8 @@ class _AvisoConfirmacion extends StatelessWidget {
                     fontSize: 13,
                     height: 1.35,
                     color: oscuro
-                        ? const Color(0xFFBFB49A)
-                        : const Color(0xFF8A7550),
+                        ? const Color(0xFFBBBCA7)
+                        : const Color(0xFFAE7960),
                   ),
                 ),
               ],
@@ -437,7 +437,7 @@ class _Encabezado extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF252825),
+                    color: Color(0xFF474646),
                   ),
                 ),
                 Text(
@@ -445,7 +445,7 @@ class _Encabezado extends StatelessWidget {
                       ? 'Pedido de ${pedido.nombreComprador}'
                       : 'Vendedor: ${pedido.nombreVendedor}',
                   style: const TextStyle(
-                    color: Color(0xFF7C827E),
+                    color: Color(0xFF848381),
                     fontSize: 13,
                   ),
                 ),
@@ -467,7 +467,7 @@ class _Items extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Color(0xFFE6E1D5),
       borderRadius: BorderRadius.circular(20),
       border: Border.all(color: Theme.of(context).dividerColor),
     ),
@@ -488,7 +488,7 @@ class _Items extends StatelessWidget {
                 ),
                 Text(
                   '×${item.cantidad}',
-                  style: const TextStyle(color: Color(0xFF7C827E)),
+                  style: const TextStyle(color: Color(0xFF848381)),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -515,7 +515,7 @@ class _Totales extends StatelessWidget {
         Text(
           etiqueta,
           style: TextStyle(
-            color: fuerte ? const Color(0xFF202221) : const Color(0xFF7C827E),
+            color: fuerte ? const Color(0xFF474646) : const Color(0xFF848381),
             fontWeight: fuerte ? FontWeight.w800 : FontWeight.normal,
           ),
         ),
@@ -546,11 +546,11 @@ class _Totales extends StatelessWidget {
         const SizedBox(height: 6),
         const Row(
           children: [
-            Icon(Icons.payments_outlined, size: 15, color: Color(0xFF7C827E)),
+            Icon(Icons.payments_outlined, size: 15, color: Color(0xFF848381)),
             SizedBox(width: 6),
             Text(
               'Pago coordinado entre ustedes',
-              style: TextStyle(color: Color(0xFF7C827E), fontSize: 12),
+              style: TextStyle(color: Color(0xFF848381), fontSize: 12),
             ),
           ],
         ),
@@ -570,7 +570,7 @@ class _Dato extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Icon(icono, size: 19, color: const Color(0xFF7C827E)),
+      Icon(icono, size: 19, color: const Color(0xFF848381)),
       const SizedBox(width: 10),
       Expanded(
         child: Column(

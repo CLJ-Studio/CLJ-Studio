@@ -139,7 +139,7 @@ class _DialogoAjustarStockState extends State<_DialogoAjustarStock> {
             const SizedBox(height: 10),
             Text(
               _error!,
-              style: const TextStyle(color: Color(0xFFB3453B), fontSize: 13),
+              style: const TextStyle(color: Color(0xFFAE7960), fontSize: 13),
             ),
           ],
         ],

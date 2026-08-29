@@ -39,11 +39,11 @@ class ResumenCompra extends StatelessWidget {
   );
   @override
   Widget build(BuildContext context) {
-    const colorTexto = Color(0xFF242424);
+    const colorTexto = Color(0xFF474646);
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFE6E1D5),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Padding(
@@ -60,7 +60,7 @@ class ResumenCompra extends StatelessWidget {
               'Bs ${entrega.toStringAsFixed(2)}',
               colorTexto: colorTexto,
             ),
-            const Divider(color: Color(0xFFDADADA)),
+            const Divider(color: Color(0xFFE6E1D5)),
             fila(
               'Total',
               'Bs ${total.toStringAsFixed(2)}',

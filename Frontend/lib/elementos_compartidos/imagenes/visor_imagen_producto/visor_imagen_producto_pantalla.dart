@@ -93,7 +93,7 @@ class _VisorImagenProductoPantallaState
       autofocus: true,
       onKeyEvent: _alPresionarTecla,
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xFF474646),
         body: Stack(
           fit: StackFit.expand,
           children: [
@@ -104,7 +104,7 @@ class _VisorImagenProductoPantallaState
                   itemCount: widget.urlsImagenes.length,
                   pageController: _paginas,
                   backgroundDecoration: const BoxDecoration(
-                    color: Colors.black,
+                    color: Color(0xFF474646),
                   ),
                   scrollPhysics: const BouncingScrollPhysics(),
                   onPageChanged: (indice) => setState(() => _indice = indice),
@@ -113,7 +113,7 @@ class _VisorImagenProductoPantallaState
                       dimension: 32,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: Colors.white,
+                        color: Color(0xFFE6E1D5),
                         value: progreso?.expectedTotalBytes == null
                             ? null
                             : progreso!.cumulativeBytesLoaded /
@@ -165,7 +165,7 @@ class _VisorImagenProductoPantallaState
                     alignment: Alignment.topCenter,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: const Color(0x99000000),
+                        color: const Color(0x99474646),
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Padding(
@@ -176,7 +176,7 @@ class _VisorImagenProductoPantallaState
                         child: Text(
                           '${_indice + 1} / ${widget.urlsImagenes.length}',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFFE6E1D5),
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -235,12 +235,12 @@ class _ControlCircular extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.all(8),
     child: Material(
-      color: const Color(0x99000000),
+      color: const Color(0x99474646),
       shape: const CircleBorder(),
       child: IconButton(
         tooltip: tooltip,
         onPressed: alPresionar,
-        icon: Icon(icono, color: Colors.white),
+        icon: Icon(icono, color: Color(0xFFE6E1D5)),
       ),
     ),
   );
@@ -254,11 +254,11 @@ class _ErrorImagen extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.broken_image_outlined, color: Colors.white70, size: 46),
+        Icon(Icons.broken_image_outlined, color: Color(0xB3E6E1D5), size: 46),
         SizedBox(height: 12),
         Text(
           'No se pudo cargar esta imagen',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: Color(0xB3E6E1D5)),
         ),
       ],
     ),

@@ -27,10 +27,10 @@ class _PantallaRecortarFotoState extends State<PantallaRecortarFoto> {
   Widget build(BuildContext context) => Scaffold(
     // Fondo oscuro fijo, en los dos temas: lo que importa es ver la foto, y
     // un lienzo claro compite con ella.
-    backgroundColor: const Color(0xFF14161A),
+    backgroundColor: const Color(0xFF474646),
     appBar: AppBar(
       backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
+      foregroundColor: Color(0xFFE6E1D5),
       title: const Text(
         'Ajusta tu foto',
         style: TextStyle(fontWeight: FontWeight.w900),
@@ -47,8 +47,8 @@ class _PantallaRecortarFotoState extends State<PantallaRecortarFoto> {
             // exactamente lo que se verá después.
             aspectRatio: 1,
             withCircleUi: true,
-            baseColor: const Color(0xFF14161A),
-            maskColor: Colors.black.withValues(alpha: .6),
+            baseColor: const Color(0xFF474646),
+            maskColor: Color(0xFF474646).withValues(alpha: .6),
             onCropped: (resultado) {
               if (!mounted) return;
               switch (resultado) {
@@ -72,7 +72,7 @@ class _PantallaRecortarFotoState extends State<PantallaRecortarFoto> {
             children: [
               const Text(
                 'Arrastra y pellizca para encuadrar',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                style: TextStyle(color: Color(0xB3E6E1D5), fontSize: 13),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -91,7 +91,7 @@ class _PantallaRecortarFotoState extends State<PantallaRecortarFoto> {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: Color(0xFFE6E1D5),
                           ),
                         )
                       : const Icon(Icons.check_rounded),

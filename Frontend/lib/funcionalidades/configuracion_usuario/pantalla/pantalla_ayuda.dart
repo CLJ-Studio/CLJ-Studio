@@ -12,7 +12,7 @@ class PantallaAyuda extends StatelessWidget {
   Future<void> _abrirWhatsapp(BuildContext context) async {
     final url = Uri.parse(
       'https://wa.me/$_whatsappSoporte'
-      '?text=${Uri.encodeComponent('Hola, necesito ayuda con UPSA Eat.')}',
+      '?text=${Uri.encodeComponent('Hola, necesito ayuda con U market.')}',
     );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication) &&
         context.mounted) {
@@ -139,8 +139,8 @@ class _Contacto extends StatelessWidget {
           child: FilledButton.icon(
             onPressed: alEscribir,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF25D366),
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF848381),
+              foregroundColor: Color(0xFFE6E1D5),
               shape: const StadiumBorder(),
             ),
             icon: const Icon(Icons.chat_rounded),

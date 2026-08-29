@@ -20,19 +20,19 @@ class MensajeCatalogo extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 44, horizontal: 20),
     child: Column(
       children: [
-        Icon(icono, size: 46, color: const Color(0xFFB8BDB8)),
+        Icon(icono, size: 46, color: const Color(0xFFBBBCA7)),
         const SizedBox(height: 14),
         Text(
           mensaje,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Color(0xFF858585), height: 1.4),
+          style: const TextStyle(color: Color(0xFF848381), height: 1.4),
         ),
         const SizedBox(height: 18),
         OutlinedButton.icon(
           onPressed: alReintentar,
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF0C6843),
-            side: const BorderSide(color: Color(0xFF6F9D76), width: 1.4),
+            foregroundColor: const Color(0xFF474646),
+            side: const BorderSide(color: Color(0xFF848381), width: 1.4),
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
           ),

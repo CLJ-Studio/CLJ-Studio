@@ -15,8 +15,8 @@ class SelectorTipoPublicacion extends StatelessWidget {
     padding: const EdgeInsets.all(5),
     decoration: BoxDecoration(
       color: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF090B09)
-          : const Color(0xFFE9ECE9),
+          ? const Color(0xFF474646)
+          : const Color(0xFFE6E1D5),
       borderRadius: BorderRadius.circular(22),
     ),
     child: Row(
@@ -62,7 +62,7 @@ class _OpcionTipo extends StatelessWidget {
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
-        color: activo ? const Color(0xFF138A5B) : Colors.transparent,
+        color: activo ? const Color(0xFF474646) : Colors.transparent,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Material(
@@ -78,7 +78,7 @@ class _OpcionTipo extends StatelessWidget {
                 Icon(
                   icono,
                   color: activo
-                      ? Colors.white
+                      ? Color(0xFFE6E1D5)
                       : Theme.of(context).colorScheme.onSurface,
                   size: 23,
                 ),
@@ -91,7 +91,7 @@ class _OpcionTipo extends StatelessWidget {
                         texto,
                         style: TextStyle(
                           color: activo
-                              ? Colors.white
+                              ? Color(0xFFE6E1D5)
                               : Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w900,
                         ),
@@ -100,10 +100,10 @@ class _OpcionTipo extends StatelessWidget {
                         descripcion,
                         style: TextStyle(
                           color: activo
-                              ? Colors.white70
+                              ? Color(0xB3E6E1D5)
                               : Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black,
+                              ? Color(0xFFE6E1D5)
+                              : Color(0xFF474646),
                           fontSize: 10,
                         ),
                       ),

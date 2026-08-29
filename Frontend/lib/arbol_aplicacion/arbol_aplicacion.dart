@@ -36,7 +36,7 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
     animation: tema,
     builder: (context, _) => MaterialApp(
       navigatorKey: _navegador,
-      title: 'UPSA Eat',
+      title: 'U market',
       debugShowCheckedModeBanner: false,
       theme: ConfiguracionTema.temaClaro,
       darkTheme: ConfiguracionTema.temaOscuro,

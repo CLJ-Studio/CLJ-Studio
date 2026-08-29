@@ -57,10 +57,10 @@ class _PantallaRecortarPortadaState extends State<PantallaRecortarPortada> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF14161A),
+    backgroundColor: const Color(0xFF474646),
     appBar: AppBar(
       backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
+      foregroundColor: Color(0xFFE6E1D5),
       title: const Text(
         'Ajusta la imagen',
         style: TextStyle(fontWeight: FontWeight.w900),
@@ -73,8 +73,8 @@ class _PantallaRecortarPortadaState extends State<PantallaRecortarPortada> {
             image: widget.original,
             controller: _controlador,
             aspectRatio: 4 / 3,
-            baseColor: const Color(0xFF14161A),
-            maskColor: Colors.black.withValues(alpha: .62),
+            baseColor: const Color(0xFF474646),
+            maskColor: Color(0xFF474646).withValues(alpha: .62),
             onCropped: (resultado) {
               if (!mounted) return;
               switch (resultado) {
@@ -99,7 +99,7 @@ class _PantallaRecortarPortadaState extends State<PantallaRecortarPortada> {
               const Text(
                 'Mueve la imagen y pellizca para hacer zoom · Formato 1200 × 900',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                style: TextStyle(color: Color(0xB3E6E1D5), fontSize: 13),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -118,7 +118,7 @@ class _PantallaRecortarPortadaState extends State<PantallaRecortarPortada> {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: Color(0xFFE6E1D5),
                           ),
                         )
                       : const Icon(Icons.check_rounded),

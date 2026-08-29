@@ -69,7 +69,7 @@ class _EncabezadoPublicar extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.fromLTRB(22, 24, 18, 24),
     decoration: BoxDecoration(
-      color: ConfiguracionTema.verdeMarca,
+      color: ConfiguracionTema.primario,
       borderRadius: BorderRadius.circular(30),
     ),
     child: const Row(
@@ -81,7 +81,7 @@ class _EncabezadoPublicar extends StatelessWidget {
               Text(
                 'PUBLICA EN MINUTOS',
                 style: TextStyle(
-                  color: Color(0xCCFFFFFF),
+                  color: Color(0xCCE6E1D5),
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: .8,
@@ -91,7 +91,7 @@ class _EncabezadoPublicar extends StatelessWidget {
               Text(
                 'Convierte una idea\nen tu próxima venta',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFFE6E1D5),
                   fontSize: 25,
                   height: 1.05,
                   fontWeight: FontWeight.w900,
@@ -100,7 +100,7 @@ class _EncabezadoPublicar extends StatelessWidget {
               SizedBox(height: 7),
               Text(
                 'Agrega los datos, el precio y una buena foto.',
-                style: TextStyle(color: Color(0xE6FFFFFF), height: 1.3),
+                style: TextStyle(color: Color(0xE6E6E1D5), height: 1.3),
               ),
             ],
           ),
@@ -108,7 +108,7 @@ class _EncabezadoPublicar extends StatelessWidget {
         SizedBox(width: 14),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Color(0xFFE6E1D5),
             shape: BoxShape.circle,
           ),
           child: SizedBox(
@@ -116,7 +116,7 @@ class _EncabezadoPublicar extends StatelessWidget {
             height: 76,
             child: Icon(
               Icons.add_photo_alternate_rounded,
-              color: ConfiguracionTema.verdeMarca,
+              color: ConfiguracionTema.primario,
               size: 38,
             ),
           ),

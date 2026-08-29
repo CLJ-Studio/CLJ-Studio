@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/marca/marca_u_market.dart';
 import '../logica/controlador_instalacion.dart';
 
 /// Invitacion a instalar la app, adaptada a lo que el navegador permite.
@@ -70,8 +71,8 @@ class TarjetaInstalacion extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  'Instala UPSA Eat',
+                child: TextoConMarcaUMarket(
+                  'Instala U market',
                   style: tema.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -141,7 +142,7 @@ class _PasosIOS extends StatelessWidget {
       _Paso(
         numero: '3',
         icono: Icons.check_rounded,
-        texto: 'Abre UPSA Eat desde el ícono nuevo',
+        texto: 'Abre U market desde el ícono nuevo',
       ),
     ],
   );
@@ -183,7 +184,7 @@ class _Paso extends StatelessWidget {
           Icon(icono, size: 18, color: tema.colorScheme.primary),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
+            child: TextoConMarcaUMarket(
               texto,
               style: TextStyle(
                 color: tema.colorScheme.onSurface,

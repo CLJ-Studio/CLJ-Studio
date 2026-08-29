@@ -66,8 +66,8 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
 
     return Scaffold(
       backgroundColor: oscuro
-          ? const Color(0xFF090B0A)
-          : const Color(0xFFF5F6F3),
+          ? const Color(0xFF474646)
+          : const Color(0xFFE6E1D5),
       body: AnimatedBuilder(
         animation: controlador,
         builder: (context, _) {
@@ -77,7 +77,7 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
 
           final grupos = _agrupar(controlador.notificaciones);
           return RefreshIndicator.adaptive(
-            color: const Color(0xFF138A5B),
+            color: const Color(0xFF474646),
             onRefresh: controlador.cargar,
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(
@@ -152,8 +152,8 @@ class _Encabezado extends StatelessWidget {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     return SliverAppBar.large(
       backgroundColor: oscuro
-          ? const Color(0xE6090B0A)
-          : const Color(0xEAF5F6F3),
+          ? const Color(0xE6474646)
+          : const Color(0xEAE6E1D5),
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -184,8 +184,8 @@ class _Encabezado extends StatelessWidget {
                     icon: const Icon(Icons.done_all_rounded, size: 18),
                     label: const Text('Leer todas'),
                     style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF527A59),
-                      backgroundColor: const Color(0x18138A5B),
+                      foregroundColor: const Color(0xFF474646),
+                      backgroundColor: const Color(0x18474646),
                       textStyle: const TextStyle(fontWeight: FontWeight.w800),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 13,
@@ -221,7 +221,7 @@ class _BotonCircular extends StatelessWidget {
       backgroundColor: Theme.of(
         context,
       ).colorScheme.surface.withValues(alpha: .86),
-      shadowColor: Colors.black.withValues(alpha: .12),
+      shadowColor: Color(0xFF474646).withValues(alpha: .12),
       elevation: 1,
     ),
   );
@@ -243,12 +243,12 @@ class _ResumenPendientes extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF527F5A), Color(0xFF719D77)],
+            colors: [Color(0xFF474646), Color(0xFF848381)],
           ),
           borderRadius: BorderRadius.circular(24),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x24527F5A),
+              color: Color(0x24474646),
               blurRadius: 22,
               offset: Offset(0, 10),
             ),
@@ -260,13 +260,15 @@ class _ResumenPendientes extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .18),
+                color: Color(0xFFE6E1D5).withValues(alpha: .18),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: .2)),
+                border: Border.all(
+                  color: Color(0xFFE6E1D5).withValues(alpha: .2),
+                ),
               ),
               child: const Icon(
                 Icons.notifications_active_rounded,
-                color: Colors.white,
+                color: Color(0xFFE6E1D5),
                 size: 25,
               ),
             ),
@@ -278,7 +280,7 @@ class _ResumenPendientes extends StatelessWidget {
                   Text(
                     '$cantidad ${cantidad == 1 ? 'novedad' : 'novedades'}',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFFE6E1D5),
                       fontWeight: FontWeight.w900,
                       fontSize: 17,
                       letterSpacing: -.25,
@@ -288,7 +290,7 @@ class _ResumenPendientes extends StatelessWidget {
                   Text(
                     'Todo lo importante de tus pedidos, en un solo lugar.',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: .78),
+                      color: Color(0xFFE6E1D5).withValues(alpha: .78),
                       fontSize: 12.5,
                       height: 1.35,
                     ),
@@ -357,11 +359,11 @@ class _TarjetaNotificacion extends StatelessWidget {
   final VoidCallback alTocar;
 
   Color get _colorIcono => switch (notificacion.tipo) {
-    'pedido_rechazado' || 'pedido_cancelado' => const Color(0xFFB65D54),
-    'pedido_vencido' || 'entrega_por_confirmar' => const Color(0xFFC08335),
-    'nuevo_local' => const Color(0xFF6B70B5),
-    'ubicacion_pendiente' => const Color(0xFF3E8291),
-    _ => const Color(0xFF138A5B),
+    'pedido_rechazado' || 'pedido_cancelado' => const Color(0xFFAE7960),
+    'pedido_vencido' || 'entrega_por_confirmar' => const Color(0xFFAE7960),
+    'nuevo_local' => const Color(0xFF848381),
+    'ubicacion_pendiente' => const Color(0xFF848381),
+    _ => const Color(0xFF474646),
   };
 
   @override
@@ -383,10 +385,10 @@ class _TarjetaNotificacion extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 15, 13, 15),
             decoration: BoxDecoration(
               color: oscuro
-                  ? const Color(0xFF171A18)
+                  ? const Color(0xFF474646)
                   : notificacion.leida
-                  ? Colors.white.withValues(alpha: .72)
-                  : Colors.white.withValues(alpha: .96),
+                  ? Color(0xFFE6E1D5).withValues(alpha: .72)
+                  : Color(0xFFE6E1D5).withValues(alpha: .96),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
                 color: notificacion.leida
@@ -395,7 +397,7 @@ class _TarjetaNotificacion extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(
+                  color: Color(0xFF474646).withValues(
                     alpha: oscuro ? .18 : (notificacion.leida ? .025 : .065),
                   ),
                   blurRadius: notificacion.leida ? 12 : 24,
@@ -521,15 +523,15 @@ class _SinNotificaciones extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0x26138A5B), Color(0x0D138A5B)],
+                colors: [Color(0x26474646), Color(0x0D474646)],
               ),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0x22138A5B)),
+              border: Border.all(color: const Color(0x22474646)),
             ),
             child: const Icon(
               Icons.notifications_none_rounded,
               size: 42,
-              color: Color(0xFF628C69),
+              color: Color(0xFF848381),
             ),
           ),
           const SizedBox(height: 22),

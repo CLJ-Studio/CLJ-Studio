@@ -16,10 +16,10 @@ class TarjetaPerfilUsuario extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final esOscuro = Theme.of(context).brightness == Brightness.dark;
-    final colorTexto = esOscuro ? Colors.white : const Color(0xFF121418);
+    final colorTexto = esOscuro ? Color(0xFFE6E1D5) : const Color(0xFF474646);
     final textoSecundario = esOscuro
-        ? const Color(0xFFA7ADB5)
-        : const Color(0xFF737A83);
+        ? const Color(0xFFBBBCA7)
+        : const Color(0xFF848381);
 
     return Column(
       children: [
@@ -32,8 +32,8 @@ class TarjetaPerfilUsuario extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: esOscuro
-                    ? const Color(0xFF202429)
-                    : const Color(0xFFDCE1E7),
+                    ? const Color(0xFF474646)
+                    : const Color(0xFFE6E1D5),
                 shape: BoxShape.circle,
               ),
               child: switch (usuario.avatarUrl) {
@@ -49,7 +49,7 @@ class TarjetaPerfilUsuario extends StatelessWidget {
               right: -3,
               bottom: 5,
               child: Material(
-                color: esOscuro ? const Color(0xFF138A5B) : Colors.white,
+                color: esOscuro ? const Color(0xFF474646) : Color(0xFFE6E1D5),
                 shape: const CircleBorder(),
                 elevation: 2,
                 child: InkWell(
@@ -61,7 +61,7 @@ class TarjetaPerfilUsuario extends StatelessWidget {
                     child: Icon(
                       Icons.camera_alt_rounded,
                       size: 21,
-                      color: esOscuro ? Colors.white : colorTexto,
+                      color: esOscuro ? Color(0xFFE6E1D5) : colorTexto,
                     ),
                   ),
                 ),
@@ -110,12 +110,12 @@ class TarjetaPerfilUsuario extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: colorTexto,
             backgroundColor: esOscuro
-                ? const Color(0xFF15171A)
-                : const Color(0xFFF7F9FB),
+                ? const Color(0xFF474646)
+                : const Color(0xFFE6E1D5),
             side: BorderSide(
               color: esOscuro
-                  ? const Color(0xFF30343A)
-                  : const Color(0xFFDCE1E7),
+                  ? const Color(0xFF474646)
+                  : const Color(0xFFE6E1D5),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
             shape: const StadiumBorder(),
@@ -142,8 +142,8 @@ class _Inicial extends StatelessWidget {
       usuario.inicial,
       style: TextStyle(
         color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.white
-            : const Color(0xFF30353B),
+            ? Color(0xFFE6E1D5)
+            : const Color(0xFF474646),
         fontSize: 54,
         fontWeight: FontWeight.w900,
       ),

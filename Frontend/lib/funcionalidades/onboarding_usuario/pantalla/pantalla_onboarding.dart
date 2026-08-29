@@ -39,7 +39,7 @@ class PantallaOnboarding extends StatelessWidget {
                   const Text(
                     'Completa tu perfil para poder publicar y pedir dentro '
                     'del campus.',
-                    style: TextStyle(color: Color(0xFF858585), height: 1.4),
+                    style: TextStyle(color: Color(0xFF848381), height: 1.4),
                   ),
                   const SizedBox(height: 28),
                   _CampoNombre(controlador: controlador),
@@ -98,7 +98,7 @@ class PantallaOnboarding extends StatelessWidget {
                               if (await controlador.enviar()) alCompletar();
                             },
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF138A5B),
+                        backgroundColor: const Color(0xFF474646),
                         shape: const StadiumBorder(),
                       ),
                       child: controlador.enviando
@@ -170,7 +170,7 @@ class _CampoNombre extends StatelessWidget {
               prefixIcon: Icon(Icons.badge_outlined),
               suffixIcon: Icon(
                 Icons.verified_rounded,
-                color: Color(0xFF138A5B),
+                color: Color(0xFF474646),
                 size: 21,
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 
 /// Acceso al carrito con el contador real de unidades.
@@ -26,13 +27,13 @@ class BotonCarritoCompras extends StatelessWidget {
             backgroundColor: sobreFondoMarca
                 ? Colors.transparent
                 : Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF40373D)
-                : const Color(0xFFE1F2E8),
+                ? const Color(0xFF474646)
+                : ConfiguracionTema.cremaSuperficie,
             foregroundColor: sobreFondoMarca
                 ? Colors.white
                 : Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : Colors.black,
+                ? Color(0xFFE6E1D5)
+                : Color(0xFF474646),
           ),
           onPressed: alPresionar,
           icon: const Icon(Icons.shopping_cart_outlined, size: 27),

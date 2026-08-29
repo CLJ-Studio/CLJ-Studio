@@ -6,7 +6,7 @@
 
 self.addEventListener('push', (evento) => {
   let datos = {
-    title: 'UPSA Eat',
+    title: 'U market',
     body: '',
     order_id: null,
     store_id: null,
@@ -19,7 +19,7 @@ self.addEventListener('push', (evento) => {
   }
 
   evento.waitUntil(
-    self.registration.showNotification(datos.title || 'UPSA Eat', {
+    self.registration.showNotification(datos.title || 'U market', {
       body: datos.body || '',
       icon: '/icons/Icon-192.png',
       badge: '/icons/Icon-192.png',

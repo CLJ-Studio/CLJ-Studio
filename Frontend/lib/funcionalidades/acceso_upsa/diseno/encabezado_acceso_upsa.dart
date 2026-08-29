@@ -12,7 +12,7 @@ class EncabezadoAccesoUpsa extends StatelessWidget {
           'Tu campus.\nTodo más cerca.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: const Color(0xFF181818),
+            color: const Color(0xFF474646),
             fontSize: 32,
             height: 1.08,
             fontWeight: FontWeight.w900,
@@ -24,7 +24,7 @@ class EncabezadoAccesoUpsa extends StatelessWidget {
           'Compra, vende y encuentra lo que necesitas dentro de la comunidad UPSA.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF858585),
+            color: const Color(0xFF848381),
             height: 1.45,
           ),
         ),

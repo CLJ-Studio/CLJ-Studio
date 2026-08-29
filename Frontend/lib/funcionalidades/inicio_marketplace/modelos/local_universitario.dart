@@ -43,8 +43,8 @@ class LocalUniversitario {
       estaAbierto: (fila['is_open'] as bool?) ?? false,
       costoEntrega: (fila['delivery_cost'] as num?)?.toDouble() ?? 0,
       emoji: (fila['emoji'] as String?) ?? '🍽️',
-      // color_hex es bigint en Postgres: 0xFFFFE8D6 desborda un int32.
-      colorHexadecimal: (fila['color_hex'] as num?)?.toInt() ?? 0xFFF1F6F0,
+      // color_hex es bigint en Postgres: 0xFFE6E1D5 desborda un int32.
+      colorHexadecimal: (fila['color_hex'] as num?)?.toInt() ?? 0xFFE6E1D5,
       esPersonal: (fila['is_personal'] as bool?) ?? false,
       logoPath: fila['logo_path'] as String?,
       portadaPath: fila['portada_path'] as String?,

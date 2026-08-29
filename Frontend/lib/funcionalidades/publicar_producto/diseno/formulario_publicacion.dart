@@ -97,7 +97,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
           FilledButton(
             onPressed: () => Navigator.of(contexto).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: ConfiguracionTema.verdeMarca,
+              backgroundColor: ConfiguracionTema.primario,
             ),
             child: const Text('Continuar'),
           ),
@@ -227,7 +227,9 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       ];
       final pasoActivo = pasosObligatorios.indexWhere((valor) => !valor);
       final formularioCompleto = pasosObligatorios.every((valor) => valor);
-      final colorTextoSecundario = oscuro ? Colors.white : Colors.black;
+      final colorTextoSecundario = oscuro
+          ? Color(0xFFE6E1D5)
+          : Color(0xFF474646);
 
       return Form(
         key: llave,
@@ -241,8 +243,8 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                 .copyWith(
                   filled: true,
                   fillColor: oscuro
-                      ? const Color(0xFF090B09)
-                      : const Color(0xFFF1F5F2),
+                      ? const Color(0xFF474646)
+                      : const Color(0xFFE6E1D5),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
                     borderSide: BorderSide.none,
@@ -254,7 +256,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
                     borderSide: const BorderSide(
-                      color: ConfiguracionTema.verdeMarca,
+                      color: ConfiguracionTema.primario,
                       width: 1.5,
                     ),
                   ),
@@ -402,8 +404,8 @@ class _PasoPublicacion extends StatelessWidget {
             width: 5,
             decoration: BoxDecoration(
               color: completo
-                  ? ConfiguracionTema.verdeMarca
-                  : const Color(0xFFDFE4DF),
+                  ? ConfiguracionTema.primario
+                  : const Color(0xFFE6E1D5),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -422,17 +424,17 @@ class _PasoPublicacion extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: completo
-                    ? ConfiguracionTema.verdeMarca
+                    ? ConfiguracionTema.primario
                     : activo
-                    ? Colors.white
-                    : const Color(0xFFDFE4DF),
+                    ? Color(0xFFE6E1D5)
+                    : const Color(0xFFE6E1D5),
                 shape: BoxShape.circle,
                 border: activo
-                    ? Border.all(color: ConfiguracionTema.verdeMarca, width: 4)
+                    ? Border.all(color: ConfiguracionTema.primario, width: 4)
                     : null,
                 boxShadow: activo
                     ? const [
-                        BoxShadow(color: Color(0x44138A5B), blurRadius: 12),
+                        BoxShadow(color: Color(0x44474646), blurRadius: 12),
                       ]
                     : null,
               ),
@@ -442,7 +444,7 @@ class _PasoPublicacion extends StatelessWidget {
                     ? const Icon(
                         Icons.check_rounded,
                         key: ValueKey('completo'),
-                        color: Colors.white,
+                        color: Color(0xFFE6E1D5),
                         size: 18,
                       )
                     : Text(
@@ -450,10 +452,10 @@ class _PasoPublicacion extends StatelessWidget {
                         key: ValueKey(numero),
                         style: TextStyle(
                           color: activo
-                              ? ConfiguracionTema.verdeMarca
+                              ? ConfiguracionTema.primario
                               : Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black,
+                              ? Color(0xFFE6E1D5)
+                              : Color(0xFF474646),
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                         ),
@@ -480,7 +482,7 @@ class _TarjetaFormulario extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(2, 4, 2, 18),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: oscuro ? const Color(0xFF19161B) : Colors.white,
+        color: oscuro ? const Color(0xFF474646) : Color(0xFFE6E1D5),
         borderRadius: BorderRadius.circular(26),
       ),
       child: Column(
@@ -489,7 +491,7 @@ class _TarjetaFormulario extends StatelessWidget {
           Text(
             titulo,
             style: TextStyle(
-              color: oscuro ? Colors.white : Colors.black,
+              color: oscuro ? Color(0xFFE6E1D5) : Color(0xFF474646),
               fontSize: 19,
               fontWeight: FontWeight.w900,
             ),

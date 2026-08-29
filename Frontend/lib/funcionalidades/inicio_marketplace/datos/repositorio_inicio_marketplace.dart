@@ -22,11 +22,18 @@ class RepositorioInicioMarketplace {
         .select('id, name, icon_name')
         .order('sort_order');
 
+    // Transporte deja de ser una categoría navegable en la aplicación. Se
+    // conserva en la base para no alterar publicaciones existentes.
+    final categoriasVisibles = filas.map(CategoriaMarketplace.desdeMapa).where((
+      categoria,
+    ) {
+      final id = categoria.id.trim().toLowerCase();
+      final nombre = categoria.nombre.trim().toLowerCase();
+      return id != 'transporte' && id != 'transport' && nombre != 'transporte';
+    });
+
     // 'Todo' encabeza la barra pero no existe como fila en la base.
-    return [
-      CategoriaMarketplace.todas,
-      ...filas.map(CategoriaMarketplace.desdeMapa),
-    ];
+    return [CategoriaMarketplace.todas, ...categoriasVisibles];
   }
 
   /// Se lee de la vista y no de `stores` porque incluye el avatar del

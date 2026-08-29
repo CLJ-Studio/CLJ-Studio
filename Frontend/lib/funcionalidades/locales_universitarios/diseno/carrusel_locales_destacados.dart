@@ -66,7 +66,9 @@ class _TarjetaDestacada extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.surface,
+    color: Theme.of(context).brightness == Brightness.dark
+        ? ConfiguracionTema.grafito
+        : Colors.white,
     borderRadius: BorderRadius.circular(24),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
@@ -111,7 +113,7 @@ class _TarjetaDestacada extends StatelessWidget {
                       const Icon(
                         Icons.arrow_forward_rounded,
                         size: 19,
-                        color: ConfiguracionTema.verdeMarca,
+                        color: ConfiguracionTema.primario,
                       ),
                     ],
                   ),
@@ -121,7 +123,7 @@ class _TarjetaDestacada extends StatelessWidget {
                       const Icon(
                         Icons.location_on_rounded,
                         size: 15,
-                        color: ConfiguracionTema.verdeMarca,
+                        color: ConfiguracionTema.primario,
                       ),
                       const SizedBox(width: 3),
                       Expanded(
@@ -171,8 +173,8 @@ class _Emoji extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Colors.white.withValues(alpha: .7),
-          ConfiguracionTema.verdeMarca.withValues(alpha: .12),
+          Color(0xFFE6E1D5).withValues(alpha: .7),
+          ConfiguracionTema.primario.withValues(alpha: .12),
         ],
       ),
     ),

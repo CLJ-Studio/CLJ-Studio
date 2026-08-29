@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../../elementos_compartidos/navegacion/bloqueo_deslizamiento_principal.dart';
 import '../logica/controlador_navegacion_principal.dart';
 
@@ -154,18 +155,20 @@ class _BarraLigera extends StatelessWidget {
             decoration: BoxDecoration(
               // Del tema: fija en gris claro, la barra quedaba blanca flotando
               // sobre el fondo oscuro.
-              color: esOscuro ? const Color(0xFF303230) : Colors.white,
+              color: esOscuro
+                  ? const Color(0xFF474646)
+                  : ConfiguracionTema.cremaSuperficie,
               borderRadius: BorderRadius.circular(38),
               border: Border.all(
                 color: esOscuro
-                    ? const Color(0xFF484A48)
-                    : const Color(0xFFE1E1E1),
+                    ? const Color(0xFF969A82)
+                    : const Color(0xFFBBBCA7),
               ),
               boxShadow: [
                 BoxShadow(
                   color: esOscuro
-                      ? const Color(0x40000000)
-                      : const Color(0x33000000),
+                      ? const Color(0x40474646)
+                      : const Color(0x33474646),
                   blurRadius: 16,
                   offset: const Offset(0, 5),
                 ),
@@ -190,9 +193,7 @@ class _BarraLigera extends StatelessWidget {
                       height: restricciones.maxHeight - margen * 2,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: esOscuro
-                              ? tema.colorScheme.primary.withValues(alpha: .18)
-                              : Colors.black,
+                          color: ConfiguracionTema.naranjaCoral,
                           borderRadius: BorderRadius.circular(32),
                         ),
                       ),
@@ -241,13 +242,12 @@ class _DestinoBarra extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final esOscuro = tema.brightness == Brightness.dark;
-    final color = esOscuro
-        ? activo
-              ? tema.colorScheme.primary
-              : Colors.white
-        : activo
-        ? Colors.white
-        : Colors.black;
+    final colorTexto = activo
+        ? ConfiguracionTema.azulNoche
+        : esOscuro
+        ? Color(0xFFE6E1D5)
+        : Color(0xFF474646);
+    final colorIcono = activo ? ConfiguracionTema.blancoSuave : colorTexto;
     return InkWell(
       onTap: alPresionar,
       borderRadius: BorderRadius.circular(32),
@@ -258,13 +258,17 @@ class _DestinoBarra extends StatelessWidget {
             scale: activo ? 1.08 : 1,
             duration: const Duration(milliseconds: 260),
             curve: Curves.easeOutBack,
-            child: Icon(activo ? iconoActivo : icono, color: color, size: 25),
+            child: Icon(
+              activo ? iconoActivo : icono,
+              color: colorIcono,
+              size: 25,
+            ),
           ),
           const SizedBox(height: 3),
           AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 220),
             style: TextStyle(
-              color: color,
+              color: colorTexto,
               fontFamily: 'Nunito',
               fontSize: 11,
               fontWeight: activo ? FontWeight.w700 : FontWeight.w500,

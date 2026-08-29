@@ -7,6 +7,7 @@ import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../../elementos_compartidos/marca/marca_u_market.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../instalacion_app/diseno/aviso_instalacion.dart';
@@ -135,7 +136,6 @@ class PantallaInicioMarketplace extends StatelessWidget {
                             const SizedBox(height: 18),
                             _CategoriasInicio(
                               categorias: estado.categorias,
-                              publicaciones: controlador.catalogoCompleto,
                               categoriaId: estado.categoriaId,
                               alSeleccionar: controlador.seleccionarCategoria,
                             ),
@@ -206,7 +206,7 @@ class PantallaInicioMarketplace extends StatelessWidget {
                   scale: buscando ? 1 : .72,
                   child: Material(
                     elevation: 18,
-                    shadowColor: const Color(0x55000000),
+                    shadowColor: const Color(0x55474646),
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(18),
                     clipBehavior: Clip.antiAlias,
@@ -385,7 +385,7 @@ class _ResultadoBusqueda extends StatelessWidget {
     leading: _ImagenResultado(icono: icono, imagenUrl: imagenUrl),
     title: Text(titulo, style: const TextStyle(fontWeight: FontWeight.w800)),
     subtitle: Text(subtitulo),
-    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF138A5B)),
+    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF474646)),
   );
 }
 
@@ -398,8 +398,8 @@ class _ImagenResultado extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CircleAvatar(
     radius: 22,
-    backgroundColor: const Color(0xFF138A5B),
-    foregroundColor: Colors.white,
+    backgroundColor: const Color(0xFF474646),
+    foregroundColor: Color(0xFFE6E1D5),
     child: imagenUrl == null || imagenUrl!.isEmpty
         ? Icon(icono, size: 21)
         : ClipOval(
@@ -427,7 +427,7 @@ class _BusquedaVacia extends StatelessWidget {
     ),
     child: const Column(
       children: [
-        Icon(Icons.search_off_rounded, size: 42, color: Color(0xFF138A5B)),
+        Icon(Icons.search_off_rounded, size: 42, color: Color(0xFF474646)),
         SizedBox(height: 10),
         Text(
           'No encontramos resultados',
@@ -472,7 +472,7 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
     ),
   };
 
-  static const _colores = [ConfiguracionTema.azulPetroleo, Color(0xFF2B7A73)];
+  static const _colores = [ConfiguracionTema.amarilloDorado];
 
   static const _imagenes = <String, String>{
     'comida': 'assets/images/banners/comida-buho.jpg',
@@ -499,7 +499,7 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
         titulo: 'Todo el campus\nen un solo lugar.',
         subtitulo: 'Compra, vende y descubre sin salir de la UPSA.',
         textoBoton: 'Explorar',
-        colorDegradado: ConfiguracionTema.verdeMarca,
+        colorDegradado: ConfiguracionTema.amarilloDorado,
         rutaImagen: 'assets/images/banners/comida-buho.jpg',
         accion: () => widget.alSeleccionar('todas'),
       ),
@@ -520,7 +520,7 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
         titulo: 'Hay Deportes\nen el campus.',
         subtitulo: 'Mira lo que publicaron.',
         textoBoton: 'Ver deportes',
-        colorDegradado: ConfiguracionTema.azulPetroleo,
+        colorDegradado: ConfiguracionTema.amarilloDorado,
         rutaImagen: 'assets/images/banners/deportes-buho.jpg',
         accion: () => widget.alSeleccionar(
           categoriaDeportes?.id ?? CategoriaMarketplace.todas.id,
@@ -619,8 +619,8 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
                       margin: const EdgeInsets.symmetric(horizontal: 3),
                       decoration: BoxDecoration(
                         color: activo
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: .42),
+                            ? Color(0xFFE6E1D5)
+                            : Color(0xFFE6E1D5).withValues(alpha: .42),
                         borderRadius: BorderRadius.circular(20),
                       ),
                     );
@@ -670,7 +670,6 @@ class BannerSlide extends StatelessWidget {
       children: [
         ColoredBox(color: data.colorDegradado),
         Positioned.fill(
-          left: MediaQuery.sizeOf(context).width < 430 ? 115 : 210,
           child: Image.asset(
             data.rutaImagen,
             fit: BoxFit.cover,
@@ -686,10 +685,14 @@ class BannerSlide extends StatelessWidget {
               end: Alignment.centerRight,
               colors: [
                 data.colorDegradado,
-                data.colorDegradado.withValues(alpha: .95),
-                data.colorDegradado.withValues(alpha: .1),
+                data.colorDegradado,
+                data.colorDegradado.withValues(alpha: .90),
+                data.colorDegradado.withValues(alpha: .65),
+                data.colorDegradado.withValues(alpha: .35),
+                data.colorDegradado.withValues(alpha: .10),
+                data.colorDegradado.withValues(alpha: 0),
               ],
-              stops: const [0, .48, .88],
+              stops: const [0, .28, .33, .38, .43, .48, .53],
             ),
           ),
         ),
@@ -706,7 +709,7 @@ class BannerSlide extends StatelessWidget {
                 Text(
                   data.titulo,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: ConfiguracionTema.azulNoche,
                     fontSize: 25,
                     height: 1.02,
                     fontWeight: FontWeight.w900,
@@ -717,7 +720,7 @@ class BannerSlide extends StatelessWidget {
                   data.subtitulo,
                   maxLines: 2,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: .92),
+                    color: ConfiguracionTema.azulNoche.withValues(alpha: .86),
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -726,8 +729,8 @@ class BannerSlide extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: data.accion,
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: data.colorDegradado,
+                    backgroundColor: Color(0xFFE6E1D5),
+                    foregroundColor: ConfiguracionTema.azulNoche,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 17,
                       vertical: 10,
@@ -752,13 +755,11 @@ class BannerSlide extends StatelessWidget {
 class _CategoriasInicio extends StatelessWidget {
   const _CategoriasInicio({
     required this.categorias,
-    required this.publicaciones,
     required this.categoriaId,
     required this.alSeleccionar,
   });
 
   final List<CategoriaMarketplace> categorias;
-  final List<ProductoMarketplace> publicaciones;
   final String categoriaId;
   final ValueChanged<String> alSeleccionar;
 
@@ -769,6 +770,10 @@ class _CategoriasInicio extends StatelessWidget {
   );
 
   static const _idsPrincipales = ['comida', 'productos'];
+  static const _imagenesPrincipales = <String, String>{
+    'comida': 'assets/images/categorias/comida-rapida.png',
+    'productos': 'assets/images/categorias/productos-varios.png',
+  };
 
   Future<void> _mostrarOtrasCategorias(
     BuildContext context,
@@ -803,8 +808,8 @@ class _CategoriasInicio extends StatelessWidget {
                     final categoria = categorias[indice];
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: const Color(0xFFE1F2E8),
-                        foregroundColor: const Color(0xFF164A56),
+                        backgroundColor: ConfiguracionTema.cremaSuperficie,
+                        foregroundColor: const Color(0xFF474646),
                         child: Icon(categoria.icono),
                       ),
                       title: Text(
@@ -814,7 +819,7 @@ class _CategoriasInicio extends StatelessWidget {
                       trailing: categoria.id == categoriaId
                           ? const Icon(
                               Icons.check_circle_rounded,
-                              color: Color(0xFF138A5B),
+                              color: Color(0xFF474646),
                             )
                           : null,
                       onTap: () => Navigator.of(context).pop(categoria.id),
@@ -847,24 +852,6 @@ class _CategoriasInicio extends StatelessWidget {
     final visibles = principales.take(2).toList(growable: false);
     final secundarias = [...principales.skip(2), ...adicionales.take(5)];
 
-    String? imagenDe(CategoriaMarketplace categoria) {
-      for (final publicacion in publicaciones) {
-        final local = publicacion.local;
-        final esComida =
-            publicacion.categoriaEfectiva == 'comida' ||
-            (local != null &&
-                !local.esPersonal &&
-                local.categoriaId == 'comida');
-        final coincide = categoria.id == 'productos'
-            ? !esComida
-            : publicacion.categoriaEfectiva == categoria.id;
-        if (coincide && publicacion.imagenUrl?.isNotEmpty == true) {
-          return publicacion.imagenUrl;
-        }
-      }
-      return null;
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -896,7 +883,7 @@ class _CategoriasInicio extends StatelessWidget {
                 Expanded(
                   child: _TarjetaCategoriaGrande(
                     categoria: categoria,
-                    imagenUrl: imagenDe(categoria),
+                    rutaImagenAsset: _imagenesPrincipales[categoria.id]!,
                     seleccionada: categoria.id == categoriaId,
                     alPresionar: () => alSeleccionar(categoria.id),
                   ),
@@ -928,7 +915,6 @@ class _CategoriasInicio extends StatelessWidget {
                 final categoria = secundarias[indice];
                 return _TarjetaCategoriaCompacta(
                   categoria: categoria,
-                  imagenUrl: imagenDe(categoria),
                   seleccionada: categoria.id == categoriaId,
                   alPresionar: () => alSeleccionar(categoria.id),
                 );
@@ -945,18 +931,20 @@ class _TarjetaCategoriaGrande extends StatelessWidget {
   const _TarjetaCategoriaGrande({
     required this.categoria,
     required this.alPresionar,
-    this.imagenUrl,
+    required this.rutaImagenAsset,
     this.seleccionada = false,
   });
 
   final CategoriaMarketplace categoria;
   final VoidCallback alPresionar;
-  final String? imagenUrl;
+  final String rutaImagenAsset;
   final bool seleccionada;
 
   @override
   Widget build(BuildContext context) => Material(
-    color: seleccionada ? const Color(0xFFE1F3E9) : const Color(0xFFF1F5F2),
+    color: seleccionada
+        ? ConfiguracionTema.salviaClara
+        : ConfiguracionTema.cremaSuperficie,
     borderRadius: BorderRadius.circular(24),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
@@ -966,30 +954,25 @@ class _TarjetaCategoriaGrande extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              right: -8,
-              top: 6,
-              bottom: 28,
-              width: 116,
-              child: imagenUrl == null
-                  ? Icon(
-                      categoria.icono,
-                      size: 72,
-                      color: ConfiguracionTema.verdeMarca.withValues(
-                        alpha: .75,
-                      ),
-                    )
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(22),
-                      child: Image.network(
-                        imagenUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Icon(
-                          categoria.icono,
-                          size: 72,
-                          color: ConfiguracionTema.verdeMarca,
-                        ),
-                      ),
-                    ),
+              right: -6,
+              top: 0,
+              bottom: 24,
+              width: 160,
+              child: Transform.scale(
+                scale: categoria.id == 'productos' ? 1.22 : 1,
+                alignment: Alignment.centerRight,
+                child: Image.asset(
+                  rutaImagenAsset,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.centerRight,
+                  filterQuality: FilterQuality.high,
+                  errorBuilder: (_, _, _) => Icon(
+                    categoria.icono,
+                    size: 72,
+                    color: ConfiguracionTema.primario,
+                  ),
+                ),
+              ),
             ),
             Positioned(
               left: 16,
@@ -1000,7 +983,7 @@ class _TarjetaCategoriaGrande extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: ConfiguracionTema.tinta,
+                  color: ConfiguracionTema.grafito,
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
                 ),
@@ -1017,18 +1000,18 @@ class _TarjetaCategoriaCompacta extends StatelessWidget {
   const _TarjetaCategoriaCompacta({
     required this.categoria,
     required this.alPresionar,
-    this.imagenUrl,
     this.seleccionada = false,
   });
 
   final CategoriaMarketplace categoria;
   final VoidCallback alPresionar;
-  final String? imagenUrl;
   final bool seleccionada;
 
   @override
   Widget build(BuildContext context) => Material(
-    color: seleccionada ? const Color(0xFFE1F3E9) : const Color(0xFFF1F5F2),
+    color: seleccionada
+        ? ConfiguracionTema.salviaClara
+        : ConfiguracionTema.cremaSuperficie,
     borderRadius: BorderRadius.circular(20),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
@@ -1040,25 +1023,11 @@ class _TarjetaCategoriaCompacta extends StatelessWidget {
           child: Column(
             children: [
               Expanded(
-                child: imagenUrl == null
-                    ? Icon(
-                        categoria.icono,
-                        size: 42,
-                        color: ConfiguracionTema.verdeMarca,
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: Image.network(
-                          imagenUrl!,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Icon(
-                            categoria.icono,
-                            size: 42,
-                            color: ConfiguracionTema.verdeMarca,
-                          ),
-                        ),
-                      ),
+                child: Icon(
+                  categoria.icono,
+                  size: 42,
+                  color: ConfiguracionTema.primario,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
@@ -1066,7 +1035,7 @@ class _TarjetaCategoriaCompacta extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: ConfiguracionTema.tinta,
+                  color: ConfiguracionTema.grafito,
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
                 ),
@@ -1110,8 +1079,13 @@ class _EscaparatePopular extends StatelessWidget {
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: ConfiguracionTema.azulPetroleo,
-                    borderRadius: BorderRadius.circular(30),
+                    color: ConfiguracionTema.moradoPromocional,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(100),
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
                   ),
                 ),
               ),
@@ -1122,7 +1096,7 @@ class _EscaparatePopular extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 18, right: 16),
+                    padding: const EdgeInsets.only(left: 18, right: 44),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1136,15 +1110,13 @@ class _EscaparatePopular extends StatelessWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: Color(0xFFE6E1D5),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: const Text(
-                                  'UPSA EAT',
+                                child: const MarcaUMarket(
                                   style: TextStyle(
-                                    color: ConfiguracionTema.azulPetroleo,
+                                    color: ConfiguracionTema.grafito,
                                     fontSize: 11,
-                                    fontWeight: FontWeight.w900,
                                   ),
                                 ),
                               ),
@@ -1152,7 +1124,7 @@ class _EscaparatePopular extends StatelessWidget {
                               const Text(
                                 'Lo que todos quieren\nen el campus',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Color(0xFFE6E1D5),
                                   fontSize: 23,
                                   height: 1.05,
                                   fontWeight: FontWeight.w900,
@@ -1164,7 +1136,7 @@ class _EscaparatePopular extends StatelessWidget {
                         TextButton(
                           onPressed: alVerTodo,
                           style: TextButton.styleFrom(
-                            foregroundColor: Colors.white,
+                            foregroundColor: Color(0xFFE6E1D5),
                           ),
                           child: const Text(
                             'Ver todo',
@@ -1257,11 +1229,13 @@ class _CuadriculaPublicaciones extends StatelessWidget {
             crossAxisCount: columnas,
             crossAxisSpacing: separacion,
             mainAxisSpacing: separacion,
-            childAspectRatio: anchoTarjeta / 238,
+            childAspectRatio: anchoTarjeta / 205,
           ),
           itemBuilder: (_, indice) => _TarjetaPublicacion(
             publicacion: publicaciones[indice],
             ancho: double.infinity,
+            superficieSuave: true,
+            mostrarAcciones: false,
           ),
         );
       },
@@ -1270,10 +1244,19 @@ class _CuadriculaPublicaciones extends StatelessWidget {
 }
 
 class _TarjetaPublicacion extends StatelessWidget {
-  const _TarjetaPublicacion({required this.publicacion, this.ancho = 164});
+  static const Color _superficieDescubre = Color(0xFFF5F4F0);
+
+  const _TarjetaPublicacion({
+    required this.publicacion,
+    this.ancho = 164,
+    this.superficieSuave = false,
+    this.mostrarAcciones = true,
+  });
 
   final ProductoMarketplace publicacion;
   final double ancho;
+  final bool superficieSuave;
+  final bool mostrarAcciones;
 
   void _abrir(BuildContext context) {
     final local = publicacion.local;
@@ -1293,7 +1276,11 @@ class _TarjetaPublicacion extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
     width: ancho,
     child: Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: Theme.of(context).brightness == Brightness.dark
+          ? ConfiguracionTema.grafito
+          : superficieSuave
+          ? _superficieDescubre
+          : Colors.white,
       borderRadius: BorderRadius.circular(22),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -1301,8 +1288,10 @@ class _TarjetaPublicacion extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF1C181E)
-                : const Color(0xFFF1F4F2),
+                ? ConfiguracionTema.grafito
+                : superficieSuave
+                ? _superficieDescubre
+                : Colors.white,
             borderRadius: BorderRadius.circular(22),
           ),
           child: Column(
@@ -1342,67 +1331,70 @@ class _TarjetaPublicacion extends StatelessWidget {
                         child: Text(
                           'Bs ${publicacion.precio.toStringAsFixed(2)}',
                           style: const TextStyle(
-                            color: ConfiguracionTema.verdeMarca,
+                            color: ConfiguracionTema.terracota,
                             fontSize: 15,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          AnimatedBuilder(
-                            animation: ControladorFavoritos.instancia,
-                            builder: (context, _) {
-                              final favorito = ControladorFavoritos.instancia
-                                  .contiene(publicacion);
-                              final colorInactivo =
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black;
-                              return IconButton(
-                                tooltip: favorito
-                                    ? 'Quitar de favoritos'
-                                    : 'Agregar a favoritos',
-                                onPressed: () => ControladorFavoritos.instancia
-                                    .alternar(publicacion),
-                                style: IconButton.styleFrom(
-                                  foregroundColor: favorito
-                                      ? const Color(0xFFE53935)
-                                      : colorInactivo,
-                                  minimumSize: const Size(30, 30),
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                  padding: EdgeInsets.zero,
-                                ),
-                                icon: Icon(
-                                  favorito
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                                  size: 24,
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton.filled(
-                            tooltip: 'Ver publicación',
-                            onPressed: () => _abrir(context),
-                            style: IconButton.styleFrom(
-                              backgroundColor: ConfiguracionTema.verdeMarca,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size(30, 30),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
+                      if (mostrarAcciones) ...[
+                        const SizedBox(height: 3),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            AnimatedBuilder(
+                              animation: ControladorFavoritos.instancia,
+                              builder: (context, _) {
+                                final favorito = ControladorFavoritos.instancia
+                                    .contiene(publicacion);
+                                final colorInactivo =
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Color(0xFFE6E1D5)
+                                    : Color(0xFF474646);
+                                return IconButton(
+                                  tooltip: favorito
+                                      ? 'Quitar de favoritos'
+                                      : 'Agregar a favoritos',
+                                  onPressed: () => ControladorFavoritos
+                                      .instancia
+                                      .alternar(publicacion),
+                                  style: IconButton.styleFrom(
+                                    foregroundColor: favorito
+                                        ? const Color(0xFFAE7960)
+                                        : colorInactivo,
+                                    minimumSize: const Size(30, 30),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                  icon: Icon(
+                                    favorito
+                                        ? Icons.favorite_rounded
+                                        : Icons.favorite_border_rounded,
+                                    size: 24,
+                                  ),
+                                );
+                              },
                             ),
-                            icon: const Icon(Icons.add_rounded, size: 20),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 4),
+                            IconButton.filled(
+                              tooltip: 'Ver publicación',
+                              onPressed: () => _abrir(context),
+                              style: IconButton.styleFrom(
+                                backgroundColor: ConfiguracionTema.primario,
+                                foregroundColor: Color(0xFFE6E1D5),
+                                minimumSize: const Size(30, 30),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                              ),
+                              icon: const Icon(Icons.add_rounded, size: 20),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1452,7 +1444,7 @@ class _TituloSeccion extends StatelessWidget {
           child: const Text(
             'Ver todo',
             style: TextStyle(
-              color: ConfiguracionTema.verdeMarca,
+              color: ConfiguracionTema.primario,
               fontWeight: FontWeight.w800,
             ),
           ),

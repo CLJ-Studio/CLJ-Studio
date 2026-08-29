@@ -121,7 +121,7 @@ class _EditorNegocioState extends State<EditorNegocio> {
             const Icon(
               Icons.storefront_rounded,
               size: 19,
-              color: Color(0xFF138A5B),
+              color: Color(0xFF474646),
             ),
             const SizedBox(width: 8),
             Text(
@@ -168,17 +168,17 @@ class _EditorNegocioState extends State<EditorNegocio> {
           const SizedBox(height: 6),
           Text(
             mensaje,
-            style: const TextStyle(color: Color(0xFF7C827E), fontSize: 12),
+            style: const TextStyle(color: Color(0xFF848381), fontSize: 12),
           ),
         ],
         const SizedBox(height: 14),
         FilledButton.icon(
           onPressed: _guardando ? null : _guardar,
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: const Color(0xFF343434),
-            disabledForegroundColor: Colors.white70,
+            backgroundColor: Color(0xFF474646),
+            foregroundColor: Color(0xFFE6E1D5),
+            disabledBackgroundColor: const Color(0xFF474646),
+            disabledForegroundColor: Color(0xB3E6E1D5),
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(vertical: 13),
           ),
@@ -199,9 +199,9 @@ class _EditorNegocioState extends State<EditorNegocio> {
           OutlinedButton.icon(
             onPressed: _guardando ? null : widget.alEliminar,
             style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFFB3453B),
-              side: const BorderSide(color: Color(0xFFE1E1E1)),
+              backgroundColor: Color(0xFFE6E1D5),
+              foregroundColor: const Color(0xFFAE7960),
+              side: const BorderSide(color: Color(0xFFE6E1D5)),
               shape: const StadiumBorder(),
               padding: const EdgeInsets.symmetric(vertical: 13),
             ),
@@ -252,7 +252,7 @@ class _Logo extends StatelessWidget {
             right: 6,
             child: IconButton.filled(
               tooltip: 'Quitar logo',
-              style: IconButton.styleFrom(backgroundColor: Colors.black54),
+              style: IconButton.styleFrom(backgroundColor: Color(0x8A474646)),
               onPressed: alQuitar,
               icon: const Icon(Icons.close_rounded, size: 16),
             ),
@@ -284,7 +284,7 @@ class _Logo extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subiendo ? 'Subiendo logo...' : 'Subir logo del negocio',
-              style: const TextStyle(color: Color(0xFF7C827E), fontSize: 12),
+              style: const TextStyle(color: Color(0xFF848381), fontSize: 12),
             ),
           ],
         ),

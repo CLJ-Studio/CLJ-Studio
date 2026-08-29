@@ -66,7 +66,7 @@ class PantallaMiLocal extends StatelessWidget {
           FilledButton(
             onPressed: () => Navigator.of(contexto).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFB3453B),
+              backgroundColor: const Color(0xFFAE7960),
             ),
             child: const Text('Eliminar'),
           ),
@@ -184,7 +184,7 @@ class PantallaMiLocal extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: () => _agregar(context),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF138A5B),
+                    backgroundColor: const Color(0xFF474646),
                   ),
                   icon: const Icon(Icons.add_rounded),
                   label: const Text('Producto'),
@@ -223,7 +223,7 @@ class _AccesoFinanzas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: const Color(0xFF173B2A),
+    color: const Color(0xFF474646),
     borderRadius: BorderRadius.circular(22),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
@@ -236,12 +236,12 @@ class _AccesoFinanzas extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .12),
+                color: Color(0xFFE6E1D5).withValues(alpha: .12),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: const Icon(
                 Icons.insights_rounded,
-                color: Color(0xFF9AD6A5),
+                color: Color(0xFFBBBCA7),
               ),
             ),
             const SizedBox(width: 13),
@@ -252,7 +252,7 @@ class _AccesoFinanzas extends StatelessWidget {
                   Text(
                     'Mis finanzas',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFFE6E1D5),
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
                     ),
@@ -260,12 +260,12 @@ class _AccesoFinanzas extends StatelessWidget {
                   SizedBox(height: 3),
                   Text(
                     'Ventas, rendimiento y visitas',
-                    style: TextStyle(color: Color(0xBFFFFFFF), fontSize: 12),
+                    style: TextStyle(color: Color(0xBFE6E1D5), fontSize: 12),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.white70),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xB3E6E1D5)),
           ],
         ),
       ),
@@ -288,7 +288,7 @@ class _TarjetaUbicacion extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final puesta = ubicacion != null && ubicacion!.isNotEmpty;
-    final acento = puesta ? tema.colorScheme.primary : const Color(0xFFB07A2B);
+    final acento = puesta ? tema.colorScheme.primary : const Color(0xFFAE7960);
 
     return Material(
       color: acento.withValues(alpha: .12),
@@ -359,8 +359,8 @@ class _Encabezado extends StatelessWidget {
         border: Border(
           bottom: BorderSide(
             color: oscuro
-                ? Colors.white.withValues(alpha: .12)
-                : Colors.black.withValues(alpha: .1),
+                ? Color(0xFFE6E1D5).withValues(alpha: .12)
+                : Color(0xFF474646).withValues(alpha: .1),
           ),
         ),
       ),
@@ -372,7 +372,7 @@ class _Encabezado extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: oscuro ? const Color(0xFF252825) : const Color(0xFFF1F2F0),
+              color: oscuro ? const Color(0xFF474646) : const Color(0xFFE6E1D5),
               borderRadius: BorderRadius.circular(18),
             ),
             child: switch (controlador.local?.logoUrl) {
@@ -398,8 +398,8 @@ class _Encabezado extends StatelessWidget {
                   'Mi local',
                   style: TextStyle(
                     color: oscuro
-                        ? Colors.white.withValues(alpha: .62)
-                        : const Color(0xFF777A77),
+                        ? Color(0xFFE6E1D5).withValues(alpha: .62)
+                        : const Color(0xFF848381),
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: .4,
@@ -419,7 +419,7 @@ class _Encabezado extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Color(0xFF797D79),
+                      color: Color(0xFF848381),
                       fontSize: 13,
                     ),
                   ),
@@ -461,10 +461,10 @@ class _FilaProducto extends StatelessWidget {
     tooltip: 'Más opciones',
     icon: const Icon(Icons.close_rounded, size: 22),
     color: Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF202320)
-        : const Color(0xFFF9FAF8),
+        ? const Color(0xFF474646)
+        : const Color(0xFFE6E1D5),
     elevation: 18,
-    shadowColor: Colors.black.withValues(alpha: .24),
+    shadowColor: Color(0xFF474646).withValues(alpha: .24),
     surfaceTintColor: Colors.transparent,
     menuPadding: const EdgeInsets.all(8),
     offset: const Offset(-12, 8),
@@ -473,8 +473,8 @@ class _FilaProducto extends StatelessWidget {
       borderRadius: BorderRadius.circular(28),
       side: BorderSide(
         color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.white.withValues(alpha: .1)
-            : Colors.black.withValues(alpha: .07),
+            ? Color(0xFFE6E1D5).withValues(alpha: .1)
+            : Color(0xFF474646).withValues(alpha: .07),
       ),
     ),
     popUpAnimationStyle: const AnimationStyle(
@@ -555,8 +555,8 @@ class _FilaProducto extends StatelessWidget {
               border: Border(
                 bottom: BorderSide(
                   color: oscuro
-                      ? Colors.white.withValues(alpha: .1)
-                      : Colors.black.withValues(alpha: .09),
+                      ? Color(0xFFE6E1D5).withValues(alpha: .1)
+                      : Color(0xFF474646).withValues(alpha: .09),
                 ),
               ),
             ),
@@ -583,7 +583,9 @@ class _FilaProducto extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: oscuro ? Colors.white : Colors.black,
+                                  color: oscuro
+                                      ? Color(0xFFE6E1D5)
+                                      : Color(0xFF474646),
                                   fontSize: compacto ? 17 : 20,
                                   height: 1.08,
                                   fontWeight: FontWeight.w800,
@@ -599,7 +601,7 @@ class _FilaProducto extends StatelessWidget {
                             maxLines: compacto ? 1 : 2,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Color(0xFF777A77),
+                              color: Color(0xFF848381),
                               fontSize: 13,
                             ),
                           ),
@@ -609,7 +611,7 @@ class _FilaProducto extends StatelessWidget {
                             child: Text(
                               'OCULTA',
                               style: TextStyle(
-                                color: Color(0xFF138A5B),
+                                color: Color(0xFF474646),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: .8,
@@ -630,7 +632,9 @@ class _FilaProducto extends StatelessWidget {
                               child: Text(
                                 'Bs ${producto.precio.toStringAsFixed(2)}',
                                 style: TextStyle(
-                                  color: oscuro ? Colors.white : Colors.black,
+                                  color: oscuro
+                                      ? Color(0xFFE6E1D5)
+                                      : Color(0xFF474646),
                                   fontSize: compacto ? 18 : 21,
                                   fontWeight: FontWeight.w900,
                                 ),
@@ -685,12 +689,12 @@ class _BotonCantidad extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         padding: EdgeInsets.zero,
         foregroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Colors.white
-            : Colors.black,
+            ? Color(0xFFE6E1D5)
+            : Color(0xFF474646),
         side: BorderSide(
           color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white.withValues(alpha: .35)
-              : Colors.black.withValues(alpha: .28),
+              ? Color(0xFFE6E1D5).withValues(alpha: .35)
+              : Color(0xFF474646).withValues(alpha: .28),
         ),
         shape: const RoundedRectangleBorder(),
       ),
@@ -723,8 +727,8 @@ class _AccionMenuInventarioState extends State<_AccionMenuInventario> {
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final acento = widget.destructiva
-        ? const Color(0xFFD9584F)
-        : const Color(0xFF138A5B);
+        ? const Color(0xFFAE7960)
+        : const Color(0xFF474646);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _encima = true),
@@ -769,8 +773,8 @@ class _AccionMenuInventarioState extends State<_AccionMenuInventario> {
                         color: widget.destructiva
                             ? acento
                             : oscuro
-                            ? Colors.white
-                            : const Color(0xFF242724),
+                            ? Color(0xFFE6E1D5)
+                            : const Color(0xFF474646),
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
@@ -780,8 +784,8 @@ class _AccionMenuInventarioState extends State<_AccionMenuInventario> {
                       widget.descripcion,
                       style: TextStyle(
                         color: oscuro
-                            ? Colors.white.withValues(alpha: .6)
-                            : const Color(0xFF777C78),
+                            ? Color(0xFFE6E1D5).withValues(alpha: .6)
+                            : const Color(0xFF848381),
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -819,8 +823,8 @@ class _Miniatura extends StatelessWidget {
     clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
       color: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF242624)
-          : const Color(0xFFF2F2F2),
+          ? const Color(0xFF474646)
+          : const Color(0xFFE6E1D5),
     ),
     child: switch (producto.imagenUrl) {
       final String url => Image.network(
@@ -852,7 +856,7 @@ class _InventarioVacio extends StatelessWidget {
     ),
     child: const Column(
       children: [
-        Icon(Icons.inventory_2_outlined, size: 44, color: Color(0xFF8B928D)),
+        Icon(Icons.inventory_2_outlined, size: 44, color: Color(0xFF969A82)),
         SizedBox(height: 12),
         Text('Todavía no agregaste productos.'),
       ],

@@ -14,8 +14,8 @@ class IndicadorVistas extends StatelessWidget {
   Widget build(BuildContext context) {
     final etiqueta = '$total ${total == 1 ? 'vista' : 'vistas'}';
     final color = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : const Color(0xFF202220);
+        ? Color(0xFFE6E1D5)
+        : const Color(0xFF474646);
 
     return Semantics(
       label: etiqueta,

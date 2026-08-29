@@ -17,13 +17,13 @@ class ListaProductosCarrito extends StatelessWidget {
               Icon(
                 Icons.shopping_bag_outlined,
                 size: 48,
-                color: Color(0xFF777777),
+                color: Color(0xFF848381),
               ),
               SizedBox(height: 12),
               Text(
                 'Tu carrito está vacío',
                 style: TextStyle(
-                  color: Color(0xFF777777),
+                  color: Color(0xFF848381),
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -35,7 +35,7 @@ class ListaProductosCarrito extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFE6E1D5),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(

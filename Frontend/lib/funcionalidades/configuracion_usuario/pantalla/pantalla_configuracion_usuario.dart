@@ -45,7 +45,7 @@ class _PantallaConfiguracionUsuarioState
       final esOscuro = Theme.of(context).brightness == Brightness.dark;
 
       return ColoredBox(
-        color: esOscuro ? Colors.black : const Color(0xFFEEF0F4),
+        color: esOscuro ? Color(0xFF474646) : const Color(0xFFE6E1D5),
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 20, 18, 126),
           child: Center(
@@ -103,18 +103,20 @@ class _GrupoAjustes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final esOscuro = Theme.of(context).brightness == Brightness.dark;
-    final textoPrincipal = esOscuro ? Colors.white : const Color(0xFF17191D);
+    final textoPrincipal = esOscuro
+        ? Color(0xFFE6E1D5)
+        : const Color(0xFF474646);
     final textoSecundario = esOscuro
-        ? const Color(0xFF9DA2AA)
-        : const Color(0xFF747B84);
+        ? const Color(0xFFBBBCA7)
+        : const Color(0xFF848381);
     final colorIcono = esOscuro
-        ? const Color(0xFF7EB287)
-        : const Color(0xFF7D858E);
+        ? const Color(0xFF969A82)
+        : const Color(0xFF848381);
 
     final temaGrupo = Theme.of(context).copyWith(
       dividerColor: esOscuro
-          ? const Color(0xFF282B30)
-          : const Color(0xFFE5E8EC),
+          ? const Color(0xFF474646)
+          : const Color(0xFFE6E1D5),
       listTileTheme: ListTileThemeData(
         iconColor: colorIcono,
         textColor: textoPrincipal,
@@ -135,13 +137,13 @@ class _GrupoAjustes extends StatelessWidget {
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.selected)
-              ? Colors.white
-              : const Color(0xFFF8F8F8),
+              ? Color(0xFFE6E1D5)
+              : const Color(0xFFE6E1D5),
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.selected)
-              ? const Color(0xFF138A5B)
-              : const Color(0xFFD0D4D8),
+              ? const Color(0xFF474646)
+              : const Color(0xFFE6E1D5),
         ),
       ),
     );
@@ -162,7 +164,7 @@ class _GrupoAjustes extends StatelessWidget {
           ),
         ),
         Material(
-          color: esOscuro ? const Color(0xFF15171A) : Colors.white,
+          color: esOscuro ? const Color(0xFF474646) : Color(0xFFE6E1D5),
           borderRadius: BorderRadius.circular(27),
           clipBehavior: Clip.antiAlias,
           child: Theme(

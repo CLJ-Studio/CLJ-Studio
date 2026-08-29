@@ -130,8 +130,8 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                           ),
                           decoration: BoxDecoration(
                             color: indice <= _pagina
-                                ? const Color(0xFF6F9A76)
-                                : const Color(0xFFDDE3DD),
+                                ? const Color(0xFF848381)
+                                : const Color(0xFFE6E1D5),
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
@@ -159,15 +159,15 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                               _continuar();
                             },
                             textCapitalization: TextCapitalization.words,
-                            style: const TextStyle(color: Color(0xFF263029)),
-                            cursorColor: const Color(0xFF138A5B),
+                            style: const TextStyle(color: Color(0xFF474646)),
+                            cursorColor: const Color(0xFF474646),
                             decoration: const InputDecoration(
                               labelText: 'Nombre del local',
                               hintText: 'Ej. Sabor Campus',
                               filled: true,
-                              fillColor: Color(0xFFF0F2EF),
-                              labelStyle: TextStyle(color: Color(0xFF68716B)),
-                              hintStyle: TextStyle(color: Color(0xFF8B928D)),
+                              fillColor: Color(0xFFE6E1D5),
+                              labelStyle: TextStyle(color: Color(0xFF848381)),
+                              hintStyle: TextStyle(color: Color(0xFF969A82)),
                             ),
                           ),
                         ),
@@ -232,7 +232,7 @@ class _PantallaCrearLocalState extends State<PantallaCrearLocal> {
                     child: FilledButton(
                       onPressed: _guardando ? null : _continuar,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF138A5B),
+                        backgroundColor: const Color(0xFF474646),
                         padding: const EdgeInsets.symmetric(vertical: 17),
                       ),
                       child: _guardando
@@ -349,10 +349,10 @@ class _BurbujaPregunta extends StatelessWidget {
             width: 22,
             height: 22,
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: Color(0xFFE6E1D5),
               boxShadow: [
                 BoxShadow(
-                  color: Color(0x0D000000),
+                  color: Color(0x0D474646),
                   blurRadius: 8,
                   offset: Offset(-2, -2),
                 ),
@@ -365,12 +365,12 @@ class _BurbujaPregunta extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFFE6E1D5),
           borderRadius: BorderRadius.circular(30),
           border: Border.all(color: Theme.of(context).dividerColor),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0A000000),
+              color: Color(0x0A474646),
               blurRadius: 18,
               offset: Offset(0, 7),
             ),
@@ -385,7 +385,7 @@ class _BurbujaPregunta extends StatelessWidget {
                 backgroundColor: Theme.of(
                   context,
                 ).colorScheme.primary.withValues(alpha: .12),
-                foregroundColor: const Color(0xFF138A5B),
+                foregroundColor: const Color(0xFF474646),
                 child: Icon(icono, size: 22),
               ),
               const SizedBox(height: 16),
@@ -399,7 +399,7 @@ class _BurbujaPregunta extends StatelessWidget {
             const SizedBox(height: 7),
             Text(
               descripcion,
-              style: const TextStyle(color: Color(0xFF7C827E), height: 1.4),
+              style: const TextStyle(color: Color(0xFF848381), height: 1.4),
             ),
             const SizedBox(height: 22),
             child,
@@ -443,7 +443,7 @@ class _LogoSubido extends StatelessWidget {
             right: 6,
             child: IconButton.filled(
               tooltip: 'Quitar imagen',
-              style: IconButton.styleFrom(backgroundColor: Colors.black54),
+              style: IconButton.styleFrom(backgroundColor: Color(0x8A474646)),
               onPressed: alQuitar,
               icon: const Icon(Icons.close_rounded, size: 16),
             ),
@@ -455,8 +455,8 @@ class _LogoSubido extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: subiendo ? null : alElegir,
       style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF0C6843),
-        side: const BorderSide(color: Color(0xFF6F9D76), width: 1.4),
+        foregroundColor: const Color(0xFF474646),
+        side: const BorderSide(color: Color(0xFF848381), width: 1.4),
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
       ),

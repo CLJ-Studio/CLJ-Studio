@@ -23,8 +23,8 @@ class BotonCampana extends StatelessWidget {
             foregroundColor: sobreFondoMarca
                 ? Colors.white
                 : Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : const Color(0xFF202220),
+                ? Color(0xFFE6E1D5)
+                : const Color(0xFF474646),
           ),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute<void>(

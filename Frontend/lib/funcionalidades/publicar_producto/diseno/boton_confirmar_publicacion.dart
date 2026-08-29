@@ -16,15 +16,15 @@ class BotonConfirmarPublicacion extends StatelessWidget {
       child: FilledButton(
         onPressed: alPresionar,
         style: FilledButton.styleFrom(
-          backgroundColor: ConfiguracionTema.verdeMarca,
-          disabledBackgroundColor: const Color(0xFFD5D8D5),
-          disabledForegroundColor: const Color(0xFF777C79),
-          foregroundColor: Colors.white,
+          backgroundColor: ConfiguracionTema.primario,
+          disabledBackgroundColor: const Color(0xFFE6E1D5),
+          disabledForegroundColor: const Color(0xFF848381),
+          foregroundColor: Color(0xFFE6E1D5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
           ),
           elevation: 5,
-          shadowColor: const Color(0x66138A5B),
+          shadowColor: const Color(0x66474646),
         ),
         child: const Row(
           children: [

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../configuracion_aplicacion/configuracion_tema.dart';
 import 'elemento_menu_desplegable.dart';
 
 /// Menú de categorías integrado en el flujo de la pantalla.
@@ -28,7 +29,7 @@ class MenuDesplegableAplicacion extends StatefulWidget {
 }
 
 class _MenuDesplegableAplicacionState extends State<MenuDesplegableAplicacion> {
-  static const _verde = Color(0xFF138A5B);
+  static const _verde = Color(0xFF474646);
   static const _altoFila = 52.0;
   static const _umbralBusqueda = 8;
 
@@ -69,7 +70,9 @@ class _MenuDesplegableAplicacionState extends State<MenuDesplegableAplicacion> {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final oscuro = tema.brightness == Brightness.dark;
-    final fondo = oscuro ? const Color(0xFF202420) : const Color(0xFFF0F2F0);
+    final fondo = oscuro
+        ? const Color(0xFF474646)
+        : ConfiguracionTema.cremaSuperficie;
 
     return SizedBox(
       width: widget.ancho,
@@ -98,8 +101,8 @@ class _MenuDesplegableAplicacionState extends State<MenuDesplegableAplicacion> {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: oscuro
-                                ? const Color(0xFF303630)
-                                : const Color(0xFFDDE5DE),
+                                ? const Color(0xFF474646)
+                                : ConfiguracionTema.cremaSuperficie,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -194,8 +197,8 @@ class _MenuDesplegableAplicacionState extends State<MenuDesplegableAplicacion> {
                                         isDense: true,
                                         filled: true,
                                         fillColor: oscuro
-                                            ? const Color(0xFF2C312C)
-                                            : Colors.white,
+                                            ? const Color(0xFF474646)
+                                            : ConfiguracionTema.cremaSuperficie,
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                             13,

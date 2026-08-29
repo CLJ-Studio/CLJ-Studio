@@ -7,13 +7,15 @@ import '../../configuracion_aplicacion/configuracion_tema.dart';
 class CampoBusqueda extends StatefulWidget {
   const CampoBusqueda({
     required this.alCambiar,
-    this.texto = 'Buscar en UPSA Eat',
+    this.texto = 'Buscar en U market',
     this.compactProgress = 0,
+    this.colorFondo,
     super.key,
   });
   final ValueChanged<String> alCambiar;
   final String texto;
   final double compactProgress;
+  final Color? colorFondo;
 
   @override
   State<CampoBusqueda> createState() => _CampoBusquedaState();
@@ -42,7 +44,10 @@ class _CampoBusquedaState extends State<CampoBusqueda> {
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final colorTexto = oscuro ? Colors.white : ConfiguracionTema.tinta;
+    final sobreFondoPersonalizado = widget.colorFondo != null;
+    final colorTexto = oscuro && !sobreFondoPersonalizado
+        ? Color(0xFFE6E1D5)
+        : ConfiguracionTema.grafito;
     final radio = lerpDouble(28, 22, widget.compactProgress)!;
     final borde = OutlineInputBorder(
       borderRadius: BorderRadius.circular(radio),
@@ -60,12 +65,16 @@ class _CampoBusquedaState extends State<CampoBusqueda> {
         decoration: InputDecoration(
           hintText: widget.texto,
           hintStyle: TextStyle(
-            color: oscuro
-                ? Colors.white.withValues(alpha: .55)
-                : const Color(0xFF9A9D9A),
+            color: oscuro && !sobreFondoPersonalizado
+                ? Color(0xFFE6E1D5).withValues(alpha: .55)
+                : const Color(0xFF969A82),
           ),
           filled: true,
-          fillColor: oscuro ? const Color(0xFF272329) : Colors.white,
+          fillColor:
+              widget.colorFondo ??
+              (oscuro
+                  ? const Color(0xFF474646)
+                  : ConfiguracionTema.cremaSuperficie),
           isDense: true,
           contentPadding: EdgeInsets.symmetric(
             horizontal: lerpDouble(16, 13, widget.compactProgress)!,
@@ -76,12 +85,12 @@ class _CampoBusquedaState extends State<CampoBusqueda> {
                   padding: const EdgeInsets.all(5),
                   child: DecoratedBox(
                     decoration: const BoxDecoration(
-                      color: ConfiguracionTema.verdeMarca,
+                      color: ConfiguracionTema.primario,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.search_rounded,
-                      color: Colors.white,
+                      color: Color(0xFFE6E1D5),
                     ),
                   ),
                 )
@@ -90,9 +99,9 @@ class _CampoBusquedaState extends State<CampoBusqueda> {
                   onPressed: _limpiar,
                   icon: Icon(
                     Icons.close_rounded,
-                    color: oscuro
-                        ? const Color(0xFFB9BDBA)
-                        : ConfiguracionTema.verdeMarca,
+                    color: oscuro && !sobreFondoPersonalizado
+                        ? const Color(0xFFBBBCA7)
+                        : ConfiguracionTema.primario,
                   ),
                 ),
           border: borde,

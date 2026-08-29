@@ -16,9 +16,9 @@ class SelectorCantidadProducto extends StatelessWidget {
     width: 132,
     height: 48,
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Color(0xFFE6E1D5),
       borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: const Color(0xFFE4E4E4)),
+      border: Border.all(color: const Color(0xFFE6E1D5)),
     ),
     child: Row(
       children: [
@@ -26,13 +26,13 @@ class SelectorCantidadProducto extends StatelessWidget {
           child: InkWell(
             onTap: alDisminuir,
             borderRadius: BorderRadius.circular(24),
-            child: const Icon(Icons.remove_rounded, color: Color(0xFF171717)),
+            child: const Icon(Icons.remove_rounded, color: Color(0xFF474646)),
           ),
         ),
         Text(
           '$cantidad',
           style: const TextStyle(
-            color: Color(0xFF171717),
+            color: Color(0xFF474646),
             fontWeight: FontWeight.w600,
             fontSize: 16,
           ),
@@ -41,12 +41,12 @@ class SelectorCantidadProducto extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(3),
             child: Material(
-              color: const Color(0xFF138A5B),
+              color: const Color(0xFF474646),
               shape: const CircleBorder(),
               child: InkWell(
                 onTap: alAumentar,
                 customBorder: const CircleBorder(),
-                child: const Icon(Icons.add_rounded, color: Colors.white),
+                child: const Icon(Icons.add_rounded, color: Color(0xFFE6E1D5)),
               ),
             ),
           ),

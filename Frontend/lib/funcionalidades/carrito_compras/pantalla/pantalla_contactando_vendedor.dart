@@ -50,7 +50,7 @@ class _PantallaContactandoVendedorState
       builder: (context) => AlertDialog(
         icon: const Icon(
           Icons.close_rounded,
-          color: Color(0xFFB3453B),
+          color: Color(0xFFAE7960),
           size: 30,
         ),
         title: const Text('¿Cancelar solicitud?', textAlign: TextAlign.center),
@@ -67,7 +67,7 @@ class _PantallaContactandoVendedorState
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFB3453B),
+              backgroundColor: const Color(0xFFAE7960),
             ),
             child: const Text('Sí, cancelar'),
           ),
@@ -154,7 +154,7 @@ class _PantallaContactandoVendedorState
                       'Tu solicitud ya fue enviada.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Color(0xFF747B76),
+                        color: Color(0xFF848381),
                         fontSize: 15,
                         height: 1.45,
                       ),
@@ -168,7 +168,7 @@ class _PantallaContactandoVendedorState
                       child: FilledButton.icon(
                         onPressed: _volver,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF138A5B),
+                          backgroundColor: const Color(0xFF474646),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
@@ -189,7 +189,7 @@ class _PantallaContactandoVendedorState
                             ? null
                             : _cancelarSolicitud,
                         style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFFB3453B),
+                          foregroundColor: const Color(0xFFAE7960),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -200,7 +200,7 @@ class _PantallaContactandoVendedorState
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Color(0xFFB3453B),
+                                  color: Color(0xFFAE7960),
                                 ),
                               )
                             : const Text(
@@ -252,7 +252,7 @@ class _EstadoSolicitud extends StatelessWidget {
               const Text(
                 'Esperando confirmación',
                 style: TextStyle(
-                  color: Color(0xFF527A59),
+                  color: Color(0xFF474646),
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -280,13 +280,13 @@ class _CuentaRegresiva extends StatelessWidget {
     if (restante.isNegative) {
       return const Text(
         'Tiempo de respuesta finalizado',
-        style: TextStyle(color: Color(0xFF747B76), fontSize: 12),
+        style: TextStyle(color: Color(0xFF848381), fontSize: 12),
       );
     }
 
     return Text(
       '${restante.inMinutes + 1} min restantes',
-      style: const TextStyle(color: Color(0xFF747B76), fontSize: 12),
+      style: const TextStyle(color: Color(0xFF848381), fontSize: 12),
     );
   }
 }

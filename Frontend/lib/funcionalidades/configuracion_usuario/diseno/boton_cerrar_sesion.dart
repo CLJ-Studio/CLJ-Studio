@@ -11,8 +11,8 @@ class BotonCerrarSesion extends StatelessWidget {
     child: FilledButton.icon(
       onPressed: alPresionar,
       style: FilledButton.styleFrom(
-        backgroundColor: const Color(0xFF138A5B),
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF474646),
+        foregroundColor: Color(0xFFE6E1D5),
         shape: const StadiumBorder(),
       ),
       icon: const Icon(Icons.logout_rounded),

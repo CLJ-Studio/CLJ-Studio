@@ -29,7 +29,7 @@ class TarjetaProductoCarrito extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFEAE2DE),
+            color: const Color(0xFFE6E1D5),
             borderRadius: BorderRadius.circular(22),
           ),
           child: switch (elemento.producto.imagenUrl) {
@@ -61,7 +61,7 @@ class TarjetaProductoCarrito extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF171717),
+                  color: Color(0xFF474646),
                 ),
               ),
               const SizedBox(height: 6),
@@ -69,12 +69,12 @@ class TarjetaProductoCarrito extends StatelessWidget {
                 vendedor,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF58A3A3)),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF848381)),
               ),
               const SizedBox(height: 5),
               Text(
                 'Bs ${elemento.producto.precio.toStringAsFixed(2)}',
-                style: const TextStyle(fontSize: 16, color: Color(0xFF555555)),
+                style: const TextStyle(fontSize: 16, color: Color(0xFF474646)),
               ),
               const SizedBox(height: 12),
               SelectorCantidadProducto(
@@ -88,7 +88,7 @@ class TarjetaProductoCarrito extends StatelessWidget {
         PopupMenuButton<void>(
           tooltip: 'Opciones del producto',
           padding: EdgeInsets.zero,
-          icon: const Icon(Icons.more_horiz, color: Color(0xFF777777)),
+          icon: const Icon(Icons.more_horiz, color: Color(0xFF848381)),
           itemBuilder: (_) => [
             PopupMenuItem<void>(
               onTap: alEliminar,

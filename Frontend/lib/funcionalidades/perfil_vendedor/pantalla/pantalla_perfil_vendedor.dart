@@ -262,7 +262,7 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(18, 6, 18, 42),
           decoration: const BoxDecoration(
-            color: ConfiguracionTema.verdeMarca,
+            color: ConfiguracionTema.primario,
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
           ),
           child: Column(
@@ -275,7 +275,7 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
                       child: Text(
                         'Mi perfil',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFFE6E1D5),
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                         ),
@@ -285,7 +285,7 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
                       tooltip: 'Configuración',
                       onPressed: alAbrirConfiguracion,
                       style: IconButton.styleFrom(
-                        foregroundColor: Colors.white,
+                        foregroundColor: Color(0xFFE6E1D5),
                       ),
                       icon: const Icon(Icons.settings_outlined),
                     ),
@@ -309,7 +309,7 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFFE6E1D5),
                             fontSize: 22,
                             height: 1.05,
                             fontWeight: FontWeight.w900,
@@ -323,7 +323,7 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: .82),
+                            color: Color(0xFFE6E1D5).withValues(alpha: .82),
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
@@ -332,8 +332,8 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
                         OutlinedButton.icon(
                           onPressed: alEditarPerfil,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: ConfiguracionTema.verdeMarca,
-                            backgroundColor: Colors.white,
+                            foregroundColor: ConfiguracionTema.primario,
+                            backgroundColor: Color(0xFFE6E1D5),
                             side: BorderSide.none,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -362,11 +362,11 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
-                color: oscuro ? const Color(0xFF201B22) : Colors.white,
+                color: oscuro ? const Color(0xFF474646) : Color(0xFFE6E1D5),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x18000000),
+                    color: Color(0x18474646),
                     blurRadius: 18,
                     offset: Offset(0, 7),
                   ),
@@ -476,7 +476,7 @@ class _EncabezadoPerfil extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final colorContenido = oscuro ? Colors.white : Colors.black;
+    final colorContenido = oscuro ? Color(0xFFE6E1D5) : Color(0xFF474646);
     final nombre = perfil?.nombre.trim();
     final correo = perfil?.correo.trim();
     final carrera = perfil?.carrera.trim();
@@ -665,7 +665,7 @@ class _SelectorPerfil extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final colorContenido = oscuro ? Colors.white : Colors.black;
+    final colorContenido = oscuro ? Color(0xFFE6E1D5) : Color(0xFF474646);
     final iconos = [
       (Icons.grid_view_rounded, 'Publicaciones personales'),
       (Icons.storefront_rounded, 'Publicaciones del local'),
@@ -689,7 +689,7 @@ class _SelectorPerfil extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: ConfiguracionTema.verdeMarca,
+                    color: ConfiguracionTema.primario,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -709,9 +709,9 @@ class _SelectorPerfil extends StatelessWidget {
                           iconos[indice].$1,
                           size: 25,
                           color: indice == seleccionado
-                              ? ConfiguracionTema.verdeMarca
+                              ? ConfiguracionTema.primario
                               : indice == 2
-                              ? const Color(0xFFE53935)
+                              ? const Color(0xFFAE7960)
                               : colorContenido.withValues(alpha: .48),
                         ),
                       ),
@@ -745,12 +745,12 @@ class _AvatarPerfil extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFE4E6E4),
+            color: const Color(0xFFE6E1D5),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3),
+            border: Border.all(color: Color(0xFFE6E1D5), width: 3),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x22000000),
+                color: Color(0x22474646),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -775,8 +775,8 @@ class _AvatarPerfil extends StatelessWidget {
             onPressed: alEditar,
             iconSize: 18,
             style: IconButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
+              backgroundColor: Color(0xFF474646),
+              foregroundColor: Color(0xFFE6E1D5),
             ),
             icon: const Icon(Icons.camera_alt_rounded),
           ),
@@ -794,8 +794,8 @@ class _InicialPerfil extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
+        ? Color(0xFFE6E1D5)
+        : Color(0xFF474646);
     return Text(
       perfil?.inicial ?? '?',
       style: TextStyle(color: color, fontSize: 50, fontWeight: FontWeight.w900),
@@ -812,8 +812,8 @@ class _MetricaPerfil extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
+        ? Color(0xFFE6E1D5)
+        : Color(0xFF474646);
     return SizedBox(
       width: 62,
       child: Column(
@@ -869,7 +869,7 @@ class _PublicacionPerfil extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             ColoredBox(
-              color: Color(producto.local?.colorHexadecimal ?? 0xFFF1F6F0),
+              color: Color(producto.local?.colorHexadecimal ?? 0xFFE6E1D5),
               child: switch (producto.imagenUrl) {
                 final String url => Image.network(
                   url,
@@ -884,7 +884,7 @@ class _PublicacionPerfil extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.center,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Color(0x99000000)],
+                  colors: [Colors.transparent, Color(0x99474646)],
                 ),
               ),
             ),
@@ -896,7 +896,7 @@ class _PublicacionPerfil extends StatelessWidget {
                 children: [
                   const Icon(
                     Icons.visibility_rounded,
-                    color: Colors.white,
+                    color: Color(0xFFE6E1D5),
                     size: 14,
                   ),
                   const SizedBox(width: 4),
@@ -904,7 +904,7 @@ class _PublicacionPerfil extends StatelessWidget {
                     child: Text(
                       '${producto.vistas}',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFFE6E1D5),
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                       ),
@@ -913,7 +913,7 @@ class _PublicacionPerfil extends StatelessWidget {
                   if (!producto.disponible)
                     const Icon(
                       Icons.visibility_off_rounded,
-                      color: Colors.white,
+                      color: Color(0xFFE6E1D5),
                       size: 15,
                     ),
                 ],
@@ -1015,8 +1015,8 @@ class _PerfilSinPublicaciones extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
+        ? Color(0xFFE6E1D5)
+        : Color(0xFF474646);
     return Padding(
       padding: const EdgeInsets.only(bottom: 100),
       child: Column(

@@ -124,7 +124,7 @@ class _PantallaLocalesUniversitariosState
                                 child: const Text(
                                   'Quitar filtro',
                                   style: TextStyle(
-                                    color: Color(0xFF138A5B),
+                                    color: Color(0xFF474646),
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
@@ -186,7 +186,7 @@ class _PantallaLocalesUniversitariosState
                   scale: buscando ? 1 : .72,
                   child: Material(
                     elevation: 18,
-                    shadowColor: const Color(0x55000000),
+                    shadowColor: const Color(0x55474646),
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(18),
                     clipBehavior: Clip.antiAlias,
@@ -244,7 +244,7 @@ class _ResultadosBusquedaLocales extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off_rounded, size: 42, color: Color(0xFF9BA09C)),
+            Icon(Icons.search_off_rounded, size: 42, color: Color(0xFF969A82)),
             SizedBox(height: 10),
             Text(
               'No encontramos locales',
@@ -254,7 +254,7 @@ class _ResultadosBusquedaLocales extends StatelessWidget {
             Text(
               'Prueba escribiendo otro nombre o categoría.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF7B817D)),
+              style: TextStyle(color: Color(0xFF848381)),
             ),
           ],
         ),
@@ -270,8 +270,8 @@ class _ResultadosBusquedaLocales extends StatelessWidget {
         final local = resultados[indice];
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: const Color(0xFFE1F2E8),
-            foregroundColor: const Color(0xFF164A56),
+            backgroundColor: const Color(0xFFE6E1D5),
+            foregroundColor: const Color(0xFF474646),
             backgroundImage: local.logoUrl == null
                 ? null
                 : NetworkImage(local.logoUrl!),
@@ -312,7 +312,7 @@ class _SinLocales extends StatelessWidget {
           const Icon(
             Icons.storefront_outlined,
             size: 46,
-            color: Color(0xFFB8BDB8),
+            color: Color(0xFFBBBCA7),
           ),
           const SizedBox(height: 14),
           Text(
@@ -326,7 +326,7 @@ class _SinLocales extends StatelessWidget {
           const Text(
             'Puedes ser el primero en abrir el tuyo.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF7B817D)),
+            style: TextStyle(color: Color(0xFF848381)),
           ),
         ],
       ),

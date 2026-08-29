@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/version_aplicacion.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../../elementos_compartidos/marca/marca_u_market.dart';
 
 /// Quiénes hacen la aplicación y bajo qué términos se usa.
 class PantallaAcercaDe extends StatelessWidget {
@@ -46,9 +47,9 @@ class PantallaAcercaDe extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    TextoConMarcaUMarket(
                       'Somos un equipo de estudiantes de la UPSA. Hicimos '
-                      'UPSA Eat porque en el campus se compra y se vende todo '
+                      'U market porque en el campus se compra y se vende todo '
                       'el día por grupos de WhatsApp, donde las cosas se '
                       'pierden entre mensajes y nadie sabe quién vende qué.',
                       style: TextStyle(
@@ -60,8 +61,8 @@ class PantallaAcercaDe extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 30),
-              Text(
-                'Qué es UPSA Eat',
+              TextoConMarcaUMarket(
+                'Qué es U market',
                 style: tema.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -124,11 +125,11 @@ class PantallaAcercaDe extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                'El código, el diseño, el nombre y el logotipo de UPSA Eat '
+              TextoConMarcaUMarket(
+                'El código, el diseño, el nombre y el logotipo de U market '
                 'pertenecen a CLJ Studio. Queda prohibida su reproducción o '
                 'distribución sin autorización escrita.\n\n'
-                'UPSA Eat no es un producto oficial de la Universidad Privada '
+                'U market no es un producto oficial de la Universidad Privada '
                 'de Santa Cruz de la Sierra. El contenido de cada publicación '
                 'es responsabilidad de quien la publica.',
                 style: TextStyle(

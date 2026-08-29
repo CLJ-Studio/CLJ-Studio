@@ -87,7 +87,7 @@ class _PantallaDetalleLocalState extends State<PantallaDetalleLocal> {
                       const SizedBox(height: 4),
                       Text(
                         '${productos.length} ${productos.length == 1 ? 'producto' : 'productos'} para elegir',
-                        style: const TextStyle(color: Color(0xFF858585)),
+                        style: const TextStyle(color: Color(0xFF848381)),
                       ),
                       const SizedBox(height: 12),
                       if (productos.isEmpty)
@@ -118,6 +118,6 @@ class _MensajeSimple extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 24),
-    child: Text(texto, style: const TextStyle(color: Color(0xFF858585))),
+    child: Text(texto, style: const TextStyle(color: Color(0xFF848381))),
   );
 }

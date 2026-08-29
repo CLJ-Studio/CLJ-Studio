@@ -124,9 +124,9 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: controlador,
     builder: (context, _) => Scaffold(
-      backgroundColor: const Color(0xFFF1F2F3),
+      backgroundColor: const Color(0xFFE6E1D5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF1F2F3),
+        backgroundColor: const Color(0xFFE6E1D5),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -134,7 +134,7 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
         leading: Padding(
           padding: const EdgeInsets.only(left: 20, top: 6, bottom: 6),
           child: Material(
-            color: Colors.white,
+            color: Color(0xFFE6E1D5),
             shape: const CircleBorder(),
             child: IconButton(
               onPressed: () => Navigator.maybePop(context),
@@ -145,7 +145,7 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
         title: const Text(
           'Carrito',
           style: TextStyle(
-            color: Color(0xFF171717),
+            color: Color(0xFF474646),
             fontWeight: FontWeight.w800,
             fontSize: 22,
           ),
@@ -154,7 +154,7 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
           Padding(
             padding: const EdgeInsets.only(right: 20, top: 6, bottom: 6),
             child: Material(
-              color: Colors.white,
+              color: Color(0xFFE6E1D5),
               shape: const CircleBorder(),
               child: PopupMenuButton<void>(
                 tooltip: 'Opciones',
@@ -173,7 +173,7 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
       ),
       body: _buscandoSolicitud
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF138A5B)),
+              child: CircularProgressIndicator(color: Color(0xFF474646)),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
@@ -189,7 +189,7 @@ class _PantallaCarritoComprasState extends State<PantallaCarritoCompras> {
                         Container(
                           padding: const EdgeInsets.only(bottom: 18),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Color(0xFFE6E1D5),
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Column(

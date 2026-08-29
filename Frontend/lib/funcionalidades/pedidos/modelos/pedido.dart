@@ -34,19 +34,19 @@ enum EstadoPedido {
   };
 
   Color get color => switch (this) {
-    EstadoPedido.solicitado => const Color(0xFFC98A2B),
-    EstadoPedido.aceptado => const Color(0xFF138A5B),
-    EstadoPedido.porConfirmar => const Color(0xFFC98A2B),
-    EstadoPedido.entregado => const Color(0xFF4A7C93),
-    _ => const Color(0xFF9A9A9A),
+    EstadoPedido.solicitado => const Color(0xFFAE7960),
+    EstadoPedido.aceptado => const Color(0xFF474646),
+    EstadoPedido.porConfirmar => const Color(0xFFAE7960),
+    EstadoPedido.entregado => const Color(0xFF848381),
+    _ => const Color(0xFF969A82),
   };
 
   Color get fondo => switch (this) {
-    EstadoPedido.solicitado => const Color(0xFFFDF3E2),
-    EstadoPedido.aceptado => const Color(0xFFE7F0E7),
-    EstadoPedido.porConfirmar => const Color(0xFFFDF3E2),
-    EstadoPedido.entregado => const Color(0xFFE6F0F5),
-    _ => const Color(0xFFF0F1F0),
+    EstadoPedido.solicitado => const Color(0xFFE6E1D5),
+    EstadoPedido.aceptado => const Color(0xFFE6E1D5),
+    EstadoPedido.porConfirmar => const Color(0xFFE6E1D5),
+    EstadoPedido.entregado => const Color(0xFFE6E1D5),
+    _ => const Color(0xFFE6E1D5),
   };
 
   /// El contacto sigue abierto mientras se confirma: entre que uno marca la

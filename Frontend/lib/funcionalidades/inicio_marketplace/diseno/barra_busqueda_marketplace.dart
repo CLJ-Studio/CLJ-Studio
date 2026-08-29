@@ -17,5 +17,6 @@ class BarraBusquedaMarketplace extends StatelessWidget {
     alCambiar: alCambiar,
     texto: 'Buscar locales, productos o personas',
     compactProgress: compactProgress,
+    colorFondo: Colors.white,
   );
 }

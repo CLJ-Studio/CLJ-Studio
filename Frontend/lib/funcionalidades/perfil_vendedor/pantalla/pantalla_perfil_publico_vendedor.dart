@@ -120,7 +120,7 @@ class _PantallaPerfilPublicoVendedorState
     // nombre del local y la pantalla parecia el perfil de una tienda.
     final nombre = local.vendedorNombre;
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final colorContenido = oscuro ? Colors.white : Colors.black;
+    final colorContenido = oscuro ? Color(0xFFE6E1D5) : Color(0xFF474646);
 
     return Scaffold(
       appBar: AppBar(
@@ -286,7 +286,7 @@ class _PantallaPerfilPublicoVendedorState
                         },
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: oscuro ? Colors.white : Colors.black,
+                          color: oscuro ? Color(0xFFE6E1D5) : Color(0xFF474646),
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -334,7 +334,7 @@ class _AvatarVendedor extends StatelessWidget {
       PageRouteBuilder<void>(
         opaque: false,
         barrierDismissible: true,
-        barrierColor: const Color(0x52000000),
+        barrierColor: const Color(0x52474646),
         barrierLabel: 'Cerrar foto de perfil',
         transitionDuration: const Duration(milliseconds: 360),
         reverseTransitionDuration: const Duration(milliseconds: 280),
@@ -434,8 +434,8 @@ class _VisorAvatarVendedor extends StatelessWidget {
                 tooltip: 'Cerrar',
                 onPressed: () => Navigator.of(context).pop(),
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.black.withValues(alpha: .42),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Color(0xFF474646).withValues(alpha: .42),
+                  foregroundColor: Color(0xFFE6E1D5),
                 ),
                 icon: const Icon(Icons.close_rounded),
               ),
@@ -448,7 +448,7 @@ class _VisorAvatarVendedor extends StatelessWidget {
                 'Pellizca para ampliar',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: .9),
+                  color: Color(0xFFE6E1D5).withValues(alpha: .9),
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
@@ -481,7 +481,7 @@ class _ImagenAvatarVendedor extends StatelessWidget {
     decoration: BoxDecoration(
       color: Color(local.colorHexadecimal),
       shape: BoxShape.circle,
-      border: Border.all(color: Colors.white, width: borde),
+      border: Border.all(color: Color(0xFFE6E1D5), width: borde),
     ),
     child: switch (local.vendedorAvatarUrl) {
       final String url when url.trim().isNotEmpty => Image.network(
@@ -569,8 +569,8 @@ class _Metrica extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
+        ? Color(0xFFE6E1D5)
+        : Color(0xFF474646);
     return Column(
       children: [
         Text(
@@ -599,8 +599,8 @@ class _SelectorPublico extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
+        ? Color(0xFFE6E1D5)
+        : Color(0xFF474646);
     // La tienda ya no es una pestaña: se llega por el enlace de arriba.
     const iconos = [Icons.grid_view_rounded, Icons.favorite_rounded];
 
@@ -636,7 +636,7 @@ class _SelectorPublico extends StatelessWidget {
                     child: Center(
                       child: Icon(
                         iconos[indice],
-                        color: indice == 1 ? const Color(0xFFE53935) : color,
+                        color: indice == 1 ? const Color(0xFFAE7960) : color,
                         size: 25,
                       ),
                     ),

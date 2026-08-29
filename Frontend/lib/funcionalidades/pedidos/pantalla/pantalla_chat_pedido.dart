@@ -265,11 +265,11 @@ class _Burbuja extends StatelessWidget {
     // ajeno, que es lo que mantiene el chat legible en modo oscuro sin
     // inventar una paleta aparte.
     final fondo = mensaje.mio
-        ? const Color(0xFF138A5B)
-        : (oscuro ? const Color(0xFF24272A) : const Color(0xFFEFF1EF));
+        ? const Color(0xFF474646)
+        : (oscuro ? const Color(0xFF474646) : const Color(0xFFE6E1D5));
     final color = mensaje.mio
-        ? Colors.white
-        : (oscuro ? Colors.white : const Color(0xFF202220));
+        ? Color(0xFFE6E1D5)
+        : (oscuro ? Color(0xFFE6E1D5) : const Color(0xFF474646));
 
     return Padding(
       padding: EdgeInsets.only(top: seguido ? 3 : 12),
@@ -318,7 +318,7 @@ class _Burbuja extends StatelessWidget {
                               ? Icons.done_all_rounded
                               : Icons.done_rounded,
                           size: 13,
-                          color: Colors.white.withValues(alpha: .75),
+                          color: Color(0xFFE6E1D5).withValues(alpha: .75),
                         ),
                       ],
                     ],
@@ -348,7 +348,7 @@ class _ChatVacio extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.forum_outlined, size: 46, color: Color(0xFFB8BDB8)),
+          const Icon(Icons.forum_outlined, size: 46, color: Color(0xFFBBBCA7)),
           const SizedBox(height: 14),
           Text(
             'Ponte de acuerdo con ${contraparte.split(' ').first}',
@@ -362,7 +362,7 @@ class _ChatVacio extends StatelessWidget {
             'La hora y el lugar exacto. Esta conversación se cierra cuando '
             'los dos confirmen la entrega.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF858585), height: 1.4),
+            style: TextStyle(color: Color(0xFF848381), height: 1.4),
           ),
           const SizedBox(height: 14),
           // Se dice claro: el hilo se conserva y alguien puede leerlo si hay
@@ -397,7 +397,7 @@ class _ChatCerrado extends StatelessWidget {
           const Icon(
             Icons.lock_outline_rounded,
             size: 44,
-            color: Color(0xFFB8BDB8),
+            color: Color(0xFFBBBCA7),
           ),
           const SizedBox(height: 14),
           Text(
@@ -410,7 +410,7 @@ class _ChatCerrado extends StatelessWidget {
           const Text(
             'El pedido terminó, así que el chat se cerró.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF858585), height: 1.4),
+            style: TextStyle(color: Color(0xFF848381), height: 1.4),
           ),
         ],
       ),
@@ -458,8 +458,8 @@ class _Redaccion extends StatelessWidget {
                   hintText: 'Escribe un mensaje',
                   filled: true,
                   fillColor: oscuro
-                      ? const Color(0xFF24272A)
-                      : const Color(0xFFEFF1EF),
+                      ? const Color(0xFF474646)
+                      : const Color(0xFFE6E1D5),
                   isDense: true,
                   // El contador de 1000 caracteres en un chat solo estorba.
                   counterText: '',
@@ -484,7 +484,7 @@ class _Redaccion extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Material(
-              color: const Color(0xFF138A5B),
+              color: const Color(0xFF474646),
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
@@ -499,7 +499,7 @@ class _Redaccion extends StatelessWidget {
                         )
                       : const Icon(
                           Icons.send_rounded,
-                          color: Colors.white,
+                          color: Color(0xFFE6E1D5),
                           size: 22,
                         ),
                 ),
@@ -540,7 +540,7 @@ class _RespaldoWhatsapp extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
         decoration: BoxDecoration(
-          color: oscuro ? const Color(0xFF16261C) : const Color(0xFFEBF7EF),
+          color: oscuro ? const Color(0xFF474646) : const Color(0xFFE6E1D5),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -552,15 +552,15 @@ class _RespaldoWhatsapp extends StatelessWidget {
                   fontSize: 12.5,
                   height: 1.3,
                   color: oscuro
-                      ? const Color(0xFFA9C9B5)
-                      : const Color(0xFF3F6B4F),
+                      ? const Color(0xFFBBBCA7)
+                      : const Color(0xFF474646),
                 ),
               ),
             ),
             TextButton.icon(
               onPressed: ocupado ? null : alPresionar,
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF1EA855),
+                foregroundColor: const Color(0xFF474646),
                 padding: const EdgeInsets.symmetric(horizontal: 10),
               ),
               icon: const Icon(Icons.phone_outlined, size: 17),

@@ -52,8 +52,8 @@ class _CampoCodigoVerificacionState extends State<CampoCodigoVerificacion> {
 
   @override
   Widget build(BuildContext context) {
-    const verde = Color(0xFF138A5B);
-    const gris = Color(0xFFB8BDB8);
+    const verde = Color(0xFF474646);
+    const gris = Color(0xFFBBBCA7);
     final tema = Theme.of(context);
     final digitos = _controlador.text;
     final casillaActiva = digitos.length.clamp(

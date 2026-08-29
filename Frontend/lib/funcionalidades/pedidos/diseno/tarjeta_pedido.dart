@@ -28,8 +28,8 @@ class TarjetaPedido extends StatelessWidget {
     padding: const EdgeInsets.only(bottom: 10),
     child: Material(
       color: Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF171A17)
-          : Colors.white,
+          ? const Color(0xFF474646)
+          : Color(0xFFE6E1D5),
       borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -39,7 +39,7 @@ class TarjetaPedido extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x12000000),
+                color: Color(0x12474646),
                 blurRadius: 14,
                 offset: Offset(0, 5),
               ),
@@ -59,8 +59,8 @@ class TarjetaPedido extends StatelessWidget {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF242824)
-                            : const Color(0xFFF3F4F2),
+                            ? const Color(0xFF474646)
+                            : const Color(0xFFE6E1D5),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -80,7 +80,7 @@ class TarjetaPedido extends StatelessWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF138A5B),
+                            color: const Color(0xFF474646),
                             borderRadius: BorderRadius.circular(20),
                             // El borde del color de la tarjeta despega el
                             // distintivo del emoji que tiene detras.
@@ -88,15 +88,15 @@ class TarjetaPedido extends StatelessWidget {
                               color:
                                   Theme.of(context).brightness ==
                                       Brightness.dark
-                                  ? const Color(0xFF171A17)
-                                  : Colors.white,
+                                  ? const Color(0xFF474646)
+                                  : Color(0xFFE6E1D5),
                               width: 2,
                             ),
                           ),
                           child: Text(
                             '$mensajesSinLeer',
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFFE6E1D5),
                               fontSize: 11,
                               fontWeight: FontWeight.w900,
                             ),
@@ -128,7 +128,7 @@ class TarjetaPedido extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: Color(0xFF858985),
+                          color: Color(0xFF848381),
                           fontSize: 12,
                         ),
                       ),
@@ -147,7 +147,7 @@ class TarjetaPedido extends StatelessWidget {
                               '${pedido.unidades == 1 ? 'producto' : 'productos'}',
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: Color(0xFF777C78),
+                                color: Color(0xFF848381),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -168,13 +168,13 @@ class TarjetaPedido extends StatelessWidget {
                         vertical: 9,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black,
+                        color: Color(0xFF474646),
                         borderRadius: BorderRadius.circular(22),
                       ),
                       child: Text(
                         'Bs ${pedido.total.toStringAsFixed(0)}',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFFE6E1D5),
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
                         ),
@@ -188,7 +188,7 @@ class TarjetaPedido extends StatelessWidget {
                         visualDensity: VisualDensity.compact,
                         icon: const Icon(
                           Icons.close_rounded,
-                          color: Color(0xFFB3453B),
+                          color: Color(0xFFAE7960),
                           size: 20,
                         ),
                       ),

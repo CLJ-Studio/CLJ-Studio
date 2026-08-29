@@ -105,7 +105,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
             FilledButton(
               onPressed: () => Navigator.of(contexto).pop(true),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF0C6843),
+                backgroundColor: const Color(0xFF474646),
               ),
               child: const Text('Vaciar y agregar'),
             ),
@@ -197,7 +197,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
           FilledButton(
             onPressed: () => Navigator.of(contexto).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFB3453B),
+              backgroundColor: const Color(0xFFAE7960),
             ),
             child: const Text('Eliminar'),
           ),
@@ -228,7 +228,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFE6E1D5),
       bottomNavigationBar: AnimatedBuilder(
         animation: ControladorCarritoCompras.instancia,
         builder: (context, _) {
@@ -255,7 +255,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                           child: FilledButton(
                             onPressed: _abrirCarrito,
                             style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF185D4E),
+                              backgroundColor: const Color(0xFF474646),
                               shape: const StadiumBorder(),
                             ),
                             child: FittedBox(
@@ -289,12 +289,12 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                         width: 126,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Color(0xFFE6E1D5),
                           borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: const Color(0xFFE1E1E1)),
+                          border: Border.all(color: const Color(0xFFE6E1D5)),
                           boxShadow: const [
                             BoxShadow(
-                              color: Color(0x18000000),
+                              color: Color(0x18474646),
                               blurRadius: 8,
                               offset: Offset(0, 2),
                             ),
@@ -312,14 +312,14 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                                     : carrito.disminuir(indice),
                                 icon: const Icon(
                                   Icons.remove_rounded,
-                                  color: Colors.black,
+                                  color: Color(0xFF474646),
                                 ),
                               ),
                             ),
                             Text(
                               '$cantidad',
                               style: const TextStyle(
-                                color: Colors.black,
+                                color: Color(0xFF474646),
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -332,7 +332,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                                     : null,
                                 icon: const Icon(
                                   Icons.add_rounded,
-                                  color: Colors.black,
+                                  color: Color(0xFF474646),
                                 ),
                               ),
                             ),
@@ -437,8 +437,8 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                                   ? Icons.favorite_rounded
                                   : Icons.favorite_border_rounded,
                               colorIcono: _favorito
-                                  ? const Color(0xFFE53935)
-                                  : const Color(0xFF222222),
+                                  ? const Color(0xFFAE7960)
+                                  : const Color(0xFF474646),
                               etiqueta: 'Guardar en favoritos',
                               alPresionar: () => ControladorFavoritos.instancia
                                   .alternar(_producto),
@@ -454,7 +454,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(24, 14, 24, 110),
                     decoration: const BoxDecoration(
-                      color: Colors.white,
+                      color: Color(0xFFE6E1D5),
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(32),
                       ),
@@ -472,7 +472,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                         Text(
                           _producto.nombre,
                           style: const TextStyle(
-                            color: Color(0xFF111111),
+                            color: Color(0xFF474646),
                             fontSize: 30,
                             fontWeight: FontWeight.w900,
                             height: 1.05,
@@ -484,7 +484,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                             Text(
                               'Bs ${_producto.precio.toStringAsFixed(2)}',
                               style: const TextStyle(
-                                color: Color(0xFF185D4E),
+                                color: Color(0xFF474646),
                                 fontSize: 25,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -498,8 +498,8 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                                   : 'Agotado',
                               style: TextStyle(
                                 color: _producto.hayExistencias
-                                    ? const Color(0xFF185D4E)
-                                    : const Color(0xFFB3453B),
+                                    ? const Color(0xFF474646)
+                                    : const Color(0xFFAE7960),
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -514,8 +514,8 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                                 ? _agregar
                                 : null,
                             style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF185D4E),
-                              disabledBackgroundColor: const Color(0xFFB8C7C2),
+                              backgroundColor: const Color(0xFF474646),
+                              disabledBackgroundColor: const Color(0xFFBBBCA7),
                               shape: const StadiumBorder(),
                             ),
                             child: Text(
@@ -529,11 +529,11 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                             ),
                           ),
                         ),
-                        const Divider(height: 38, color: Color(0xFFE5E5E5)),
+                        const Divider(height: 38, color: Color(0xFFE6E1D5)),
                         const Text(
                           'Acerca de este producto',
                           style: TextStyle(
-                            color: Color(0xFF171717),
+                            color: Color(0xFF474646),
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
                           ),
@@ -548,7 +548,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto> {
                         const Text(
                           'Publicado por',
                           style: TextStyle(
-                            color: Color(0xFF171717),
+                            color: Color(0xFF474646),
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
                           ),
@@ -585,7 +585,7 @@ class _DescripcionProductoState extends State<_DescripcionProducto> {
   bool _expandida = false;
 
   static const _estilo = TextStyle(
-    color: Color(0xFF666666),
+    color: Color(0xFF848381),
     fontSize: 15,
     height: 1.5,
   );
@@ -617,7 +617,7 @@ class _DescripcionProductoState extends State<_DescripcionProducto> {
                 child: Text(
                   _expandida ? 'Ver menos' : '… más',
                   style: const TextStyle(
-                    color: Color(0xFF185D4E),
+                    color: Color(0xFF474646),
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -634,7 +634,7 @@ class _BotonCircular extends StatelessWidget {
     required this.icono,
     required this.etiqueta,
     required this.alPresionar,
-    this.colorIcono = const Color(0xFF222222),
+    this.colorIcono = const Color(0xFF474646),
   });
 
   final IconData icono;
@@ -644,7 +644,7 @@ class _BotonCircular extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: Colors.white,
+    color: Color(0xFFE6E1D5),
     shape: const CircleBorder(),
     elevation: 1,
     child: IconButton(
@@ -666,7 +666,7 @@ class _MenuGestionProducto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: Colors.white,
+    color: Color(0xFFE6E1D5),
     shape: const CircleBorder(),
     elevation: 1,
     child: PopupMenuButton<String>(
@@ -715,9 +715,9 @@ class _MenuGestionProducto extends StatelessWidget {
           child: ListTile(
             leading: Icon(
               Icons.delete_outline_rounded,
-              color: Color(0xFFB3453B),
+              color: Color(0xFFAE7960),
             ),
-            title: Text('Eliminar', style: TextStyle(color: Color(0xFFB3453B))),
+            title: Text('Eliminar', style: TextStyle(color: Color(0xFFAE7960))),
             contentPadding: EdgeInsets.zero,
           ),
         ),
@@ -748,7 +748,7 @@ class _Galeria extends StatelessWidget {
     if (fotos.isEmpty) {
       return Container(
         height: 330,
-        color: const Color(0xFFFFE9DE),
+        color: const Color(0xFFE6E1D5),
         alignment: Alignment.center,
         child: Text(emoji, style: const TextStyle(fontSize: 110)),
       );
@@ -769,7 +769,7 @@ class _Galeria extends StatelessWidget {
                 fotos[i],
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => ColoredBox(
-                  color: const Color(0xFFFFE9DE),
+                  color: const Color(0xFFE6E1D5),
                   child: Center(
                     child: Text(emoji, style: const TextStyle(fontSize: 90)),
                   ),
@@ -791,7 +791,9 @@ class _Galeria extends StatelessWidget {
                     width: i == pagina ? 20 : 7,
                     height: 7,
                     decoration: BoxDecoration(
-                      color: i == pagina ? Colors.white : Colors.white54,
+                      color: i == pagina
+                          ? Color(0xFFE6E1D5)
+                          : Color(0x8AE6E1D5),
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -823,8 +825,8 @@ class _Vendedor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorContenido = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
+        ? Color(0xFFE6E1D5)
+        : Color(0xFF474646);
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),

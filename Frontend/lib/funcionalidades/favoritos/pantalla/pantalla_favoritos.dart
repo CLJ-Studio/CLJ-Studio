@@ -33,7 +33,7 @@ class PantallaFavoritos extends StatelessWidget {
                       Text(
                         '${controlador.cantidad} ${controlador.cantidad == 1 ? 'producto guardado' : 'productos guardados'}',
                         style: const TextStyle(
-                          color: Color(0xFF7B817D),
+                          color: Color(0xFF848381),
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -65,7 +65,7 @@ class _FavoritosVacios extends StatelessWidget {
             child: const Icon(
               Icons.favorite_border_rounded,
               size: 48,
-              color: Color(0xFF6F9A76),
+              color: Color(0xFF848381),
             ),
           ),
           const SizedBox(height: 20),
@@ -80,7 +80,7 @@ class _FavoritosVacios extends StatelessWidget {
           const Text(
             'Pulsa el corazón de un producto para guardarlo aquí.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF7B817D)),
+            style: TextStyle(color: Color(0xFF848381)),
           ),
         ],
       ),

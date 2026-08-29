@@ -155,13 +155,13 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
               ListTile(
                 leading: const Icon(
                   Icons.location_on_outlined,
-                  color: ConfiguracionTema.verdeMarca,
+                  color: ConfiguracionTema.primario,
                 ),
                 title: Text(ubicacion),
                 trailing: UbicacionComprador.instancia.zona == ubicacion
                     ? const Icon(
                         Icons.check_circle_rounded,
-                        color: ConfiguracionTema.verdeMarca,
+                        color: ConfiguracionTema.primario,
                       )
                     : null,
                 onTap: () => Navigator.of(context).pop(ubicacion),
@@ -190,9 +190,9 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     final opacidadBuscador = (1 - progreso * 1.75).clamp(0.0, 1.0);
 
     return Material(
-      color: ConfiguracionTema.verdeMarca,
+      color: ConfiguracionTema.azulNoche,
       elevation: overlapsContent ? 6 : 0,
-      shadowColor: const Color(0x33000000),
+      shadowColor: const Color(0x33474646),
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
       clipBehavior: Clip.antiAlias,
       child: Padding(
@@ -221,9 +221,9 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                                   Text(
                                     'ENTREGA EN',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(
-                                        alpha: .72,
-                                      ),
+                                      color: Color(
+                                        0xFFE6E1D5,
+                                      ).withValues(alpha: .72),
                                       fontSize: 10,
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: .8,
@@ -307,7 +307,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                               const Text(
                                 'Compra y vende dentro del campus',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Color(0xFFE6E1D5),
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -315,7 +315,9 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                               Text(
                                 '${categorias.length} categorías',
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: .76),
+                                  color: Color(
+                                    0xFFE6E1D5,
+                                  ).withValues(alpha: .76),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -378,18 +380,18 @@ class _AvatarEncabezado extends StatelessWidget {
         : nombre.trim()[0].toUpperCase();
 
     Widget respaldo() => ColoredBox(
-      color: const Color(0xFFE1F2E8),
+      color: const Color(0xFFE6E1D5),
       child: Center(
         child: inicial == null
             ? const Icon(
                 Icons.person_rounded,
-                color: ConfiguracionTema.verdeMarcaOscuro,
+                color: ConfiguracionTema.grafito,
                 size: 23,
               )
             : Text(
                 inicial,
                 style: const TextStyle(
-                  color: ConfiguracionTema.verdeMarcaOscuro,
+                  color: ConfiguracionTema.grafito,
                   fontSize: 17,
                   fontWeight: FontWeight.w900,
                 ),
@@ -406,7 +408,7 @@ class _AvatarEncabezado extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withValues(alpha: .82),
+            color: Color(0xFFE6E1D5).withValues(alpha: .82),
             width: 2,
           ),
         ),

@@ -21,8 +21,8 @@ class CampoCodigoEstudiante extends StatelessWidget {
     final colorBorde = hayError
         ? Theme.of(context).colorScheme.error
         : esValido
-        ? const Color(0xFF138A5B)
-        : const Color(0xFFB8BDB8);
+        ? const Color(0xFF474646)
+        : const Color(0xFFBBBCA7);
 
     return TextField(
       onChanged: alCambiar,
@@ -53,7 +53,7 @@ class CampoCodigoEstudiante extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
         suffixIcon: esValido
-            ? const Icon(Icons.check_circle_rounded, color: Color(0xFF138A5B))
+            ? const Icon(Icons.check_circle_rounded, color: Color(0xFF474646))
             : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),

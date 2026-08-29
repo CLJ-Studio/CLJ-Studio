@@ -28,9 +28,9 @@ class _PantallaFinanzasLocalState extends State<PantallaFinanzasLocal> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF3F5F2),
+    backgroundColor: const Color(0xFFE6E1D5),
     appBar: AppBar(
-      backgroundColor: const Color(0xFFF3F5F2),
+      backgroundColor: const Color(0xFFE6E1D5),
       surfaceTintColor: Colors.transparent,
       title: const Text(
         'Mis finanzas',
@@ -49,7 +49,7 @@ class _PantallaFinanzasLocalState extends State<PantallaFinanzasLocal> {
         }
         return RefreshIndicator.adaptive(
           onRefresh: _actualizar,
-          color: const Color(0xFF138A5B),
+          color: const Color(0xFF474646),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
@@ -88,7 +88,7 @@ class _ContenidoFinanzas extends StatelessWidget {
               icono: Icons.today_rounded,
               etiqueta: 'Ventas de hoy',
               valor: _dinero(resumen.ingresosHoy),
-              color: const Color(0xFF138A5B),
+              color: const Color(0xFF474646),
             ),
           ),
           const SizedBox(width: 12),
@@ -97,7 +97,7 @@ class _ContenidoFinanzas extends StatelessWidget {
               icono: Icons.receipt_long_rounded,
               etiqueta: 'Completados',
               valor: '${resumen.pedidosCompletados}',
-              color: const Color(0xFF3F79A8),
+              color: const Color(0xFF848381),
             ),
           ),
         ],
@@ -120,7 +120,7 @@ class _ContenidoFinanzas extends StatelessWidget {
         etiqueta: 'Más vendido',
         nombre: resumen.nombreProductoMasVendido,
         detalle: '${resumen.unidadesProductoMasVendido} unidades',
-        color: const Color(0xFF138A5B),
+        color: const Color(0xFF474646),
       ),
       const SizedBox(height: 10),
       _TarjetaProducto(
@@ -128,7 +128,7 @@ class _ContenidoFinanzas extends StatelessWidget {
         etiqueta: 'Más visto',
         nombre: resumen.nombreProductoMasVisto,
         detalle: '${resumen.vistasProductoMasVisto} vistas',
-        color: const Color(0xFF6B70B5),
+        color: const Color(0xFF848381),
       ),
       const SizedBox(height: 12),
       _CuadriculaRendimiento(resumen: resumen),
@@ -155,12 +155,12 @@ class _TarjetaBalance extends StatelessWidget {
       gradient: const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF183D2B), Color(0xFF3F7550)],
+        colors: [Color(0xFF474646), Color(0xFF474646)],
       ),
       borderRadius: BorderRadius.circular(28),
       boxShadow: const [
         BoxShadow(
-          color: Color(0x333F7550),
+          color: Color(0x33474646),
           blurRadius: 24,
           offset: Offset(0, 12),
         ),
@@ -171,12 +171,12 @@ class _TarjetaBalance extends StatelessWidget {
         const Positioned(
           right: -28,
           top: -42,
-          child: _CirculoDecorativo(tamanio: 126, color: Color(0x225FD081)),
+          child: _CirculoDecorativo(tamanio: 126, color: Color(0x22969A82)),
         ),
         const Positioned(
           right: 30,
           bottom: -46,
-          child: _CirculoDecorativo(tamanio: 92, color: Color(0x22FFFFFF)),
+          child: _CirculoDecorativo(tamanio: 92, color: Color(0x22E6E1D5)),
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +187,7 @@ class _TarjetaBalance extends StatelessWidget {
                   child: Text(
                     'INGRESOS TOTALES',
                     style: TextStyle(
-                      color: Color(0xBFFFFFFF),
+                      color: Color(0xBFE6E1D5),
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
@@ -197,12 +197,12 @@ class _TarjetaBalance extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .14),
+                    color: Color(0xFFE6E1D5).withValues(alpha: .14),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.trending_up_rounded,
-                    color: Colors.white,
+                    color: Color(0xFFE6E1D5),
                     size: 22,
                   ),
                 ),
@@ -215,7 +215,7 @@ class _TarjetaBalance extends StatelessWidget {
               child: Text(
                 'Bs ${resumen.ingresosTotales.toStringAsFixed(2)}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFFE6E1D5),
                   fontSize: 38,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1.5,
@@ -225,7 +225,7 @@ class _TarjetaBalance extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Ventas entregadas · ${resumen.pedidosCompletados} pedidos',
-              style: const TextStyle(color: Color(0xBFFFFFFF), fontSize: 12.5),
+              style: const TextStyle(color: Color(0xBFE6E1D5), fontSize: 12.5),
             ),
           ],
         ),
@@ -264,9 +264,9 @@ class _MetricaCompacta extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Color(0xFFE6E1D5),
       borderRadius: BorderRadius.circular(22),
-      border: Border.all(color: const Color(0x0D000000)),
+      border: Border.all(color: const Color(0x0D474646)),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,7 +281,7 @@ class _MetricaCompacta extends StatelessWidget {
         const SizedBox(height: 3),
         Text(
           etiqueta,
-          style: const TextStyle(color: Color(0xFF7A817C), fontSize: 11.5),
+          style: const TextStyle(color: Color(0xFF848381), fontSize: 11.5),
         ),
       ],
     ),
@@ -308,7 +308,7 @@ class _TituloSeccion extends StatelessWidget {
       const SizedBox(height: 2),
       Text(
         subtitulo,
-        style: const TextStyle(color: Color(0xFF858B87), fontSize: 12.5),
+        style: const TextStyle(color: Color(0xFF848381), fontSize: 12.5),
       ),
     ],
   );
@@ -330,7 +330,7 @@ class _GraficoSemanal extends StatelessWidget {
       height: 210,
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFE6E1D5),
         borderRadius: BorderRadius.circular(24),
       ),
       child: datos.isEmpty
@@ -349,7 +349,7 @@ class _GraficoSemanal extends StatelessWidget {
                             Text(
                               punto.ingresos.toStringAsFixed(0),
                               style: const TextStyle(
-                                color: Color(0xFF138A5B),
+                                color: Color(0xFF474646),
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -364,7 +364,7 @@ class _GraficoSemanal extends StatelessWidget {
                               gradient: const LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [Color(0xFF138A5B), Color(0xFF9AB9A0)],
+                                colors: [Color(0xFF474646), Color(0xFFBBBCA7)],
                               ),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -373,7 +373,7 @@ class _GraficoSemanal extends StatelessWidget {
                           Text(
                             _dias[punto.fecha.weekday - 1],
                             style: const TextStyle(
-                              color: Color(0xFF727975),
+                              color: Color(0xFF848381),
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                             ),
@@ -406,7 +406,7 @@ class _TarjetaProducto extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Color(0xFFE6E1D5),
       borderRadius: BorderRadius.circular(22),
     ),
     child: Row(
@@ -452,7 +452,7 @@ class _TarjetaProducto extends StatelessWidget {
         Text(
           detalle,
           style: const TextStyle(
-            color: Color(0xFF6F7671),
+            color: Color(0xFF848381),
             fontSize: 11.5,
             fontWeight: FontWeight.w700,
           ),
@@ -546,7 +546,7 @@ class _DatoRendimiento extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Color(0xFFE6E1D5),
       borderRadius: BorderRadius.circular(20),
     ),
     child: Column(
@@ -555,14 +555,14 @@ class _DatoRendimiento extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icono, color: const Color(0xFF138A5B), size: 18),
+            Icon(icono, color: const Color(0xFF474646), size: 18),
             const SizedBox(width: 7),
             Expanded(
               child: Text(
                 etiqueta,
                 maxLines: 1,
                 style: const TextStyle(
-                  color: Color(0xFF777E79),
+                  color: Color(0xFF848381),
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
@@ -578,7 +578,7 @@ class _DatoRendimiento extends StatelessWidget {
         ),
         Text(
           detalle,
-          style: const TextStyle(color: Color(0xFF929793), fontSize: 10),
+          style: const TextStyle(color: Color(0xFF969A82), fontSize: 10),
         ),
       ],
     ),
@@ -598,7 +598,7 @@ class _TarjetaVisitas extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF202E3B),
+        color: const Color(0xFF474646),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -607,12 +607,12 @@ class _TarjetaVisitas extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: const BoxDecoration(
-              color: Color(0x223FA8D0),
+              color: Color(0x22848381),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.visibility_rounded,
-              color: Color(0xFF78C3DF),
+              color: Color(0xFFBBBCA7),
             ),
           ),
           const SizedBox(width: 14),
@@ -623,7 +623,7 @@ class _TarjetaVisitas extends StatelessWidget {
                 Text(
                   '${resumen.visitasTotales} visitas totales',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFFE6E1D5),
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
                   ),
@@ -632,7 +632,7 @@ class _TarjetaVisitas extends StatelessWidget {
                 Text(
                   'Mejor día: $fechaTexto',
                   style: const TextStyle(
-                    color: Color(0xAFFFFFFF),
+                    color: Color(0xAFE6E1D5),
                     fontSize: 11.5,
                   ),
                 ),
@@ -659,7 +659,7 @@ class _ErrorFinanzas extends StatelessWidget {
           const Icon(
             Icons.query_stats_rounded,
             size: 48,
-            color: Color(0xFF138A5B),
+            color: Color(0xFF474646),
           ),
           const SizedBox(height: 14),
           const Text('No pudimos cargar tus finanzas.'),

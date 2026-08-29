@@ -40,7 +40,7 @@ class PantallaAdministrarLocal extends StatelessWidget {
           FilledButton(
             onPressed: () => Navigator.of(dialogo).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFB3453B),
+              backgroundColor: const Color(0xFFAE7960),
             ),
             child: const Text('Eliminar local'),
           ),

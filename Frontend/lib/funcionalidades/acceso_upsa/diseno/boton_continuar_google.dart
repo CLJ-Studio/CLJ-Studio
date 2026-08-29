@@ -17,16 +17,16 @@ class BotonContinuarGoogle extends StatelessWidget {
       height: 54,
       child: FilledButton.icon(
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF1D1D1D),
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: const Color(0xFFD9D9D9),
+          backgroundColor: const Color(0xFF474646),
+          foregroundColor: Color(0xFFE6E1D5),
+          disabledBackgroundColor: const Color(0xFFE6E1D5),
           shape: const StadiumBorder(),
         ),
         onPressed: habilitado ? alPresionar : null,
         icon: const Text(
           'G',
           style: TextStyle(
-            color: Color(0xFF86A989),
+            color: Color(0xFF969A82),
             fontSize: 18,
             fontWeight: FontWeight.w900,
           ),

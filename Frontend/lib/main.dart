@@ -7,7 +7,7 @@ import 'configuracion_aplicacion/modo_local.dart';
 import 'configuracion_aplicacion/configuracion_supabase.dart';
 import 'elementos_compartidos/animaciones/precargador_animaciones.dart';
 
-/// Punto de entrada de UPSA Eat.
+/// Punto de entrada de U market.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

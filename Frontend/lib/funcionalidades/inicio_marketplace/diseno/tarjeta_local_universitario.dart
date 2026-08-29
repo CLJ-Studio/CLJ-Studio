@@ -21,7 +21,9 @@ class TarjetaLocalUniversitario extends StatelessWidget {
     button: true,
     label: 'Abrir ${local.nombreVisible}',
     child: Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: Theme.of(context).brightness == Brightness.dark
+          ? ConfiguracionTema.grafito
+          : Colors.white,
       borderRadius: BorderRadius.circular(24),
       clipBehavior: Clip.antiAlias,
       elevation: 0,
@@ -63,7 +65,7 @@ class TarjetaLocalUniversitario extends StatelessWidget {
                       ),
                       const Icon(
                         Icons.visibility_outlined,
-                        color: ConfiguracionTema.verdeMarca,
+                        color: ConfiguracionTema.primario,
                         size: 18,
                       ),
                       const SizedBox(width: 4),
@@ -82,7 +84,7 @@ class TarjetaLocalUniversitario extends StatelessWidget {
                     children: [
                       const Icon(
                         Icons.location_on_outlined,
-                        color: ConfiguracionTema.verdeMarca,
+                        color: ConfiguracionTema.primario,
                         size: 17,
                       ),
                       const SizedBox(width: 4),

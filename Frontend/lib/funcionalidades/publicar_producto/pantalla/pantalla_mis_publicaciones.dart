@@ -86,7 +86,7 @@ class _Resumen extends StatelessWidget {
       children: [
         const CircleAvatar(
           radius: 29,
-          child: Icon(Icons.person_rounded, color: Color(0xFF138A5B)),
+          child: Icon(Icons.person_rounded, color: Color(0xFF474646)),
         ),
         const SizedBox(width: 15),
         const Expanded(
@@ -99,7 +99,7 @@ class _Resumen extends StatelessWidget {
               ),
               Text(
                 'Todo lo que compartiste.',
-                style: TextStyle(color: Color(0xFF6F7771)),
+                style: TextStyle(color: Color(0xFF848381)),
               ),
             ],
           ),
@@ -107,7 +107,7 @@ class _Resumen extends StatelessWidget {
         Text(
           '$cantidad',
           style: const TextStyle(
-            color: Color(0xFF138A5B),
+            color: Color(0xFF474646),
             fontSize: 26,
             fontWeight: FontWeight.w900,
           ),
@@ -195,7 +195,7 @@ class _TarjetaPublicacion extends StatelessWidget {
               Text(
                 'Bs ${publicacion.precio.toStringAsFixed(2)}',
                 style: const TextStyle(
-                  color: Color(0xFF4F7956),
+                  color: Color(0xFF474646),
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
                 ),
@@ -204,7 +204,7 @@ class _TarjetaPublicacion extends StatelessWidget {
                 const SizedBox(height: 7),
                 Text(
                   publicacion.descripcion,
-                  style: const TextStyle(color: Color(0xFF555B57), height: 1.4),
+                  style: const TextStyle(color: Color(0xFF474646), height: 1.4),
                 ),
               ],
             ],
@@ -278,7 +278,7 @@ class _EstadoVacio extends StatelessWidget {
             child: const Icon(
               Icons.grid_on_rounded,
               size: 46,
-              color: Color(0xFF6F9A76),
+              color: Color(0xFF848381),
             ),
           ),
           const SizedBox(height: 20),
@@ -291,7 +291,7 @@ class _EstadoVacio extends StatelessWidget {
           const SizedBox(height: 8),
           const Text(
             'Tus productos y servicios aparecerán aquí.',
-            style: TextStyle(color: Color(0xFF7B817D)),
+            style: TextStyle(color: Color(0xFF848381)),
           ),
         ],
       ),

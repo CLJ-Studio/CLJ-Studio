@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../modelos/carrera_upsa.dart';
 
-const _grisTexto = Color(0xFF7C827E);
+const _grisTexto = Color(0xFF848381);
 
 /// Campo que abre una hoja deslizable con todas las carreras.
 ///
@@ -75,7 +75,7 @@ class SelectorCarrera extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             borderSide: carrera == null
                 ? BorderSide.none
-                : const BorderSide(color: Color(0xFF79A780), width: 2),
+                : const BorderSide(color: Color(0xFF969A82), width: 2),
           ),
         ),
         // El label flota solo si hay contenido; sin esto se solaparia

@@ -96,9 +96,9 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final colorTexto = oscuro ? Colors.white : Colors.black;
+    final colorTexto = oscuro ? Color(0xFFE6E1D5) : Color(0xFF474646);
     return Material(
-      color: oscuro ? const Color(0xFF151815) : Colors.white,
+      color: oscuro ? const Color(0xFF474646) : Colors.white,
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -106,14 +106,14 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: Border.all(
-              color: oscuro ? const Color(0xFF283028) : const Color(0xFFE9E4DD),
+              color: oscuro ? const Color(0xFF474646) : Colors.white,
             ),
             borderRadius: BorderRadius.circular(18),
             boxShadow: oscuro
                 ? null
                 : const [
                     BoxShadow(
-                      color: Color(0x174A3928),
+                      color: Color(0x17474646),
                       blurRadius: 18,
                       offset: Offset(0, 6),
                     ),
@@ -144,7 +144,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                         onPressed: () => ControladorFavoritos.instancia
                             .alternar(widget.producto),
                         style: IconButton.styleFrom(
-                          foregroundColor: const Color(0xFFE53935),
+                          foregroundColor: const Color(0xFFAE7960),
                         ),
                         icon: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),

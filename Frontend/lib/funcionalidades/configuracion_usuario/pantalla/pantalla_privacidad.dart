@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../diseno/ajustes_visibilidad.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../../elementos_compartidos/marca/marca_u_market.dart';
 
 /// Política de privacidad.
 ///
@@ -142,8 +143,8 @@ class _Intro extends StatelessWidget {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'UPSA Eat conecta a la comunidad de la universidad para comprar '
+        const TextoConMarcaUMarket(
+          'U market conecta a la comunidad de la universidad para comprar '
           'y vender dentro del campus. Aquí explicamos, sin rodeos, qué '
           'hacemos con tu información.',
           style: TextStyle(height: 1.45),

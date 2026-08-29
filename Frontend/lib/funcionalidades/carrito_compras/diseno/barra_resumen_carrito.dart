@@ -41,10 +41,10 @@ class BarraResumenCarrito extends StatelessWidget {
                       child: Row(
                         children: [
                           Material(
-                            color: Colors.white,
+                            color: Color(0xFFE6E1D5),
                             borderRadius: BorderRadius.circular(28),
                             elevation: 10,
-                            shadowColor: Colors.black38,
+                            shadowColor: Color(0x61474646),
                             child: SizedBox(
                               width: 76,
                               height: 68,
@@ -52,7 +52,7 @@ class BarraResumenCarrito extends StatelessWidget {
                                 child: Text(
                                   '${carrito.unidades}',
                                   style: const TextStyle(
-                                    color: Color(0xFF315638),
+                                    color: Color(0xFF474646),
                                     fontSize: 20,
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -63,10 +63,10 @@ class BarraResumenCarrito extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Material(
-                              color: const Color(0xFF138A5B),
+                              color: const Color(0xFF474646),
                               borderRadius: BorderRadius.circular(28),
                               elevation: 10,
-                              shadowColor: Colors.black38,
+                              shadowColor: Color(0x61474646),
                               clipBehavior: Clip.antiAlias,
                               child: InkWell(
                                 onTap: () => Navigator.of(
@@ -84,7 +84,7 @@ class BarraResumenCarrito extends StatelessWidget {
                                           child: Text(
                                             'Ver carrito',
                                             style: TextStyle(
-                                              color: Colors.white,
+                                              color: Color(0xFFE6E1D5),
                                               fontSize: 17,
                                               fontWeight: FontWeight.w900,
                                             ),
@@ -93,7 +93,7 @@ class BarraResumenCarrito extends StatelessWidget {
                                         Text(
                                           'Bs ${carrito.total.toStringAsFixed(2)}',
                                           style: const TextStyle(
-                                            color: Colors.white,
+                                            color: Color(0xFFE6E1D5),
                                             fontSize: 16,
                                             fontWeight: FontWeight.w900,
                                           ),
@@ -101,7 +101,7 @@ class BarraResumenCarrito extends StatelessWidget {
                                         const SizedBox(width: 5),
                                         const Icon(
                                           Icons.chevron_right_rounded,
-                                          color: Colors.white,
+                                          color: Color(0xFFE6E1D5),
                                         ),
                                       ],
                                     ),

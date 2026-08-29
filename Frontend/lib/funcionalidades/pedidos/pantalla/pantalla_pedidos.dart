@@ -55,7 +55,7 @@ class _PantallaPedidosState extends State<PantallaPedidos>
           FilledButton(
             onPressed: () => Navigator.of(contexto).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFB3453B),
+              backgroundColor: const Color(0xFFAE7960),
             ),
             child: const Text('Sí, cancelar'),
           ),
@@ -85,9 +85,9 @@ class _PantallaPedidosState extends State<PantallaPedidos>
           const SizedBox(height: 12),
           TabBar(
             controller: _pestanas,
-            labelColor: const Color(0xFF0C6843),
+            labelColor: const Color(0xFF474646),
             unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
-            indicatorColor: const Color(0xFF138A5B),
+            indicatorColor: const Color(0xFF474646),
             labelStyle: const TextStyle(fontWeight: FontWeight.w900),
             tabs: [
               _PestanaConAviso(
@@ -165,13 +165,13 @@ class _PestanaConAviso extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
-              color: const Color(0xFFC98A2B),
+              color: const Color(0xFFAE7960),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '$pendientes',
               style: const TextStyle(
-                color: Colors.white,
+                color: Color(0xFFE6E1D5),
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
               ),
@@ -251,13 +251,13 @@ class _ListaPedidosState extends State<_ListaPedidos> {
                       const Icon(
                         Icons.receipt_long_outlined,
                         size: 46,
-                        color: Color(0xFFB8BDB8),
+                        color: Color(0xFFBBBCA7),
                       ),
                       const SizedBox(height: 14),
                       Text(
                         widget.vacio,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF858585)),
+                        style: const TextStyle(color: Color(0xFF848381)),
                       ),
                     ],
                   ),
@@ -287,8 +287,8 @@ class _ListaPedidosState extends State<_ListaPedidos> {
                         filled: true,
                         fillColor:
                             Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF202320)
-                            : Colors.white,
+                            ? const Color(0xFF474646)
+                            : Color(0xFFE6E1D5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(22),
                           borderSide: BorderSide.none,
@@ -318,7 +318,7 @@ class _ListaPedidosState extends State<_ListaPedidos> {
                         child: Text(
                           'No encontramos pedidos con esa búsqueda.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Color(0xFF858585)),
+                          style: TextStyle(color: Color(0xFF848381)),
                         ),
                       ),
                   ],
@@ -346,11 +346,11 @@ class _ResumenMovimiento extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
-      color: esVenta ? const Color(0xFF138A5B) : const Color(0xFF171917),
+      color: esVenta ? const Color(0xFF474646) : const Color(0xFF474646),
       borderRadius: BorderRadius.circular(26),
       boxShadow: const [
         BoxShadow(
-          color: Color(0x22000000),
+          color: Color(0x22474646),
           blurRadius: 18,
           offset: Offset(0, 7),
         ),
@@ -365,7 +365,7 @@ class _ResumenMovimiento extends StatelessWidget {
               Text(
                 titulo,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: Color(0xB3E6E1D5),
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -373,7 +373,7 @@ class _ResumenMovimiento extends StatelessWidget {
               Text(
                 'Bs ${total.toStringAsFixed(2)}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFFE6E1D5),
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
                 ),
@@ -384,13 +384,13 @@ class _ResumenMovimiento extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .16),
+            color: Color(0xFFE6E1D5).withValues(alpha: .16),
             borderRadius: BorderRadius.circular(18),
           ),
           child: Text(
             '$cantidad ${cantidad == 1 ? 'pedido' : 'pedidos'}',
             style: const TextStyle(
-              color: Colors.white,
+              color: Color(0xFFE6E1D5),
               fontWeight: FontWeight.w800,
             ),
           ),

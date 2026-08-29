@@ -206,7 +206,7 @@ class _HojaReportarState extends State<_HojaReportar> {
               const SizedBox(height: 6),
               Text(
                 _error!,
-                style: const TextStyle(color: Color(0xFFB3453B), fontSize: 13),
+                style: const TextStyle(color: Color(0xFFAE7960), fontSize: 13),
               ),
             ],
 
@@ -230,7 +230,7 @@ class _HojaReportarState extends State<_HojaReportar> {
               child: FilledButton(
                 onPressed: _motivo == null || _enviando ? null : _enviar,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFB3453B),
+                  backgroundColor: const Color(0xFFAE7960),
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: const StadiumBorder(),
                 ),

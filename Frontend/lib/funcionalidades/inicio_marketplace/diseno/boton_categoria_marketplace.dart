@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../modelos/categoria_marketplace.dart';
 
 /// Botón que hace evidente la categoría actualmente seleccionada.
@@ -21,7 +22,7 @@ class BotonCategoriaMarketplace extends StatelessWidget {
     final tema = Theme.of(context);
     final esOscuro = tema.brightness == Brightness.dark;
     final tamanio = 48 - (6 * compactProgress);
-    final verde = const Color(0xFF138A5B);
+    final verde = const Color(0xFF474646);
 
     return Semantics(
       button: true,
@@ -44,19 +45,19 @@ class BotonCategoriaMarketplace extends StatelessWidget {
                       ? verde
                       : esOscuro
                       ? tema.colorScheme.surfaceContainerHighest
-                      : Colors.white,
+                      : ConfiguracionTema.cremaSuperficie,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: seleccionado
                         ? verde
                         : esOscuro
-                        ? const Color(0xFF464A46)
-                        : const Color(0xFFE1E4E1),
+                        ? const Color(0xFF474646)
+                        : ConfiguracionTema.cremaSuperficie,
                   ),
                   boxShadow: seleccionado
                       ? const [
                           BoxShadow(
-                            color: Color(0x30138A5B),
+                            color: Color(0x30474646),
                             blurRadius: 12,
                             offset: Offset(0, 5),
                           ),
@@ -65,7 +66,7 @@ class BotonCategoriaMarketplace extends StatelessWidget {
                       ? null
                       : const [
                           BoxShadow(
-                            color: Color(0x12000000),
+                            color: Color(0x12474646),
                             blurRadius: 8,
                             offset: Offset(0, 3),
                           ),
@@ -75,10 +76,10 @@ class BotonCategoriaMarketplace extends StatelessWidget {
                   categoria.icono,
                   size: 22,
                   color: seleccionado
-                      ? Colors.white
+                      ? Color(0xFFE6E1D5)
                       : esOscuro
-                      ? Colors.white
-                      : const Color(0xFF303330),
+                      ? Color(0xFFE6E1D5)
+                      : const Color(0xFF474646),
                 ),
               ),
               const SizedBox(height: 5),
@@ -90,7 +91,7 @@ class BotonCategoriaMarketplace extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: seleccionado ? FontWeight.w800 : FontWeight.w600,
-                  color: esOscuro ? Colors.white : const Color(0xFF343634),
+                  color: esOscuro ? Color(0xFFE6E1D5) : const Color(0xFF474646),
                 ),
               ),
             ],

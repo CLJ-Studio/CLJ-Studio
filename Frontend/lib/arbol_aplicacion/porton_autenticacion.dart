@@ -177,13 +177,13 @@ class _PantallaErrorSesion extends StatelessWidget {
               Text(
                 detalle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF858585), fontSize: 12),
+                style: const TextStyle(color: Color(0xFF848381), fontSize: 12),
               ),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: alReintentar,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF138A5B),
+                  backgroundColor: const Color(0xFF474646),
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Reintentar'),

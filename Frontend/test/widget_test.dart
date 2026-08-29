@@ -6,7 +6,7 @@ void main() {
   testWidgets('muestra el acceso UPSA al iniciar', (tester) async {
     await tester.pumpWidget(const ArbolAplicacion());
 
-    expect(find.text('UPSA Eat'), findsOneWidget);
+    expect(find.text('U market', findRichText: true), findsOneWidget);
     expect(find.text('Continuar con Google'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
   });

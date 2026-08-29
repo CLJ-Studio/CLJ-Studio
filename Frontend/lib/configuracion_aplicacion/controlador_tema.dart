@@ -43,7 +43,9 @@ class ControladorTema extends ChangeNotifier {
   void _sincronizarBarraDelSistema() {
     if (!kIsWeb) return;
 
-    final color = esOscuro ? _aHex(ConfiguracionTema.fondoOscuro) : '#FFFFFF';
+    final color = _aHex(
+      esOscuro ? ConfiguracionTema.fondoOscuro : ConfiguracionTema.fondo,
+    );
 
     // NodeList no es iterable en Dart: se recorre por indice.
     final etiquetas = web.document.querySelectorAll('meta[name="theme-color"]');

@@ -24,7 +24,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
       child: Ink(
         height: 180,
         decoration: BoxDecoration(
-          color: ConfiguracionTema.azulPetroleo,
+          color: ConfiguracionTema.grafito,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Stack(
@@ -50,9 +50,9 @@ class InvitacionAbrirLocal extends StatelessWidget {
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                     colors: [
-                      ConfiguracionTema.azulPetroleo,
-                      ConfiguracionTema.azulPetroleo.withValues(alpha: .94),
-                      ConfiguracionTema.azulPetroleo.withValues(alpha: .08),
+                      ConfiguracionTema.grafito,
+                      ConfiguracionTema.grafito.withValues(alpha: .94),
+                      ConfiguracionTema.grafito.withValues(alpha: .08),
                     ],
                     stops: [0, .48, .74],
                   ),
@@ -72,7 +72,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                           ? 'Administra tu local aquí'
                           : '¿Quieres abrir tu propio local?',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
+                        color: Color(0xFFE6E1D5),
                         fontWeight: FontWeight.w900,
                         height: 1.05,
                       ),
@@ -86,7 +86,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                                 'solo sitio.'
                           : 'Crea tu perfil y empieza a publicar tus productos.',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: .9),
+                        color: Color(0xFFE6E1D5).withValues(alpha: .9),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -99,7 +99,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                         Text(
                           yaTieneLocal ? 'Administrar' : 'Comenzar',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFFE6E1D5),
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -107,7 +107,7 @@ class InvitacionAbrirLocal extends StatelessWidget {
                         const Icon(
                           Icons.arrow_forward_rounded,
                           size: 18,
-                          color: Colors.white,
+                          color: Color(0xFFE6E1D5),
                         ),
                       ],
                     ),

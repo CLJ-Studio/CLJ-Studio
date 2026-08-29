@@ -106,7 +106,7 @@ Future<DatosProducto?> mostrarDialogoProducto(
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF138A5B),
+              backgroundColor: const Color(0xFF474646),
             ),
             onPressed: () {
               final monto = double.tryParse(precio.text.replaceAll(',', '.'));

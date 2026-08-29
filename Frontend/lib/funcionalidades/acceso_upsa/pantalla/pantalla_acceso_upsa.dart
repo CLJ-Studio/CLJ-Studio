@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../elementos_compartidos/marca/marca_u_market.dart';
 import '../datos/codigo_pendiente.dart';
 import '../datos/cuentas_recordadas.dart';
 import '../datos/servicio_autenticacion_correo.dart';
@@ -221,15 +222,15 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
     await _cargarCuentas();
   }
 
-  Widget _marca() => const Text(
-    'UPSA Eat',
+  Widget _marca() => const MarcaUMarket(
     textAlign: TextAlign.center,
+    colorU: Colors.black,
+    colorMarket: Colors.black,
     style: TextStyle(
       color: Colors.black,
-      fontFamily: 'Metropolis',
-      fontSize: 34,
-      fontWeight: FontWeight.w900,
-      letterSpacing: -1.2,
+      fontFamily: 'Nunito',
+      fontSize: 40,
+      letterSpacing: -1.4,
     ),
   );
 
