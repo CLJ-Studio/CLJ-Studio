@@ -15,7 +15,7 @@ class OpcionChats extends StatelessWidget {
     onTap: () => Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const PantallaChats())),
-    leading: const Icon(Icons.forum_outlined, color: Color(0xFF138A5B)),
+    leading: const Icon(Icons.forum_outlined, color: Colors.black),
     title: const Text('Chats'),
     subtitle: const Text('Conversaciones de tus pedidos'),
     trailing: const Icon(Icons.chevron_right_rounded),

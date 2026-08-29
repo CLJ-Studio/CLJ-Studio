@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
@@ -18,25 +20,92 @@ class PantallaNavegacionPrincipal extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: controlador,
-    builder: (_, _) => Scaffold(
-      extendBody: true,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: _PantallasDeslizables(
-                indice: controlador.indice,
-                pantallas: pantallas,
-                alDeslizar: controlador.seleccionarIndice,
+    builder: (_, _) {
+      final ocultarBarra = controlador.indice == 2;
+
+      return Scaffold(
+        extendBody: true,
+        body: SafeArea(
+          bottom: false,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: _PantallasDeslizables(
+                  indice: controlador.indice,
+                  pantallas: pantallas,
+                  alDeslizar: controlador.seleccionarIndice,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: _BarraLigera(
-        indice: controlador.indice,
-        alSeleccionar: controlador.seleccionarIndice,
+        bottomNavigationBar: _BarraAnimadaPublicar(
+          ocultar: ocultarBarra,
+          child: _BarraLigera(
+            indice: controlador.indice,
+            alSeleccionar: controlador.seleccionarIndice,
+          ),
+        ),
+      );
+    },
+  );
+}
+
+/// Deja entrar primero a Publicar y después retira la navegación inferior.
+/// Al salir, la barra reaparece sin espera para acompañar el deslizamiento.
+class _BarraAnimadaPublicar extends StatefulWidget {
+  const _BarraAnimadaPublicar({required this.ocultar, required this.child});
+
+  final bool ocultar;
+  final Widget child;
+
+  @override
+  State<_BarraAnimadaPublicar> createState() => _BarraAnimadaPublicarState();
+}
+
+class _BarraAnimadaPublicarState extends State<_BarraAnimadaPublicar> {
+  Timer? _espera;
+  late bool _oculta;
+
+  @override
+  void initState() {
+    super.initState();
+    _oculta = widget.ocultar;
+  }
+
+  @override
+  void didUpdateWidget(covariant _BarraAnimadaPublicar anterior) {
+    super.didUpdateWidget(anterior);
+    if (widget.ocultar == anterior.ocultar) return;
+
+    _espera?.cancel();
+    if (widget.ocultar) {
+      _espera = Timer(const Duration(milliseconds: 1500), () {
+        if (mounted) setState(() => _oculta = true);
+      });
+    } else if (_oculta) {
+      setState(() => _oculta = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _espera?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    ignoring: _oculta,
+    child: AnimatedSlide(
+      offset: _oculta ? const Offset(0, 1.18) : Offset.zero,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeInOutCubic,
+      child: AnimatedOpacity(
+        opacity: _oculta ? 0 : 1,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
       ),
     ),
   );

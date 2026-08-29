@@ -11,8 +11,6 @@ import '../diseno/opcion_ayuda.dart';
 import '../diseno/opcion_cuenta_institucional.dart';
 import '../diseno/opcion_notificaciones.dart';
 import '../diseno/opcion_privacidad.dart';
-import '../diseno/opcion_tema_aplicacion.dart';
-import '../logica/controlador_configuracion.dart';
 
 /// Perfil y preferencias organizados en tarjetas agrupadas.
 class PantallaConfiguracionUsuario extends StatefulWidget {
@@ -27,25 +25,12 @@ class PantallaConfiguracionUsuario extends StatefulWidget {
 
 class _PantallaConfiguracionUsuarioState
     extends State<PantallaConfiguracionUsuario> {
-  final controlador = ControladorConfiguracion();
-
-  @override
-  void dispose() {
-    controlador.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: Listenable.merge([
-      controlador,
-      ControladorInstalacion.instancia,
-    ]),
+    animation: ControladorInstalacion.instancia,
     builder: (context, _) {
-      final esOscuro = Theme.of(context).brightness == Brightness.dark;
-
       return ColoredBox(
-        color: esOscuro ? Color(0xFF474646) : const Color(0xFFE6E1D5),
+        color: Colors.white,
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 20, 18, 126),
           child: Center(
@@ -69,7 +54,6 @@ class _PantallaConfiguracionUsuarioState
                       const OpcionNotificaciones(),
                       if (ControladorInstalacion.instancia.disponible)
                         const OpcionInstalarApp(),
-                      const OpcionTemaAplicacion(),
                       const OpcionAyuda(),
                       const OpcionAcercaDe(),
                     ],
@@ -102,49 +86,39 @@ class _GrupoAjustes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final esOscuro = Theme.of(context).brightness == Brightness.dark;
-    final textoPrincipal = esOscuro
-        ? Color(0xFFE6E1D5)
-        : const Color(0xFF474646);
-    final textoSecundario = esOscuro
-        ? const Color(0xFFBBBCA7)
-        : const Color(0xFF848381);
-    final colorIcono = esOscuro
-        ? const Color(0xFF969A82)
-        : const Color(0xFF848381);
+    const colorContenido = Colors.black;
 
     final temaGrupo = Theme.of(context).copyWith(
-      dividerColor: esOscuro
-          ? const Color(0xFF474646)
-          : const Color(0xFFE6E1D5),
-      listTileTheme: ListTileThemeData(
-        iconColor: colorIcono,
-        textColor: textoPrincipal,
+      dividerColor: colorContenido,
+      listTileTheme: const ListTileThemeData(
+        iconColor: colorContenido,
+        textColor: colorContenido,
         titleTextStyle: TextStyle(
-          color: textoPrincipal,
+          color: colorContenido,
           fontSize: 17,
           fontWeight: FontWeight.w700,
         ),
         subtitleTextStyle: TextStyle(
-          color: textoSecundario,
+          color: colorContenido,
           fontSize: 12,
           height: 1.2,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+        contentPadding: EdgeInsets.symmetric(horizontal: 20),
         minLeadingWidth: 28,
         minTileHeight: 72,
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.selected)
-              ? Color(0xFFE6E1D5)
-              : const Color(0xFFE6E1D5),
+              ? Colors.white
+              : Colors.black,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.selected)
-              ? const Color(0xFF474646)
-              : const Color(0xFFE6E1D5),
+              ? Colors.black
+              : Colors.white,
         ),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.black),
       ),
     );
 
@@ -155,8 +129,8 @@ class _GrupoAjustes extends StatelessWidget {
           padding: const EdgeInsets.only(left: 14, bottom: 10),
           child: Text(
             titulo.toUpperCase(),
-            style: TextStyle(
-              color: textoSecundario,
+            style: const TextStyle(
+              color: colorContenido,
               fontSize: 13,
               fontWeight: FontWeight.w800,
               letterSpacing: .7,
@@ -164,7 +138,7 @@ class _GrupoAjustes extends StatelessWidget {
           ),
         ),
         Material(
-          color: esOscuro ? const Color(0xFF474646) : Color(0xFFE6E1D5),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(27),
           clipBehavior: Clip.antiAlias,
           child: Theme(
@@ -173,7 +147,7 @@ class _GrupoAjustes extends StatelessWidget {
               children: [
                 for (var i = 0; i < opciones.length; i++) ...[
                   IconTheme(
-                    data: IconThemeData(color: colorIcono, size: 26),
+                    data: const IconThemeData(color: colorContenido, size: 26),
                     child: opciones[i],
                   ),
                   if (i < opciones.length - 1)

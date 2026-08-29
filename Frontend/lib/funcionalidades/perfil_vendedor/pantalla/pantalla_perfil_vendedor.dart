@@ -64,8 +64,15 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
   }
 
   /// Gestiona una publicacion propia sin entrar en ella.
-  Future<void> _gestionar(ProductoMarketplace producto) async {
-    final resultado = await mostrarAccionesPublicacion(context, producto);
+  Future<void> _gestionar(
+    ProductoMarketplace producto, {
+    VoidCallback? alVer,
+  }) async {
+    final resultado = await mostrarAccionesPublicacion(
+      context,
+      producto,
+      alVer: alVer,
+    );
     if (resultado == ResultadoAccion.sinCambios || !mounted) return;
 
     // Se recargan las dos fuentes: la publicacion pudo ser del local o
@@ -79,9 +86,14 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
       MaterialPageRoute<void>(
         builder: (_) => Scaffold(
           appBar: AppBar(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
             title: const Text(
               'Configuración',
-              style: TextStyle(fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           body: ArbolConfiguracionUsuario(
@@ -208,8 +220,9 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
                     // Los favoritos son de otras personas: ahi no hay nada
                     // que gestionar.
                     alGestionar: seccion == 2
-                        ? () {}
-                        : () => _gestionar(productos[indice]),
+                        ? null
+                        : (abrir) =>
+                              _gestionar(productos[indice], alVer: abrir),
                   ),
                 ),
               ),
@@ -262,7 +275,7 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(18, 6, 18, 42),
           decoration: const BoxDecoration(
-            color: ConfiguracionTema.primario,
+            color: ConfiguracionTema.azulNoche,
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
           ),
           child: Column(
@@ -332,7 +345,7 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
                         OutlinedButton.icon(
                           onPressed: alEditarPerfil,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: ConfiguracionTema.primario,
+                            foregroundColor: Colors.black,
                             backgroundColor: Color(0xFFE6E1D5),
                             side: BorderSide.none,
                             padding: const EdgeInsets.symmetric(
@@ -400,7 +413,7 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
+                color: Colors.black,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -408,7 +421,11 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
         if (perfil?.biografia case final String bio when bio.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-            child: Text(bio, textAlign: TextAlign.center),
+            child: Text(
+              bio,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.black),
+            ),
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(18, 6, 18, 0),
@@ -434,13 +451,17 @@ class _MetricaMarketplace extends StatelessWidget {
     children: [
       Text(
         valor,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 20,
+          fontWeight: FontWeight.w900,
+        ),
       ),
       const SizedBox(height: 2),
       Text(
         etiqueta,
-        style: TextStyle(
-          color: Theme.of(context).textTheme.bodyMedium?.color,
+        style: const TextStyle(
+          color: Colors.black,
           fontSize: 11,
           fontWeight: FontWeight.w700,
         ),
@@ -664,8 +685,6 @@ class _SelectorPerfil extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final colorContenido = oscuro ? Color(0xFFE6E1D5) : Color(0xFF474646);
     final iconos = [
       (Icons.grid_view_rounded, 'Publicaciones personales'),
       (Icons.storefront_rounded, 'Publicaciones del local'),
@@ -689,7 +708,7 @@ class _SelectorPerfil extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: ConfiguracionTema.primario,
+                    color: Colors.black,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -708,11 +727,7 @@ class _SelectorPerfil extends StatelessWidget {
                         child: Icon(
                           iconos[indice].$1,
                           size: 25,
-                          color: indice == seleccionado
-                              ? ConfiguracionTema.primario
-                              : indice == 2
-                              ? const Color(0xFFAE7960)
-                              : colorContenido.withValues(alpha: .48),
+                          color: Colors.black,
                         ),
                       ),
                     ),
@@ -775,7 +790,7 @@ class _AvatarPerfil extends StatelessWidget {
             onPressed: alEditar,
             iconSize: 18,
             style: IconButton.styleFrom(
-              backgroundColor: Color(0xFF474646),
+              backgroundColor: Colors.black,
               foregroundColor: Color(0xFFE6E1D5),
             ),
             icon: const Icon(Icons.camera_alt_rounded),
@@ -854,7 +869,7 @@ class _PublicacionPerfil extends StatelessWidget {
   /// Manteniendo pulsado se gestiona sin abrir la publicacion. El perfil es
   /// la unica lista donde estan todas juntas, asi que tener que entrar en
   /// cada una para editarla obligaba a ir y volver por cada cambio.
-  final VoidCallback alGestionar;
+  final ValueChanged<VoidCallback?>? alGestionar;
 
   @override
   Widget build(BuildContext context) {
@@ -864,7 +879,7 @@ class _PublicacionPerfil extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: abrir,
-        onLongPress: alGestionar,
+        onLongPress: alGestionar == null ? null : () => alGestionar!(abrir),
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -888,6 +903,23 @@ class _PublicacionPerfil extends StatelessWidget {
                 ),
               ),
             ),
+            if (alGestionar != null)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: IconButton(
+                  tooltip: 'Opciones de la publicación',
+                  onPressed: () => alGestionar!(abrir),
+                  style: IconButton.styleFrom(
+                    backgroundColor: const Color(0xD9FFFFFF),
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size(34, 34),
+                    maximumSize: const Size(34, 34),
+                    padding: EdgeInsets.zero,
+                  ),
+                  icon: const Icon(Icons.more_vert_rounded, size: 23),
+                ),
+              ),
             Positioned(
               left: 8,
               right: 8,

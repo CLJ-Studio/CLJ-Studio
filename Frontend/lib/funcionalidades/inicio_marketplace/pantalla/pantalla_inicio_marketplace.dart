@@ -28,7 +28,7 @@ import '../modelos/producto_marketplace.dart';
 ///
 /// Muestra publicaciones y no locales: el catalogo de cada vendedor vive en
 /// la seccion Locales, y aqui se mezcla todo como en cualquier marketplace.
-class PantallaInicioMarketplace extends StatelessWidget {
+class PantallaInicioMarketplace extends StatefulWidget {
   const PantallaInicioMarketplace({
     required this.controlador,
     this.alVerLocalesDestacados,
@@ -41,6 +41,20 @@ class PantallaInicioMarketplace extends StatelessWidget {
   final bool mostrarEncabezado;
   final bool mostrarUbicacion;
 
+  @override
+  State<PantallaInicioMarketplace> createState() =>
+      _PantallaInicioMarketplaceState();
+}
+
+class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
+  final _controladorDesplazamiento = ScrollController();
+  final _claveResultados = GlobalKey();
+
+  ControladorInicioMarketplace get controlador => widget.controlador;
+  VoidCallback? get alVerLocalesDestacados => widget.alVerLocalesDestacados;
+  bool get mostrarEncabezado => widget.mostrarEncabezado;
+  bool get mostrarUbicacion => widget.mostrarUbicacion;
+
   static List<CategoriaMarketplace> _categoriasConContenido(
     List<CategoriaMarketplace> categorias,
     List<ProductoMarketplace> publicaciones,
@@ -51,6 +65,27 @@ class PantallaInicioMarketplace extends StatelessWidget {
     return categorias
         .where((categoria) => ids.contains(categoria.id))
         .toList(growable: false);
+  }
+
+  void _seleccionarCategoriaYMostrarResultados(String categoriaId) {
+    controlador.seleccionarCategoria(categoriaId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final contextoResultados = _claveResultados.currentContext;
+      if (contextoResultados == null) return;
+      Scrollable.ensureVisible(
+        contextoResultados,
+        duration: const Duration(milliseconds: 850),
+        curve: Curves.easeInOutCubic,
+        alignment: .08,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controladorDesplazamiento.dispose();
+    super.dispose();
   }
 
   @override
@@ -79,6 +114,7 @@ class PantallaInicioMarketplace extends StatelessWidget {
               return false;
             },
             child: CustomScrollView(
+              controller: _controladorDesplazamiento,
               // Mientras el buscador está abierto, el contenido de fondo queda
               // inmóvil. El panel de resultados conserva su propio scroll.
               physics: buscando ? const NeverScrollableScrollPhysics() : null,
@@ -137,7 +173,8 @@ class PantallaInicioMarketplace extends StatelessWidget {
                             _CategoriasInicio(
                               categorias: estado.categorias,
                               categoriaId: estado.categoriaId,
-                              alSeleccionar: controlador.seleccionarCategoria,
+                              alSeleccionar:
+                                  _seleccionarCategoriaYMostrarResultados,
                             ),
                             const SizedBox(height: 26),
                             _EscaparatePopular(
@@ -160,7 +197,12 @@ class PantallaInicioMarketplace extends StatelessWidget {
                                   PantallaDetalleLocal(local: local),
                             ),
                             const SizedBox(height: 28),
-                            _TituloSeccion(titulo: 'Descubre algo nuevo'),
+                            KeyedSubtree(
+                              key: _claveResultados,
+                              child: const _TituloSeccion(
+                                titulo: 'Descubre algo nuevo',
+                              ),
+                            ),
                             const SizedBox(height: 10),
                             _CuadriculaPublicaciones(
                               publicaciones: publicacionesHome,

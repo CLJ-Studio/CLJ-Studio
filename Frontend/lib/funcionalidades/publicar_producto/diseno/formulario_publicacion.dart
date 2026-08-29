@@ -387,6 +387,8 @@ class _PasoPublicacion extends StatelessWidget {
   final bool ultimo;
   final Widget child;
 
+  static const _verdeCompleto = Color(0xFF2E7D32);
+
   @override
   Widget build(BuildContext context) => Stack(
     children: [
@@ -403,9 +405,7 @@ class _PasoPublicacion extends StatelessWidget {
             duration: const Duration(milliseconds: 420),
             width: 5,
             decoration: BoxDecoration(
-              color: completo
-                  ? ConfiguracionTema.primario
-                  : const Color(0xFFE6E1D5),
+              color: completo ? _verdeCompleto : const Color(0xFFE6E1D5),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -424,7 +424,7 @@ class _PasoPublicacion extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: completo
-                    ? ConfiguracionTema.primario
+                    ? _verdeCompleto
                     : activo
                     ? Color(0xFFE6E1D5)
                     : const Color(0xFFE6E1D5),

@@ -11,7 +11,7 @@ class OpcionMisPublicaciones extends StatelessWidget {
     onTap: () => Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const PantallaMisPublicaciones()),
     ),
-    leading: const Icon(Icons.grid_on_rounded, color: Color(0xFF474646)),
+    leading: const Icon(Icons.grid_on_rounded, color: Colors.black),
     title: const Text('Mis publicaciones'),
     subtitle: const Text('Lo que ofreces en tu local'),
     trailing: const Icon(Icons.chevron_right_rounded),

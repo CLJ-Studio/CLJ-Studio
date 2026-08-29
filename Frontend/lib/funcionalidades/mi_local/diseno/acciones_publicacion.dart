@@ -25,8 +25,9 @@ enum ResultadoAccion {
 /// lo suelto con lo del local, así que no hay un índice común.
 Future<ResultadoAccion> mostrarAccionesPublicacion(
   BuildContext context,
-  ProductoMarketplace producto,
-) async {
+  ProductoMarketplace producto, {
+  VoidCallback? alVer,
+}) async {
   const repositorio = RepositorioMiLocal();
 
   final opcion = await showModalBottomSheet<String>(
@@ -47,6 +48,12 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
             ),
           ),
+          if (alVer != null)
+            ListTile(
+              leading: const Icon(Icons.visibility_outlined),
+              title: const Text('Ver publicación'),
+              onTap: () => Navigator.of(hoja).pop('ver'),
+            ),
           ListTile(
             leading: const Icon(Icons.edit_outlined),
             title: const Text('Editar'),
@@ -74,7 +81,7 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
           ),
           ListTile(
             leading: const Icon(Icons.arrow_upward_rounded),
-            title: const Text('Relanzar'),
+            title: const Text('Volver a publicar'),
             subtitle: const Text('Vuelve al inicio del catálogo'),
             onTap: () => Navigator.of(hoja).pop('relanzar'),
           ),
@@ -99,6 +106,10 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
 
   try {
     switch (opcion) {
+      case 'ver':
+        alVer?.call();
+        return ResultadoAccion.sinCambios;
+
       case 'editar':
         final datos = await mostrarDialogoProducto(context, producto: producto);
         if (datos == null) return ResultadoAccion.sinCambios;

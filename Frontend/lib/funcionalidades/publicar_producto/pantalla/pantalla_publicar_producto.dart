@@ -69,7 +69,7 @@ class _EncabezadoPublicar extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.fromLTRB(22, 24, 18, 24),
     decoration: BoxDecoration(
-      color: ConfiguracionTema.primario,
+      color: ConfiguracionTema.azulNoche,
       borderRadius: BorderRadius.circular(30),
     ),
     child: const Row(
@@ -116,7 +116,7 @@ class _EncabezadoPublicar extends StatelessWidget {
             height: 76,
             child: Icon(
               Icons.add_photo_alternate_rounded,
-              color: ConfiguracionTema.primario,
+              color: ConfiguracionTema.azulNoche,
               size: 38,
             ),
           ),

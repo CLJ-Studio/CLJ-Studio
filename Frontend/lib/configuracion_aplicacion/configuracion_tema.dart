@@ -15,10 +15,10 @@ abstract final class ConfiguracionTema {
   static const Color salvia = Color(0xFF969A82);
   static const Color salviaClara = Color(0xFFBBBCA7);
   static const Color grafito = Color(0xFF474646);
-  static const Color terracota = Color(0xFFAE7960);
+  static const Color terracota = Color.fromARGB(255, 106, 85, 75);
   static const Color azulNoche = Color.fromARGB(255, 34, 39, 91);
-  static const Color amarilloDorado = Color.fromARGB(255, 246, 182, 72);
-  static const Color naranjaCoral = Color(0xFFFF724C);
+  static const Color amarilloDorado = Color.fromARGB(255, 255, 168, 19);
+  static const Color naranjaCoral = Color.fromRGBO(233, 80, 38, 1);
   static const Color blancoSuave = Color(0xFFF4F4F8);
   static const Color moradoPromocional = Color(0xFF4A08A1);
 
