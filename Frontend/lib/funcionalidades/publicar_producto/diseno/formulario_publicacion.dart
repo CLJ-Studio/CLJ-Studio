@@ -188,12 +188,12 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.miLocal.tieneLocalFormal
-                  ? 'Publicado en ${widget.miLocal.nombre}.'
-                  : 'Publicación creada.',
-            ),
+          const SnackBar(
+            // Este formulario nunca publica en el negocio (eso solo pasa
+            // desde "Mi Local", que llama a agregarProducto con
+            // alLocal: true): el mensaje no puede nombrar el negocio aunque
+            // el estudiante tenga uno.
+            content: Text('Publicación creada.'),
             behavior: SnackBarBehavior.floating,
           ),
         );
