@@ -152,6 +152,7 @@ class _CampoNombre extends StatelessWidget {
         textCapitalization: TextCapitalization.words,
         decoration: const InputDecoration(
           labelText: 'Nombre completo',
+          hintText: 'Nombre y apellido',
           prefixIcon: Icon(Icons.badge_outlined),
         ),
       );
@@ -196,7 +197,9 @@ class _CampoNombre extends StatelessWidget {
             textCapitalization: TextCapitalization.words,
             decoration: const InputDecoration(
               labelText: 'Nombre completo',
-              hintText: 'Como te conocen en la universidad',
+              // Decia "Como te conocen en la universidad", que es justo una
+              // invitacion al apodo: alguien se registro como "MOMO".
+              hintText: 'Nombre y apellido',
               prefixIcon: Icon(Icons.badge_outlined),
             ),
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
@@ -204,7 +207,9 @@ class _CampoNombre extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.only(left: 20, top: 6),
             child: Text(
-              'Es el nombre con el que te verán al comprar y vender.',
+              'Tu nombre real: es con el que te van a buscar para '
+              'entregarte o recibir lo que pediste. No se puede cambiar '
+              'después.',
               style: TextStyle(fontSize: 12),
             ),
           ),

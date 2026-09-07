@@ -72,6 +72,26 @@ class ControladorOnboarding extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Las excepciones de completar_onboarding llegan con su prefijo y su
+  /// explicacion tecnica pegados; sin traducirlas la pantalla muestra un
+  /// volcado del servidor debajo del boton.
+  String _mensajeDeError(Object error) {
+    final texto = error.toString();
+    if (texto.contains('CONTENIDO_NO_PERMITIDO')) {
+      return 'Ese nombre no se puede usar. Escribe el tuyo real.';
+    }
+    if (texto.contains('NOMBRE_INVALIDO')) {
+      return 'Escribe tu nombre y tu apellido, sin apodos.';
+    }
+    if (texto.contains('CARRERA_INVALIDA')) {
+      return 'Selecciona una carrera de la lista.';
+    }
+    if (texto.contains('WHATSAPP_INVALIDO')) {
+      return 'Revisa tu número de WhatsApp.';
+    }
+    return 'No se pudo guardar tu perfil. Intenta de nuevo.';
+  }
+
   Future<bool> enviar() async {
     if (!borrador.esValido) return false;
 
@@ -83,7 +103,7 @@ class ControladorOnboarding extends ChangeNotifier {
       await _repositorio.completar(borrador);
       return true;
     } catch (error) {
-      errorServidor = 'No se pudo guardar tu perfil. $error';
+      errorServidor = _mensajeDeError(error);
       return false;
     } finally {
       enviando = false;

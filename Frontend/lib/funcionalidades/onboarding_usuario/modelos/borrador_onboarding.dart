@@ -23,11 +23,33 @@ class BorradorOnboarding {
   /// Solo digitos, como los espera el backend.
   String get whatsappNormalizado => whatsapp.replaceAll(RegExp(r'\D'), '');
 
+  /// Una letra, con las tildes y la ñ que llevan los apellidos de aqui.
+  static const _letra = r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]';
+
+  /// Una parte del nombre: palabra de dos letras o mas, o compuesta con
+  /// guion o apostrofo ("Ana-María", "O'Connor"). El apostrofo va DENTRO de
+  /// la parte, no separando: si no, "O'Connor" se leeria como una "O" suelta.
+  static const _parte = '($_letra{2,}|$_letra+([\'-]$_letra+)+)';
+
+  /// Nombre y apellido: al menos dos partes separadas por espacio. Es la
+  /// misma regla que aplica completar_onboarding() en Postgres.
+  static final _nombreReal = RegExp('^$_parte( $_parte)+\$');
+
   /// Espeja las reglas de completar_onboarding() en Postgres para dar
   /// retroalimentacion inmediata sin esperar el viaje al servidor.
   String? get error {
-    if (nombreCompleto.trim().length < 3) {
+    final nombre = nombreCompleto.trim();
+    if (nombre.isEmpty) {
       return 'Escribe tu nombre completo.';
+    }
+    // El campo solo se pide cuando la cuenta no trajo nombre, y entonces es
+    // lo unico que identifica a la persona ante quien le va a entregar algo
+    // en mano: un apodo suelto no sirve.
+    if (!_nombreReal.hasMatch(nombre)) {
+      return 'Escribe tu nombre y tu apellido, sin apodos.';
+    }
+    if (nombre.length > 60) {
+      return 'Ese nombre es demasiado largo.';
     }
     if (carreraId == null) {
       return 'Selecciona tu carrera.';
