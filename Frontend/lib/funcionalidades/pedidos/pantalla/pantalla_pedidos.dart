@@ -224,16 +224,14 @@ class _ListaPedidosState extends State<_ListaPedidos> {
     }).toList();
   }
 
-  /// Lo vendido incluye lo que está en el aire pero no se cayó: un pedido a
-  /// medio confirmar ya se entregó, solo falta que alguien lo diga.
-  double get _totalVendido => widget.pedidos
-      .where(
-        (pedido) =>
-            pedido.estado == EstadoPedido.aceptado ||
-            pedido.estado == EstadoPedido.porConfirmar ||
-            pedido.estado == EstadoPedido.entregado,
-      )
-      .fold(0, (total, pedido) => total + pedido.total);
+  /// Los que cuentan para el resumen: un vencido, rechazado o cancelado
+  /// nunca se concretó y no debe aparecer ni en el total ni en el contador,
+  /// sea "Total comprado" o "Total vendido".
+  List<Pedido> get _pedidosContados =>
+      widget.pedidos.where((pedido) => pedido.estado.cuentaParaTotal).toList();
+
+  double get _totalContado =>
+      _pedidosContados.fold(0, (total, pedido) => total + pedido.total);
 
   @override
   Widget build(BuildContext context) => RefreshIndicator(
@@ -269,13 +267,8 @@ class _ListaPedidosState extends State<_ListaPedidos> {
                       titulo: widget.mostrarTotalVendido
                           ? 'Total vendido'
                           : 'Total comprado',
-                      total: widget.mostrarTotalVendido
-                          ? _totalVendido
-                          : widget.pedidos.fold(
-                              0,
-                              (total, pedido) => total + pedido.total,
-                            ),
-                      cantidad: widget.pedidos.length,
+                      total: _totalContado,
+                      cantidad: _pedidosContados.length,
                       esVenta: widget.mostrarTotalVendido,
                     ),
                     const SizedBox(height: 16),

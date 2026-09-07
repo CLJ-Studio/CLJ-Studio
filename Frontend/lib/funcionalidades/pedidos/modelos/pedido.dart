@@ -60,6 +60,15 @@ enum EstadoPedido {
       this != EstadoPedido.solicitado &&
       this != EstadoPedido.aceptado &&
       this != EstadoPedido.porConfirmar;
+
+  /// Si el pedido debe sumar en "Total comprado"/"Total vendido". Incluye lo
+  /// que está en el aire pero no se cayó: uno a medio confirmar ya se
+  /// entregó, solo falta que alguien lo diga. Un vencido, rechazado o
+  /// cancelado nunca se concretó y no debe inflar el total de nadie.
+  bool get cuentaParaTotal =>
+      this == EstadoPedido.aceptado ||
+      this == EstadoPedido.porConfirmar ||
+      this == EstadoPedido.entregado;
 }
 
 /// Linea de un pedido, con los datos congelados al momento de crearlo.
