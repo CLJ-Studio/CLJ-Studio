@@ -92,15 +92,19 @@ class _EncabezadoPublicar extends StatelessWidget {
                 'Convierte una idea\nen tu próxima venta',
                 style: TextStyle(
                   color: Color(0xFFE6E1D5),
-                  fontSize: 25,
-                  height: 1.05,
+                  fontSize: 22,
+                  height: 1.08,
                   fontWeight: FontWeight.w900,
                 ),
               ),
               SizedBox(height: 7),
               Text(
                 'Agrega los datos, el precio y una buena foto.',
-                style: TextStyle(color: Color(0xE6E6E1D5), height: 1.3),
+                style: TextStyle(
+                  color: Color(0xE6E6E1D5),
+                  fontSize: 14,
+                  height: 1.3,
+                ),
               ),
             ],
           ),

@@ -1,13 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../../elementos_compartidos/navegacion/bloqueo_deslizamiento_principal.dart';
 import '../logica/controlador_navegacion_principal.dart';
 
 /// Presenta las secciones con una navegación nativa y ligera.
-class PantallaNavegacionPrincipal extends StatelessWidget {
+class PantallaNavegacionPrincipal extends StatefulWidget {
   const PantallaNavegacionPrincipal({
     required this.controlador,
     required this.pantallas,
@@ -18,32 +20,57 @@ class PantallaNavegacionPrincipal extends StatelessWidget {
   final List<Widget> pantallas;
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: controlador,
-    builder: (_, _) {
-      final ocultarBarra = controlador.indice == 2;
+  State<PantallaNavegacionPrincipal> createState() =>
+      _PantallaNavegacionPrincipalState();
+}
 
-      return Scaffold(
-        extendBody: true,
-        body: SafeArea(
-          bottom: false,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: _PantallasDeslizables(
-                  indice: controlador.indice,
-                  pantallas: pantallas,
-                  alDeslizar: controlador.seleccionarIndice,
-                ),
-              ),
-            ],
+class _PantallaNavegacionPrincipalState
+    extends State<PantallaNavegacionPrincipal> {
+  int _solicitudesMostrarBarra = 0;
+
+  bool _alMoverPublicacion(UserScrollNotification notificacion) {
+    if (widget.controlador.indice == 2 &&
+        notificacion.metrics.axis == Axis.vertical &&
+        notificacion.direction == ScrollDirection.forward) {
+      setState(() => _solicitudesMostrarBarra++);
+    }
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: widget.controlador,
+    builder: (_, _) {
+      final ocultarBarra = widget.controlador.indice == 2;
+      final encabezadoAzul = widget.controlador.indice != 2;
+      final estiloBarraEstado = encabezadoAzul
+          ? const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.dark,
+            )
+          : Theme.of(context).appBarTheme.systemOverlayStyle ??
+                SystemUiOverlayStyle.dark;
+
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        value: estiloBarraEstado,
+        child: Scaffold(
+          extendBody: true,
+          body: NotificationListener<UserScrollNotification>(
+            onNotification: _alMoverPublicacion,
+            child: _PantallasDeslizables(
+              indice: widget.controlador.indice,
+              pantallas: widget.pantallas,
+              alDeslizar: widget.controlador.seleccionarIndice,
+            ),
           ),
-        ),
-        bottomNavigationBar: _BarraAnimadaPublicar(
-          ocultar: ocultarBarra,
-          child: _BarraLigera(
-            indice: controlador.indice,
-            alSeleccionar: controlador.seleccionarIndice,
+          bottomNavigationBar: _BarraAnimadaPublicar(
+            ocultar: ocultarBarra,
+            solicitudMostrar: _solicitudesMostrarBarra,
+            child: _BarraLigera(
+              indice: widget.controlador.indice,
+              alSeleccionar: widget.controlador.seleccionarIndice,
+            ),
           ),
         ),
       );
@@ -54,9 +81,14 @@ class PantallaNavegacionPrincipal extends StatelessWidget {
 /// Deja entrar primero a Publicar y después retira la navegación inferior.
 /// Al salir, la barra reaparece sin espera para acompañar el deslizamiento.
 class _BarraAnimadaPublicar extends StatefulWidget {
-  const _BarraAnimadaPublicar({required this.ocultar, required this.child});
+  const _BarraAnimadaPublicar({
+    required this.ocultar,
+    required this.solicitudMostrar,
+    required this.child,
+  });
 
   final bool ocultar;
+  final int solicitudMostrar;
   final Widget child;
 
   @override
@@ -70,22 +102,37 @@ class _BarraAnimadaPublicarState extends State<_BarraAnimadaPublicar> {
   @override
   void initState() {
     super.initState();
-    _oculta = widget.ocultar;
+    _oculta = false;
+    if (widget.ocultar) _programarOcultamiento();
   }
 
   @override
   void didUpdateWidget(covariant _BarraAnimadaPublicar anterior) {
     super.didUpdateWidget(anterior);
-    if (widget.ocultar == anterior.ocultar) return;
-
-    _espera?.cancel();
-    if (widget.ocultar) {
-      _espera = Timer(const Duration(milliseconds: 1500), () {
-        if (mounted) setState(() => _oculta = true);
-      });
-    } else if (_oculta) {
-      setState(() => _oculta = false);
+    if (!widget.ocultar) {
+      _espera?.cancel();
+      if (_oculta) setState(() => _oculta = false);
+      return;
     }
+
+    final acabaDeEntrar = !anterior.ocultar;
+    final usuarioVolvioHaciaArriba =
+        widget.solicitudMostrar != anterior.solicitudMostrar;
+    if (acabaDeEntrar || usuarioVolvioHaciaArriba) {
+      _mostrarYReprogramar();
+    }
+  }
+
+  void _programarOcultamiento() {
+    _espera?.cancel();
+    _espera = Timer(const Duration(milliseconds: 1500), () {
+      if (mounted && widget.ocultar) setState(() => _oculta = true);
+    });
+  }
+
+  void _mostrarYReprogramar() {
+    if (_oculta) setState(() => _oculta = false);
+    _programarOcultamiento();
   }
 
   @override
@@ -186,9 +233,45 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
               : const PageScrollPhysics(),
           onPageChanged: widget.alDeslizar,
           itemCount: widget.pantallas.length,
-          itemBuilder: (_, indice) => widget.pantallas[indice],
+          itemBuilder: (_, indice) => _PaginaConBarraEstado(
+            encabezadoAzul: indice != 2,
+            child: widget.pantallas[indice],
+          ),
         ),
       );
+}
+
+/// La zona de la hora pertenece a cada página y se desliza junto con ella.
+/// Así Inicio no pierde de golpe su azul mientras Publicar todavía está
+/// entrando, y ninguna página cambia su posición vertical durante el gesto.
+class _PaginaConBarraEstado extends StatelessWidget {
+  const _PaginaConBarraEstado({
+    required this.encabezadoAzul,
+    required this.child,
+  });
+
+  final bool encabezadoAzul;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorBarra = encabezadoAzul
+        ? ConfiguracionTema.azulNoche
+        : Theme.of(context).scaffoldBackgroundColor;
+
+    return Stack(
+      children: [
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: MediaQuery.paddingOf(context).top + 1,
+          child: ColoredBox(color: colorBarra),
+        ),
+        Positioned.fill(child: SafeArea(bottom: false, child: child)),
+      ],
+    );
+  }
 }
 
 /// Cápsula deslizante sin blur, shaders ni filtros costosos.

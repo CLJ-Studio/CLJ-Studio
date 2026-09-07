@@ -115,9 +115,8 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           SesionUsuario.instancia.cargar();
           ControladorFavoritos.instancia.cargar();
           ControladorNotificaciones.instancia.cargar();
-          // Solo si el dispositivo YA esta suscrito: refresca la fila por si
-          // el endpoint roto. Comprobar unicamente el permiso reactivaria
-          // los avisos de quien los apago a proposito.
+          // Si ya estaban activos, refresca su estado. En Web conserva la
+          // suscripción Push; en móvil usa el centro de notificaciones local.
           ServicioPush.estaActivo().then((activo) {
             if (activo) ServicioPush.activar();
           });

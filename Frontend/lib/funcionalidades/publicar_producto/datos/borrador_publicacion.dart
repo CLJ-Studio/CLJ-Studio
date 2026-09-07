@@ -12,6 +12,7 @@ class BorradorPublicacion {
     this.stock = '1',
     this.emoji = '🛍️',
     this.galeria = const [],
+    this.categoriaId,
   });
 
   factory BorradorPublicacion.desdeJson(Map<String, dynamic> json) =>
@@ -23,6 +24,7 @@ class BorradorPublicacion {
         stock: (json['stock'] as String?) ?? '1',
         emoji: (json['emoji'] as String?) ?? '🛍️',
         galeria: ((json['galeria'] as List?) ?? const []).cast<String>(),
+        categoriaId: json['categoria_id'] as String?,
       );
 
   final String tipo;
@@ -32,6 +34,7 @@ class BorradorPublicacion {
   final String stock;
   final String emoji;
   final List<String> galeria;
+  final String? categoriaId;
 
   Map<String, dynamic> aJson() => {
     'tipo': tipo,
@@ -41,6 +44,7 @@ class BorradorPublicacion {
     'stock': stock,
     'emoji': emoji,
     'galeria': galeria,
+    'categoria_id': categoriaId,
   };
 
   /// Un borrador sin nada escrito no merece recuperarse.
@@ -48,6 +52,7 @@ class BorradorPublicacion {
       nombre.trim().isNotEmpty ||
       descripcion.trim().isNotEmpty ||
       precio.trim().isNotEmpty ||
+      categoriaId != null ||
       galeria.isNotEmpty;
 
   /// Resumen para el aviso de "tienes una publicacion sin terminar".

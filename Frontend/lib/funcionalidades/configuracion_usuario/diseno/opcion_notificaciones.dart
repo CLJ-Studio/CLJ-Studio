@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
@@ -5,10 +6,8 @@ import '../../notificaciones/datos/servicio_push.dart';
 
 /// Enciende y apaga las notificaciones del sistema en este dispositivo.
 ///
-/// Apagar no revoca el permiso del navegador (ninguna API lo permite): lo
-/// que hace es cancelar la suscripcion, con lo que el servidor se queda sin
-/// via para enviar. Volver a encender es inmediato, sin dialogo, porque el
-/// permiso sigue concedido.
+/// En Web administra la suscripción Push existente. En iPhone administra el
+/// registro directo con APNs y en Android controla los avisos locales.
 class OpcionNotificaciones extends StatefulWidget {
   const OpcionNotificaciones({super.key});
 
@@ -49,8 +48,11 @@ class _OpcionNotificacionesState extends State<OpcionNotificaciones> {
       final motivo = ServicioPush.ultimoError;
       _avisar(
         ServicioPush.denegado
-            ? 'Bloqueaste las notificaciones. Habilítalas en los ajustes '
-                  'del navegador para poder activarlas.'
+            ? kIsWeb
+                  ? 'Bloqueaste las notificaciones. Habilítalas en los ajustes '
+                        'del navegador para poder activarlas.'
+                  : 'Bloqueaste las notificaciones. Habilítalas en los ajustes '
+                        'del sistema para poder activarlas.'
             // Mostrar el motivo evita tener que abrir las herramientas del
             // navegador para saber que fallo.
             : motivo == null

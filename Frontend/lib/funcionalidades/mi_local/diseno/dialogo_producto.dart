@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/imagenes/selector_galeria.dart';
+import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
+import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../publicar_producto/diseno/selector_categoria_publicacion.dart';
 import '../../publicar_producto/diseno/selector_emoji_publicacion.dart';
 
 /// Datos con los que se crea o edita un producto del inventario.
@@ -13,6 +16,7 @@ class DatosProducto {
     required this.cantidad,
     required this.emoji,
     required this.galeria,
+    required this.categoriaId,
   });
 
   final String nombre;
@@ -21,6 +25,7 @@ class DatosProducto {
   final int cantidad;
   final String emoji;
   final List<String> galeria;
+  final String categoriaId;
 }
 
 /// Formulario de producto reutilizado para agregar y para editar: son el
@@ -28,7 +33,22 @@ class DatosProducto {
 Future<DatosProducto?> mostrarDialogoProducto(
   BuildContext context, {
   ProductoMarketplace? producto,
-}) {
+}) async {
+  late final List<CategoriaMarketplace> categorias;
+  try {
+    categorias = await const RepositorioInicioMarketplace().obtenerCategorias();
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No pudimos cargar las categorías. Intenta de nuevo.'),
+        ),
+      );
+    }
+    return null;
+  }
+  if (!context.mounted) return null;
+
   final esEdicion = producto != null;
   final nombre = TextEditingController(text: producto?.nombre ?? '');
   final descripcion = TextEditingController(text: producto?.descripcion ?? '');
@@ -39,6 +59,7 @@ Future<DatosProducto?> mostrarDialogoProducto(
     text: (producto?.stock ?? 1).toString(),
   );
   var emoji = producto?.emoji ?? '🛍️';
+  String? categoriaId = producto?.categoriaId;
   var galeria = <String>[
     if (producto?.imagePath != null) producto!.imagePath!,
     ...?producto?.imagenes,
@@ -85,6 +106,18 @@ Future<DatosProducto?> mostrarDialogoProducto(
                     labelText: 'Cantidad disponible',
                   ),
                 ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Categoría obligatoria',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                SelectorCategoriaPublicacion(
+                  categorias: categorias,
+                  seleccionada: categoriaId,
+                  alSeleccionar: (valor) =>
+                      actualizar(() => categoriaId = valor),
+                ),
                 const SizedBox(height: 20),
                 SelectorGaleria(
                   rutas: galeria,
@@ -110,10 +143,14 @@ Future<DatosProducto?> mostrarDialogoProducto(
             ),
             onPressed: () {
               final monto = double.tryParse(precio.text.replaceAll(',', '.'));
-              if (nombre.text.trim().isEmpty || monto == null) {
+              if (nombre.text.trim().isEmpty ||
+                  monto == null ||
+                  categoriaId == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Completa el nombre y un precio válido.'),
+                    content: Text(
+                      'Completa el nombre, un precio válido y la categoría.',
+                    ),
                   ),
                 );
                 return;
@@ -127,6 +164,7 @@ Future<DatosProducto?> mostrarDialogoProducto(
                   cantidad: int.tryParse(cantidad.text) ?? 0,
                   emoji: emoji,
                   galeria: galeria,
+                  categoriaId: categoriaId!,
                 ),
               );
             },

@@ -6,6 +6,7 @@ import 'arbol_aplicacion/arbol_aplicacion.dart';
 import 'configuracion_aplicacion/modo_local.dart';
 import 'configuracion_aplicacion/configuracion_supabase.dart';
 import 'elementos_compartidos/animaciones/precargador_animaciones.dart';
+import 'funcionalidades/notificaciones/datos/servicio_push.dart';
 
 /// Punto de entrada de U market.
 void main() async {
@@ -25,6 +26,9 @@ void main() async {
       url: ConfiguracionSupabase.url,
       publishableKey: ConfiguracionSupabase.publishableKey,
     );
+    // Web conserva su service worker. iPhone se registra directamente con
+    // APNs y Android prepara su centro de notificaciones local, sin Firebase.
+    await ServicioPush.inicializar();
   }
 
   runApp(const ArbolAplicacion());

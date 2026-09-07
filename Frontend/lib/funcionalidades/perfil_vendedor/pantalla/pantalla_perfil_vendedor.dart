@@ -161,6 +161,7 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
       return ColoredBox(
         color: Theme.of(context).scaffoldBackgroundColor,
         child: CustomScrollView(
+          physics: const ClampingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
               child: SafeArea(

@@ -146,6 +146,7 @@ class _PantallaPerfilPublicoVendedorState
           final productos = seccion == 0 ? datos.personales : datos.favoritos;
 
           return CustomScrollView(
+            physics: const ClampingScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
@@ -404,22 +405,29 @@ class _VisorAvatarVendedor extends StatelessWidget {
                 child: Hero(
                   tag: tagHero,
                   transitionOnUserGestures: true,
-                  child: Material(
-                    color: Colors.transparent,
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAlias,
-                    child: SizedBox.square(
-                      dimension: dimension,
-                      child: InteractiveViewer(
-                        minScale: 1,
-                        maxScale: 5,
-                        panEnabled: true,
-                        scaleEnabled: true,
-                        boundaryMargin: EdgeInsets.all(dimension),
-                        child: _ImagenAvatarVendedor(
-                          local: local,
-                          dimension: dimension,
-                          borde: 4,
+                  child: SizedBox.square(
+                    dimension: dimension,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFE6E1D5),
+                          width: 4,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: ClipOval(
+                          clipBehavior: Clip.antiAlias,
+                          child: InteractiveViewer(
+                            minScale: 1,
+                            maxScale: 5,
+                            panEnabled: true,
+                            scaleEnabled: true,
+                            boundaryMargin: EdgeInsets.zero,
+                            clipBehavior: Clip.none,
+                            child: _ContenidoAvatarVendedor(local: local),
+                          ),
                         ),
                       ),
                     ),
@@ -462,15 +470,10 @@ class _VisorAvatarVendedor extends StatelessWidget {
 }
 
 class _ImagenAvatarVendedor extends StatelessWidget {
-  const _ImagenAvatarVendedor({
-    required this.local,
-    required this.dimension,
-    this.borde = 3,
-  });
+  const _ImagenAvatarVendedor({required this.local, required this.dimension});
 
   final LocalUniversitario local;
   final double dimension;
-  final double borde;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -481,7 +484,7 @@ class _ImagenAvatarVendedor extends StatelessWidget {
     decoration: BoxDecoration(
       color: Color(local.colorHexadecimal),
       shape: BoxShape.circle,
-      border: Border.all(color: Color(0xFFE6E1D5), width: borde),
+      border: Border.all(color: Color(0xFFE6E1D5), width: 3),
     ),
     child: switch (local.vendedorAvatarUrl) {
       final String url when url.trim().isNotEmpty => Image.network(
@@ -495,6 +498,46 @@ class _ImagenAvatarVendedor extends StatelessWidget {
       ),
       _ => Text(local.emoji, style: TextStyle(fontSize: dimension * .39)),
     },
+  );
+}
+
+/// Contenido ampliable del avatar.
+///
+/// La máscara circular y su borde viven fuera de este widget para que el
+/// gesto de zoom transforme únicamente la fotografía, nunca el círculo.
+class _ContenidoAvatarVendedor extends StatelessWidget {
+  const _ContenidoAvatarVendedor({required this.local});
+
+  final LocalUniversitario local;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: Color(local.colorHexadecimal),
+    child: switch (local.vendedorAvatarUrl) {
+      final String url when url.trim().isNotEmpty => Image.network(
+        url,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => _EmojiAvatar(local: local),
+      ),
+      _ => _EmojiAvatar(local: local),
+    },
+  );
+}
+
+class _EmojiAvatar extends StatelessWidget {
+  const _EmojiAvatar({required this.local});
+
+  final LocalUniversitario local;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: LayoutBuilder(
+      builder: (_, limites) =>
+          Text(local.emoji, style: TextStyle(fontSize: limites.maxWidth * .39)),
+    ),
   );
 }
 

@@ -187,7 +187,7 @@ class ControladorMiLocal extends ChangeNotifier {
     bool esServicio = false,
     List<String> galeria = const [],
     bool alLocal = false,
-    String? categoriaId,
+    required String categoriaId,
   }) async {
     // Solo se crea el espacio personal si de verdad hace falta: si va al
     // local, crearlo dejaria una tienda vacia colgando.
@@ -205,9 +205,7 @@ class ControladorMiLocal extends ChangeNotifier {
       descripcion: descripcion,
       esServicio: esServicio,
       galeria: galeria,
-      // Sin categoria propia cae a la del local, que es lo que se usaba
-      // antes de que las publicaciones tuvieran la suya.
-      categoriaId: categoriaId ?? destino.categoriaId,
+      categoriaId: categoriaId,
     );
     // Solo el negocio tiene inventario visible en "Tu local".
     if (negocio != null) {
@@ -222,6 +220,7 @@ class ControladorMiLocal extends ChangeNotifier {
     required double precio,
     required int cantidad,
     required String emoji,
+    required String categoriaId,
     String? descripcion,
     List<String> galeria = const [],
   }) async {
@@ -238,6 +237,7 @@ class ControladorMiLocal extends ChangeNotifier {
           precio: precio,
           emoji: emoji,
           stock: cantidad,
+          categoriaId: categoriaId,
           local: anterior.local,
           imagePath: galeria.isEmpty ? null : galeria.first,
           imagenes: galeria.length <= 1 ? const [] : galeria.sublist(1),
@@ -251,6 +251,7 @@ class ControladorMiLocal extends ChangeNotifier {
       precio: precio,
       stock: cantidad,
       emoji: emoji,
+      categoriaId: categoriaId,
       descripcion: descripcion,
       galeria: galeria,
     );

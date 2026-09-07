@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
+import '../datos/servicio_push.dart';
 import '../modelos/notificacion.dart';
 
 /// Notificaciones del usuario y su contador de no leidas.
@@ -22,6 +23,7 @@ class ControladorNotificaciones extends ChangeNotifier {
   bool cargando = false;
   String? error;
   EscuchaTabla? _escucha;
+  final Set<String> _idsConocidos = {};
 
   int get noLeidas => notificaciones.where((n) => !n.leida).length;
 
@@ -45,6 +47,7 @@ class ControladorNotificaciones extends ChangeNotifier {
           .order('created_at', ascending: false)
           .limit(60);
       notificaciones = filas.map(Notificacion.desdeMapa).toList();
+      _idsConocidos.addAll(notificaciones.map((n) => n.id));
     } catch (_) {
       error = 'No se pudieron cargar tus notificaciones.';
     } finally {
@@ -73,8 +76,20 @@ class ControladorNotificaciones extends ChangeNotifier {
           .select()
           .order('created_at', ascending: false)
           .limit(60);
-      notificaciones = filas.map(Notificacion.desdeMapa).toList();
+      final actualizadas = filas.map(Notificacion.desdeMapa).toList();
+      final nuevas = actualizadas
+          .where((n) => !_idsConocidos.contains(n.id) && !n.leida)
+          .toList();
+
+      notificaciones = actualizadas;
+      _idsConocidos.addAll(actualizadas.map((n) => n.id));
       notifyListeners();
+
+      // Android convierte aquí la fila nueva en un aviso local. En iPhone el
+      // servidor ya envió esa misma fila directamente mediante APNs.
+      for (final notificacion in nuevas.reversed) {
+        await ServicioPush.mostrar(notificacion);
+      }
     } catch (_) {
       // Se reintenta en el siguiente evento o sondeo.
     }
@@ -106,6 +121,7 @@ class ControladorNotificaciones extends ChangeNotifier {
   /// Al cerrar sesion: sin esto, el siguiente usuario veria avisos ajenos.
   void limpiar() {
     notificaciones = const [];
+    _idsConocidos.clear();
     _escucha?.detener();
     _escucha = null;
     notifyListeners();

@@ -36,6 +36,21 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
     theme: ConfiguracionTema.temaClaro,
     themeMode: ThemeMode.light,
     onGenerateRoute: ArbolRutas.generarRuta,
+    // Flutter conserva el teclado al tocar fuera en iOS y Android. Se
+    // reemplaza esa acción una sola vez para todos los campos de la app;
+    // tocar otro campo sigue enfocándolo normalmente.
+    builder: (context, child) => Actions(
+      actions: <Type, Action<Intent>>{
+        EditableTextTapOutsideIntent:
+            CallbackAction<EditableTextTapOutsideIntent>(
+              onInvoke: (intent) {
+                intent.focusNode.unfocus();
+                return null;
+              },
+            ),
+      },
+      child: child ?? const SizedBox.shrink(),
+    ),
     home: ModoLocal.activo
         ? _accesoLocalCompletado
               ? ArbolNavegacionPrincipal(

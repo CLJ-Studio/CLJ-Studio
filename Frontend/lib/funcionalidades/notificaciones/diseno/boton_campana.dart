@@ -16,6 +16,8 @@ class BotonCampana extends StatelessWidget {
       final sinLeer = ControladorNotificaciones.instancia.noLeidas;
       return Badge(
         isLabelVisible: sinLeer > 0,
+        backgroundColor: const Color(0xFFE53935),
+        textColor: Colors.white,
         label: Text('$sinLeer'),
         child: IconButton(
           tooltip: 'Notificaciones',

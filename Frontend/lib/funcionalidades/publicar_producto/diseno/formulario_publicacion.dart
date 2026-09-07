@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/interaccion/retroalimentacion_haptica.dart';
 import 'selector_categoria_publicacion.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
@@ -42,6 +43,8 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   bool _publicando = false;
   bool _revisandoBorrador = true;
   bool _limpiandoFormulario = false;
+  bool _cargandoCategorias = true;
+  bool _errorCategorias = false;
 
   @override
   void initState() {
@@ -113,7 +116,10 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       precio.text = borrador.precio;
       stock.text = borrador.stock;
       widget.controlador.seleccionarEmoji(borrador.emoji);
-      setState(() => _galeria = borrador.galeria);
+      setState(() {
+        _galeria = borrador.galeria;
+        _categoriaId = borrador.categoriaId;
+      });
     } else {
       await AlmacenBorrador.borrar();
     }
@@ -131,6 +137,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         stock: stock.text,
         emoji: widget.controlador.emoji,
         galeria: _galeria,
+        categoriaId: _categoriaId,
       ),
     );
   }
@@ -138,19 +145,44 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   /// Las mismas que filtran el inicio: si aqui hubiera otra lista, algo
   /// publicado podria caer en una categoria que la barra no ofrece.
   Future<void> _cargarCategorias() async {
+    if (mounted) {
+      setState(() {
+        _cargandoCategorias = true;
+        _errorCategorias = false;
+      });
+    }
     try {
       final lista = await const RepositorioInicioMarketplace()
           .obtenerCategorias();
-      if (mounted) setState(() => _categorias = lista);
+      if (!mounted) return;
+      setState(() {
+        _categorias = lista;
+        _cargandoCategorias = false;
+        final ids = lista.map((categoria) => categoria.id);
+        if (_categoriaId != null && !ids.contains(_categoriaId)) {
+          _categoriaId = null;
+        }
+      });
     } catch (_) {
-      // Sin categorias el paso no aparece; publicar sigue funcionando y la
-      // publicacion hereda la del local.
+      if (mounted) {
+        setState(() {
+          _cargandoCategorias = false;
+          _errorCategorias = true;
+        });
+      }
     }
   }
 
   Future<void> publicar() async {
     if (!(llave.currentState?.validate() ?? false)) return;
+    if (_categoriaId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona una categoría.')),
+      );
+      return;
+    }
 
+    RetroalimentacionHaptica.accion();
     setState(() => _publicando = true);
     try {
       await widget.miLocal.agregarProducto(
@@ -163,7 +195,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         descripcion: descripcion.text,
         esServicio: false,
         galeria: _galeria,
-        categoriaId: _categoriaId,
+        categoriaId: _categoriaId!,
       );
 
       if (!mounted) return;
@@ -178,13 +210,17 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         stock.clear();
         widget.controlador.seleccionarTipo('Producto');
         widget.controlador.seleccionarEmoji('🛍️');
-        setState(() => _galeria = const []);
+        setState(() {
+          _galeria = const [];
+          _categoriaId = null;
+        });
         await AlmacenBorrador.borrar();
       } finally {
         _limpiandoFormulario = false;
       }
 
       if (!mounted) return;
+      RetroalimentacionHaptica.exito();
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -199,6 +235,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         );
     } catch (fallo) {
       if (!mounted) return;
+      RetroalimentacionHaptica.advertencia();
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -224,6 +261,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       final pasosObligatorios = [
         nombre.text.trim().length >= 3 && descripcion.text.trim().isNotEmpty,
         double.tryParse(precio.text.replaceAll(',', '.')) != null,
+        _categoriaId != null,
       ];
       final pasoActivo = pasosObligatorios.indexWhere((valor) => !valor);
       final formularioCompleto = pasosObligatorios.every((valor) => valor);
@@ -280,15 +318,6 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                       CampoNombrePublicacion(controlador: nombre),
                       const SizedBox(height: 13),
                       CampoDescripcionPublicacion(controlador: descripcion),
-                      if (_categorias.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        SelectorCategoriaPublicacion(
-                          categorias: _categorias,
-                          seleccionada: _categoriaId,
-                          alSeleccionar: (id) =>
-                              setState(() => _categoriaId = id),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -344,6 +373,25 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
               ),
               _PasoPublicacion(
                 numero: '03',
+                completo: pasosObligatorios[2],
+                activo: pasoActivo == 2,
+                child: _TarjetaFormulario(
+                  titulo: 'Elige una categoría',
+                  child: _SelectorCategoriaObligatoria(
+                    categorias: _categorias,
+                    seleccionada: _categoriaId,
+                    cargando: _cargandoCategorias,
+                    conError: _errorCategorias,
+                    alReintentar: _cargarCategorias,
+                    alSeleccionar: (id) {
+                      setState(() => _categoriaId = id);
+                      _guardarBorrador();
+                    },
+                  ),
+                ),
+              ),
+              _PasoPublicacion(
+                numero: '04',
                 completo: _galeria.isNotEmpty,
                 activo: pasoActivo == -1,
                 ultimo: true,
@@ -370,6 +418,52 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       );
     },
   );
+}
+
+class _SelectorCategoriaObligatoria extends StatelessWidget {
+  const _SelectorCategoriaObligatoria({
+    required this.categorias,
+    required this.seleccionada,
+    required this.cargando,
+    required this.conError,
+    required this.alReintentar,
+    required this.alSeleccionar,
+  });
+
+  final List<CategoriaMarketplace> categorias;
+  final String? seleccionada;
+  final bool cargando;
+  final bool conError;
+  final VoidCallback alReintentar;
+  final ValueChanged<String> alSeleccionar;
+
+  @override
+  Widget build(BuildContext context) {
+    if (cargando) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final hayOpciones = categorias.any(
+      (categoria) => categoria.id != CategoriaMarketplace.todas.id,
+    );
+    if (conError || !hayOpciones) {
+      return Row(
+        children: [
+          const Expanded(child: Text('No pudimos cargar las categorías.')),
+          TextButton(onPressed: alReintentar, child: const Text('Reintentar')),
+        ],
+      );
+    }
+
+    return SelectorCategoriaPublicacion(
+      categorias: categorias,
+      seleccionada: seleccionada,
+      alSeleccionar: alSeleccionar,
+    );
+  }
 }
 
 class _PasoPublicacion extends StatelessWidget {
@@ -492,7 +586,7 @@ class _TarjetaFormulario extends StatelessWidget {
             titulo,
             style: TextStyle(
               color: oscuro ? Color(0xFFE6E1D5) : Color(0xFF474646),
-              fontSize: 19,
+              fontSize: 17,
               fontWeight: FontWeight.w900,
             ),
           ),

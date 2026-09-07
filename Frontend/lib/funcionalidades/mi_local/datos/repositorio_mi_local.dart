@@ -185,7 +185,7 @@ class RepositorioMiLocal {
     String? descripcion,
     bool esServicio = false,
     List<String> galeria = const [],
-    String? categoriaId,
+    required String categoriaId,
   }) async {
     final creado = await _cliente
         .from('products')
@@ -197,7 +197,7 @@ class RepositorioMiLocal {
           'stock': stock,
           'emoji': emoji,
           'kind': esServicio ? 'servicio' : 'producto',
-          'category_id': ?categoriaId,
+          'category_id': categoriaId,
           'image_path': ?galeria.firstOrNull,
         })
         .select('id')
@@ -224,6 +224,7 @@ class RepositorioMiLocal {
     required double precio,
     required int stock,
     required String emoji,
+    required String categoriaId,
     String? descripcion,
     List<String> galeria = const [],
   }) async {
@@ -235,6 +236,7 @@ class RepositorioMiLocal {
           'price': precio,
           'stock': stock,
           'emoji': emoji,
+          'category_id': categoriaId,
           'image_path': galeria.firstOrNull,
         })
         .eq('id', productoId);

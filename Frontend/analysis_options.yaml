@@ -9,6 +9,12 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+# Xcode y Swift Package Manager descargan fuentes de terceros dentro de
+# `build/ios`. Son artefactos generados, no código de U market.
+analyzer:
+  exclude:
+    - build/**
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

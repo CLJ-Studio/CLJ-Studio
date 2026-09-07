@@ -50,6 +50,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   /// mejor decir cuanto falta que dejar tropezar.
   int _esperaReenvio = 0;
   Timer? _cronometro;
+  bool _verificacionAutomaticaProgramada = false;
 
   static const _segundosEntreCodigos = 60;
 
@@ -129,6 +130,29 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   bool get _esperandoCodigo => _correoPendiente != null;
 
   bool get _accesoDirecto => widget.alAccederLocal != null;
+
+  /// Al completar los seis dígitos se consulta al servidor sin exigir otro
+  /// toque. Solo una respuesta correcta abre la sesión; si el código falla,
+  /// la pantalla permanece aquí y muestra el error habitual.
+  void _alCambiarCodigo(String valor) {
+    setState(() {
+      _codigo = valor;
+      if (!_codigoCompleto) _error = null;
+    });
+
+    if (!_codigoCompleto) {
+      _verificacionAutomaticaProgramada = false;
+      return;
+    }
+    if (_cargando || _verificacionAutomaticaProgramada) return;
+
+    _verificacionAutomaticaProgramada = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _verificacionAutomaticaProgramada = false;
+      if (!mounted || !_codigoCompleto || _cargando) return;
+      unawaited(_verificar());
+    });
+  }
 
   /// Pide el código al buzón institucional.
   Future<void> _pedirCodigo([String? correoDirecto]) async {
@@ -250,7 +274,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
           CampoCodigoVerificacion(
             esValido: _codigoCompleto,
             hayError: _error != null,
-            alCambiar: (valor) => setState(() => _codigo = valor),
+            alCambiar: _alCambiarCodigo,
             alEnviar: _verificar,
           ),
         ] else ...[

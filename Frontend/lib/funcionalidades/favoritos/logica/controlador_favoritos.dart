@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../configuracion_aplicacion/modo_local.dart';
+import '../../../elementos_compartidos/interaccion/retroalimentacion_haptica.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../datos/repositorio_favoritos.dart';
 
@@ -49,6 +50,7 @@ class ControladorFavoritos extends ChangeNotifier {
   /// Se actualiza la interfaz antes de que responda el servidor para que el
   /// corazon reaccione al instante; si la escritura falla, se revierte.
   Future<void> alternar(ProductoMarketplace producto) async {
+    RetroalimentacionHaptica.seleccion();
     final estaba = contiene(producto);
 
     if (estaba) {
@@ -67,6 +69,7 @@ class ControladorFavoritos extends ChangeNotifier {
         await _repositorio.agregar(producto.id);
       }
     } catch (_) {
+      RetroalimentacionHaptica.advertencia();
       if (estaba) {
         _productos[producto.id] = producto;
       } else {

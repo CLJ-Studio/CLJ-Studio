@@ -1,5 +1,6 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:web/web.dart' as web;
 
 import '../../../arbol_aplicacion/arbol_dependencias.dart';
 import '../../inicio_marketplace/logica/controlador_inicio_marketplace.dart';
@@ -10,6 +11,8 @@ import '../../mi_local/logica/controlador_mi_local.dart';
 import '../../mi_local/pantalla/pantalla_administrar_local.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
 import '../../notificaciones/logica/navegador_notificaciones.dart';
+import '../../notificaciones/datos/destino_notificacion_sistema.dart';
+import '../../notificaciones/datos/servicio_push.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_vendedor.dart';
 import '../../publicar_producto/arbol/arbol_publicar_producto.dart';
 import '../logica/controlador_navegacion_principal.dart';
@@ -33,6 +36,7 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
     ArbolDependencias.crearRepositorioInicio(),
   );
   final locales = ControladorLocales();
+  StreamSubscription<DestinoNotificacionSistema>? _destinosDelSistema;
 
   @override
   void initState() {
@@ -43,37 +47,34 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
     locales.cargar();
     inicio.iniciarTiempoReal();
     locales.iniciarTiempoReal();
-    _abrirDestinoDeNotificacion();
+    _destinosDelSistema = ServicioPush.destinosAbiertos.listen(
+      _abrirDestinoDeNotificacion,
+    );
+    _consumirDestinoInicial();
   }
 
-  /// Al tocar una notificacion del sistema, `push_sw.js` navega o abre la
-  /// app con el destino en la URL (`?notif_local=...`) porque un service
-  /// worker no puede llamar directamente al Navigator de Flutter. Aqui se
-  /// lee esa URL una sola vez al arrancar y se completa la navegacion.
-  void _abrirDestinoDeNotificacion() {
-    final parametros = Uri.base.queryParameters;
-    final pedidoId = parametros['notif_pedido'];
-    final localId = parametros['notif_local'];
-    final productoId = parametros['notif_producto'];
-    if (pedidoId == null && localId == null && productoId == null) return;
+  Future<void> _consumirDestinoInicial() async {
+    final destino = await ServicioPush.consumirDestinoInicial();
+    if (destino != null) _abrirDestinoDeNotificacion(destino);
+  }
 
-    // Se limpia antes de navegar: si la persona recarga despues, no debe
-    // volver a saltar a la misma notificacion vieja.
-    web.window.history.replaceState(null, '', web.window.location.pathname);
-
+  /// Web entrega parámetros de URL; iOS y Android usan el payload local.
+  /// Desde aquí ambos recorren exactamente el mismo navegador de la app.
+  void _abrirDestinoDeNotificacion(DestinoNotificacionSistema destino) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       NavegadorNotificaciones.abrir(
         context,
-        pedidoId: pedidoId,
-        localId: localId,
-        productoId: productoId,
+        pedidoId: destino.pedidoId,
+        localId: destino.localId,
+        productoId: destino.productoId,
       );
     });
   }
 
   @override
   void dispose() {
+    _destinosDelSistema?.cancel();
     controlador.dispose();
     miLocal.dispose();
     inicio.dispose();

@@ -119,6 +119,7 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
           precio: datos.precio,
           stock: datos.cantidad,
           emoji: datos.emoji,
+          categoriaId: datos.categoriaId,
           descripcion: datos.descripcion,
           galeria: datos.galeria,
         );
