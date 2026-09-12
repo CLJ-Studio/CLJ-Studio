@@ -18,11 +18,14 @@ import '../../pedidos/pantalla/pantalla_chats.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../diseno/campus_collapsing_header.dart';
+import '../diseno/carrusel_publicidad_empresas.dart';
+import '../diseno/imagen_publicidad.dart';
 import '../logica/controlador_inicio_marketplace.dart';
 import '../logica/estado_inicio_marketplace.dart';
 import '../modelos/categoria_marketplace.dart';
 import '../modelos/local_universitario.dart';
 import '../modelos/producto_marketplace.dart';
+import '../modelos/publicidad.dart';
 
 /// Feed con todo lo que se publica en el campus.
 ///
@@ -168,8 +171,32 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                                 controlador.catalogoCompleto,
                               ),
                               alSeleccionar: controlador.seleccionarCategoria,
+                              publicidad: controlador.publicidadDe(
+                                UbicacionPublicidad.bannerPrincipal,
+                              ),
                             ),
                             const SizedBox(height: 18),
+                            // Los avisos de empresas van pegados al banner y
+                            // antes de las categorias: mas abajo quedarian
+                            // despues del primer desplazamiento, donde ya casi
+                            // nadie los ve. La seccion entera desaparece si no
+                            // hay ninguno vigente.
+                            Builder(
+                              builder: (_) {
+                                final avisos = controlador.publicidadDe(
+                                  UbicacionPublicidad.carruselEmpresas,
+                                );
+                                if (avisos.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 18),
+                                  child: CarruselPublicidadEmpresas(
+                                    avisos: avisos,
+                                  ),
+                                );
+                              },
+                            ),
                             _CategoriasInicio(
                               categorias: estado.categorias,
                               categoriaId: estado.categoriaId,
@@ -486,10 +513,16 @@ class _AnuncioPrincipal extends StatefulWidget {
   const _AnuncioPrincipal({
     required this.categoriasConContenido,
     required this.alSeleccionar,
+    this.publicidad = const [],
   });
 
   final List<CategoriaMarketplace> categoriasConContenido;
   final ValueChanged<String> alSeleccionar;
+
+  /// Avisos administrados desde Supabase. Cuando hay alguno vigente, ocupan
+  /// el banner entero; vacio deja los de `assets/`, que son el respaldo
+  /// cuando no hay campana activa o no hubo red.
+  final List<Publicidad> publicidad;
 
   @override
   State<_AnuncioPrincipal> createState() => _AnuncioPrincipalState();
@@ -582,7 +615,11 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
     _temporizador?.cancel();
     _temporizador = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!_controlador.hasClients) return;
-      final siguiente = (_paginaActual + 1) % _banners.length;
+      final cantidad = _cantidadDiapositivas;
+      // Un solo aviso no es un carrusel: animar hacia él mismo produce un
+      // parpadeo cada cinco segundos.
+      if (cantidad < 2) return;
+      final siguiente = (_paginaActual + 1) % cantidad;
       _controlador.animateToPage(
         siguiente,
         duration: const Duration(milliseconds: 480),
@@ -614,13 +651,23 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
     super.dispose();
   }
 
+  /// Cuántas diapositivas tiene el carrusel ahora mismo.
+  ///
+  /// El autoplay lo consulta desde un temporizador, que puede dispararse
+  /// mientras la publicidad todavía está cargando: si contara siempre los
+  /// banners locales, saltaría a una página que ya no existe.
+  int get _cantidadDiapositivas =>
+      widget.publicidad.isNotEmpty ? widget.publicidad.length : _banners.length;
+
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final banners = _banners;
-    final paginaActual = _paginaActual.clamp(0, banners.length - 1);
+    final avisos = widget.publicidad;
+    final banners = avisos.isEmpty ? _banners : const <BannerData>[];
+    final cantidad = _cantidadDiapositivas;
+    final paginaActual = _paginaActual.clamp(0, cantidad - 1);
     return AspectRatio(
-      aspectRatio: 1.68,
+      aspectRatio: UbicacionPublicidad.bannerPrincipal.proporcion,
       // Un único recorte mantiene inmóvil la silueta exterior del banner.
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
@@ -637,12 +684,13 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
                 physics: const PageScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
-                itemCount: banners.length,
+                itemCount: cantidad,
                 onPageChanged: (pagina) => setState(() {
                   _paginaActual = pagina;
                 }),
-                itemBuilder: (_, indice) =>
-                    BannerSlide(data: banners[indice], oscuro: oscuro),
+                itemBuilder: (context, indice) => avisos.isEmpty
+                    ? BannerSlide(data: banners[indice], oscuro: oscuro)
+                    : _DiapositivaPublicidad(aviso: avisos[indice]),
               ),
               // Los indicadores también permanecen dentro del banner fijo.
               Positioned(
@@ -651,7 +699,7 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
                 right: 0,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(banners.length, (indice) {
+                  children: List.generate(cantidad, (indice) {
                     final activo = indice == paginaActual;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 240),
@@ -675,6 +723,29 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
       ),
     );
   }
+}
+
+/// Una diapositiva que es solo el aviso: imagen a sangre, sin título ni
+/// botón encima.
+///
+/// Los banners de `assets/` llevan su texto puesto por la app porque son
+/// nuestros. Un aviso de un anunciante ya viene con su propio diseño, y
+/// superponerle nuestra tipografía y nuestro degradado lo taparía.
+class _DiapositivaPublicidad extends StatelessWidget {
+  const _DiapositivaPublicidad({required this.aviso});
+
+  final Publicidad aviso;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(30),
+    child: GestureDetector(
+      onTap: aviso.tieneEnlace
+          ? () => abrirEnlacePublicidad(context, aviso)
+          : null,
+      child: ImagenPublicidad(aviso: aviso),
+    ),
+  );
 }
 
 /// Contenido y comportamiento propios de una diapositiva del banner.

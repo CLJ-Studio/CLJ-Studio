@@ -4,6 +4,7 @@ import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../datos/repositorio_inicio_marketplace.dart';
 import '../modelos/producto_marketplace.dart';
 import '../modelos/local_universitario.dart';
+import '../modelos/publicidad.dart';
 import 'estado_inicio_marketplace.dart';
 
 /// Feed de publicaciones del campus, con busqueda y filtro por categoria.
@@ -22,6 +23,7 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   List<ProductoMarketplace> _todas = const [];
   List<ProductoMarketplace> _populares = const [];
   List<LocalUniversitario> _localesMasVistos = const [];
+  List<Publicidad> _publicidad = const [];
   static const _tamanoPagina = 10;
   int _limiteVisible = _tamanoPagina;
 
@@ -34,6 +36,12 @@ class ControladorInicioMarketplace extends ChangeNotifier {
       List.unmodifiable(_populares);
   List<LocalUniversitario> get localesMasVistos =>
       List.unmodifiable(_localesMasVistos);
+
+  /// Avisos de cada espacio, ya vigentes y en orden. Vacio significa que no
+  /// hay campana activa (o que no hubo red): el inicio usa entonces sus
+  /// banners locales, que es el comportamiento de siempre.
+  List<Publicidad> publicidadDe(UbicacionPublicidad ubicacion) =>
+      _publicidad.where((aviso) => aviso.ubicacion == ubicacion).toList();
 
   /// Indica si el filtro actual todavía tiene otra tanda de publicaciones.
   bool get hayMasPublicaciones =>
@@ -71,15 +79,18 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     );
 
     try {
-      final (categorias, publicaciones, populares, localesMasVistos) = await (
-        repositorio.obtenerCategorias(),
-        repositorio.obtenerPublicaciones(),
-        repositorio.obtenerPublicacionesPopulares(),
-        repositorio.obtenerLocalesMasVistos(),
-      ).wait;
+      final (categorias, publicaciones, populares, localesMasVistos, avisos) =
+          await (
+            repositorio.obtenerCategorias(),
+            repositorio.obtenerPublicaciones(),
+            repositorio.obtenerPublicacionesPopulares(),
+            repositorio.obtenerLocalesMasVistos(),
+            repositorio.obtenerPublicidad(),
+          ).wait;
       _todas = publicaciones;
       _populares = populares;
       _localesMasVistos = localesMasVistos;
+      _publicidad = avisos;
       await esperaVisual;
       estado = estado.copiarCon(
         categorias: categorias,

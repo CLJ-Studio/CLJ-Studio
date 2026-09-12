@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../modelos/categoria_marketplace.dart';
 import '../modelos/local_universitario.dart';
 import '../modelos/producto_marketplace.dart';
+import '../modelos/publicidad.dart';
 
 /// Catalogo del marketplace leido desde Supabase.
 class RepositorioInicioMarketplace {
@@ -76,6 +77,32 @@ class RepositorioInicioMarketplace {
         .whereType<LocalUniversitario>()
         .where((local) => !local.esPersonal)
         .toList(growable: false);
+  }
+
+  /// Los avisos publicitarios vigentes, ya ordenados.
+  ///
+  /// La ventana de fechas y el `is_active` NO se filtran aqui: los aplica la
+  /// RLS de `advertisements`, asi que una campana apagada o todavia sin
+  /// empezar ni siquiera viaja al telefono.
+  ///
+  /// Devuelve vacio ante cualquier fallo en vez de propagar la excepcion. La
+  /// publicidad es decoracion: que no cargue debe dejar los banners locales
+  /// de siempre, nunca tumbar el inicio entero con un mensaje de error.
+  Future<List<Publicidad>> obtenerPublicidad() async {
+    try {
+      final filas = await _cliente
+          .from('advertisements')
+          .select('id, title, image_path, placement, link_url, updated_at')
+          .order('sort_order')
+          .order('created_at');
+
+      return filas
+          .map(Publicidad.desdeMapa)
+          .nonNulls
+          .toList(growable: false);
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// Todo lo publicado en el campus, de todos los vendedores.
