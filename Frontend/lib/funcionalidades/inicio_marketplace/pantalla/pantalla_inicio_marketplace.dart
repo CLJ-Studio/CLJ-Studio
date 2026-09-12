@@ -651,18 +651,33 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
     super.dispose();
   }
 
+  /// Avisos cuya imagen no se pudo cargar. Se descartan en vez de dejar el
+  /// banner en blanco: si se caen todos, vuelven los banners de `assets/`,
+  /// que es justo para lo que están.
+  final Set<String> _avisosRotos = {};
+
+  List<Publicidad> get _avisosVisibles => widget.publicidad
+      .where((aviso) => !_avisosRotos.contains(aviso.id))
+      .toList(growable: false);
+
+  void _descartar(Publicidad aviso) {
+    if (!mounted || _avisosRotos.contains(aviso.id)) return;
+    setState(() => _avisosRotos.add(aviso.id));
+  }
+
   /// Cuántas diapositivas tiene el carrusel ahora mismo.
   ///
   /// El autoplay lo consulta desde un temporizador, que puede dispararse
   /// mientras la publicidad todavía está cargando: si contara siempre los
   /// banners locales, saltaría a una página que ya no existe.
-  int get _cantidadDiapositivas =>
-      widget.publicidad.isNotEmpty ? widget.publicidad.length : _banners.length;
+  int get _cantidadDiapositivas => _avisosVisibles.isNotEmpty
+      ? _avisosVisibles.length
+      : _banners.length;
 
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final avisos = widget.publicidad;
+    final avisos = _avisosVisibles;
     final banners = avisos.isEmpty ? _banners : const <BannerData>[];
     final cantidad = _cantidadDiapositivas;
     final paginaActual = _paginaActual.clamp(0, cantidad - 1);
@@ -690,7 +705,10 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
                 }),
                 itemBuilder: (context, indice) => avisos.isEmpty
                     ? BannerSlide(data: banners[indice], oscuro: oscuro)
-                    : _DiapositivaPublicidad(aviso: avisos[indice]),
+                    : _DiapositivaPublicidad(
+                        aviso: avisos[indice],
+                        alFallar: () => _descartar(avisos[indice]),
+                      ),
               ),
               // Los indicadores también permanecen dentro del banner fijo.
               Positioned(
@@ -732,9 +750,10 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
 /// nuestros. Un aviso de un anunciante ya viene con su propio diseño, y
 /// superponerle nuestra tipografía y nuestro degradado lo taparía.
 class _DiapositivaPublicidad extends StatelessWidget {
-  const _DiapositivaPublicidad({required this.aviso});
+  const _DiapositivaPublicidad({required this.aviso, this.alFallar});
 
   final Publicidad aviso;
+  final VoidCallback? alFallar;
 
   @override
   Widget build(BuildContext context) => ClipRRect(
@@ -743,7 +762,7 @@ class _DiapositivaPublicidad extends StatelessWidget {
       onTap: aviso.tieneEnlace
           ? () => abrirEnlacePublicidad(context, aviso)
           : null,
-      child: ImagenPublicidad(aviso: aviso),
+      child: ImagenPublicidad(aviso: aviso, alFallar: alFallar),
     ),
   );
 }

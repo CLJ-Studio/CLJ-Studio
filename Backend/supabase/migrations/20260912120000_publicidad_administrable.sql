@@ -169,10 +169,15 @@ create policy "publicidad_borrar_admin"
 --      main_banner       -> proporcion 1.68:1   (ideal 1680 x 1000)
 --      company_carousel  -> proporcion 2.596:1  (ideal 1620 x 624)
 --
--- 2. Insertar la fila con la ruta del archivo (NO la URL completa):
+-- 2. Insertar la fila con la ruta del archivo (NO la URL completa).
+--    PLANTILLA: los cuatro valores son de mentira, hay que reemplazarlos.
+--    Corriendo esto tal cual queda un aviso activo apuntando a un archivo
+--    que no existe, y como la publicidad remota tiene prioridad sobre los
+--    banners de assets/, el inicio se queda sin banner hasta que alguien
+--    borre la fila.
 --
 --      insert into public.advertisements (title, image_path, placement, link_url, sort_order)
---      values ('Campana X', 'empresa-x/banner.jpg', 'main_banner', 'https://ejemplo.com', 1);
+--      values ('<nombre>', '<carpeta/archivo.jpg>', 'main_banner', '<https://...>', 1);
 --
 -- 3. Para reemplazar la imagen de un aviso que ya existe, subir el archivo
 --    con un NOMBRE NUEVO y apuntar la fila ahi. Pisar el archivo anterior

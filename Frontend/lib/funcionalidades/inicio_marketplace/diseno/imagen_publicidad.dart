@@ -11,9 +11,18 @@ import '../modelos/publicidad.dart';
 /// recomendación para los anunciantes es dejar los logos y el texto dentro
 /// del centro de la pieza.
 class ImagenPublicidad extends StatelessWidget {
-  const ImagenPublicidad({required this.aviso, super.key});
+  const ImagenPublicidad({required this.aviso, this.alFallar, super.key});
 
   final Publicidad aviso;
+
+  /// Se avisa cuando la imagen no se pudo cargar, para que quien muestra el
+  /// aviso lo saque de la lista y deje su lugar al respaldo.
+  ///
+  /// Pasa de verdad: basta con que una fila apunte a un archivo que no está
+  /// en el bucket (un nombre mal escrito, una imagen borrada) para que el
+  /// espacio publicitario quede en blanco. Sin este aviso, el hueco se queda
+  /// ahí hasta que alguien note que el inicio se ve raro.
+  final VoidCallback? alFallar;
 
   @override
   Widget build(BuildContext context) => Image.network(
@@ -30,8 +39,16 @@ class ImagenPublicidad extends StatelessWidget {
     loadingBuilder: (context, hijo, progreso) =>
         progreso == null ? hijo : const _Marcador(),
     // Una imagen rota no debe dejar un cuadro negro con un icono de error en
-    // medio del inicio; simplemente no se muestra nada.
-    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+    // medio del inicio. Se avisa hacia arriba (fuera del build, que si no
+    // Flutter se queja de un setState en pleno dibujado) y mientras tanto no
+    // se muestra nada.
+    errorBuilder: (_, _, _) {
+      final avisar = alFallar;
+      if (avisar != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => avisar());
+      }
+      return const SizedBox.shrink();
+    },
   );
 }
 
