@@ -29,8 +29,9 @@ class TarjetaProductoCarrito extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFE6E1D5),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFE9E9E9)),
           ),
           child: switch (elemento.producto.imagenUrl) {
             final String url => Image.network(

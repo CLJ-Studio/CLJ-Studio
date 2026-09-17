@@ -95,7 +95,7 @@ class _ContenidoFinanzas extends StatelessWidget {
           Expanded(
             child: _MetricaCompacta(
               icono: Icons.receipt_long_rounded,
-              etiqueta: 'Completados',
+              etiqueta: 'Registradas',
               valor: '${resumen.pedidosCompletados}',
               color: const Color(0xFF848381),
             ),
@@ -105,7 +105,7 @@ class _ContenidoFinanzas extends StatelessWidget {
       const SizedBox(height: 26),
       const _TituloSeccion(
         titulo: 'Últimos 7 días',
-        subtitulo: 'Ingresos por ventas completadas',
+        subtitulo: 'Pedidos y ventas rápidas',
       ),
       const SizedBox(height: 12),
       _GraficoSemanal(datos: resumen.ventasSemana),
@@ -224,7 +224,7 @@ class _TarjetaBalance extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Ventas entregadas · ${resumen.pedidosCompletados} pedidos',
+              'Pedidos y ventas rápidas · ${resumen.pedidosCompletados} ventas',
               style: const TextStyle(color: Color(0xBFE6E1D5), fontSize: 12.5),
             ),
           ],

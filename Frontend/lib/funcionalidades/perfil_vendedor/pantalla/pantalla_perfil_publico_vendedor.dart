@@ -165,8 +165,6 @@ class _PantallaPerfilPublicoVendedorState
                                 const SizedBox(height: 10),
                                 Text(
                                   nombre,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: colorContenido,
                                     fontSize: 16,

@@ -21,6 +21,8 @@ abstract final class ConfiguracionTema {
   static const Color naranjaCoral = Color.fromRGBO(233, 80, 38, 1);
   static const Color blancoSuave = Color(0xFFF4F4F8);
   static const Color moradoPromocional = Color(0xFF4A08A1);
+  static const Color interruptorActivo = Color(0xFF16A34A);
+  static const Color interruptorInactivo = Color(0xFF9CA3AF);
 
   // Roles de marca
   static const Color primario = grafito;
@@ -211,12 +213,17 @@ abstract final class ConfiguracionTema {
         subtitleTextStyle: TextStyle(color: colorTextoSecundario, fontSize: 13),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((estados) => crema),
+        thumbColor: WidgetStateProperty.resolveWith(
+          (estados) => estados.contains(WidgetState.disabled)
+              ? blancoSuave.withValues(alpha: .72)
+              : Colors.white,
+        ),
         trackColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.selected)
-              ? (esOscuro ? salviaClara : secundario)
-              : grisCalido,
+              ? interruptorActivo
+              : interruptorInactivo,
         ),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: esOscuro ? salviaClara : primario,

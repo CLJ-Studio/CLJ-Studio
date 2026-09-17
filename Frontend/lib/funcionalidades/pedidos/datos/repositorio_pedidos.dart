@@ -59,7 +59,64 @@ class RepositorioPedidos {
         .eq(columna, _usuarioId)
         .order('created_at', ascending: false);
 
-    return filas.map(Pedido.desdeMapa).toList();
+    if (filas.isEmpty) return const [];
+
+    final pedidosIds = filas.map((fila) => fila['id'] as String).toList();
+    final localesIds = filas
+        .map((fila) => fila['store_id'] as String)
+        .toSet()
+        .toList();
+
+    // La vista histórica conserva nombres y precios, pero no incluía fotos.
+    // Se resuelven en dos consultas agrupadas para evitar una petición por
+    // cada tarjeta de la lista.
+    final (items, locales, eventosCancelacion) = await (
+      _cliente
+          .from('order_items')
+          .select(
+            'order_id, product_id, product_name, product_emoji, '
+            'unit_price, quantity, products(image_path)',
+          )
+          .inFilter('order_id', pedidosIds),
+      _cliente
+          .from('stores')
+          .select('id, logo_path')
+          .inFilter('id', localesIds),
+      _cliente
+          .from('order_events')
+          .select('order_id, actor_id, created_at')
+          .inFilter('order_id', pedidosIds)
+          .eq('to_status', 'cancelado')
+          .order('created_at', ascending: false),
+    ).wait;
+
+    final itemsPorPedido = <String, List<Map<String, dynamic>>>{};
+    for (final item in items) {
+      final pedidoId = item['order_id'] as String;
+      itemsPorPedido.putIfAbsent(pedidoId, () => []).add(item);
+    }
+    final logoPorLocal = <String, String?>{
+      for (final local in locales)
+        local['id'] as String: local['logo_path'] as String?,
+    };
+    final canceladorPorPedido = <String, String?>{};
+    for (final evento in eventosCancelacion) {
+      canceladorPorPedido.putIfAbsent(
+        evento['order_id'] as String,
+        () => evento['actor_id'] as String?,
+      );
+    }
+
+    return filas.map((fila) {
+      final enriquecida = Map<String, dynamic>.from(fila);
+      final pedidoId = fila['id'] as String;
+      final localId = fila['store_id'] as String;
+      final itemsEnriquecidos = itemsPorPedido[pedidoId];
+      if (itemsEnriquecidos != null) enriquecida['items'] = itemsEnriquecidos;
+      enriquecida['store_logo_path'] = logoPorLocal[localId];
+      enriquecida['cancelled_by'] = canceladorPorPedido[pedidoId];
+      return Pedido.desdeMapa(enriquecida);
+    }).toList();
   }
 
   Future<Pedido?> obtener(String pedidoId) async {
@@ -69,7 +126,23 @@ class RepositorioPedidos {
         .eq('id', pedidoId)
         .maybeSingle();
 
-    return fila == null ? null : Pedido.desdeMapa(fila);
+    if (fila == null) return null;
+
+    final enriquecida = Map<String, dynamic>.from(fila);
+    if (fila['status'] == 'cancelado') {
+      final eventos = await _cliente
+          .from('order_events')
+          .select('actor_id')
+          .eq('order_id', pedidoId)
+          .eq('to_status', 'cancelado')
+          .order('created_at', ascending: false)
+          .limit(1);
+      if (eventos.isNotEmpty) {
+        enriquecida['cancelled_by'] = eventos.first['actor_id'] as String?;
+      }
+    }
+
+    return Pedido.desdeMapa(enriquecida);
   }
 
   /// Devuelve el id del pedido creado.

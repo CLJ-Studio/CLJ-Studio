@@ -5,7 +5,6 @@ import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../../publicar_producto/diseno/selector_categoria_publicacion.dart';
-import '../../publicar_producto/diseno/selector_emoji_publicacion.dart';
 
 /// Datos con los que se crea o edita un producto del inventario.
 class DatosProducto {
@@ -58,7 +57,10 @@ Future<DatosProducto?> mostrarDialogoProducto(
   final cantidad = TextEditingController(
     text: (producto?.stock ?? 1).toString(),
   );
-  var emoji = producto?.emoji ?? '🛍️';
+  // `products.emoji` se conserva por compatibilidad con publicaciones
+  // existentes, pero la clasificación y el icono visible dependen únicamente
+  // de la categoría elegida. El usuario ya no tiene que elegir ambos.
+  final emoji = producto?.emoji ?? '🛍️';
   String? categoriaId = producto?.categoriaId;
   var galeria = <String>[
     if (producto?.imagePath != null) producto!.imagePath!,
@@ -122,11 +124,6 @@ Future<DatosProducto?> mostrarDialogoProducto(
                 SelectorGaleria(
                   rutas: galeria,
                   alCambiar: (rutas) => actualizar(() => galeria = rutas),
-                ),
-                const SizedBox(height: 18),
-                SelectorEmojiPublicacion(
-                  valor: emoji,
-                  alCambiar: (valor) => actualizar(() => emoji = valor),
                 ),
               ],
             ),

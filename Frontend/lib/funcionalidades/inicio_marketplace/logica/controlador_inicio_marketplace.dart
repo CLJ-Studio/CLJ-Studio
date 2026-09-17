@@ -36,12 +36,9 @@ class ControladorInicioMarketplace extends ChangeNotifier {
       List.unmodifiable(_populares);
   List<LocalUniversitario> get localesMasVistos =>
       List.unmodifiable(_localesMasVistos);
-
-  /// Avisos de cada espacio, ya vigentes y en orden. Vacio significa que no
-  /// hay campana activa (o que no hubo red): el inicio usa entonces sus
-  /// banners locales, que es el comportamiento de siempre.
-  List<Publicidad> publicidadDe(UbicacionPublicidad ubicacion) =>
-      _publicidad.where((aviso) => aviso.ubicacion == ubicacion).toList();
+  List<Publicidad> publicidadDe(UbicacionPublicidad ubicacion) => _publicidad
+      .where((anuncio) => anuncio.ubicacion == ubicacion)
+      .toList(growable: false);
 
   /// Indica si el filtro actual todavía tiene otra tanda de publicaciones.
   bool get hayMasPublicaciones =>
@@ -59,15 +56,23 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     alCambiar: _recargarEnSilencio,
   );
 
+  /// Los cambios de los administradores aparecen sin reiniciar la app.
+  late final _escuchaPublicidad = EscuchaTabla(
+    tabla: 'advertisements',
+    alCambiar: _recargarEnSilencio,
+  );
+
   void iniciarTiempoReal() {
     _escuchaProductos.iniciar();
     _escuchaLocales.iniciar();
+    _escuchaPublicidad.iniciar();
   }
 
   @override
   void dispose() {
     _escuchaProductos.detener();
     _escuchaLocales.detener();
+    _escuchaPublicidad.detener();
     super.dispose();
   }
 
@@ -79,18 +84,23 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     );
 
     try {
-      final (categorias, publicaciones, populares, localesMasVistos, avisos) =
-          await (
-            repositorio.obtenerCategorias(),
-            repositorio.obtenerPublicaciones(),
-            repositorio.obtenerPublicacionesPopulares(),
-            repositorio.obtenerLocalesMasVistos(),
-            repositorio.obtenerPublicidad(),
-          ).wait;
+      final (
+        categorias,
+        publicaciones,
+        populares,
+        localesMasVistos,
+        publicidad,
+      ) = await (
+        repositorio.obtenerCategorias(),
+        repositorio.obtenerPublicaciones(),
+        repositorio.obtenerPublicacionesPopulares(),
+        repositorio.obtenerLocalesMasVistos(),
+        repositorio.obtenerPublicidad(),
+      ).wait;
       _todas = publicaciones;
       _populares = populares;
       _localesMasVistos = localesMasVistos;
-      _publicidad = avisos;
+      _publicidad = publicidad;
       await esperaVisual;
       estado = estado.copiarCon(
         categorias: categorias,
@@ -111,14 +121,16 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   /// asi que la lista debe cambiar sin parpadear.
   Future<void> _recargarEnSilencio() async {
     try {
-      final (publicaciones, populares, localesMasVistos) = await (
+      final (publicaciones, populares, localesMasVistos, publicidad) = await (
         repositorio.obtenerPublicaciones(),
         repositorio.obtenerPublicacionesPopulares(),
         repositorio.obtenerLocalesMasVistos(),
+        repositorio.obtenerPublicidad(),
       ).wait;
       _todas = publicaciones;
       _populares = populares;
       _localesMasVistos = localesMasVistos;
+      _publicidad = publicidad;
       estado = estado.copiarCon(publicaciones: _aplicarFiltros());
       notifyListeners();
     } catch (_) {

@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>U market necesita usar la cámara para tomar fotografías de los productos que publiques.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>U market necesita acceder a tus fotos para añadir imágenes a tus publicaciones y a tu perfil.</string>
 	<key>UIApplicationSceneManifest</key>

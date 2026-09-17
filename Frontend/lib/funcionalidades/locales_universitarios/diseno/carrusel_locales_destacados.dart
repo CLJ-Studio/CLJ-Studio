@@ -100,15 +100,27 @@ class _TarjetaDestacada extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          local.nombreVisible,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
+                        child: local.esPersonal
+                            ? FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  local.nombreVisible,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                local.nombreVisible,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
                       ),
                       const Icon(
                         Icons.arrow_forward_rounded,

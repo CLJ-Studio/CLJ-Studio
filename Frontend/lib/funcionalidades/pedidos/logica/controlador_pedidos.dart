@@ -6,6 +6,7 @@ import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../datos/repositorio_chat_pedido.dart';
 import '../datos/repositorio_pedidos.dart';
 import '../modelos/pedido.dart';
+import '../modelos/resumen_chat.dart';
 
 /// Carga las compras y ventas del usuario.
 class ControladorPedidos extends ChangeNotifier {
@@ -17,11 +18,13 @@ class ControladorPedidos extends ChangeNotifier {
 
   List<Pedido> compras = const [];
   List<Pedido> ventas = const [];
+  List<ResumenChat> chats = const [];
 
   /// Mensajes sin leer por pedido. Alimenta el distintivo de cada tarjeta.
   Map<String, int> sinLeer = const {};
 
   int mensajesSinLeerDe(String pedidoId) => sinLeer[pedidoId] ?? 0;
+  int get chatsAbiertos => chats.length;
   bool cargando = true;
   String? error;
 
@@ -51,6 +54,14 @@ class ControladorPedidos extends ChangeNotifier {
   /// sesion y un id guardado dejaria contando lo de la cuenta anterior.
   String? _miId() =>
       ModoLocal.activo ? null : Supabase.instance.client.auth.currentUser?.id;
+
+  /// En "Mis pedidos" interesan las cancelaciones que recibió el comprador,
+  /// no las que él mismo decidió. Los pedidos cancelados por el vendedor se
+  /// conservan y la tarjeta indica expresamente quién tomó la decisión.
+  List<Pedido> _comprasVisibles(List<Pedido> pedidos) {
+    final miId = _miId();
+    return pedidos.where((pedido) => !pedido.fueCanceladoPor(miId)).toList();
+  }
 
   /// Un pedido nuevo o una respuesta del vendedor deben aparecer sin que
   /// nadie recargue: es la pantalla donde mas se nota la espera.
@@ -101,24 +112,30 @@ class ControladorPedidos extends ChangeNotifier {
   Future<void> _recargarEnSilencio() async {
     if (ModoLocal.activo) return;
     try {
-      final (nuevasCompras, nuevasVentas, nuevosSinLeer) = await (
+      final (nuevasCompras, nuevasVentas, nuevosSinLeer, nuevosChats) = await (
         _repositorio.misCompras(),
         _repositorio.misVentas(),
         _chat.sinLeerPorPedido(),
+        _chat.listarChats(),
       ).wait;
-      compras = nuevasCompras;
+      compras = _comprasVisibles(nuevasCompras);
       ventas = nuevasVentas;
       sinLeer = nuevosSinLeer;
+      chats = nuevosChats;
       notifyListeners();
     } catch (_) {
       // Se reintenta en el siguiente evento o sondeo.
     }
   }
 
+  /// Actualiza las tres pestañas sin reemplazarlas por un indicador de carga.
+  Future<void> recargar() => _recargarEnSilencio();
+
   Future<void> cargar() async {
     if (ModoLocal.activo) {
       compras = const [];
       ventas = const [];
+      chats = const [];
       cargando = false;
       error = null;
       notifyListeners();
@@ -130,14 +147,16 @@ class ControladorPedidos extends ChangeNotifier {
 
     try {
       // En paralelo: son consultas independientes entre si.
-      final (nuevasCompras, nuevasVentas, nuevosSinLeer) = await (
+      final (nuevasCompras, nuevasVentas, nuevosSinLeer, nuevosChats) = await (
         _repositorio.misCompras(),
         _repositorio.misVentas(),
         _chat.sinLeerPorPedido(),
+        _chat.listarChats(),
       ).wait;
-      compras = nuevasCompras;
+      compras = _comprasVisibles(nuevasCompras);
       ventas = nuevasVentas;
       sinLeer = nuevosSinLeer;
+      chats = nuevosChats;
     } catch (_) {
       error = 'No se pudieron cargar tus pedidos.';
     } finally {

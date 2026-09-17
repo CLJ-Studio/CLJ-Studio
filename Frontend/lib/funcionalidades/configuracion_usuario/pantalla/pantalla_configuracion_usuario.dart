@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../instalacion_app/diseno/opcion_instalar_app.dart';
 import '../../instalacion_app/logica/controlador_instalacion.dart';
 import '../diseno/opcion_chats.dart';
+import '../diseno/opcion_administrar_publicidad.dart';
 import '../diseno/opcion_mis_publicaciones.dart';
 import '../diseno/boton_cerrar_sesion.dart';
 import '../diseno/opcion_acerca_de.dart';
@@ -50,6 +52,7 @@ class _PantallaConfiguracionUsuarioState
                       // sin acceso, asi que la unica forma de ver lo propio
                       // era el perfil.
                       const OpcionMisPublicaciones(),
+                      const OpcionAdministrarPublicidad(),
                       const OpcionChats(),
                       const OpcionNotificaciones(),
                       if (ControladorInstalacion.instancia.disponible)
@@ -108,17 +111,13 @@ class _GrupoAjustes extends StatelessWidget {
         minTileHeight: 72,
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith(
-          (estados) => estados.contains(WidgetState.selected)
-              ? Colors.white
-              : Colors.black,
-        ),
+        thumbColor: const WidgetStatePropertyAll(Colors.white),
         trackColor: WidgetStateProperty.resolveWith(
           (estados) => estados.contains(WidgetState.selected)
-              ? Colors.black
-              : Colors.white,
+              ? ConfiguracionTema.interruptorActivo
+              : ConfiguracionTema.interruptorInactivo,
         ),
-        trackOutlineColor: const WidgetStatePropertyAll(Colors.black),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
     );
 

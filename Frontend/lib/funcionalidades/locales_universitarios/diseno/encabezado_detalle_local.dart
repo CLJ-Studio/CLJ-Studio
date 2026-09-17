@@ -108,8 +108,6 @@ class _AccesoVendedor extends StatelessWidget {
             Expanded(
               child: Text(
                 local.vendedorNombre,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
             ),

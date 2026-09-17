@@ -7,6 +7,7 @@ import 'configuracion_aplicacion/modo_local.dart';
 import 'configuracion_aplicacion/configuracion_supabase.dart';
 import 'elementos_compartidos/animaciones/precargador_animaciones.dart';
 import 'funcionalidades/notificaciones/datos/servicio_push.dart';
+import 'funcionalidades/venta_rapida/datos/servicio_atajo_venta_rapida.dart';
 
 /// Punto de entrada de U market.
 void main() async {
@@ -26,6 +27,10 @@ void main() async {
       url: ConfiguracionSupabase.url,
       publishableKey: ConfiguracionSupabase.publishableKey,
     );
+    // Expone la venta rápida como una acción nativa de Atajos en iPhone.
+    // La sesión se comparte con iOS para que el atajo pueda consultar el
+    // inventario y descontar stock sin mostrar la interfaz de Flutter.
+    await ServicioAtajoVentaRapida.inicializar();
     // Web conserva su service worker. iPhone se registra directamente con
     // APNs y Android prepara su centro de notificaciones local, sin Firebase.
     await ServicioPush.inicializar();

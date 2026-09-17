@@ -13,11 +13,13 @@ class PantallaNavegacionPrincipal extends StatefulWidget {
   const PantallaNavegacionPrincipal({
     required this.controlador,
     required this.pantallas,
+    required this.camara,
     super.key,
   });
 
   final ControladorNavegacionPrincipal controlador;
   final List<Widget> pantallas;
+  final Widget camara;
 
   @override
   State<PantallaNavegacionPrincipal> createState() =>
@@ -41,7 +43,8 @@ class _PantallaNavegacionPrincipalState
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: widget.controlador,
     builder: (_, _) {
-      final ocultarBarra = widget.controlador.indice == 2;
+      final enCamara = widget.controlador.indice == -1;
+      final ocultarBarra = widget.controlador.indice == 2 || enCamara;
       final encabezadoAzul = widget.controlador.indice != 2;
       final estiloBarraEstado = encabezadoAzul
           ? const SystemUiOverlayStyle(
@@ -61,14 +64,18 @@ class _PantallaNavegacionPrincipalState
             child: _PantallasDeslizables(
               indice: widget.controlador.indice,
               pantallas: widget.pantallas,
+              camara: widget.camara,
               alDeslizar: widget.controlador.seleccionarIndice,
             ),
           ),
           bottomNavigationBar: _BarraAnimadaPublicar(
             ocultar: ocultarBarra,
+            ocultarInmediatamente: enCamara,
             solicitudMostrar: _solicitudesMostrarBarra,
             child: _BarraLigera(
-              indice: widget.controlador.indice,
+              indice: widget.controlador.indice < 0
+                  ? 0
+                  : widget.controlador.indice,
               alSeleccionar: widget.controlador.seleccionarIndice,
             ),
           ),
@@ -83,11 +90,13 @@ class _PantallaNavegacionPrincipalState
 class _BarraAnimadaPublicar extends StatefulWidget {
   const _BarraAnimadaPublicar({
     required this.ocultar,
+    required this.ocultarInmediatamente,
     required this.solicitudMostrar,
     required this.child,
   });
 
   final bool ocultar;
+  final bool ocultarInmediatamente;
   final int solicitudMostrar;
   final Widget child;
 
@@ -102,8 +111,10 @@ class _BarraAnimadaPublicarState extends State<_BarraAnimadaPublicar> {
   @override
   void initState() {
     super.initState();
-    _oculta = false;
-    if (widget.ocultar) _programarOcultamiento();
+    _oculta = widget.ocultarInmediatamente;
+    if (widget.ocultar && !widget.ocultarInmediatamente) {
+      _programarOcultamiento();
+    }
   }
 
   @override
@@ -112,6 +123,11 @@ class _BarraAnimadaPublicarState extends State<_BarraAnimadaPublicar> {
     if (!widget.ocultar) {
       _espera?.cancel();
       if (_oculta) setState(() => _oculta = false);
+      return;
+    }
+    if (widget.ocultarInmediatamente) {
+      _espera?.cancel();
+      if (!_oculta) setState(() => _oculta = true);
       return;
     }
 
@@ -167,11 +183,13 @@ class _PantallasDeslizables extends StatefulWidget {
   const _PantallasDeslizables({
     required this.indice,
     required this.pantallas,
+    required this.camara,
     required this.alDeslizar,
   });
 
   final int indice;
   final List<Widget> pantallas;
+  final Widget camara;
   final ValueChanged<int> alDeslizar;
 
   @override
@@ -179,7 +197,7 @@ class _PantallasDeslizables extends StatefulWidget {
 }
 
 class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
-  late final _paginas = PageController(initialPage: widget.indice);
+  late final _paginas = PageController(initialPage: widget.indice + 1);
   bool _deslizamientoBloqueado = false;
 
   @override
@@ -188,9 +206,10 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
 
     // El cambio vino de la barra inferior: se acompaña con la animacion.
     // Si vino del propio deslizamiento, la pagina ya esta donde toca.
+    final paginaDestino = widget.indice + 1;
     if (widget.indice != anterior.indice &&
         _paginas.hasClients &&
-        _paginas.page?.round() != widget.indice) {
+        _paginas.page?.round() != paginaDestino) {
       final cambioDentroDeInicioYLocales =
           widget.indice <= 1 && anterior.indice <= 1;
       final cambioEntrePantallasCompletas =
@@ -198,7 +217,7 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
 
       if (cambioDentroDeInicioYLocales || cambioEntrePantallasCompletas) {
         _paginas.animateToPage(
-          widget.indice,
+          paginaDestino,
           duration: const Duration(milliseconds: 480),
           curve: Curves.easeInOutCubic,
         );
@@ -206,7 +225,7 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
         // Al entrar o salir de Inicio/Locales no se anima el PageView:
         // el encabezado y la pantalla cambian juntos, sin huecos oscuros,
         // compresión, desplazamiento vertical ni desapariciones intermedias.
-        _paginas.jumpToPage(widget.indice);
+        _paginas.jumpToPage(paginaDestino);
       }
     }
   }
@@ -218,27 +237,39 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      NotificationListener<BloqueoDeslizamientoPrincipal>(
-        onNotification: (notificacion) {
-          if (_deslizamientoBloqueado != notificacion.bloqueado) {
-            setState(() => _deslizamientoBloqueado = notificacion.bloqueado);
-          }
-          return true;
-        },
-        child: PageView.builder(
-          controller: _paginas,
-          physics: _deslizamientoBloqueado
-              ? const NeverScrollableScrollPhysics()
-              : const PageScrollPhysics(),
-          onPageChanged: widget.alDeslizar,
-          itemCount: widget.pantallas.length,
-          itemBuilder: (_, indice) => _PaginaConBarraEstado(
-            encabezadoAzul: indice != 2,
-            child: widget.pantallas[indice],
-          ),
-        ),
-      );
+  Widget build(
+    BuildContext context,
+  ) => NotificationListener<BloqueoDeslizamientoPrincipal>(
+    onNotification: (notificacion) {
+      if (_deslizamientoBloqueado != notificacion.bloqueado) {
+        if (notificacion.bloqueado && _paginas.hasClients) {
+          // El primer dedo puede haber iniciado el arrastre antes de que
+          // llegue el segundo. Se devuelve la página a su posición exacta
+          // antes de bloquearla para que el pellizco nunca mueva el carrusel.
+          _paginas.jumpToPage(widget.indice + 1);
+        }
+        setState(() => _deslizamientoBloqueado = notificacion.bloqueado);
+      }
+      return true;
+    },
+    child: PageView.builder(
+      controller: _paginas,
+      physics: _deslizamientoBloqueado
+          ? const NeverScrollableScrollPhysics()
+          : const PageScrollPhysics(parent: ClampingScrollPhysics()),
+      clipBehavior: Clip.hardEdge,
+      onPageChanged: (pagina) => widget.alDeslizar(pagina - 1),
+      itemCount: widget.pantallas.length + 1,
+      itemBuilder: (_, pagina) {
+        if (pagina == 0) return widget.camara;
+        final indice = pagina - 1;
+        return _PaginaConBarraEstado(
+          encabezadoAzul: indice != 2,
+          child: widget.pantallas[indice],
+        );
+      },
+    ),
+  );
 }
 
 /// La zona de la hora pertenece a cada página y se desliza junto con ella.

@@ -43,8 +43,9 @@ class ResumenCompra extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFFE6E1D5),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFFE9E9E9)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
@@ -60,7 +61,7 @@ class ResumenCompra extends StatelessWidget {
               'Bs ${entrega.toStringAsFixed(2)}',
               colorTexto: colorTexto,
             ),
-            const Divider(color: Color(0xFFE6E1D5)),
+            const Divider(color: Color(0xFFE9E9E9)),
             fila(
               'Total',
               'Bs ${total.toStringAsFixed(2)}',

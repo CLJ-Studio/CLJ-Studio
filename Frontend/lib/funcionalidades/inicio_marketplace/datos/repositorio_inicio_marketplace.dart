@@ -79,28 +79,20 @@ class RepositorioInicioMarketplace {
         .toList(growable: false);
   }
 
-  /// Los avisos publicitarios vigentes, ya ordenados.
-  ///
-  /// La ventana de fechas y el `is_active` NO se filtran aqui: los aplica la
-  /// RLS de `advertisements`, asi que una campana apagada o todavia sin
-  /// empezar ni siquiera viaja al telefono.
-  ///
-  /// Devuelve vacio ante cualquier fallo en vez de propagar la excepcion. La
-  /// publicidad es decoracion: que no cargue debe dejar los banners locales
-  /// de siempre, nunca tumbar el inicio entero con un mensaje de error.
+  /// Publicidad activa y vigente. Las fechas y permisos los filtra RLS.
   Future<List<Publicidad>> obtenerPublicidad() async {
     try {
       final filas = await _cliente
           .from('advertisements')
-          .select('id, title, image_path, placement, link_url, updated_at')
+          .select(
+            'id, title, image_path, placement, link_url, sort_order, '
+            'is_active, starts_at, ends_at, updated_at',
+          )
           .order('sort_order')
           .order('created_at');
-
-      return filas
-          .map(Publicidad.desdeMapa)
-          .nonNulls
-          .toList(growable: false);
+      return filas.map(Publicidad.desdeMapa).nonNulls.toList(growable: false);
     } catch (_) {
+      // La publicidad nunca debe impedir que el catálogo cargue.
       return const [];
     }
   }

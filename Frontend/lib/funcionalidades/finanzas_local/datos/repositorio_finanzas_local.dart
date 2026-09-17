@@ -8,22 +8,10 @@ class RepositorioFinanzasLocal {
 
   Future<ResumenFinanzas> cargar(String localId) async {
     if (ModoLocal.activo) return ResumenFinanzas.desdeMapa(const {});
-
-    try {
-      final respuesta = await Supabase.instance.client
-          .rpc<Map<String, dynamic>>(
-            'resumen_finanzas_local',
-            params: {'p_local': localId},
-          );
-      return ResumenFinanzas.desdeMapa(respuesta);
-    } catch (_) {
-      // Compatibilidad inmediata mientras la migracion de analitica llega al
-      // servidor: usa las vistas que la app ya tiene disponibles.
-      return _cargarSinFuncion(localId);
-    }
+    return _cargarConVentasRapidas(localId);
   }
 
-  Future<ResumenFinanzas> _cargarSinFuncion(String localId) async {
+  Future<ResumenFinanzas> _cargarConVentasRapidas(String localId) async {
     final cliente = Supabase.instance.client;
     final resultados = await Future.wait<dynamic>([
       cliente
@@ -36,11 +24,19 @@ class RepositorioFinanzasLocal {
           .select('name, emoji, view_count')
           .eq('store_id', localId),
       cliente.from('stores').select('view_count').eq('id', localId).single(),
+      cliente
+          .from('quick_sales')
+          .select(
+            'product_name, product_emoji, unit_price, quantity, total, '
+            'created_at',
+          )
+          .eq('store_id', localId),
     ]);
 
     final pedidos = (resultados[0] as List).cast<Map<String, dynamic>>();
     final productos = (resultados[1] as List).cast<Map<String, dynamic>>();
     final local = (resultados[2] as Map).cast<String, dynamic>();
+    final ventasRapidas = (resultados[3] as List).cast<Map<String, dynamic>>();
     final ahora = DateTime.now();
 
     final ingresosPorDia = <String, double>{};
@@ -72,6 +68,25 @@ class RepositorioFinanzasLocal {
             ((fila['quantity'] as num?)?.toInt() ?? 0);
         emojis[nombre] = (fila['product_emoji'] as String?) ?? '🛍️';
       }
+    }
+
+    for (final venta in ventasRapidas) {
+      final fecha = DateTime.parse(venta['created_at'] as String).toLocal();
+      final importe = (venta['total'] as num?)?.toDouble() ?? 0;
+      final cantidad = (venta['quantity'] as num?)?.toInt() ?? 0;
+      final nombre = (venta['product_name'] as String?) ?? 'Producto';
+      final llaveDia = _fecha(fecha);
+      final llaveMes =
+          '${fecha.year}-${fecha.month.toString().padLeft(2, '0')}';
+
+      total += importe;
+      if (_mismoDia(fecha, ahora)) hoy += importe;
+      ingresosPorDia[llaveDia] = (ingresosPorDia[llaveDia] ?? 0) + importe;
+      ingresosPorHora[fecha.hour] =
+          (ingresosPorHora[fecha.hour] ?? 0) + importe;
+      ingresosPorMes[llaveMes] = (ingresosPorMes[llaveMes] ?? 0) + importe;
+      unidades[nombre] = (unidades[nombre] ?? 0) + cantidad;
+      emojis[nombre] = (venta['product_emoji'] as String?) ?? '🛍️';
     }
 
     MapEntry<String, double>? extremo(
@@ -112,7 +127,7 @@ class RepositorioFinanzasLocal {
     return ResumenFinanzas.desdeMapa({
       'ingresos_totales': total,
       'ingresos_hoy': hoy,
-      'pedidos_completados': pedidos.length,
+      'pedidos_completados': pedidos.length + ventasRapidas.length,
       'visitas_totales': (local['view_count'] as num?)?.toInt() ?? 0,
       'producto_mas_vendido': masVendido == null
           ? null

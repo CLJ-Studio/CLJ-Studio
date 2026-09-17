@@ -320,8 +320,6 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
                           nombre == null || nombre.isEmpty
                               ? 'Vendedor UPSA'
                               : nombre,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: Color(0xFFE6E1D5),
                             fontSize: 22,
@@ -596,8 +594,6 @@ class _EncabezadoPerfil extends StatelessWidget {
                       nombre == null || nombre.isEmpty
                           ? 'Vendedor UPSA'
                           : nombre,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: colorContenido,
                         fontSize: 16,

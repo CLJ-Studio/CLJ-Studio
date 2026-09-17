@@ -219,23 +219,10 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
       ];
     }
 
-    // El comprador puede desistir mientras no se haya entregado.
+    // El comprador espera la respuesta del vendedor. La cancelación que se
+    // refleja en "Mis pedidos" corresponde a la decisión del vendedor.
     if (pedido.estado == EstadoPedido.solicitado && !soyVendedor) {
-      return [
-        OutlinedButton.icon(
-          onPressed: _ocupado
-              ? null
-              : () => _ejecutar(() => _repositorio.cancelar(pedido.id)),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFFAE7960),
-            side: const BorderSide(color: Color(0xFFBBBCA7)),
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: const StadiumBorder(),
-          ),
-          icon: const Icon(Icons.close_rounded),
-          label: const Text('Cancelar pedido'),
-        ),
-      ];
+      return const [];
     }
 
     if (pedido.estado == EstadoPedido.aceptado) {
@@ -273,14 +260,16 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
             soyVendedor ? 'Marcar como entregado' : 'Marcar como recibido',
           ),
         ),
-        const SizedBox(height: 10),
-        TextButton(
-          onPressed: _ocupado ? null : () => _confirmarCancelacion(pedido),
-          child: const Text(
-            'Cancelar pedido',
-            style: TextStyle(color: Color(0xFFAE7960)),
+        if (soyVendedor) ...[
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: _ocupado ? null : () => _confirmarCancelacion(pedido),
+            child: const Text(
+              'Cancelar pedido',
+              style: TextStyle(color: Color(0xFFAE7960)),
+            ),
           ),
-        ),
+        ],
       ];
     }
 

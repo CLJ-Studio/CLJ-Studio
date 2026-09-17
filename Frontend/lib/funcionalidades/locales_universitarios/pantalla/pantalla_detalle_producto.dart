@@ -6,6 +6,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../mi_local/diseno/dialogo_producto.dart';
 import '../../mi_local/datos/repositorio_mi_local.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
@@ -135,6 +136,11 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
   Future<void> _agregar() async {
     final carrito = ControladorCarritoCompras.instancia;
 
+    if (_esMio) {
+      _avisar('No puedes agregar al carrito un producto que publicaste.');
+      return;
+    }
+
     if (!_producto.hayExistencias) {
       _avisar('${_producto.nombre} está agotado.');
       return;
@@ -157,7 +163,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
             FilledButton(
               onPressed: () => Navigator.of(contexto).pop(true),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF474646),
+                backgroundColor: ConfiguracionTema.azulNoche,
               ),
               child: const Text('Vaciar y agregar'),
             ),
@@ -281,13 +287,14 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: Color(0xFFE6E1D5),
+      backgroundColor: Colors.white,
       bottomNavigationBar: AnimatedBuilder(
         animation: Listenable.merge([
           ControladorCarritoCompras.instancia,
           _animacionModoImagen,
         ]),
         builder: (context, _) {
+          if (_esMio) return const SizedBox.shrink();
           final carrito = ControladorCarritoCompras.instancia;
           final indice = carrito.elementos.indexWhere(
             (elemento) => elemento.producto.id == _producto.id,
@@ -315,7 +322,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                               child: FilledButton(
                                 onPressed: _abrirCarrito,
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFF474646),
+                                  backgroundColor: ConfiguracionTema.azulNoche,
                                   shape: const StadiumBorder(),
                                 ),
                                 child: FittedBox(
@@ -349,10 +356,10 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                             width: 126,
                             height: 56,
                             decoration: BoxDecoration(
-                              color: Color(0xFFE6E1D5),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(28),
                               border: Border.all(
-                                color: const Color(0xFFE6E1D5),
+                                color: const Color(0xFFE1E1E1),
                               ),
                               boxShadow: const [
                                 BoxShadow(
@@ -526,7 +533,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(24, 14, 24, 110),
                           decoration: const BoxDecoration(
-                            color: Color(0xFFE6E1D5),
+                            color: Colors.white,
                             borderRadius: BorderRadius.vertical(
                               top: Radius.circular(32),
                             ),
@@ -582,18 +589,21 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                                 width: double.infinity,
                                 height: 54,
                                 child: FilledButton(
-                                  onPressed: _producto.hayExistencias
+                                  onPressed: !_esMio && _producto.hayExistencias
                                       ? _agregar
                                       : null,
                                   style: FilledButton.styleFrom(
-                                    backgroundColor: const Color(0xFF474646),
+                                    backgroundColor:
+                                        ConfiguracionTema.azulNoche,
                                     disabledBackgroundColor: const Color(
                                       0xFFBBBCA7,
                                     ),
                                     shape: const StadiumBorder(),
                                   ),
                                   child: Text(
-                                    _producto.hayExistencias
+                                    _esMio
+                                        ? 'Este producto es tuyo'
+                                        : _producto.hayExistencias
                                         ? 'Agregar al carrito'
                                         : 'Agotado',
                                     style: const TextStyle(
@@ -605,7 +615,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                               ),
                               const Divider(
                                 height: 38,
-                                color: Color(0xFFE6E1D5),
+                                color: Color(0xFFE9E9E9),
                               ),
                               const Text(
                                 'Acerca de este producto',
@@ -724,7 +734,7 @@ class _BotonCircular extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: Color(0xFFE6E1D5),
+    color: Colors.white,
     shape: const CircleBorder(),
     elevation: 1,
     child: IconButton(
@@ -746,7 +756,7 @@ class _MenuGestionProducto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: Color(0xFFE6E1D5),
+    color: Colors.white,
     shape: const CircleBorder(),
     elevation: 1,
     child: PopupMenuButton<String>(
@@ -859,7 +869,7 @@ class _GaleriaState extends State<_Galeria> {
     if (widget.fotos.isEmpty) {
       return Container(
         height: widget.alto,
-        color: const Color(0xFFE6E1D5),
+        color: Colors.white,
         alignment: Alignment.center,
         child: Text(widget.emoji, style: const TextStyle(fontSize: 110)),
       );
@@ -869,7 +879,7 @@ class _GaleriaState extends State<_Galeria> {
       url,
       fit: ajuste,
       errorBuilder: (_, _, _) => ColoredBox(
-        color: const Color(0xFFE6E1D5),
+        color: Colors.white,
         child: Center(
           child: Text(widget.emoji, style: const TextStyle(fontSize: 90)),
         ),
@@ -896,8 +906,8 @@ class _GaleriaState extends State<_Galeria> {
             Container(
               height: widget.alto,
               color: Color.lerp(
-                const Color(0xFFE6E1D5),
                 Colors.white,
+                Colors.black,
                 widget.progresoExpansion,
               ),
               child: PageView.builder(
@@ -931,7 +941,7 @@ class _GaleriaState extends State<_Galeria> {
                     itemCount: widget.fotos.length,
                     pageController: _paginasAmpliadas,
                     backgroundDecoration: const BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                     scrollPhysics: const ClampingScrollPhysics(),
                     onPageChanged: (indice) {
@@ -945,7 +955,7 @@ class _GaleriaState extends State<_Galeria> {
                         dimension: 30,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          color: const Color(0xFF474646),
+                          color: Colors.white,
                           value: progreso?.expectedTotalBytes == null
                               ? null
                               : progreso!.cumulativeBytesLoaded /
@@ -963,7 +973,7 @@ class _GaleriaState extends State<_Galeria> {
                       maxScale: PhotoViewComputedScale.covered * 4,
                       basePosition: Alignment.center,
                       errorBuilder: (_, _, _) => ColoredBox(
-                        color: const Color(0xFFE6E1D5),
+                        color: Colors.black,
                         child: Center(
                           child: Text(
                             widget.emoji,
@@ -997,11 +1007,11 @@ class _GaleriaState extends State<_Galeria> {
                           decoration: BoxDecoration(
                             color: Color.lerp(
                               i == widget.pagina
-                                  ? const Color(0xFFE6E1D5)
-                                  : const Color(0x8AE6E1D5),
+                                  ? Colors.white
+                                  : Colors.white54,
                               i == widget.pagina
-                                  ? const Color(0xFF474646)
-                                  : const Color(0x59474646),
+                                  ? Colors.white
+                                  : Colors.white54,
                               widget.progresoExpansion,
                             ),
                             borderRadius: BorderRadius.circular(8),

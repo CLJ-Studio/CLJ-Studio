@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../logica/controlador_carrito_compras.dart';
 
 /// Resumen persistente que aparece al agregar productos desde un local.
@@ -41,7 +42,7 @@ class BarraResumenCarrito extends StatelessWidget {
                       child: Row(
                         children: [
                           Material(
-                            color: Color(0xFFE6E1D5),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(28),
                             elevation: 10,
                             shadowColor: Color(0x61474646),
@@ -63,7 +64,7 @@ class BarraResumenCarrito extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Material(
-                              color: const Color(0xFF474646),
+                              color: ConfiguracionTema.azulNoche,
                               borderRadius: BorderRadius.circular(28),
                               elevation: 10,
                               shadowColor: Color(0x61474646),
@@ -84,7 +85,7 @@ class BarraResumenCarrito extends StatelessWidget {
                                           child: Text(
                                             'Ver carrito',
                                             style: TextStyle(
-                                              color: Color(0xFFE6E1D5),
+                                              color: Colors.white,
                                               fontSize: 17,
                                               fontWeight: FontWeight.w900,
                                             ),
@@ -93,7 +94,7 @@ class BarraResumenCarrito extends StatelessWidget {
                                         Text(
                                           'Bs ${carrito.total.toStringAsFixed(2)}',
                                           style: const TextStyle(
-                                            color: Color(0xFFE6E1D5),
+                                            color: Colors.white,
                                             fontSize: 16,
                                             fontWeight: FontWeight.w900,
                                           ),
@@ -101,7 +102,7 @@ class BarraResumenCarrito extends StatelessWidget {
                                         const SizedBox(width: 5),
                                         const Icon(
                                           Icons.chevron_right_rounded,
-                                          color: Color(0xFFE6E1D5),
+                                          color: Colors.white,
                                         ),
                                       ],
                                     ),

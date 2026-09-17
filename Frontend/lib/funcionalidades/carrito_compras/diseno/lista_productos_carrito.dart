@@ -35,7 +35,7 @@ class ListaProductosCarrito extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Color(0xFFE6E1D5),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(

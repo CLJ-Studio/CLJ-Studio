@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
+
 class BotonContinuarPedido extends StatelessWidget {
   const BotonContinuarPedido({
     required this.habilitado,
@@ -11,7 +13,7 @@ class BotonContinuarPedido extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: habilitado ? const Color(0xFF474646) : const Color(0xFFBBBCA7),
+    color: habilitado ? ConfiguracionTema.azulNoche : const Color(0xFFBBBCA7),
     borderRadius: BorderRadius.circular(28),
     child: InkWell(
       onTap: habilitado ? alPresionar : null,
@@ -22,7 +24,7 @@ class BotonContinuarPedido extends StatelessWidget {
           child: Text(
             'Contactar con el vendedor',
             style: TextStyle(
-              color: Color(0xFFE6E1D5),
+              color: Colors.white,
               fontWeight: FontWeight.w700,
               fontSize: 16,
             ),

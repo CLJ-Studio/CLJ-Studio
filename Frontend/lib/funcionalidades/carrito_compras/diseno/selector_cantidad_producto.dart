@@ -16,9 +16,9 @@ class SelectorCantidadProducto extends StatelessWidget {
     width: 132,
     height: 48,
     decoration: BoxDecoration(
-      color: Color(0xFFE6E1D5),
+      color: Colors.white,
       borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: const Color(0xFFE6E1D5)),
+      border: Border.all(color: const Color(0xFFE1E1E1)),
     ),
     child: Row(
       children: [
@@ -46,7 +46,7 @@ class SelectorCantidadProducto extends StatelessWidget {
               child: InkWell(
                 onTap: alAumentar,
                 customBorder: const CircleBorder(),
-                child: const Icon(Icons.add_rounded, color: Color(0xFFE6E1D5)),
+                child: const Icon(Icons.add_rounded, color: Colors.white),
               ),
             ),
           ),

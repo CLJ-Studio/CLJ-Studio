@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../arbol_aplicacion/arbol_dependencias.dart';
+import '../../camara_publicacion/pantalla/pantalla_camara_publicacion.dart';
 import '../../inicio_marketplace/logica/controlador_inicio_marketplace.dart';
 import '../../inicio_marketplace/pantalla/pantalla_inicio_marketplace.dart';
 import '../../locales_universitarios/logica/controlador_locales.dart';
@@ -37,6 +38,8 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
   );
   final locales = ControladorLocales();
   StreamSubscription<DestinoNotificacionSistema>? _destinosDelSistema;
+  List<String> _imagenesDesdeCamara = const [];
+  int _loteImagenesCamara = 0;
 
   @override
   void initState() {
@@ -125,6 +128,15 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
     );
   }
 
+  void _usarImagenesCamara(List<String> imagenes) {
+    if (!mounted || imagenes.isEmpty) return;
+    setState(() {
+      _imagenesDesdeCamara = List.unmodifiable(imagenes);
+      _loteImagenesCamara++;
+    });
+    controlador.seleccionarIndice(2);
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: Listenable.merge([miLocal, controlador]),
@@ -146,7 +158,11 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
           mostrarUbicacion: miLocal.tieneLocalFormal,
           controladorExterno: locales,
         ),
-        ArbolPublicarProducto(miLocal: miLocal),
+        ArbolPublicarProducto(
+          miLocal: miLocal,
+          imagenesIniciales: _imagenesDesdeCamara,
+          loteImagenes: _loteImagenesCamara,
+        ),
         PantallaPerfilVendedor(
           controlador: miLocal,
           alCerrarSesion: widget.alCerrarSesion,
@@ -155,6 +171,11 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
       return PantallaNavegacionPrincipal(
         controlador: controlador,
         pantallas: pantallas,
+        camara: PantallaCamaraPublicacion(
+          activa: controlador.indice == -1,
+          alCerrar: () => controlador.seleccionarIndice(0),
+          alContinuar: _usarImagenesCamara,
+        ),
       );
     },
   );

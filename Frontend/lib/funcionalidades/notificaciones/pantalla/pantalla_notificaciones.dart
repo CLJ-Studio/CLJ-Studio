@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
@@ -22,7 +20,9 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
   @override
   void initState() {
     super.initState();
-    controlador.cargar();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) controlador.cargar();
+    });
   }
 
   Future<void> _abrir(Notificacion notificacion) async {
@@ -62,12 +62,9 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final oscuro = tema.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: oscuro
-          ? const Color(0xFF474646)
-          : const Color(0xFFE6E1D5),
+      backgroundColor: tema.scaffoldBackgroundColor,
       body: AnimatedBuilder(
         animation: controlador,
         builder: (context, _) {
@@ -85,7 +82,6 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
               ),
               slivers: [
                 _Encabezado(
-                  cantidadNoLeidas: controlador.noLeidas,
                   alMarcarTodas: controlador.noLeidas == 0
                       ? null
                       : controlador.marcarTodasLeidas,
@@ -104,12 +100,6 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            if (controlador.noLeidas > 0) ...[
-                              _ResumenPendientes(
-                                cantidad: controlador.noLeidas,
-                              ),
-                              const SizedBox(height: 28),
-                            ],
                             for (final grupo in grupos.entries) ...[
                               _TituloSeccion(titulo: grupo.key),
                               const SizedBox(height: 10),
@@ -139,21 +129,14 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
 }
 
 class _Encabezado extends StatelessWidget {
-  const _Encabezado({
-    required this.cantidadNoLeidas,
-    required this.alMarcarTodas,
-  });
+  const _Encabezado({required this.alMarcarTodas});
 
-  final int cantidadNoLeidas;
   final VoidCallback? alMarcarTodas;
 
   @override
   Widget build(BuildContext context) {
-    final oscuro = Theme.of(context).brightness == Brightness.dark;
     return SliverAppBar.large(
-      backgroundColor: oscuro
-          ? const Color(0xE6474646)
-          : const Color(0xEAE6E1D5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -184,8 +167,8 @@ class _Encabezado extends StatelessWidget {
                     icon: const Icon(Icons.done_all_rounded, size: 18),
                     label: const Text('Leer todas'),
                     style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF474646),
-                      backgroundColor: const Color(0x18474646),
+                      foregroundColor: const Color(0xFF4A08A1),
+                      backgroundColor: const Color(0x144A08A1),
                       textStyle: const TextStyle(fontWeight: FontWeight.w800),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 13,
@@ -223,84 +206,6 @@ class _BotonCircular extends StatelessWidget {
       ).colorScheme.surface.withValues(alpha: .86),
       shadowColor: Color(0xFF474646).withValues(alpha: .12),
       elevation: 1,
-    ),
-  );
-}
-
-class _ResumenPendientes extends StatelessWidget {
-  const _ResumenPendientes({required this.cantidad});
-
-  final int cantidad;
-
-  @override
-  Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(24),
-    child: BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF474646), Color(0xFF848381)],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x24474646),
-              blurRadius: 22,
-              offset: Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Color(0xFFE6E1D5).withValues(alpha: .18),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Color(0xFFE6E1D5).withValues(alpha: .2),
-                ),
-              ),
-              child: const Icon(
-                Icons.notifications_active_rounded,
-                color: Color(0xFFE6E1D5),
-                size: 25,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$cantidad ${cantidad == 1 ? 'novedad' : 'novedades'}',
-                    style: const TextStyle(
-                      color: Color(0xFFE6E1D5),
-                      fontWeight: FontWeight.w900,
-                      fontSize: 17,
-                      letterSpacing: -.25,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Todo lo importante de tus pedidos, en un solo lugar.',
-                    style: TextStyle(
-                      color: Color(0xFFE6E1D5).withValues(alpha: .78),
-                      fontSize: 12.5,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     ),
   );
 }
@@ -359,11 +264,14 @@ class _TarjetaNotificacion extends StatelessWidget {
   final VoidCallback alTocar;
 
   Color get _colorIcono => switch (notificacion.tipo) {
-    'pedido_rechazado' || 'pedido_cancelado' => const Color(0xFFAE7960),
-    'pedido_vencido' || 'entrega_por_confirmar' => const Color(0xFFAE7960),
-    'nuevo_local' => const Color(0xFF848381),
-    'ubicacion_pendiente' => const Color(0xFF848381),
-    _ => const Color(0xFF474646),
+    'pedido_recibido' => const Color(0xFFE95026),
+    'pedido_aceptado' || 'pedido_entregado' => const Color(0xFF098B67),
+    'pedido_rechazado' || 'pedido_cancelado' => const Color(0xFFB2194B),
+    'pedido_vencido' => const Color(0xFFE09A18),
+    'mensaje_pedido' || 'nuevo_local' => const Color(0xFF8B5CD6),
+    'entrega_por_confirmar' => const Color(0xFF3449A5),
+    'ubicacion_pendiente' => const Color(0xFFE57B35),
+    _ => const Color(0xFF4A08A1),
   };
 
   @override
@@ -371,132 +279,113 @@ class _TarjetaNotificacion extends StatelessWidget {
     final tema = Theme.of(context);
     final oscuro = tema.brightness == Brightness.dark;
     final colorIcono = _colorIcono;
+    final superficie = oscuro
+        ? tema.colorScheme.surfaceContainerHighest
+        : tema.colorScheme.surface;
+    final fondoTarjeta = Color.alphaBlend(
+      colorIcono.withValues(
+        alpha: oscuro ? .13 : (notificacion.leida ? .035 : .065),
+      ),
+      superficie,
+    );
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: alTocar,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(26),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 280),
             curve: Curves.easeOut,
-            padding: const EdgeInsets.fromLTRB(14, 15, 13, 15),
+            padding: const EdgeInsets.fromLTRB(18, 17, 18, 18),
             decoration: BoxDecoration(
-              color: oscuro
-                  ? const Color(0xFF474646)
-                  : notificacion.leida
-                  ? Color(0xFFE6E1D5).withValues(alpha: .72)
-                  : Color(0xFFE6E1D5).withValues(alpha: .96),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: notificacion.leida
-                    ? tema.dividerColor.withValues(alpha: .08)
-                    : colorIcono.withValues(alpha: .16),
-              ),
+              color: fondoTarjeta,
+              borderRadius: BorderRadius.circular(26),
               boxShadow: [
                 BoxShadow(
                   color: Color(0xFF474646).withValues(
-                    alpha: oscuro ? .18 : (notificacion.leida ? .025 : .065),
+                    alpha: oscuro ? .16 : (notificacion.leida ? .025 : .05),
                   ),
-                  blurRadius: notificacion.leida ? 12 : 24,
-                  offset: const Offset(0, 8),
+                  blurRadius: notificacion.leida ? 10 : 18,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: colorIcono.withValues(alpha: oscuro ? .2 : .12),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(notificacion.icono, color: colorIcono, size: 24),
-                ),
-                const SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              notificacion.titulo,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: notificacion.leida
-                                    ? FontWeight.w700
-                                    : FontWeight.w900,
-                                fontSize: 15.5,
-                                letterSpacing: -.25,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (!notificacion.leida) ...[
-                            Container(
-                              width: 7,
-                              height: 7,
-                              decoration: BoxDecoration(
-                                color: colorIcono,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: colorIcono.withValues(alpha: .3),
-                                    blurRadius: 5,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 7),
-                          ],
-                          Text(
-                            hace,
-                            style: TextStyle(
-                              color: tema.colorScheme.onSurface.withValues(
-                                alpha: .43,
-                              ),
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                            ),
+                Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: colorIcono,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorIcono.withValues(alpha: .24),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        notificacion.cuerpo,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: tema.colorScheme.onSurface.withValues(
-                            alpha: .64,
-                          ),
-                          fontSize: 13,
-                          height: 1.38,
-                          fontWeight: FontWeight.w500,
+                      child: Icon(
+                        notificacion.icono,
+                        color: Colors.white,
+                        size: 23,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (!notificacion.leida) ...[
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: colorIcono,
+                          shape: BoxShape.circle,
                         ),
                       ),
+                      const SizedBox(width: 7),
                     ],
+                    Text(
+                      hace,
+                      style: TextStyle(
+                        color: tema.colorScheme.onSurface.withValues(alpha: .5),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                Text(
+                  notificacion.titulo,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: notificacion.leida
+                        ? FontWeight.w700
+                        : FontWeight.w900,
+                    fontSize: 16.5,
+                    height: 1.2,
+                    letterSpacing: -.25,
                   ),
                 ),
-                if (notificacion.llevaAAlgunSitio) ...[
-                  const SizedBox(width: 4),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 27),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 19,
-                      color: tema.colorScheme.onSurface.withValues(alpha: .25),
-                    ),
+                const SizedBox(height: 5),
+                Text(
+                  notificacion.cuerpo,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: tema.colorScheme.onSurface.withValues(alpha: .68),
+                    fontSize: 14,
+                    height: 1.38,
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
+                ),
               ],
             ),
           ),

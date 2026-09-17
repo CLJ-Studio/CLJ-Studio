@@ -5,11 +5,21 @@ import '../pantalla/pantalla_publicar_producto.dart';
 
 /// Ensambla el flujo de publicación sobre el local del estudiante.
 class ArbolPublicarProducto extends StatelessWidget {
-  const ArbolPublicarProducto({required this.miLocal, super.key});
+  const ArbolPublicarProducto({
+    required this.miLocal,
+    required this.imagenesIniciales,
+    required this.loteImagenes,
+    super.key,
+  });
 
   final ControladorMiLocal miLocal;
+  final List<String> imagenesIniciales;
+  final int loteImagenes;
 
   @override
-  Widget build(BuildContext context) =>
-      PantallaPublicarProducto(miLocal: miLocal);
+  Widget build(BuildContext context) => PantallaPublicarProducto(
+    miLocal: miLocal,
+    imagenesIniciales: imagenesIniciales,
+    loteImagenes: loteImagenes,
+  );
 }

@@ -93,7 +93,7 @@ class _VisorImagenProductoPantallaState
       autofocus: true,
       onKeyEvent: _alPresionarTecla,
       child: Scaffold(
-        backgroundColor: Color(0xFF474646),
+        backgroundColor: Colors.black,
         body: Stack(
           fit: StackFit.expand,
           children: [
@@ -104,7 +104,7 @@ class _VisorImagenProductoPantallaState
                   itemCount: widget.urlsImagenes.length,
                   pageController: _paginas,
                   backgroundDecoration: const BoxDecoration(
-                    color: Color(0xFF474646),
+                    color: Colors.black,
                   ),
                   scrollPhysics: const BouncingScrollPhysics(),
                   onPageChanged: (indice) => setState(() => _indice = indice),

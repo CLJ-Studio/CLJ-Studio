@@ -13,9 +13,16 @@ import '../logica/controlador_publicacion.dart';
 /// espacio personal que hace de contenedor. "Abrir tu local" vive en la
 /// seccion Locales, para quien quiera una vitrina formal.
 class PantallaPublicarProducto extends StatefulWidget {
-  const PantallaPublicarProducto({required this.miLocal, super.key});
+  const PantallaPublicarProducto({
+    required this.miLocal,
+    required this.imagenesIniciales,
+    required this.loteImagenes,
+    super.key,
+  });
 
   final ControladorMiLocal miLocal;
+  final List<String> imagenesIniciales;
+  final int loteImagenes;
 
   @override
   State<PantallaPublicarProducto> createState() =>
@@ -52,6 +59,8 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
               FormularioPublicacion(
                 controlador: controlador,
                 miLocal: widget.miLocal,
+                imagenesIniciales: widget.imagenesIniciales,
+                loteImagenes: widget.loteImagenes,
               ),
             ],
           ],

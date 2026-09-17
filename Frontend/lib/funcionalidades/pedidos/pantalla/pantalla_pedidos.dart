@@ -1,14 +1,21 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
+import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../carrito_compras/logica/controlador_carrito_compras.dart';
+import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
+import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../diseno/tarjeta_pedido.dart';
 import '../logica/controlador_pedidos.dart';
 import '../modelos/pedido.dart';
+import 'pantalla_chats.dart';
 import 'pantalla_detalle_pedido.dart';
 
-/// Compras y ventas del usuario en dos pestañas.
+/// Compras y ventas con la apariencia de un historial de pedidos nativo.
 class PantallaPedidos extends StatefulWidget {
   const PantallaPedidos({required this.controlador, super.key});
 
@@ -20,7 +27,9 @@ class PantallaPedidos extends StatefulWidget {
 
 class _PantallaPedidosState extends State<PantallaPedidos>
     with SingleTickerProviderStateMixin {
-  late final _pestanas = TabController(length: 2, vsync: this);
+  static const _marketplace = RepositorioInicioMarketplace();
+  late final _pestanas = TabController(length: 3, vsync: this);
+  String? _repitiendoId;
 
   @override
   void dispose() {
@@ -34,120 +43,215 @@ class _PantallaPedidosState extends State<PantallaPedidos>
         builder: (_) => PantallaDetallePedido(pedidoId: pedido.id),
       ),
     );
-    // Al volver, el estado pudo cambiar (aceptado, cancelado...).
     await widget.controlador.cargar();
   }
 
-  Future<void> _cancelar(Pedido pedido) async {
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (contexto) => AlertDialog(
-        title: const Text('Cancelar pedido'),
-        content: Text(
-          'Se cancelará tu pedido en ${pedido.nombreLocal}. '
-          'Esta acción no se puede deshacer.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(contexto).pop(false),
-            child: const Text('Volver'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(contexto).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFAE7960),
-            ),
-            child: const Text('Sí, cancelar'),
-          ),
-        ],
-      ),
-    );
-    if (confirmado != true) return;
-
-    final error = await widget.controlador.cancelar(pedido.id);
-    if (error != null && mounted) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(error), behavior: SnackBarBehavior.floating),
-        );
+  ProductoMarketplace? _encontrarProducto(
+    ItemPedido item,
+    List<ProductoMarketplace> productos,
+  ) {
+    for (final producto in productos) {
+      if (item.productoId != null && producto.id == item.productoId) {
+        return producto;
+      }
     }
+    final nombre = item.nombre.trim().toLowerCase();
+    for (final producto in productos) {
+      if (producto.nombre.trim().toLowerCase() == nombre) return producto;
+    }
+    return null;
   }
 
-  @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: widget.controlador,
-    builder: (context, _) {
-      final controlador = widget.controlador;
+  Future<void> _repetir(Pedido pedido) async {
+    if (_repitiendoId != null) return;
+    setState(() => _repitiendoId = pedido.id);
 
-      return Column(
-        children: [
-          const SizedBox(height: 12),
-          TabBar(
-            controller: _pestanas,
-            labelColor: const Color(0xFF474646),
-            unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color,
-            indicatorColor: const Color(0xFF474646),
-            labelStyle: const TextStyle(fontWeight: FontWeight.w900),
-            tabs: [
-              _PestanaConAviso(
-                titulo: 'Mis compras',
-                pendientes: controlador.comprasPorConfirmar,
+    try {
+      final (local, productos) = await (
+        _marketplace.obtenerLocal(pedido.localId),
+        _marketplace.obtenerProductos(pedido.localId),
+      ).wait;
+      if (!mounted) return;
+      if (local == null) {
+        _avisar('Este local ya no está disponible.');
+        return;
+      }
+
+      final disponibles = <(ProductoMarketplace, int)>[];
+      var omitidos = 0;
+      for (final item in pedido.items) {
+        final producto = _encontrarProducto(item, productos);
+        if (producto == null || !producto.disponible) {
+          omitidos++;
+          continue;
+        }
+        final cantidad = producto.esServicio
+            ? item.cantidad
+            : math.min(item.cantidad, producto.stock);
+        if (cantidad <= 0) {
+          omitidos++;
+          continue;
+        }
+        disponibles.add((producto, cantidad));
+      }
+      if (disponibles.isEmpty) {
+        _avisar('Los productos de este pedido ya no están disponibles.');
+        return;
+      }
+
+      final carrito = ControladorCarritoCompras.instancia;
+      if (!carrito.estaVacio) {
+        final reemplazar = await showDialog<bool>(
+          context: context,
+          builder: (contexto) => AlertDialog(
+            title: const Text('Reemplazar el carrito'),
+            content: const Text(
+              'Para repetir este pedido reemplazaremos lo que tienes ahora '
+              'en el carrito.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(contexto).pop(false),
+                child: const Text('Conservar carrito'),
               ),
-              _PestanaConAviso(
-                titulo: 'Mis ventas',
-                pendientes: controlador.ventasPorResponder,
+              FilledButton(
+                onPressed: () => Navigator.of(contexto).pop(true),
+                child: const Text('Reemplazar'),
               ),
             ],
           ),
-          Expanded(
-            child: switch (controlador) {
-              ControladorPedidos(cargando: true) => const Center(
-                child: IndicadorCarga(),
-              ),
-              ControladorPedidos(error: final String mensaje) =>
-                MensajeCatalogo(
-                  mensaje: mensaje,
-                  alReintentar: controlador.cargar,
-                ),
-              _ => TabBarView(
-                controller: _pestanas,
-                children: [
-                  _ListaPedidos(
-                    pedidos: controlador.compras,
-                    soyVendedor: false,
-                    vacio: 'Todavía no has hecho ningún pedido.',
-                    alRefrescar: controlador.cargar,
-                    alAbrir: _abrir,
-                    sinLeerDe: controlador.mensajesSinLeerDe,
-                    // Solo el comprador puede cancelar, y solo mientras el
-                    // vendedor no haya respondido.
-                    alCancelar: _cancelar,
-                  ),
-                  _ListaPedidos(
-                    pedidos: controlador.ventas,
-                    soyVendedor: true,
-                    mostrarTotalVendido: true,
-                    vacio: 'Aún no has recibido pedidos en tu local.',
-                    alRefrescar: controlador.cargar,
-                    alAbrir: _abrir,
-                    sinLeerDe: controlador.mensajesSinLeerDe,
-                  ),
-                ],
-              ),
-            },
-          ),
-        ],
+        );
+        if (reemplazar != true || !mounted) return;
+      }
+
+      carrito.vaciar();
+      for (final (producto, cantidad) in disponibles) {
+        for (var i = 0; i < cantidad; i++) {
+          carrito.agregar(producto, local);
+        }
+      }
+      await Navigator.of(context).pushNamed(ConfiguracionRutas.carrito);
+      if (omitidos > 0 && mounted) {
+        _avisar(
+          omitidos == 1
+              ? 'Un producto ya no estaba disponible y no se agregó.'
+              : '$omitidos productos ya no estaban disponibles.',
+        );
+      }
+    } catch (_) {
+      if (mounted) _avisar('No pudimos preparar nuevamente este pedido.');
+    } finally {
+      if (mounted) setState(() => _repitiendoId = null);
+    }
+  }
+
+  void _avisar(String mensaje) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(mensaje), behavior: SnackBarBehavior.floating),
       );
-    },
+  }
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: Colors.white,
+    child: AnimatedBuilder(
+      animation: widget.controlador,
+      builder: (context, _) {
+        final controlador = widget.controlador;
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 14, 24, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TabBar(
+                  controller: _pestanas,
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  dividerColor: Colors.transparent,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicator: BoxDecoration(
+                    color: const Color(0xFFF4F3F5),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  labelColor: const Color(0xFF10091D),
+                  unselectedLabelColor: const Color(0xFF10091D),
+                  labelStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  tabs: [
+                    _PestanaConAviso(
+                      titulo: 'Mis pedidos',
+                      pendientes: controlador.comprasPorConfirmar,
+                    ),
+                    _PestanaConAviso(
+                      titulo: 'Mis ventas',
+                      pendientes: controlador.ventasPorResponder,
+                    ),
+                    _PestanaConAviso(
+                      titulo: 'Chats',
+                      pendientes: controlador.chatsAbiertos,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xFFF1EFF3)),
+            Expanded(
+              child: switch (controlador) {
+                ControladorPedidos(cargando: true) => const Center(
+                  child: IndicadorCarga(),
+                ),
+                ControladorPedidos(error: final String mensaje) =>
+                  MensajeCatalogo(
+                    mensaje: mensaje,
+                    alReintentar: controlador.cargar,
+                  ),
+                _ => TabBarView(
+                  controller: _pestanas,
+                  children: [
+                    _ListaPedidos(
+                      pedidos: controlador.compras,
+                      soyVendedor: false,
+                      vacio: 'Todavía no has hecho ningún pedido.',
+                      alRefrescar: controlador.cargar,
+                      alAbrir: _abrir,
+                      alRepetir: _repetir,
+                      repitiendoId: _repitiendoId,
+                      sinLeerDe: controlador.mensajesSinLeerDe,
+                    ),
+                    _ListaPedidos(
+                      pedidos: controlador.ventas,
+                      soyVendedor: true,
+                      vacio: 'Aún no has recibido pedidos en tu local.',
+                      alRefrescar: controlador.cargar,
+                      alAbrir: _abrir,
+                      repitiendoId: _repitiendoId,
+                      sinLeerDe: controlador.mensajesSinLeerDe,
+                    ),
+                    ContenidoChats(
+                      chats: controlador.chats,
+                      alRefrescar: controlador.recargar,
+                    ),
+                  ],
+                ),
+              },
+            ),
+          ],
+        );
+      },
+    ),
   );
 }
 
-/// Pestaña con el número de cosas que esperan a esta persona.
-///
-/// Las dos pestañas lo usan: antes el distintivo era solo para el vendedor,
-/// pero ahora al comprador también le puede tocar confirmar una entrega, y
-/// sin aviso no volvería a entrar a mirar.
 class _PestanaConAviso extends StatelessWidget {
   const _PestanaConAviso({required this.titulo, required this.pendientes});
 
@@ -156,23 +260,26 @@ class _PestanaConAviso extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Tab(
+    height: 48,
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(titulo),
         if (pendientes > 0) ...[
-          const SizedBox(width: 6),
+          const SizedBox(width: 7),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            constraints: const BoxConstraints(minWidth: 21),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFFAE7960),
+              color: const Color(0xFFE93636),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '$pendientes',
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Color(0xFFE6E1D5),
-                fontSize: 11,
+                color: Colors.white,
+                fontSize: 10,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -183,16 +290,16 @@ class _PestanaConAviso extends StatelessWidget {
   );
 }
 
-class _ListaPedidos extends StatefulWidget {
+class _ListaPedidos extends StatelessWidget {
   const _ListaPedidos({
     required this.pedidos,
     required this.soyVendedor,
     required this.vacio,
     required this.alRefrescar,
     required this.alAbrir,
-    this.alCancelar,
-    this.mostrarTotalVendido = false,
-    this.sinLeerDe,
+    required this.repitiendoId,
+    required this.sinLeerDe,
+    this.alRepetir,
   });
 
   final List<Pedido> pedidos;
@@ -200,193 +307,62 @@ class _ListaPedidos extends StatefulWidget {
   final String vacio;
   final Future<void> Function() alRefrescar;
   final void Function(Pedido) alAbrir;
-  final void Function(Pedido)? alCancelar;
-  final bool mostrarTotalVendido;
-
-  /// Mensajes sin leer de un pedido, para su distintivo.
-  final int Function(String)? sinLeerDe;
-
-  @override
-  State<_ListaPedidos> createState() => _ListaPedidosState();
-}
-
-class _ListaPedidosState extends State<_ListaPedidos> {
-  String _busqueda = '';
-
-  List<Pedido> get _filtrados {
-    final consulta = _busqueda.trim().toLowerCase();
-    if (consulta.isEmpty) return widget.pedidos;
-    return widget.pedidos.where((pedido) {
-      final productos = pedido.items.map((item) => item.nombre).join(' ');
-      return pedido.nombreLocal.toLowerCase().contains(consulta) ||
-          pedido.nombreComprador.toLowerCase().contains(consulta) ||
-          productos.toLowerCase().contains(consulta);
-    }).toList();
-  }
-
-  /// Los que cuentan para el resumen: un vencido, rechazado o cancelado
-  /// nunca se concretó y no debe aparecer ni en el total ni en el contador,
-  /// sea "Total comprado" o "Total vendido".
-  List<Pedido> get _pedidosContados =>
-      widget.pedidos.where((pedido) => pedido.estado.cuentaParaTotal).toList();
-
-  double get _totalContado =>
-      _pedidosContados.fold(0, (total, pedido) => total + pedido.total);
+  final void Function(Pedido)? alRepetir;
+  final String? repitiendoId;
+  final int Function(String) sinLeerDe;
 
   @override
   Widget build(BuildContext context) => RefreshIndicator(
-    onRefresh: widget.alRefrescar,
+    onRefresh: alRefrescar,
+    color: const Color(0xFF252B68),
     child: ListView(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 120),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: ClampingScrollPhysics(),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 26, 24, 96),
       children: [
         ContenidoCentrado(
-          anchoMaximo: 620,
-          child: widget.pedidos.isEmpty
+          anchoMaximo: 650,
+          child: pedidos.isEmpty
               ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 80),
+                  padding: const EdgeInsets.symmetric(vertical: 90),
                   child: Column(
                     children: [
                       const Icon(
                         Icons.receipt_long_outlined,
-                        size: 46,
-                        color: Color(0xFFBBBCA7),
+                        size: 48,
+                        color: Color(0xFFB9B5BE),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 15),
                       Text(
-                        widget.vacio,
+                        vacio,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF848381)),
+                        style: const TextStyle(
+                          color: Color(0xFF625C68),
+                          fontSize: 15,
+                        ),
                       ),
                     ],
                   ),
                 )
               : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _ResumenMovimiento(
-                      titulo: widget.mostrarTotalVendido
-                          ? 'Total vendido'
-                          : 'Total comprado',
-                      total: _totalContado,
-                      cantidad: _pedidosContados.length,
-                      esVenta: widget.mostrarTotalVendido,
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      onChanged: (valor) => setState(() => _busqueda = valor),
-                      decoration: InputDecoration(
-                        hintText: 'Buscar pedido',
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        filled: true,
-                        fillColor:
-                            Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF474646)
-                            : Color(0xFFE6E1D5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(22),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(22),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    for (final pedido in _filtrados)
+                    for (final pedido in pedidos)
                       TarjetaPedido(
                         pedido: pedido,
-                        soyVendedor: widget.soyVendedor,
-                        mensajesSinLeer: widget.sinLeerDe?.call(pedido.id) ?? 0,
-                        alAbrir: () => widget.alAbrir(pedido),
-                        alCancelar:
-                            widget.alCancelar != null &&
-                                pedido.estado == EstadoPedido.solicitado
-                            ? () => widget.alCancelar!(pedido)
+                        soyVendedor: soyVendedor,
+                        mensajesSinLeer: sinLeerDe(pedido.id),
+                        alAbrir: () => alAbrir(pedido),
+                        alRepetir:
+                            !soyVendedor &&
+                                pedido.estado.estaCerrado &&
+                                alRepetir != null
+                            ? () => alRepetir!(pedido)
                             : null,
-                      ),
-                    if (_filtrados.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 44),
-                        child: Text(
-                          'No encontramos pedidos con esa búsqueda.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Color(0xFF848381)),
-                        ),
+                        repitiendo: repitiendoId == pedido.id,
                       ),
                   ],
                 ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _ResumenMovimiento extends StatelessWidget {
-  const _ResumenMovimiento({
-    required this.titulo,
-    required this.total,
-    required this.cantidad,
-    required this.esVenta,
-  });
-
-  final String titulo;
-  final double total;
-  final int cantidad;
-  final bool esVenta;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(22),
-    decoration: BoxDecoration(
-      color: esVenta ? const Color(0xFF474646) : const Color(0xFF474646),
-      borderRadius: BorderRadius.circular(26),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x22474646),
-          blurRadius: 18,
-          offset: Offset(0, 7),
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                titulo,
-                style: const TextStyle(
-                  color: Color(0xB3E6E1D5),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                'Bs ${total.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Color(0xFFE6E1D5),
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-          decoration: BoxDecoration(
-            color: Color(0xFFE6E1D5).withValues(alpha: .16),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Text(
-            '$cantidad ${cantidad == 1 ? 'pedido' : 'pedidos'}',
-            style: const TextStyle(
-              color: Color(0xFFE6E1D5),
-              fontWeight: FontWeight.w800,
-            ),
-          ),
         ),
       ],
     ),

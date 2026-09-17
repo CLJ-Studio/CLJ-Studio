@@ -83,19 +83,6 @@ class _PantallaChatsState extends State<PantallaChats> {
     }
   }
 
-  Future<void> _abrir(ResumenChat chat) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => PantallaChatPedido(
-          pedidoId: chat.pedidoId,
-          contraparte: chat.contraparte,
-        ),
-      ),
-    );
-    // Al volver, lo leído ya no debe seguir contando.
-    await _recargarEnSilencio();
-  }
-
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -108,25 +95,67 @@ class _PantallaChatsState extends State<PantallaChats> {
         mensaje: _error!,
         alReintentar: _cargar,
       ),
-      _ when _chats.isEmpty => const _SinChats(),
-      _ => RefreshIndicator(
-        onRefresh: _cargar,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 40),
-          children: [
-            ContenidoCentrado(
-              anchoMaximo: 620,
-              child: Column(
-                children: [
-                  for (final chat in _chats)
-                    _FilaChat(chat: chat, alAbrir: () => _abrir(chat)),
-                ],
-              ),
-            ),
-          ],
-        ),
+      _ => ContenidoChats(
+        chats: _chats,
+        alRefrescar: _cargar,
+        alVolverDeChat: _recargarEnSilencio,
       ),
     },
+  );
+}
+
+/// Bandeja reutilizable para mostrar Chats dentro de la pantalla de Pedidos.
+class ContenidoChats extends StatelessWidget {
+  const ContenidoChats({
+    required this.chats,
+    required this.alRefrescar,
+    this.alVolverDeChat,
+    super.key,
+  });
+
+  final List<ResumenChat> chats;
+  final Future<void> Function() alRefrescar;
+  final Future<void> Function()? alVolverDeChat;
+
+  Future<void> _abrir(BuildContext context, ResumenChat chat) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PantallaChatPedido(
+          pedidoId: chat.pedidoId,
+          contraparte: chat.contraparte,
+        ),
+      ),
+    );
+    // Al volver, lo leído ya no debe seguir contando en la pestaña.
+    await (alVolverDeChat ?? alRefrescar)();
+  }
+
+  @override
+  Widget build(BuildContext context) => RefreshIndicator(
+    onRefresh: alRefrescar,
+    color: const Color(0xFF252B68),
+    child: ListView(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: ClampingScrollPhysics(),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 96),
+      children: [
+        ContenidoCentrado(
+          anchoMaximo: 620,
+          child: chats.isEmpty
+              ? const SizedBox(height: 420, child: _SinChats())
+              : Column(
+                  children: [
+                    for (final chat in chats)
+                      _FilaChat(
+                        chat: chat,
+                        alAbrir: () => _abrir(context, chat),
+                      ),
+                  ],
+                ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -164,8 +193,6 @@ class _FilaChat extends StatelessWidget {
                           Expanded(
                             child: Text(
                               chat.contraparte,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w900,

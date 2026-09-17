@@ -73,8 +73,6 @@ class TarjetaPerfilUsuario extends StatelessWidget {
         Text(
           usuario.nombre,
           textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: colorTexto,
             fontSize: 30,

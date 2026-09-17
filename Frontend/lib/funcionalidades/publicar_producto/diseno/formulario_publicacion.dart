@@ -20,11 +20,15 @@ class FormularioPublicacion extends StatefulWidget {
   const FormularioPublicacion({
     required this.controlador,
     required this.miLocal,
+    required this.imagenesIniciales,
+    required this.loteImagenes,
     super.key,
   });
 
   final ControladorPublicacion controlador;
   final ControladorMiLocal miLocal;
+  final List<String> imagenesIniciales;
+  final int loteImagenes;
 
   @override
   State<FormularioPublicacion> createState() => _FormularioPublicacionState();
@@ -37,7 +41,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   final precio = TextEditingController();
   final stock = TextEditingController();
 
-  List<String> _galeria = const [];
+  late List<String> _galeria;
   List<CategoriaMarketplace> _categorias = const [];
   String? _categoriaId;
   bool _publicando = false;
@@ -49,6 +53,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   @override
   void initState() {
     super.initState();
+    _galeria = [...widget.imagenesIniciales];
     // El formulario simplificado publica productos; ya no pide elegir entre
     // producto y servicio como un paso separado.
     widget.controlador.seleccionarTipo('Producto');
@@ -59,6 +64,24 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
     for (final campo in [nombre, descripcion, precio, stock]) {
       campo.addListener(_alCambiarCampo);
     }
+  }
+
+  @override
+  void didUpdateWidget(covariant FormularioPublicacion anterior) {
+    super.didUpdateWidget(anterior);
+    if (widget.loteImagenes == anterior.loteImagenes ||
+        widget.imagenesIniciales.isEmpty) {
+      return;
+    }
+
+    // Cada lote de la cámara inicia la parte visual de una publicación nueva.
+    // Reemplazar, en vez de mezclar, evita que reaparezcan fotos de un borrador
+    // anterior junto a las que la persona acaba de tomar.
+    _galeria = [...widget.imagenesIniciales];
+    _revisandoBorrador = false;
+    AlmacenBorrador.borrar().then((_) {
+      if (mounted) _guardarBorrador();
+    });
   }
 
   @override
@@ -77,6 +100,14 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   }
 
   Future<void> _ofrecerBorrador() async {
+    if (_galeria.isNotEmpty) {
+      await AlmacenBorrador.borrar();
+      if (!mounted) return;
+      setState(() => _revisandoBorrador = false);
+      _guardarBorrador();
+      return;
+    }
+
     final borrador = await AlmacenBorrador.cargar();
     if (!mounted) return;
 
