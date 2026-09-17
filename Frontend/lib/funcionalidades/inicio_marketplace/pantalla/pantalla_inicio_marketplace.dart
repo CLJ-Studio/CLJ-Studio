@@ -14,7 +14,6 @@ import '../../instalacion_app/diseno/aviso_instalacion.dart';
 import '../../locales_universitarios/diseno/carrusel_locales_destacados.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_local.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
-import '../../pedidos/pantalla/pantalla_chats.dart';
 import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../diseno/campus_collapsing_header.dart';
@@ -136,11 +135,6 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                     alAbrirPedidos: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const PantallaPedidosCompleta(),
-                      ),
-                    ),
-                    alAbrirChats: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const PantallaChats(),
                       ),
                     ),
                     mostrarCategorias: false,
