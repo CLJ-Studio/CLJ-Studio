@@ -171,11 +171,25 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                               ),
                             ),
                             const SizedBox(height: 18),
-                            // Los avisos de empresas van pegados al banner y
-                            // antes de las categorias: mas abajo quedarian
-                            // despues del primer desplazamiento, donde ya casi
-                            // nadie los ve. La seccion entera desaparece si no
-                            // hay ninguno vigente.
+                            // El banner principal abre el contenido. Justo
+                            // debajo se muestran los locales destacados y,
+                            // después, la publicidad propia de empresas.
+                            _TituloSeccion(
+                              titulo: 'Los mejores del campus',
+                              alVerTodo:
+                                  alVerLocalesDestacados ??
+                                  () =>
+                                      controlador.seleccionarCategoria('todas'),
+                            ),
+                            const SizedBox(height: 6),
+                            CarruselLocalesDestacados(
+                              locales: localesMasVistos,
+                              construirDetalle: (_, local) =>
+                                  PantallaDetalleLocal(local: local),
+                            ),
+                            const SizedBox(height: 18),
+                            // La sección desaparece por completo cuando no hay
+                            // anuncios de empresas vigentes.
                             Builder(
                               builder: (_) {
                                 final avisos = controlador.publicidadDe(
@@ -203,20 +217,6 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                               publicaciones: publicacionesPopulares,
                               alVerTodo: () =>
                                   controlador.seleccionarCategoria('todas'),
-                            ),
-                            const SizedBox(height: 28),
-                            _TituloSeccion(
-                              titulo: 'Los mejores del campus',
-                              alVerTodo:
-                                  alVerLocalesDestacados ??
-                                  () =>
-                                      controlador.seleccionarCategoria('todas'),
-                            ),
-                            const SizedBox(height: 6),
-                            CarruselLocalesDestacados(
-                              locales: localesMasVistos,
-                              construirDetalle: (_, local) =>
-                                  PantallaDetalleLocal(local: local),
                             ),
                             const SizedBox(height: 28),
                             KeyedSubtree(
