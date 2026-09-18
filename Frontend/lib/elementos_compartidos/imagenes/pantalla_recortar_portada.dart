@@ -6,6 +6,7 @@ import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../configuracion_aplicacion/modo_local.dart';
+import 'rotar_imagen.dart';
 import 'salir_sin_guardar_foto.dart';
 import 'servicio_imagenes.dart';
 
@@ -27,6 +28,28 @@ class PantallaRecortarPortada extends StatefulWidget {
 class _PantallaRecortarPortadaState extends State<PantallaRecortarPortada> {
   final _controlador = CropController();
   bool _procesando = false;
+
+  /// Los bytes que se estan encuadrando. Empiezan siendo los originales y
+  /// cambian al girar: el recorte trabaja siempre sobre lo que se ve.
+  late Uint8List _imagen = widget.original;
+  bool _girando = false;
+
+  Future<void> _girar() async {
+    if (_procesando || _girando) return;
+    setState(() => _girando = true);
+    try {
+      final girada = await rotarUnCuarto(_imagen);
+      if (mounted) setState(() => _imagen = girada);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo girar la imagen.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _girando = false);
+    }
+  }
 
   Future<void> _entregar(Uint8List recortada) async {
     try {
@@ -79,12 +102,31 @@ class _PantallaRecortarPortadaState extends State<PantallaRecortarPortada> {
           'Ajusta la imagen',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
+        actions: [
+          IconButton(
+            // Una foto sacada con el telefono de costado llega acostada, y
+            // encuadrar algo acostado no sirve de nada: hay que enderezarlo
+            // antes de decidir que parte entra.
+            tooltip: 'Girar',
+            onPressed: _procesando || _girando ? null : _girar,
+            icon: _girando
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFE6E1D5),
+                    ),
+                  )
+                : const Icon(Icons.rotate_90_degrees_cw_rounded),
+          ),
+        ],
       ),
       body: Column(
         children: [
           Expanded(
             child: Crop(
-              image: widget.original,
+              image: _imagen,
               controller: _controlador,
               aspectRatio: 4 / 3,
               baseColor: const Color(0xFF474646),

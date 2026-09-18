@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -8,6 +9,7 @@ import '../../configuracion_aplicacion/modo_local.dart';
 import '../estados_aplicacion/indicador_carga.dart';
 import 'foto_red.dart';
 import 'normalizar_portada.dart';
+import 'pantalla_galeria_dispositivo.dart';
 import 'pantalla_recortar_portada.dart';
 import 'servicio_imagenes.dart';
 
@@ -70,35 +72,25 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
     final disponibles = widget.maximo - widget.rutas.length;
     if (disponibles <= 0 || _subiendo) return;
 
-    final List<XFile> elegidas;
-    try {
-      elegidas = await _selector.pickMultiImage(
-        // Reencoda al elegir: nadie necesita 12 MP en una tarjeta de producto.
-        maxWidth: 1600,
-        imageQuality: 86,
-        limit: disponibles,
-        requestFullMetadata: false,
-      );
-    } catch (_) {
-      _avisar('No se pudieron abrir esas fotos.');
-      return;
-    }
-    if (elegidas.isEmpty || !mounted) return;
+    // Primero la galeria propia; si no esta disponible (web, o permiso
+    // denegado), el selector del sistema, que siempre funciona.
+    var tanda = await _elegirEnLaApp(disponibles);
+    tanda ??= await _elegirConElSistema(disponibles);
+    if (tanda == null || tanda.isEmpty || !mounted) return;
 
-    final tanda = elegidas.take(disponibles).toList(growable: false);
     setState(() {
       _subiendo = true;
       _subidas = 0;
-      _porSubir = tanda.length;
+      _porSubir = tanda!.length;
     });
 
     // Se van agregando de a una y no todas al final: en una conexion de
     // campus cinco fotos tardan, y ver aparecer la primera mientras suben las
     // demas es la diferencia entre "esta funcionando" y "se colgo".
     var fallaron = 0;
-    for (final archivo in tanda) {
+    for (final bytes in tanda) {
       try {
-        final ruta = await _subirNormalizada(archivo);
+        final ruta = await _subirNormalizada(bytes);
         if (!mounted) return;
         widget.alCambiar([...widget.rutas, ruta]);
       } catch (_) {
@@ -124,8 +116,46 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
     }
   }
 
-  Future<String> _subirNormalizada(XFile archivo) async {
-    final encuadrada = await normalizarPortada(await archivo.readAsBytes());
+  /// La galeria dentro de la aplicacion. Null cuando no se puede usar y hay
+  /// que caer al selector del sistema; lista vacia cuando se salio sin elegir.
+  Future<List<Uint8List>?> _elegirEnLaApp(int disponibles) async {
+    // En web no hay carrete al que asomarse: el navegador no da acceso al
+    // almacenamiento del telefono.
+    if (kIsWeb) return null;
+
+    final elegidas = await Navigator.of(context).push<List<Uint8List>>(
+      MaterialPageRoute<List<Uint8List>>(
+        builder: (_) => PantallaGaleriaDispositivo(maximo: disponibles),
+      ),
+    );
+    // Volver sin nada puede ser "me arrepenti" o "no di permiso". La pantalla
+    // ofrece el selector del sistema en el segundo caso, asi que aqui se
+    // interpreta como que no hay nada que subir.
+    return elegidas ?? const [];
+  }
+
+  Future<List<Uint8List>?> _elegirConElSistema(int disponibles) async {
+    try {
+      final archivos = await _selector.pickMultiImage(
+        // Reencoda al elegir: nadie necesita 12 MP en una tarjeta de producto.
+        maxWidth: 1600,
+        imageQuality: 86,
+        limit: disponibles,
+        requestFullMetadata: false,
+      );
+      final bytes = <Uint8List>[];
+      for (final archivo in archivos.take(disponibles)) {
+        bytes.add(await archivo.readAsBytes());
+      }
+      return bytes;
+    } catch (_) {
+      _avisar('No se pudieron abrir esas fotos.');
+      return null;
+    }
+  }
+
+  Future<String> _subirNormalizada(Uint8List bytes) async {
+    final encuadrada = await normalizarPortada(bytes);
     if (ModoLocal.activo) {
       return 'data:image/png;base64,${base64Encode(encuadrada)}';
     }
