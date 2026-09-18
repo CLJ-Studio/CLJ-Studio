@@ -9,6 +9,7 @@ import '../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../funcionalidades/acceso_upsa/arbol/arbol_acceso_upsa.dart';
 import '../funcionalidades/carrito_compras/logica/controlador_carrito_compras.dart';
 import '../funcionalidades/favoritos/logica/controlador_favoritos.dart';
+import '../funcionalidades/inicio_marketplace/logica/ubicacion_comprador.dart';
 import '../funcionalidades/notificaciones/datos/servicio_push.dart';
 import '../funcionalidades/notificaciones/logica/controlador_notificaciones.dart';
 import '../funcionalidades/navegacion_principal/arbol/arbol_navegacion_principal.dart';
@@ -188,6 +189,11 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           SesionUsuario.instancia.cargar();
           ControladorFavoritos.instancia.cargar();
           ControladorNotificaciones.instancia.cargar();
+          // Otra vez aqui, y no solo al arrancar la aplicacion: el respaldo
+          // de la zona vive en el perfil, y al arrancar todavia no hay sesion
+          // con la que leerlo. Si el dispositivo ya la tenia, esta llamada no
+          // hace ningun viaje.
+          UbicacionComprador.instancia.cargar();
           // Si ya estaban activos, refresca su estado. En Web conserva la
           // suscripción Push; en móvil usa el centro de notificaciones local.
           ServicioPush.estaActivo().then((activo) {
