@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 import '../modelos/elemento_carrito.dart';
 import 'selector_cantidad_producto.dart';
 
@@ -34,12 +36,10 @@ class TarjetaProductoCarrito extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE9E9E9)),
           ),
           child: switch (elemento.producto.imagenUrl) {
-            final String url => Image.network(
-              url,
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Text(
+            final String url => FotoRed(
+              url: url,
+              anchoVisible: 96,
+              alFallar: Text(
                 elemento.producto.emoji,
                 style: const TextStyle(fontSize: 52),
               ),

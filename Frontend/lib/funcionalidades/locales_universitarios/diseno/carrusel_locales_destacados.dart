@@ -2,6 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 
 /// Carrusel horizontal de locales destacados con fotografía dominante.
@@ -82,10 +83,11 @@ class _TarjetaDestacada extends StatelessWidget {
             child: ColoredBox(
               color: Color(local.colorHexadecimal),
               child: switch (local.portadaUrl) {
-                final String url when url.isNotEmpty => Image.network(
-                  url,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => _Emoji(local: local),
+                final String url when url.isNotEmpty => FotoRed(
+                  url: url,
+                  // La tarjeta del carrusel mide 224 de ancho.
+                  anchoVisible: 224,
+                  alFallar: _Emoji(local: local),
                 ),
                 _ => _Emoji(local: local),
               },

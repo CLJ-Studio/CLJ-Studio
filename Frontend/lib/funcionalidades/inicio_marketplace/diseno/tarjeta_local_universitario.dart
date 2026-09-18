@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 import '../modelos/local_universitario.dart';
 
 /// Tarjeta de local compartida visualmente con "Locales más vistos".
@@ -36,10 +37,10 @@ class TarjetaLocalUniversitario extends StatelessWidget {
               child: ColoredBox(
                 color: Color(local.colorHexadecimal),
                 child: switch (local.portadaUrl) {
-                  final String url when url.isNotEmpty => Image.network(
-                    url,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => _Emoji(local: local),
+                  final String url when url.isNotEmpty => FotoRed(
+                    url: url,
+                    anchoVisible: 224,
+                    alFallar: _Emoji(local: local),
                   ),
                   _ => _Emoji(local: local),
                 },

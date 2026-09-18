@@ -6,6 +6,7 @@ import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../configuracion_aplicacion/modo_local.dart';
+import 'salir_sin_guardar_foto.dart';
 import 'servicio_imagenes.dart';
 
 /// Editor comun para todas las portadas de locales y productos.
@@ -56,79 +57,95 @@ class _PantallaRecortarPortadaState extends State<PantallaRecortarPortada> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF474646),
-    appBar: AppBar(
-      backgroundColor: Colors.transparent,
-      foregroundColor: Color(0xFFE6E1D5),
-      title: const Text(
-        'Ajusta la imagen',
-        style: TextStyle(fontWeight: FontWeight.w900),
+  Widget build(BuildContext context) => SalirSinGuardarFoto(
+    hayCambios: !_procesando,
+    mensaje: '¿Descartar esta imagen?',
+    child: Scaffold(
+      backgroundColor: const Color(0xFF474646),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Color(0xFFE6E1D5),
+        leading: BackButton(
+          onPressed: () async {
+            if (_procesando) return;
+            final salir = await SalirSinGuardarFoto.confirmar(
+              context,
+              mensaje: '¿Descartar esta imagen?',
+            );
+            if (salir && context.mounted) Navigator.of(context).pop();
+          },
+        ),
+        title: const Text(
+          'Ajusta la imagen',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
-    ),
-    body: Column(
-      children: [
-        Expanded(
-          child: Crop(
-            image: widget.original,
-            controller: _controlador,
-            aspectRatio: 4 / 3,
-            baseColor: const Color(0xFF474646),
-            maskColor: Color(0xFF474646).withValues(alpha: .62),
-            onCropped: (resultado) {
-              if (!mounted) return;
-              switch (resultado) {
-                case CropSuccess(:final croppedImage):
-                  _entregar(croppedImage);
-                case CropFailure():
-                  setState(() => _procesando = false);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No se pudo recortar la imagen.'),
-                    ),
-                  );
-              }
-            },
+      body: Column(
+        children: [
+          Expanded(
+            child: Crop(
+              image: widget.original,
+              controller: _controlador,
+              aspectRatio: 4 / 3,
+              baseColor: const Color(0xFF474646),
+              maskColor: Color(0xFF474646).withValues(alpha: .62),
+              onCropped: (resultado) {
+                if (!mounted) return;
+                switch (resultado) {
+                  case CropSuccess(:final croppedImage):
+                    _entregar(croppedImage);
+                  case CropFailure():
+                    setState(() => _procesando = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No se pudo recortar la imagen.'),
+                      ),
+                    );
+                }
+              },
+            ),
           ),
-        ),
-        SafeArea(
-          top: false,
-          minimum: const EdgeInsets.fromLTRB(20, 12, 20, 18),
-          child: Column(
-            children: [
-              const Text(
-                'Mueve la imagen y pellizca para hacer zoom · Formato 1200 × 900',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xB3E6E1D5), fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: FilledButton.icon(
-                  onPressed: _procesando
-                      ? null
-                      : () {
-                          setState(() => _procesando = true);
-                          _controlador.crop();
-                        },
-                  icon: _procesando
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFFE6E1D5),
-                          ),
-                        )
-                      : const Icon(Icons.check_rounded),
-                  label: Text(_procesando ? 'Preparando…' : 'Usar esta imagen'),
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.fromLTRB(20, 12, 20, 18),
+            child: Column(
+              children: [
+                const Text(
+                  'Mueve la imagen y pellizca para hacer zoom · Formato 1200 × 900',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xB3E6E1D5), fontSize: 13),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: FilledButton.icon(
+                    onPressed: _procesando
+                        ? null
+                        : () {
+                            setState(() => _procesando = true);
+                            _controlador.crop();
+                          },
+                    icon: _procesando
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFFE6E1D5),
+                            ),
+                          )
+                        : const Icon(Icons.check_rounded),
+                    label: Text(
+                      _procesando ? 'Preparando…' : 'Usar esta imagen',
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }

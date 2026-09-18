@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
@@ -168,11 +169,10 @@ class _TarjetaPublicacion extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: switch (publicacion.imagenUrl) {
-            final String url => Image.network(
-              url,
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.low,
-              errorBuilder: (_, _, _) => Center(
+            final String url => FotoRed(
+              url: url,
+              anchoVisible: MediaQuery.sizeOf(context).width,
+              alFallar: Center(
                 child: Text(
                   publicacion.emoji,
                   style: const TextStyle(fontSize: 76),

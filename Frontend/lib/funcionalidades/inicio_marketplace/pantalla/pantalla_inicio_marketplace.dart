@@ -7,6 +7,7 @@ import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 import '../../../elementos_compartidos/marca/marca_u_market.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
@@ -1428,11 +1429,12 @@ class _TarjetaPublicacion extends StatelessWidget {
                 width: double.infinity,
                 child: publicacion.imagenUrl == null
                     ? const _ImagenPublicacionVacia()
-                    : Image.network(
-                        publicacion.imagenUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) =>
-                            const _ImagenPublicacionVacia(),
+                    : FotoRed(
+                        url: publicacion.imagenUrl!,
+                        // Media pantalla: la cuadricula es de dos columnas.
+                        anchoVisible:
+                            MediaQuery.sizeOf(context).width / 2,
+                        alFallar: const _ImagenPublicacionVacia(),
                       ),
               ),
               Expanded(

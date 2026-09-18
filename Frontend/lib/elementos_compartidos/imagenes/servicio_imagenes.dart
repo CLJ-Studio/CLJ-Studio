@@ -60,7 +60,19 @@ abstract final class ServicioImagenes {
 
     await Supabase.instance.client.storage
         .from('imagenes')
-        .uploadBinary(ruta, bytes, fileOptions: FileOptions(contentType: tipo));
+        .uploadBinary(
+          ruta,
+          bytes,
+          fileOptions: FileOptions(
+            contentType: tipo,
+            // Un ano. Cada subida estrena ruta (lleva la marca de tiempo
+            // arriba), asi que el archivo de una ruta NUNCA cambia: no hay
+            // nada que revalidar. Por defecto Supabase manda una hora, y
+            // entonces el navegador vuelve a preguntar por cada foto del
+            // catalogo cada sesion larga, que es puro viaje perdido.
+            cacheControl: '31536000',
+          ),
+        );
 
     return ruta;
   }

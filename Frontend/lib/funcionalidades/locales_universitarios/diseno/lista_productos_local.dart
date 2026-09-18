@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
@@ -127,12 +128,11 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                   fit: StackFit.expand,
                   children: [
                     switch (widget.producto.imagenUrl) {
-                      final String url => Image.network(
-                        url,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.low,
-                        errorBuilder: (_, _, _) =>
-                            _FondoEmoji(emoji: widget.producto.emoji),
+                      final String url => FotoRed(
+                        url: url,
+                        // Cuadricula de dos columnas dentro del local.
+                        anchoVisible: MediaQuery.sizeOf(context).width / 2,
+                        alFallar: _FondoEmoji(emoji: widget.producto.emoji),
                       ),
                       _ => _FondoEmoji(emoji: widget.producto.emoji),
                     },

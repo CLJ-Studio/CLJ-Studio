@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../estados_aplicacion/indicador_carga.dart';
+import 'foto_red.dart';
 import 'pantalla_recortar_portada.dart';
 import 'servicio_imagenes.dart';
 
@@ -129,7 +130,7 @@ class _Miniatura extends StatelessWidget {
         Positioned.fill(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
-            child: Image.network(url, fit: BoxFit.cover),
+            child: FotoRed(url: url, anchoVisible: 92),
           ),
         ),
         if (esPortada)

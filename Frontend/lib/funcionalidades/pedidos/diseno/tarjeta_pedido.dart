@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 
 import '../modelos/pedido.dart';
 
@@ -277,11 +278,7 @@ class _ImagenPedido extends StatelessWidget {
       ),
       child: url == null
           ? reemplazo
-          : Image.network(
-              url!,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => reemplazo,
-            ),
+          : FotoRed(url: url!, anchoVisible: 96, alFallar: reemplazo),
     );
   }
 }
