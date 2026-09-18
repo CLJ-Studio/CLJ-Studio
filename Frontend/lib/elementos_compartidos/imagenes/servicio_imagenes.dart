@@ -80,6 +80,27 @@ abstract final class ServicioImagenes {
     return ruta;
   }
 
+  /// Baja los bytes de una foto ya subida.
+  ///
+  /// Hace falta para volver a encuadrar una portada: el original se pierde en
+  /// cuanto se sube, asi que reencuadrar significa recuperar lo que hay en el
+  /// bucket. Null si la ruta no es del bucket (una recien elegida, todavia en
+  /// memoria) o si la descarga falla.
+  static Future<Uint8List?> descargar(String ruta) async {
+    if (ModoLocal.activo ||
+        ruta.startsWith('http') ||
+        ruta.startsWith('data:')) {
+      return null;
+    }
+    try {
+      return await Supabase.instance.client.storage
+          .from('imagenes')
+          .download(ruta);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// URL publica y cacheable de una ruta del bucket.
   static String? urlPublica(String? ruta) {
     if (ruta == null || ruta.isEmpty) return null;

@@ -1,7 +1,13 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../configuracion_aplicacion/modo_local.dart';
 import '../estados_aplicacion/indicador_carga.dart';
 import 'foto_red.dart';
+import 'normalizar_portada.dart';
 import 'pantalla_recortar_portada.dart';
 import 'servicio_imagenes.dart';
 
@@ -45,30 +51,132 @@ class _SelectorGaleriaInterno extends StatefulWidget {
 }
 
 class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
-  bool _subiendo = false;
+  final _selector = ImagePicker();
 
+  bool _subiendo = false;
+  int _subidas = 0;
+  int _porSubir = 0;
+
+  /// Elige varias fotos de una pasada y las sube.
+  ///
+  /// Antes era de a una: abrir el selector del sistema, elegir UNA, encuadrar,
+  /// subir, volver, y repetir el viaje entero por cada foto. Para cinco fotos
+  /// eran cinco vueltas completas.
+  ///
+  /// Cada foto se encuadra sola a 4:3 en vez de pedir el recorte cinco veces
+  /// seguidas. Quien quiera corregir una la ajusta despues, con el boton de
+  /// la propia miniatura.
   Future<void> _agregar() async {
-    if (widget.rutas.length >= widget.maximo) return;
+    final disponibles = widget.maximo - widget.rutas.length;
+    if (disponibles <= 0 || _subiendo) return;
+
+    final List<XFile> elegidas;
+    try {
+      elegidas = await _selector.pickMultiImage(
+        // Reencoda al elegir: nadie necesita 12 MP en una tarjeta de producto.
+        maxWidth: 1600,
+        imageQuality: 86,
+        limit: disponibles,
+        requestFullMetadata: false,
+      );
+    } catch (_) {
+      _avisar('No se pudieron abrir esas fotos.');
+      return;
+    }
+    if (elegidas.isEmpty || !mounted) return;
+
+    final tanda = elegidas.take(disponibles).toList(growable: false);
+    setState(() {
+      _subiendo = true;
+      _subidas = 0;
+      _porSubir = tanda.length;
+    });
+
+    // Se van agregando de a una y no todas al final: en una conexion de
+    // campus cinco fotos tardan, y ver aparecer la primera mientras suben las
+    // demas es la diferencia entre "esta funcionando" y "se colgo".
+    var fallaron = 0;
+    for (final archivo in tanda) {
+      try {
+        final ruta = await _subirNormalizada(archivo);
+        if (!mounted) return;
+        widget.alCambiar([...widget.rutas, ruta]);
+      } catch (_) {
+        fallaron++;
+      }
+      if (!mounted) return;
+      setState(() => _subidas++);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _subiendo = false;
+      _subidas = 0;
+      _porSubir = 0;
+    });
+
+    if (fallaron > 0) {
+      _avisar(
+        fallaron == tanda.length
+            ? 'No se pudieron subir las fotos.'
+            : 'No se pudieron subir $fallaron de ${tanda.length} fotos.',
+      );
+    }
+  }
+
+  Future<String> _subirNormalizada(XFile archivo) async {
+    final encuadrada = await normalizarPortada(await archivo.readAsBytes());
+    if (ModoLocal.activo) {
+      return 'data:image/png;base64,${base64Encode(encuadrada)}';
+    }
+    return ServicioImagenes.subir(
+      bytes: encuadrada,
+      etiqueta: 'producto',
+      tipo: 'image/png',
+    );
+  }
+
+  /// Reencuadra una foto ya subida, para la que el recorte automatico cortó
+  /// justo lo que importaba. Se baja, se abre el encuadre y se sube de nuevo:
+  /// la ruta cambia, asi que ninguna copia vieja queda cacheada.
+  Future<void> _ajustar(int indice) async {
+    if (_subiendo) return;
+    final ruta = widget.rutas[indice];
+    if (ruta.startsWith('data:') || ruta.startsWith('blob:')) return;
 
     setState(() => _subiendo = true);
     try {
-      final ruta = await elegirRecortarYSubirPortada(
-        context,
-        etiqueta: 'producto',
+      final original = await ServicioImagenes.descargar(ruta);
+      if (!mounted || original == null) return;
+
+      final recortada = await Navigator.of(context).push<Uint8List>(
+        MaterialPageRoute<Uint8List>(
+          builder: (_) => PantallaRecortarPortada(original: original),
+        ),
       );
-      if (ruta != null) widget.alCambiar([...widget.rutas, ruta]);
+      if (!mounted || recortada == null) return;
+
+      final nueva = await ServicioImagenes.subir(
+        bytes: recortada,
+        etiqueta: 'producto',
+        tipo: 'image/png',
+      );
+      if (!mounted) return;
+      widget.alCambiar([...widget.rutas]..[indice] = nueva);
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo subir la foto.'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      _avisar('No se pudo ajustar la foto.');
     } finally {
       if (mounted) setState(() => _subiendo = false);
     }
+  }
+
+  void _avisar(String mensaje) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(mensaje), behavior: SnackBarBehavior.floating),
+      );
   }
 
   void _quitar(int indice) =>
@@ -81,6 +189,14 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
     widget.alCambiar(nuevas);
   }
 
+  /// Mueve una foto al sitio de otra, arrastrando.
+  void _mover(int desde, int hasta) {
+    if (desde == hasta) return;
+    final nuevas = [...widget.rutas];
+    nuevas.insert(hasta, nuevas.removeAt(desde));
+    widget.alCambiar(nuevas);
+  }
+
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,22 +206,104 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
         runSpacing: 10,
         children: [
           for (var i = 0; i < widget.rutas.length; i++)
-            _Miniatura(
+            _MiniaturaArrastrable(
+              indice: i,
               url: ServicioImagenes.urlPublica(widget.rutas[i])!,
               esPortada: i == 0,
               alQuitar: () => _quitar(i),
               alHacerPortada: i == 0 ? null : () => _hacerPortada(i),
+              alAjustar: () => _ajustar(i),
+              alSoltarEncima: (desde) => _mover(desde, i),
             ),
           if (widget.rutas.length < widget.maximo)
             _BotonAgregar(
               subiendo: _subiendo,
               alPresionar: _agregar,
               mostrarIndicacion: widget.rutas.isEmpty,
+              subidas: _subidas,
+              porSubir: _porSubir,
             ),
         ],
       ),
+      if (widget.rutas.length > 1) ...[
+        const SizedBox(height: 8),
+        Text(
+          'Mantén presionada una foto para cambiarla de orden. '
+          'La primera es la portada.',
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodySmall?.color,
+            fontSize: 11,
+          ),
+        ),
+      ],
     ],
   );
+}
+
+/// Miniatura que se puede arrastrar sobre otra para cambiar el orden.
+///
+/// Arrastrar es la unica forma comoda de decir "esta va primero" cuando ya
+/// hay seis fotos: el boton de portada sirve para una, pero ordenar las seis
+/// a base de toques es un rompecabezas.
+class _MiniaturaArrastrable extends StatelessWidget {
+  const _MiniaturaArrastrable({
+    required this.indice,
+    required this.url,
+    required this.esPortada,
+    required this.alQuitar,
+    required this.alAjustar,
+    required this.alSoltarEncima,
+    this.alHacerPortada,
+  });
+
+  final int indice;
+  final String url;
+  final bool esPortada;
+  final VoidCallback alQuitar;
+  final VoidCallback alAjustar;
+  final ValueChanged<int> alSoltarEncima;
+  final VoidCallback? alHacerPortada;
+
+  @override
+  Widget build(BuildContext context) {
+    final miniatura = _Miniatura(
+      url: url,
+      esPortada: esPortada,
+      alQuitar: alQuitar,
+      alHacerPortada: alHacerPortada,
+      alAjustar: alAjustar,
+    );
+
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (detalles) => detalles.data != indice,
+      onAcceptWithDetails: (detalles) => alSoltarEncima(detalles.data),
+      builder: (context, encima, _) => AnimatedScale(
+        duration: const Duration(milliseconds: 140),
+        scale: encima.isEmpty ? 1 : 1.06,
+        child: LongPressDraggable<int>(
+          data: indice,
+          // La miniatura arrastrada viaja sin sus botones: con ellos parece
+          // que se pueden tocar en pleno arrastre.
+          feedback: Material(
+            color: Colors.transparent,
+            child: Opacity(
+              opacity: .9,
+              child: SizedBox(
+                width: 92,
+                height: 92,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: FotoRed(url: url, anchoVisible: 92),
+                ),
+              ),
+            ),
+          ),
+          childWhenDragging: Opacity(opacity: .3, child: miniatura),
+          child: miniatura,
+        ),
+      ),
+    );
+  }
 }
 
 class _Miniatura extends StatelessWidget {
@@ -114,12 +312,17 @@ class _Miniatura extends StatelessWidget {
     required this.esPortada,
     required this.alQuitar,
     this.alHacerPortada,
+    this.alAjustar,
   });
 
   final String url;
   final bool esPortada;
   final VoidCallback alQuitar;
   final VoidCallback? alHacerPortada;
+
+  /// Reencuadra esta foto. El recorte automatico acierta casi siempre, pero
+  /// cuando corta justo el producto hace falta poder corregirlo.
+  final VoidCallback? alAjustar;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -193,6 +396,27 @@ class _Miniatura extends StatelessWidget {
             ),
           ),
         ),
+        if (alAjustar != null)
+          Positioned(
+            top: 2,
+            left: 2,
+            child: Material(
+              color: Color(0x8A474646),
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: alAjustar,
+                customBorder: const CircleBorder(),
+                child: const Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.crop_rounded,
+                    size: 14,
+                    color: Color(0xFFE6E1D5),
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     ),
   );
@@ -203,11 +427,18 @@ class _BotonAgregar extends StatelessWidget {
     required this.subiendo,
     required this.alPresionar,
     required this.mostrarIndicacion,
+    this.subidas = 0,
+    this.porSubir = 0,
   });
 
   final bool subiendo;
   final VoidCallback alPresionar;
   final bool mostrarIndicacion;
+
+  /// Cuantas van y cuantas son. Subir cinco fotos por una conexion de campus
+  /// tarda, y una rueda girando sin numeros no dice si avanza o se colgo.
+  final int subidas;
+  final int porSubir;
 
   @override
   Widget build(BuildContext context) => InkWell(
@@ -223,10 +454,26 @@ class _BotonAgregar extends StatelessWidget {
       ),
       child: Center(
         child: subiendo
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: IndicadorCarga(tamanio: 22),
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: IndicadorCarga(tamanio: 22),
+                  ),
+                  if (porSubir > 1) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      '${subidas + 1} de $porSubir',
+                      style: const TextStyle(
+                        color: Color(0xFF848381),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ],
               )
             : mostrarIndicacion
             ? const Padding(
