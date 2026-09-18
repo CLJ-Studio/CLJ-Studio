@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import '../../inicio_marketplace/modelos/publicidad.dart';
 import '../datos/repositorio_publicidad_admin.dart';
+import 'pantalla_recortar_publicidad.dart';
 
 class PantallaAdministrarPublicidad extends StatefulWidget {
   const PantallaAdministrarPublicidad({super.key});
@@ -302,8 +303,9 @@ class _FormularioPublicidadState extends State<_FormularioPublicidad> {
   late bool _activa;
   DateTime? _iniciaEn;
   DateTime? _terminaEn;
+  Uint8List? _imagenOriginal;
   Uint8List? _imagenNueva;
-  String _tipoImagen = 'image/jpeg';
+  String _tipoImagen = 'image/png';
   bool _guardando = false;
   String? _error;
 
@@ -329,11 +331,48 @@ class _FormularioPublicidadState extends State<_FormularioPublicidad> {
   }
 
   Future<void> _elegirImagen() async {
-    final elegida = await ServicioImagenes.elegir();
+    final elegida = await ServicioImagenes.elegir(
+      maxWidth: 2400,
+      imageQuality: 92,
+    );
     if (elegida == null || !mounted) return;
+
+    final recortada = await _recortar(elegida.bytes, _ubicacion);
+    if (recortada == null || !mounted) return;
     setState(() {
-      _imagenNueva = elegida.bytes;
-      _tipoImagen = elegida.tipo;
+      _imagenOriginal = elegida.bytes;
+      _imagenNueva = recortada;
+      _tipoImagen = 'image/png';
+    });
+  }
+
+  Future<Uint8List?> _recortar(
+    Uint8List original,
+    UbicacionPublicidad ubicacion,
+  ) => Navigator.of(context).push<Uint8List>(
+    MaterialPageRoute<Uint8List>(
+      builder: (_) =>
+          PantallaRecortarPublicidad(original: original, ubicacion: ubicacion),
+    ),
+  );
+
+  /// Cambiar de espacio cambia también la proporción. Si la persona acaba de
+  /// elegir una foto, se vuelve a abrir el recortador con el original para
+  /// que pueda decidir qué parte entra en el nuevo marco.
+  Future<void> _cambiarUbicacion(UbicacionPublicidad ubicacion) async {
+    if (_guardando || ubicacion == _ubicacion) return;
+    final original = _imagenOriginal;
+    if (original == null) {
+      setState(() => _ubicacion = ubicacion);
+      return;
+    }
+
+    final recortada = await _recortar(original, ubicacion);
+    if (recortada == null || !mounted) return;
+    setState(() {
+      _ubicacion = ubicacion;
+      _imagenNueva = recortada;
+      _tipoImagen = 'image/png';
     });
   }
 
@@ -446,38 +485,64 @@ class _FormularioPublicidadState extends State<_FormularioPublicidad> {
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 18),
-            InkWell(
-              onTap: _guardando ? null : _elegirImagen,
-              borderRadius: BorderRadius.circular(18),
+            // La ubicación y su medida viven sobre la propia imagen. Así se
+            // entiende inmediatamente qué marco se está editando y la persona
+            // ve el cambio de proporción antes de guardar.
+            AnimatedSize(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
               child: AspectRatio(
                 aspectRatio: _ubicacion.proporcion,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(18),
-                  child: _imagenNueva != null
-                      ? Image.memory(_imagenNueva!, fit: BoxFit.cover)
-                      : widget.anuncio != null
-                      ? Image.network(
-                          widget.anuncio!.urlImagen,
-                          fit: BoxFit.cover,
-                        )
-                      : ColoredBox(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                          child: const Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.add_photo_alternate_outlined,
-                                  size: 42,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Material(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        child: InkWell(
+                          onTap: _guardando ? null : _elegirImagen,
+                          child: _imagenNueva != null
+                              ? Image.memory(_imagenNueva!, fit: BoxFit.cover)
+                              : widget.anuncio != null
+                              ? Image.network(
+                                  widget.anuncio!.urlImagen,
+                                  fit: BoxFit.cover,
+                                )
+                              : const Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.add_photo_alternate_outlined,
+                                        size: 42,
+                                      ),
+                                      SizedBox(height: 6),
+                                      Text('Seleccionar y ajustar imagen'),
+                                    ],
+                                  ),
                                 ),
-                                SizedBox(height: 6),
-                                Text('Seleccionar imagen'),
-                              ],
-                            ),
-                          ),
                         ),
+                      ),
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: _EtiquetaResolucion(ubicacion: _ubicacion),
+                      ),
+                      Positioned(
+                        left: 10,
+                        right: 10,
+                        bottom: 10,
+                        child: _SelectorUbicacionImagen(
+                          ubicacion: _ubicacion,
+                          habilitado: !_guardando,
+                          alCambiar: _cambiarUbicacion,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -502,29 +567,6 @@ class _FormularioPublicidadState extends State<_FormularioPublicidad> {
               validator: (valor) => (valor?.trim().length ?? 0) < 2
                   ? 'Escribe un nombre de al menos 2 caracteres.'
                   : null,
-            ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<UbicacionPublicidad>(
-              initialValue: _ubicacion,
-              decoration: const InputDecoration(labelText: 'Ubicación'),
-              items: [
-                for (final ubicacion in UbicacionPublicidad.values)
-                  DropdownMenuItem(
-                    value: ubicacion,
-                    child: Text(ubicacion.etiqueta),
-                  ),
-              ],
-              onChanged: _guardando
-                  ? null
-                  : (valor) => setState(() => _ubicacion = valor!),
-            ),
-            const SizedBox(height: 10),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              child: _RecomendacionImagen(
-                key: ValueKey(_ubicacion),
-                ubicacion: _ubicacion,
-              ),
             ),
             const SizedBox(height: 14),
             TextFormField(
@@ -617,57 +659,93 @@ class _FormularioPublicidadState extends State<_FormularioPublicidad> {
   );
 }
 
-/// Explica el tamaño ideal para que la imagen no pierda encuadre al publicarse.
-class _RecomendacionImagen extends StatelessWidget {
-  const _RecomendacionImagen({required this.ubicacion, super.key});
+class _EtiquetaResolucion extends StatelessWidget {
+  const _EtiquetaResolucion({required this.ubicacion});
 
   final UbicacionPublicidad ubicacion;
 
   @override
-  Widget build(BuildContext context) {
-    final esquema = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: esquema.primary.withValues(alpha: .08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: esquema.primary.withValues(alpha: .22)),
-      ),
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: const Color(0xCC1D211E),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.aspect_ratio_rounded, color: esquema.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Resolución recomendada',
-                  style: TextStyle(
-                    color: esquema.primary,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '${ubicacion.resolucionRecomendada} · '
-                  'proporción ${ubicacion.proporcion.toStringAsFixed(2)}:1',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 3),
-                const Text(
-                  'Usa esta medida para evitar cortes o deformaciones.',
-                ),
-              ],
+          const Icon(Icons.aspect_ratio_rounded, color: Colors.white, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            ubicacion.resolucionRecomendada,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+/// Toggle integrado en la imagen para decidir dónde se mostrará el anuncio.
+class _SelectorUbicacionImagen extends StatelessWidget {
+  const _SelectorUbicacionImagen({
+    required this.ubicacion,
+    required this.habilitado,
+    required this.alCambiar,
+  });
+
+  final UbicacionPublicidad ubicacion;
+  final bool habilitado;
+  final ValueChanged<UbicacionPublicidad> alCambiar;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: const Color(0xE61D211E),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(4),
+      child: SegmentedButton<UbicacionPublicidad>(
+        showSelectedIcon: false,
+        segments: const [
+          ButtonSegment(
+            value: UbicacionPublicidad.bannerPrincipal,
+            icon: Icon(Icons.view_carousel_outlined, size: 18),
+            label: Text('Principal'),
+          ),
+          ButtonSegment(
+            value: UbicacionPublicidad.carruselEmpresas,
+            icon: Icon(Icons.business_rounded, size: 18),
+            label: Text('Empresas'),
+          ),
+        ],
+        selected: {ubicacion},
+        onSelectionChanged: habilitado
+            ? (seleccion) => alCambiar(seleccion.first)
+            : null,
+        style: ButtonStyle(
+          visualDensity: VisualDensity.compact,
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (estados) => estados.contains(WidgetState.selected)
+                ? Colors.white
+                : Colors.white70,
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (estados) => estados.contains(WidgetState.selected)
+                ? const Color(0xFF16A34A)
+                : Colors.transparent,
+          ),
+          side: const WidgetStatePropertyAll(BorderSide.none),
+        ),
+      ),
+    ),
+  );
 }
 
 class _SelectorFecha extends StatelessWidget {

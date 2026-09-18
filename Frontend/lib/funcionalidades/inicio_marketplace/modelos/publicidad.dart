@@ -4,25 +4,24 @@ import '../../../configuracion_aplicacion/modo_local.dart';
 
 /// Espacios publicitarios admitidos por el backend.
 enum UbicacionPublicidad {
-  bannerPrincipal('main_banner', 'Banner principal', 1.68, '1680 × 1000 px'),
-  carruselEmpresas(
-    'company_carousel',
-    'Carrusel de empresas',
-    270 / 104,
-    '1350 × 520 px',
-  );
+  bannerPrincipal('main_banner', 'Banner principal', 1680, 1000),
+  carruselEmpresas('company_carousel', 'Carrusel de empresas', 1350, 520);
 
   const UbicacionPublicidad(
     this.valor,
     this.etiqueta,
-    this.proporcion,
-    this.resolucionRecomendada,
+    this.anchoRecomendado,
+    this.altoRecomendado,
   );
 
   final String valor;
   final String etiqueta;
-  final double proporcion;
-  final String resolucionRecomendada;
+  final int anchoRecomendado;
+  final int altoRecomendado;
+
+  double get proporcion => anchoRecomendado / altoRecomendado;
+
+  String get resolucionRecomendada => '$anchoRecomendado × $altoRecomendado px';
 
   static UbicacionPublicidad? desdeValor(String? valor) {
     for (final ubicacion in values) {

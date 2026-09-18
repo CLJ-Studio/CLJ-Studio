@@ -30,13 +30,16 @@ abstract final class ServicioImagenes {
   ///
   /// Existe separado para poder meter un paso en medio, como el recorte del
   /// avatar: subir primero y recortar despues dejaria basura en el bucket.
-  static Future<ImagenElegida?> elegir() async {
+  static Future<ImagenElegida?> elegir({
+    double maxWidth = 1280,
+    int imageQuality = 82,
+  }) async {
     final archivo = await _selector.pickImage(
       source: ImageSource.gallery,
       // Reencoda a un tamano razonable: nadie necesita fotos de 12 MP para
       // una tarjeta de producto, y el plan gratuito de Storage se agradece.
-      maxWidth: 1280,
-      imageQuality: 82,
+      maxWidth: maxWidth,
+      imageQuality: imageQuality,
     );
     if (archivo == null) return null;
 

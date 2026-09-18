@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
@@ -39,7 +40,11 @@ class PortonAutenticacion extends StatefulWidget {
 }
 
 class _PortonAutenticacionState extends State<PortonAutenticacion> {
+  static const _claveSolicitudPushInicial =
+      'solicitud_notificaciones_inicial_mostrada';
+
   StreamSubscription<AuthState>? _suscripcion;
+  bool _solicitudPushProgramada = false;
 
   @override
   void initState() {
@@ -79,6 +84,73 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
         : _EstadoPerfil.pendiente;
   }
 
+  /// Muestra una explicación propia antes del permiso del sistema. En una PWA
+  /// el navegador exige que `requestPermission` nazca de un toque del usuario,
+  /// por eso el botón "Permitir" es parte imprescindible de este flujo.
+  void _programarSolicitudPushInicial() {
+    if (_solicitudPushProgramada || !ServicioPush.soportado) return;
+    _solicitudPushProgramada = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+
+      final preferencias = await SharedPreferences.getInstance();
+      if (preferencias.getBool(_claveSolicitudPushInicial) ?? false) return;
+
+      // Si el sistema ya conoce la decisión, no volvemos a interrumpir al
+      // usuario. El interruptor de Ajustes sigue disponible para cambiarla.
+      if (ServicioPush.denegado || await ServicioPush.estaActivo()) {
+        await preferencias.setBool(_claveSolicitudPushInicial, true);
+        return;
+      }
+      if (!mounted) return;
+
+      final permitir = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (contextoDialogo) => AlertDialog(
+          icon: const Icon(Icons.notifications_active_rounded, size: 42),
+          title: const Text(
+            'Activa las notificaciones',
+            textAlign: TextAlign.center,
+          ),
+          content: const Text(
+            'Te avisaremos sobre tus pedidos, mensajes y novedades importantes. '
+            'Puedes cambiar esta opción después desde Configuración.',
+            textAlign: TextAlign.center,
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(contextoDialogo).pop(false),
+              child: const Text('Ahora no'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(contextoDialogo).pop(true),
+              icon: const Icon(Icons.notifications_rounded),
+              label: const Text('Permitir'),
+            ),
+          ],
+        ),
+      );
+
+      await preferencias.setBool(_claveSolicitudPushInicial, true);
+      if (permitir != true) return;
+
+      final activado = await ServicioPush.activar();
+      if (!activado && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ServicioPush.ultimoError ??
+                  'No se pudieron activar las notificaciones. Revisa el permiso del dispositivo.',
+            ),
+          ),
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final usuario = Supabase.instance.client.auth.currentUser;
@@ -110,6 +182,7 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           return const Scaffold(body: Center(child: IndicadorCarga()));
         }
         if (snapshot.data == _EstadoPerfil.completo) {
+          _programarSolicitudPushInicial();
           // Precarga lo que varias pantallas comparten: el perfil (saludo y
           // configuracion) y los favoritos (corazones del catalogo).
           SesionUsuario.instancia.cargar();
