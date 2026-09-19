@@ -95,15 +95,8 @@ class _PantallaLocalesUniversitariosState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Transform.translate(
-                          offset: const Offset(-18, 0),
-                          child: InvitacionAbrirLocal(
-                            alPresionar: widget.alCrearLocal,
-                            yaTieneLocal: widget.yaTieneLocal,
-                          ),
-                        ),
                         if (controlador.soloDestacados) ...[
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 20),
                           Row(
                             children: [
                               Expanded(
@@ -138,11 +131,17 @@ class _PantallaLocalesUniversitariosState
                             mensaje: mensaje,
                             alReintentar: controlador.cargar,
                           )
-                        else if (localesVisibles.isEmpty)
+                        else if (localesVisibles.isEmpty && buscando)
                           const _SinLocales()
                         else
                           ListaLocales(
                             locales: localesVisibles,
+                            tarjetaInicial: buscando
+                                ? null
+                                : InvitacionAbrirLocal(
+                                    alPresionar: widget.alCrearLocal,
+                                    yaTieneLocal: widget.yaTieneLocal,
+                                  ),
                             construirDetalle: (_, local) =>
                                 PantallaDetalleLocal(local: local),
                           ),

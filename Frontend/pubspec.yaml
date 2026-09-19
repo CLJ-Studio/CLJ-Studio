@@ -82,6 +82,7 @@ flutter:
     - assets/images/banners/
     - assets/images/categorias/
     - assets/images/locales/
+    - assets/images/marca/
     - assets/images/publicidad/
     - assets/images/virtual/
 

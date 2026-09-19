@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 
-/// Invitación gastronómica visible únicamente dentro de Restaurantes.
+/// Acceso para crear o administrar el local, presentado como una tarjeta más
+/// del catálogo para no interrumpir visualmente la lista.
 class InvitacionAbrirLocal extends StatelessWidget {
   const InvitacionAbrirLocal({
     required this.alPresionar,
@@ -14,105 +15,92 @@ class InvitacionAbrirLocal extends StatelessWidget {
   final bool yaTieneLocal;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: double.infinity,
-    child: InkWell(
-      // Con local ya abierto lleva a administrarlo; sin el, a crearlo. Antes
-      // se quedaba muerta al tenerlo, que es justo cuando mas se toca.
-      onTap: alPresionar,
-      borderRadius: BorderRadius.circular(30),
-      child: Ink(
-        height: 180,
-        decoration: BoxDecoration(
-          color: ConfiguracionTema.grafito,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Stack(
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: yaTieneLocal ? 'Administrar mi local' : 'Crear mi local',
+    child: Material(
+      color: Theme.of(context).brightness == Brightness.dark
+          ? ConfiguracionTema.grafito
+          : Colors.white,
+      borderRadius: BorderRadius.circular(24),
+      clipBehavior: Clip.antiAlias,
+      elevation: 0,
+      child: InkWell(
+        // Con local ya abierto lleva a administrarlo; sin él, a crearlo.
+        onTap: alPresionar,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(30),
-                child: Image.asset(
-                  yaTieneLocal
-                      ? 'assets/images/locales/buho-chef-administrar.png'
-                      : 'assets/images/locales/buho-chef-comenzar.png',
-                  fit: BoxFit.cover,
-                  alignment: Alignment.centerRight,
-                ),
-              ),
-            ),
-            // Protege la lectura del texto sobre la zona clara de la imagen.
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      ConfiguracionTema.grafito,
-                      ConfiguracionTema.grafito.withValues(alpha: .94),
-                      ConfiguracionTema.grafito.withValues(alpha: .08),
-                    ],
-                    stops: [0, .48, .74],
+            Expanded(
+              child: ColoredBox(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF303A33)
+                    : const Color(0xFFE6E1D5),
+                child: SizedBox.expand(
+                  child: Image.asset(
+                    yaTieneLocal
+                        ? 'assets/images/locales/buho-chef-administrar.png'
+                        : 'assets/images/locales/buho-chef-comenzar.png',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
                   ),
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
-              child: SizedBox(
-                width: 235,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      yaTieneLocal
-                          ? 'Administra tu local aquí'
-                          : '¿Quieres abrir tu propio local?',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Color(0xFFE6E1D5),
-                        fontWeight: FontWeight.w900,
-                        height: 1.05,
-                      ),
-                    ),
-                    const SizedBox(height: 9),
-                    Text(
-                      yaTieneLocal
-                          // La instruccion anterior mandaba a Publicar, donde
-                          // el local ya no vive. Ahora la tarjeta ES el acceso.
-                          ? 'Tu inventario, tu ubicación y tu marca, en un '
-                                'solo sitio.'
-                          : 'Crea tu perfil y empieza a publicar tus productos.',
-                      style: TextStyle(
-                        color: Color(0xFFE6E1D5).withValues(alpha: .9),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    // La llamada a la accion sale siempre: la tarjeta lleva a
-                    // algun sitio en los dos casos, y sin ella no parecia
-                    // pulsable justo cuando ya tienes local.
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Text(
-                          yaTieneLocal ? 'Administrar' : 'Comenzar',
-                          style: const TextStyle(
-                            color: Color(0xFFE6E1D5),
-                            fontWeight: FontWeight.w900,
+              padding: const EdgeInsets.fromLTRB(14, 11, 14, 12),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          yaTieneLocal
+                              ? 'Administra tu local'
+                              : 'Crea tu local',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(width: 5),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: Color(0xFFE6E1D5),
+                      ),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: ConfiguracionTema.primario,
+                        size: 19,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.storefront_rounded,
+                        color: ConfiguracionTema.primario,
+                        size: 17,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          yaTieneLocal
+                              ? 'Inventario, ubicación y marca'
+                              : 'Empieza a vender en el campus',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color,
+                            fontSize: 13,
+                          ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],

@@ -10,14 +10,20 @@ class ListaLocalesUniversitarios extends StatelessWidget {
   const ListaLocalesUniversitarios({
     required this.locales,
     required this.construirDetalle,
+    this.tarjetaInicial,
     super.key,
   });
   final List<LocalUniversitario> locales;
   final Widget Function(BuildContext, LocalUniversitario) construirDetalle;
 
+  /// Elemento especial que ocupa exactamente una celda de la cuadrícula.
+  /// En la pantalla de locales se usa para crear o administrar el local sin
+  /// romper la estética del catálogo.
+  final Widget? tarjetaInicial;
+
   @override
   Widget build(BuildContext context) {
-    if (locales.isEmpty) {
+    if (locales.isEmpty && tarjetaInicial == null) {
       return const EstadoVacio(
         mensaje: 'No encontramos locales con esos filtros.',
       );
@@ -36,9 +42,12 @@ class ListaLocalesUniversitarios extends StatelessWidget {
             mainAxisSpacing: 18,
             mainAxisExtent: anchoTarjeta * 3 / 4 + 76,
           ),
-          itemCount: locales.length,
+          itemCount: locales.length + (tarjetaInicial == null ? 0 : 1),
           itemBuilder: (_, indice) {
-            final local = locales[indice];
+            if (tarjetaInicial != null && indice == 0) return tarjetaInicial!;
+
+            final indiceLocal = indice - (tarjetaInicial == null ? 0 : 1);
+            final local = locales[indiceLocal];
             return OpenContainer<void>(
               transitionDuration: const Duration(milliseconds: 580),
               transitionType: ContainerTransitionType.fade,
