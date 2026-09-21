@@ -39,10 +39,29 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
 
   /// Muestra la animación únicamente la primera vez que se abre la app.
   /// La marca se guarda al terminar para que una interrupción no la omita.
+  ///
+  /// NADA DE LO QUE PASE AQUI PUEDE IMPEDIR QUE LA APP ARRANQUE. Mientras
+  /// `_mostrandoApertura` sea null la pantalla esta vacia, asi que cualquier
+  /// camino que no termine en un `setState` deja la aplicacion en blanco para
+  /// siempre. Y en la PWA esto falla de verdad: el almacenamiento del
+  /// navegador lanza excepcion en ventana privada, con los datos del sitio
+  /// bloqueados, o cuando Safari los restringe. Por eso hay `catch` y un
+  /// tope de tiempo: ante la duda se salta la animacion, que es decoracion,
+  /// y se entra a la aplicacion, que es el motivo de abrirla.
   Future<void> _prepararAperturaInicial() async {
-    final preferencias = await SharedPreferences.getInstance();
-    final yaFueMostrada =
-        preferencias.getBool(_claveAperturaInicialMostrada) ?? false;
+    SharedPreferences? preferencias;
+    var yaFueMostrada = false;
+    try {
+      preferencias = await SharedPreferences.getInstance().timeout(
+        const Duration(seconds: 3),
+      );
+      yaFueMostrada =
+          preferencias.getBool(_claveAperturaInicialMostrada) ?? false;
+    } catch (_) {
+      // Sin memoria donde anotarlo, se prefiere no mostrarla: repetir la
+      // animacion en cada arranque molesta mas que no verla nunca.
+      yaFueMostrada = true;
+    }
 
     if (!mounted) return;
     if (yaFueMostrada) {
@@ -52,9 +71,17 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
 
     setState(() => _mostrandoApertura = true);
     // La escena vive el tiempo suficiente para completar todos sus movimientos.
+    final memoria = preferencias;
     _temporizadorApertura = Timer(const Duration(milliseconds: 3200), () async {
-      await preferencias.setBool(_claveAperturaInicialMostrada, true);
+      // El paso a la aplicacion va primero y fuera del try: si guardar la
+      // marca fallara, quedarse en la pantalla de apertura seria el mismo
+      // bloqueo por otra puerta.
       if (mounted) setState(() => _mostrandoApertura = false);
+      try {
+        await memoria?.setBool(_claveAperturaInicialMostrada, true);
+      } catch (_) {
+        // Se volvera a ver en el proximo arranque. Es molesto, no grave.
+      }
     });
   }
 
