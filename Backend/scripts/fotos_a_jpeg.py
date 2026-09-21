@@ -74,6 +74,25 @@ def leer_env():
     return url.rstrip('/'), clave
 
 
+def cabeceras(clave, extra=None):
+    """Storage pide la clave en las DOS cabeceras.
+
+    Con solo `Authorization` unas rutas responden y otras no: `apikey` es la
+    que identifica al proyecto y `Authorization` la que da los permisos.
+    """
+    base = {'apikey': clave, 'Authorization': f'Bearer {clave}'}
+    base.update(extra or {})
+    return base
+
+
+def explicar(respuesta):
+    """El cuerpo del error dice mucho mas que el numero."""
+    try:
+        return f'{respuesta.status_code} {respuesta.json()}'
+    except Exception:  # noqa: BLE001
+        return f'{respuesta.status_code} {respuesta.text[:200]}'
+
+
 def listar(url, clave, prefijo=''):
     """Devuelve todas las rutas del bucket. La API no recorre carpetas sola."""
     rutas = []
@@ -81,11 +100,19 @@ def listar(url, clave, prefijo=''):
     while True:
         respuesta = requests.post(
             f'{url}/storage/v1/object/list/{BUCKET}',
-            headers={'Authorization': f'Bearer {clave}'},
-            json={'prefix': prefijo, 'limit': 100, 'offset': pagina * 100},
+            headers=cabeceras(clave),
+            json={
+                'prefix': prefijo,
+                'limit': 100,
+                'offset': pagina * 100,
+                # Sin `sortBy` la API responde 400: no es opcional aunque el
+                # orden no nos importe.
+                'sortBy': {'column': 'name', 'order': 'asc'},
+            },
             timeout=60,
         )
-        respuesta.raise_for_status()
+        if not respuesta.ok:
+            sys.exit(f'Storage rechazo el listado: {explicar(respuesta)}')
         entradas = respuesta.json()
         if not entradas:
             break
@@ -138,18 +165,18 @@ def main():
             jpeg = convertir(crudo)
             subida = requests.post(
                 f'{url}/storage/v1/object/{BUCKET}/{nueva}',
-                headers={
-                    'Authorization': f'Bearer {clave}',
+                headers=cabeceras(clave, {
                     'Content-Type': 'image/jpeg',
                     # Un ano: cada ruta es unica, el archivo nunca cambia.
                     'Cache-Control': 'max-age=31536000',
                     # Por si se vuelve a correr sobre algo ya convertido.
                     'x-upsert': 'true',
-                },
+                }),
                 data=jpeg,
                 timeout=120,
             )
-            subida.raise_for_status()
+            if not subida.ok:
+                raise RuntimeError(explicar(subida))
             hechas.append((ruta, nueva))
             antes += len(crudo)
             despues += len(jpeg)
