@@ -1431,9 +1431,11 @@ class _TarjetaPublicacion extends StatelessWidget {
                     ? const _ImagenPublicacionVacia()
                     : FotoRed(
                         url: publicacion.imagenUrl!,
-                        // Media pantalla: la cuadricula es de dos columnas.
-                        anchoVisible:
-                            MediaQuery.sizeOf(context).width / 2,
+                        // Fijo, no medido: la cuadricula es de dos
+                        // columnas y ninguna tarjeta pasa de esto. Medir la
+                        // pantalla aqui hacia que el numero cambiara entre
+                        // reconstrucciones y la foto se volviera a bajar.
+                        anchoVisible: 220,
                         alFallar: const _ImagenPublicacionVacia(),
                       ),
               ),

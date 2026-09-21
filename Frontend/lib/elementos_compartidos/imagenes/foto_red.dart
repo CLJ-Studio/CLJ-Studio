@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 /// Una foto que viene de Storage, mostrada como corresponde.
@@ -69,11 +70,44 @@ class FotoRed extends StatelessWidget {
     // La relacion de pixeles del dispositivo importa: 132 puntos logicos en
     // un telefono 3x son 396 pixeles reales. Decodificar a 132 se veria
     // borroso.
+    //
+    // Se redondea a saltos de 50 a proposito. Este numero forma parte de la
+    // identidad de la imagen guardada: si cambia, aunque sea por un pixel,
+    // deja de encontrarse la que ya estaba y hay que volver a bajarla. Al
+    // rotar la pantalla o al animarse una transicion el ancho baila, y sin
+    // redondear cada rebote generaba una copia nueva.
     final escala = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
     final anchoEnMemoria = anchoVisible == null
         ? null
-        : (anchoVisible! * escala).round();
+        : ((anchoVisible! * escala / 50).ceil() * 50);
 
+    // En la web manda `Image.network`, y no es un atajo: el almacen en disco
+    // de `CachedNetworkImage` casi no funciona en un navegador, asi que cada
+    // reconstruccion se iba a buscar la foto de nuevo y mientras tanto
+    // enseñaba el hueco. El navegador ya guarda las fotos el mismo (las
+    // servimos con un ano de cache), y la memoria de Flutter las devuelve
+    // SIN esperar, que es lo que hace que al volver de otra pestaña la foto
+    // ya este ahi. Las pestañas viven en un PageView y se destruyen al
+    // salir, asi que esto pasa todo el tiempo.
+    if (kIsWeb) {
+      return Image.network(
+        url,
+        fit: ajuste,
+        alignment: alineacion,
+        cacheWidth: anchoEnMemoria,
+        // Conserva lo ya dibujado mientras llega lo nuevo, en vez de
+        // parpadear a vacio.
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => vacio,
+        frameBuilder: (_, hijo, cuadro, vinoDeLaMemoria) =>
+            cuadro != null || vinoDeLaMemoria
+            ? hijo
+            : marcador ?? const _Marcador(),
+      );
+    }
+
+    // En el telefono si vale la pena: guarda en disco de verdad y sobrevive
+    // a cerrar la aplicacion, cosa que `Image.network` no hace.
     return CachedNetworkImage(
       imageUrl: url,
       fit: ajuste,

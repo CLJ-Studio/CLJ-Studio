@@ -171,7 +171,8 @@ class _TarjetaPublicacion extends StatelessWidget {
           child: switch (publicacion.imagenUrl) {
             final String url => FotoRed(
               url: url,
-              anchoVisible: MediaQuery.sizeOf(context).width,
+              // La tarjeta ocupa el ancho, con un tope de 720.
+              anchoVisible: 720,
               alFallar: Center(
                 child: Text(
                   publicacion.emoji,

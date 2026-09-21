@@ -130,8 +130,9 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                     switch (widget.producto.imagenUrl) {
                       final String url => FotoRed(
                         url: url,
-                        // Cuadricula de dos columnas dentro del local.
-                        anchoVisible: MediaQuery.sizeOf(context).width / 2,
+                        // Fijo: con mas columnas las tarjetas son aun mas
+                        // chicas, asi que esto sobra en todos los tamanos.
+                        anchoVisible: 220,
                         alFallar: _FondoEmoji(emoji: widget.producto.emoji),
                       ),
                       _ => _FondoEmoji(emoji: widget.producto.emoji),
