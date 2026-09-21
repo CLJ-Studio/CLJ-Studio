@@ -7,3 +7,7 @@ node_modules/
 supabase/.branches/
 supabase/.temp/
 supabase/.env
+
+# Lo genera scripts/fotos_a_jpeg.py con las rutas de un momento concreto.
+# No es una migracion y no sirve en otro proyecto: se regenera al correrlo.
+scripts/fotos_a_jpeg.sql
