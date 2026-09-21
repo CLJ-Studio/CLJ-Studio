@@ -261,15 +261,53 @@ class _PantallasDeslizablesState extends State<_PantallasDeslizables> {
       onPageChanged: (pagina) => widget.alDeslizar(pagina - 1),
       itemCount: widget.pantallas.length + 1,
       itemBuilder: (_, pagina) {
-        if (pagina == 0) return widget.camara;
+        if (pagina == 0) return _PaginaViva(child: widget.camara);
         final indice = pagina - 1;
-        return _PaginaConBarraEstado(
-          encabezadoAzul: indice != 2,
-          child: widget.pantallas[indice],
+        return _PaginaViva(
+          child: _PaginaConBarraEstado(
+            encabezadoAzul: indice != 2,
+            child: widget.pantallas[indice],
+          ),
         );
       },
     ),
   );
+}
+
+/// Mantiene viva una seccion aunque no se este viendo.
+///
+/// Un PageView destruye las paginas que quedan fuera de pantalla. Al volver
+/// se reconstruian enteras: el feed pedia otra vez las fotos, que
+/// reaparecian en blanco y se descargaban de nuevo, y ademas se perdia por
+/// donde ibas desplazandote.
+///
+/// Antes esto no pasaba porque las secciones vivian en un `IndexedStack`,
+/// que las conserva todas. Al pasar a PageView para poder deslizar entre
+/// ellas se perdio esa propiedad sin querer; el comentario de
+/// `estado_navegacion_principal.dart` todavia habla del IndexedStack.
+///
+/// Son cinco secciones: conservarlas cuesta poca memoria y es justo lo que
+/// hace que moverse entre pestañas se sienta inmediato.
+class _PaginaViva extends StatefulWidget {
+  const _PaginaViva({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_PaginaViva> createState() => _PaginaVivaState();
+}
+
+class _PaginaVivaState extends State<_PaginaViva>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    // Obligatorio con este mixin: es lo que registra la pagina como viva.
+    super.build(context);
+    return widget.child;
+  }
 }
 
 /// La zona de la hora pertenece a cada página y se desliza junto con ella.
