@@ -71,12 +71,23 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
     super.dispose();
   }
 
+  /// Con tope de tiempo A PROPOSITO.
+  ///
+  /// Mientras esta consulta no responde, la pantalla es el indicador de
+  /// carga sobre el fondo del tema, o sea crema y nada mas. Si se cuelga (la
+  /// red del campus a medias, el servidor sin contestar) no llega ni dato ni
+  /// error: el `FutureBuilder` se queda cargando para siempre y desde fuera
+  /// parece que la aplicacion no arranca.
+  ///
+  /// Con el tope, colgarse pasa a ser un error, y un error ya tiene pantalla
+  /// propia con su boton de reintentar.
   Future<_EstadoPerfil> _leerEstadoPerfil(String userId) async {
     final fila = await Supabase.instance.client
         .from('profiles')
         .select('onboarding_completed')
         .eq('id', userId)
-        .maybeSingle();
+        .maybeSingle()
+        .timeout(const Duration(seconds: 15));
 
     if (fila == null) return _EstadoPerfil.inexistente;
 
