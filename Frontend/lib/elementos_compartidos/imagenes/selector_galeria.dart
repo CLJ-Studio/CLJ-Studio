@@ -157,12 +157,12 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
   Future<String> _subirNormalizada(Uint8List bytes) async {
     final encuadrada = await normalizarPortada(bytes);
     if (ModoLocal.activo) {
-      return 'data:image/png;base64,${base64Encode(encuadrada)}';
+      return 'data:image/jpeg;base64,${base64Encode(encuadrada)}';
     }
     return ServicioImagenes.subir(
       bytes: encuadrada,
       etiqueta: 'producto',
-      tipo: 'image/png',
+      tipo: 'image/jpeg',
     );
   }
 
@@ -189,7 +189,7 @@ class _SelectorGaleriaState extends State<_SelectorGaleriaInterno> {
       final nueva = await ServicioImagenes.subir(
         bytes: recortada,
         etiqueta: 'producto',
-        tipo: 'image/png',
+        tipo: 'image/jpeg',
       );
       if (!mounted) return;
       widget.alCambiar([...widget.rutas]..[indice] = nueva);

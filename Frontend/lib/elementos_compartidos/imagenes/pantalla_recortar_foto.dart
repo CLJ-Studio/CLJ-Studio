@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 
+import 'codificar_jpeg.dart';
 import 'rotar_imagen.dart';
 import 'salir_sin_guardar_foto.dart';
 
@@ -29,6 +30,19 @@ class _PantallaRecortarFotoState extends State<PantallaRecortarFoto> {
   /// Lo que se esta encuadrando. Cambia al girar.
   late Uint8List _imagen = widget.original;
   bool _girando = false;
+
+  /// El recortador entrega PNG. Se convierte antes de devolverlo: un avatar
+  /// en PNG ocupa varias veces lo mismo en JPEG y se ve igual dentro de un
+  /// circulo de cincuenta pixeles.
+  Future<void> _entregar(Uint8List recortada) async {
+    try {
+      final liviana = await bytesComoJpeg(recortada);
+      if (mounted) Navigator.of(context).pop(liviana);
+    } catch (_) {
+      // Si la conversion falla, mejor la foto pesada que ninguna foto.
+      if (mounted) Navigator.of(context).pop(recortada);
+    }
+  }
 
   Future<void> _girar() async {
     if (_recortando || _girando) return;
@@ -106,7 +120,7 @@ class _PantallaRecortarFotoState extends State<PantallaRecortarFoto> {
                 if (!mounted) return;
                 switch (resultado) {
                   case CropSuccess(:final croppedImage):
-                    Navigator.of(context).pop(croppedImage);
+                    _entregar(croppedImage);
                   case CropFailure():
                     setState(() => _recortando = false);
                     ScaffoldMessenger.of(context).showSnackBar(

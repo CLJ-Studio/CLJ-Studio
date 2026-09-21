@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'codificar_jpeg.dart';
+
 /// Medida unica de todas las portadas del catalogo.
 ///
 /// Las tarjetas dibujan la foto en 4:3. Si cada una llegara con su propia
@@ -56,9 +58,9 @@ Future<Uint8List> normalizarPortada(Uint8List bytes) async {
     dibujo.dispose();
 
     try {
-      final datos = await destino.toByteData(format: ui.ImageByteFormat.png);
-      if (datos == null) throw StateError('Imagen sin datos');
-      return datos.buffer.asUint8List();
+      // JPEG y no PNG: ver `comoJpeg`. En una foto la diferencia es de un
+      // megabyte a doscientos kilobytes, y eso se nota al abrir el feed.
+      return await comoJpeg(destino);
     } finally {
       destino.dispose();
     }

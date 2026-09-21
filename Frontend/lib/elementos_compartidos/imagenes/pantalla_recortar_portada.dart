@@ -6,6 +6,7 @@ import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../configuracion_aplicacion/modo_local.dart';
+import 'codificar_jpeg.dart';
 import 'rotar_imagen.dart';
 import 'salir_sin_guardar_foto.dart';
 import 'servicio_imagenes.dart';
@@ -72,11 +73,13 @@ class _PantallaRecortarPortadaState extends State<PantallaRecortarPortada> {
       allowUpscaling: true,
     );
     final cuadro = await codec.getNextFrame();
-    final datos = await cuadro.image.toByteData(format: ui.ImageByteFormat.png);
-    cuadro.image.dispose();
-    codec.dispose();
-    if (datos == null) throw StateError('Imagen sin datos');
-    return datos.buffer.asUint8List();
+    try {
+      // JPEG: la misma portada en PNG pesaba mas de un megabyte.
+      return await comoJpeg(cuadro.image);
+    } finally {
+      cuadro.image.dispose();
+      codec.dispose();
+    }
   }
 
   @override
@@ -208,11 +211,11 @@ Future<String?> elegirRecortarYSubirPortada(
   if (recortada == null || !context.mounted) return null;
 
   if (ModoLocal.activo) {
-    return 'data:image/png;base64,${base64Encode(recortada)}';
+    return 'data:image/jpeg;base64,${base64Encode(recortada)}';
   }
   return ServicioImagenes.subir(
     bytes: recortada,
     etiqueta: etiqueta,
-    tipo: 'image/png',
+    tipo: 'image/jpeg',
   );
 }

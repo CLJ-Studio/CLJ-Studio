@@ -49,6 +49,9 @@ dependencies:
   # Guarda las fotos en disco: sin esto cada reinicio de la app vuelve a
   # descargar el catalogo entero desde Storage.
   cached_network_image: ^3.4.1
+  # Codifica JPEG, que dart:ui no sabe hacer: solo entrega PNG, y un PNG
+  # fotografico pesa cuatro o seis veces mas que el mismo JPEG.
+  image: ^4.5.4
 dev_dependencies:
   flutter_test:
     sdk: flutter
