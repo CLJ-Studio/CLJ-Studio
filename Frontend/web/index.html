@@ -79,9 +79,251 @@
       height: 100%;
       background-color: var(--app-background);
     }
+
+    /*
+     * LA PANTALLA CREMA.
+     *
+     * El fondo de arriba es #E6E1D5, el mismo crema del tema. Es lo que se
+     * ve desde que el navegador abre la pagina hasta que Flutter pinta su
+     * primer cuadro. Si el motor no llega a arrancar nunca -por ejemplo
+     * porque el service worker de la PWA guardo una version vieja y pide un
+     * archivo que ya no existe-, ese crema se queda ahi para siempre y NO
+     * HAY CODIGO DART QUE PUEDA ARREGLARLO: Dart no llego a correr.
+     *
+     * Por eso el arranque tiene cara propia, en HTML y CSS puros, sin
+     * depender de nada que pueda fallar. Mientras carga se ve el logo; si
+     * pasado un rato Flutter sigue sin dar senales, se ofrece salida.
+     */
+    #arranque {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 24px;
+      box-sizing: border-box;
+      background-color: var(--app-background);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #474646;
+      text-align: center;
+    }
+
+    #arranque img {
+      width: 84px;
+      height: 84px;
+      border-radius: 22px;
+    }
+
+    #arranque-girando {
+      width: 26px;
+      height: 26px;
+      border: 3px solid rgba(71, 70, 70, .22);
+      border-top-color: #474646;
+      border-radius: 50%;
+      animation: arranque-giro 900ms linear infinite;
+    }
+
+    @keyframes arranque-giro {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Respeta a quien pidió menos movimiento en su sistema. */
+    @media (prefers-reduced-motion: reduce) {
+      #arranque-girando { animation-duration: 2400ms; }
+    }
+
+    #arranque-fallo {
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #arranque-fallo .titulo {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    #arranque-fallo .texto {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.45;
+      color: #6d6c6a;
+    }
+
+    #arranque-fallo .detalle {
+      margin: 4px 0 0;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #8d8b88;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    #arranque-reintentar {
+      margin-top: 6px;
+      padding: 13px 30px;
+      border: 0;
+      border-radius: 999px;
+      background-color: #474646;
+      color: #E6E1D5;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Acotado a la capa de arranque: una regla global podria tapar
+       elementos que Flutter marca como ocultos por su cuenta. */
+    #arranque [hidden] { display: none !important; }
   </style>
 </head>
 <body>
+  <div id="arranque" role="status" aria-live="polite">
+    <img src="icons/Icon-192.png" alt="" />
+    <div id="arranque-girando"></div>
+    <div id="arranque-fallo" hidden>
+      <p class="titulo">No pudimos abrir U market</p>
+      <p class="texto">
+        Puede que el teléfono haya guardado una versión vieja de la
+        aplicación. Esto la borra y vuelve a bajarla.
+      </p>
+      <button type="button" id="arranque-reintentar">Reintentar</button>
+      <p class="detalle" id="arranque-detalle" hidden></p>
+    </div>
+  </div>
+
+  <script>
+    /*
+     * Vigilante del arranque. Es lo ultimo que queda en pie cuando falla
+     * cualquier otra cosa, asi que no usa nada moderno ni depende de ningun
+     * otro script de esta pagina.
+     *
+     * `flutter-first-frame` lo dispara el propio motor de Flutter al pintar
+     * por primera vez. Si llega, se quita la capa y aqui no paso nada. Si no
+     * llega en DEMORA_LIMITE, la aplicacion esta colgada antes de Dart: se
+     * intenta una recuperacion automatica (borrar service workers y caches,
+     * que es lo que deja la PWA servida con una version rota) y, si al
+     * volver tampoco arranca, se le da el boton a la persona.
+     *
+     * La marca de "ya lo intente" vive en sessionStorage y no en una
+     * variable: una variable se reinicia con la recarga, y entonces esto
+     * seria un bucle de recargas en vez de un arreglo.
+     */
+    (() => {
+      var DEMORA_LIMITE = 12000;
+      var YA_RECUPERE = 'umarket-recuperado';
+
+      var capa = document.getElementById('arranque');
+      var girando = document.getElementById('arranque-girando');
+      var fallo = document.getElementById('arranque-fallo');
+      var boton = document.getElementById('arranque-reintentar');
+      var detalle = document.getElementById('arranque-detalle');
+      if (!capa) return;
+
+      /*
+       * El primer error del arranque, guardado para ensenarlo si hace falta.
+       *
+       * Esta pantalla ya aparecio varias veces y cada vez habia que adivinar
+       * la causa desde cero, porque un fondo de color no dice nada. Con esto,
+       * la proxima vez la pantalla trae su propio motivo escrito.
+       */
+      var primerError = '';
+      function apunta(texto) {
+        if (!primerError && texto) primerError = String(texto).slice(0, 300);
+      }
+      window.addEventListener('error', function (evento) {
+        apunta(
+          evento && evento.message
+            ? evento.message + (evento.filename ? ' · ' + evento.filename : '')
+            : 'error al cargar un archivo'
+        );
+      }, true);
+      window.addEventListener('unhandledrejection', function (evento) {
+        apunta(evento && evento.reason ? evento.reason : 'promesa rechazada');
+      });
+
+      // sessionStorage lanza excepcion en ventana privada o con los datos
+      // del sitio bloqueados. Sin memoria, se prefiere no recuperar sola:
+      // mejor ensenar el boton una vez que recargar sin fin.
+      function recuerda(clave) {
+        try { return !!sessionStorage.getItem(clave); } catch (_) { return true; }
+      }
+      function anota(clave) {
+        try { sessionStorage.setItem(clave, '1'); } catch (_) {}
+      }
+      window.memoriaArranque = { recuerda: recuerda, anota: anota };
+
+      var vigilante = null;
+      var arranco = false;
+
+      function arrancoBien() {
+        if (arranco) return;
+        arranco = true;
+        if (vigilante) clearTimeout(vigilante);
+        capa.remove();
+      }
+      window.addEventListener('flutter-first-frame', arrancoBien);
+
+      function mostrarFallo() {
+        girando.hidden = true;
+        fallo.hidden = false;
+        if (primerError) {
+          detalle.textContent = primerError;
+          detalle.hidden = false;
+        }
+      }
+
+      /* Deja el dispositivo como en la primera visita y vuelve a empezar. */
+      function borrarYRecargar() {
+        var tareas = [];
+        try {
+          if ('serviceWorker' in navigator) {
+            tareas.push(
+              navigator.serviceWorker.getRegistrations().then(function (todos) {
+                return Promise.all(todos.map(function (uno) { return uno.unregister(); }));
+              })
+            );
+          }
+        } catch (_) {}
+        try {
+          if (window.caches) {
+            tareas.push(
+              caches.keys().then(function (nombres) {
+                return Promise.all(nombres.map(function (n) { return caches.delete(n); }));
+              })
+            );
+          }
+        } catch (_) {}
+
+        var volver = function () { window.location.reload(); };
+        Promise.all(tareas).then(volver, volver);
+        // Si algo se quedara colgado borrando, se recarga igual.
+        setTimeout(volver, 4000);
+      }
+
+      vigilante = setTimeout(function () {
+        if (arranco) return;
+        if (recuerda(YA_RECUPERE)) {
+          // Ya se limpio en esta sesion y sigue sin arrancar: el problema no
+          // era la copia guardada. Se lo decimos en vez de recargar en bucle.
+          mostrarFallo();
+          return;
+        }
+        anota(YA_RECUPERE);
+        borrarYRecargar();
+      }, DEMORA_LIMITE);
+
+      boton.addEventListener('click', function () {
+        boton.disabled = true;
+        boton.textContent = 'Limpiando...';
+        borrarYRecargar();
+      });
+    })();
+  </script>
   <script>
     /*
      * Chrome dispara beforeinstallprompt en cuanto valida el manifest, que
@@ -115,11 +357,21 @@
     (() => {
       if (!('serviceWorker' in navigator)) return;
 
-      // Evita el bucle: tras recargar una vez ya se está en la última.
-      let recargando = false;
+      /*
+       * Una sola recarga por sesión, y la marca vive en sessionStorage.
+       *
+       * Antes era una variable de la página, que se reinicia justamente al
+       * recargar: si el control cambiaba otra vez -y con dos service workers
+       * conviviendo puede pasar- la guardia ya valía cero y la página se
+       * quedaba recargándose sin llegar nunca a pintar. Por fuera eso se ve
+       * igual que una pantalla crema congelada.
+       */
+      const memoria = window.memoriaArranque;
+      const YA_RECARGUE = 'umarket-sw-recargado';
+
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (recargando) return;
-        recargando = true;
+        if (!memoria || memoria.recuerda(YA_RECARGUE)) return;
+        memoria.anota(YA_RECARGUE);
         window.location.reload();
       });
 

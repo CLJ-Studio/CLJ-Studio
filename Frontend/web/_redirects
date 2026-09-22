@@ -1,4 +1,17 @@
 # Netlify: toda ruta se sirve con index.html.
 # Sin esto, recargar la pagina en una ruta interna devuelve 404, porque
 # Netlify busca un archivo que no existe: el enrutado ocurre en el cliente.
+#
+# PERO un archivo que falta tiene que fallar como archivo que falta. Si un
+# recurso de la aplicacion no existe y se responde index.html con codigo
+# 200, el navegador recibe una pagina HTML donde esperaba otra cosa y el
+# motor de Flutter no llega a arrancar: la pantalla se queda en el fondo
+# crema del HTML, fija, sin un solo error visible.
+#
+# El asterisco solo vale al final de la ruta, asi que esto se hace por
+# carpeta. Netlify sirve primero los archivos que existen: estas dos reglas
+# solo afectan a los que faltan.
+/assets/*     /index.html  404
+/canvaskit/*  /index.html  404
+
 /*  /index.html  200
