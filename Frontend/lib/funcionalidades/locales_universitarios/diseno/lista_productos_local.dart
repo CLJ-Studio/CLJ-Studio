@@ -36,9 +36,7 @@ class ListaProductosLocal extends StatelessWidget {
         // ancho salia con otra forma que en uno angosto, y distinta de como se
         // veia la misma publicacion en el inicio. Ahora manda la foto, que
         // tiene proporcion fija, y al texto se le reserva su parte.
-        final altoTexto =
-            _altoTexto *
-            MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
+        final altoTexto = _altoTexto(context);
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -57,8 +55,24 @@ class ListaProductosLocal extends StatelessWidget {
   );
 }
 
-/// Lo que ocupa el bloque de texto bajo la foto, con la tipografia comun.
-const _altoTexto = 134.0;
+/// Lo que ocupa el bloque de texto bajo la foto.
+///
+/// NO ES UNA ESTIMACION: sale de medir el bloque real a varias escalas de
+/// letra del sistema (ver `medida_tarjeta_producto_test.dart`), que dieron
+/// 150 a escala 1, 208 a 1.25, 242 a 1.5 y 362 a 2. La recta que las cubre
+/// todas con holgura es esta.
+///
+/// Antes era un 134 fijo multiplicado por la escala, y se quedaba corto ya
+/// en el caso normal: la tarjeta se desbordaba 8 px en un telefono angosto y
+/// 33 con la letra al 150%, con su franja amarilla y negra encima.
+///
+/// Por encima del 200% se deja de escalar: a esa altura la cuadricula de dos
+/// columnas ya no es la forma correcta de mostrar esto, y estirar la celda
+/// sin fin solo deja una foto diminuta con un muro de texto debajo.
+double _altoTexto(BuildContext context) {
+  final escala = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
+  return 212 * escala - 52;
+}
 
 class _TarjetaProducto extends StatefulWidget {
   const _TarjetaProducto({required this.producto, this.local});

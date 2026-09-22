@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
+import '../../../elementos_compartidos/estructuras_aplicacion/hueco_barra_navegacion.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
@@ -88,7 +89,12 @@ class _PantallaLocalesUniversitariosState
                   ),
                 ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(18, 4, 18, 120),
+                padding: EdgeInsets.fromLTRB(
+                  18,
+                  4,
+                  18,
+                  huecoBarraNavegacion(context),
+                ),
                 sliver: SliverToBoxAdapter(
                   child: ContenidoCentrado(
                     anchoMaximo: 1000,

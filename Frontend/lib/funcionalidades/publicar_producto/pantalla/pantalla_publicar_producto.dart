@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/estructuras_aplicacion/hueco_barra_navegacion.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
@@ -42,7 +43,7 @@ class _PantallaPublicarProductoState extends State<PantallaPublicarProducto> {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: widget.miLocal,
     builder: (context, _) => SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 120),
+      padding: EdgeInsets.fromLTRB(14, 16, 14, huecoBarraNavegacion(context)),
       child: ContenidoCentrado(
         anchoMaximo: 720,
         child: Column(

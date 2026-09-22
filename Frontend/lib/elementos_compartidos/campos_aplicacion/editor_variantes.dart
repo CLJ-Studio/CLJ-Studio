@@ -20,11 +20,19 @@ class EditorVariantes extends StatefulWidget {
   const EditorVariantes({
     required this.variantes,
     required this.alCambiar,
+    this.titulo,
     super.key,
   });
 
   final List<String> variantes;
   final ValueChanged<List<String>> alCambiar;
+
+  /// Encabezado propio, para cuando el contenedor no pone ninguno.
+  ///
+  /// En el formulario de publicar va sin el: la tarjeta que lo envuelve ya
+  /// dice "Sabores o tamaños", y poner debajo "Opciones (opcional)" dejaba
+  /// dos titulos pegados diciendo lo mismo.
+  final String? titulo;
 
   @override
   State<EditorVariantes> createState() => _EditorVariantesState();
@@ -71,13 +79,15 @@ class _EditorVariantesState extends State<EditorVariantes> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Opciones (opcional)',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 4),
+        if (widget.titulo case final String encabezado) ...[
+          Text(
+            encabezado,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 4),
+        ],
         Text(
           'Si es el mismo producto con varios sabores o tamaños, ponlos aquí '
           'en vez de publicarlo varias veces.',

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/estructuras_aplicacion/hueco_barra_navegacion.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
@@ -144,7 +145,12 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                     mostrarUbicacion: mostrarUbicacion,
                   ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(14, 16, 14, 120),
+                  padding: EdgeInsets.fromLTRB(
+                    14,
+                    16,
+                    14,
+                    huecoBarraNavegacion(context),
+                  ),
                   sliver: SliverToBoxAdapter(
                     child: ContenidoCentrado(
                       anchoMaximo: 1000,
@@ -223,9 +229,7 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                             const SizedBox(height: 28),
                             KeyedSubtree(
                               key: _claveResultados,
-                              child: const TituloSeccion(
-                                'Descubre algo nuevo',
-                              ),
+                              child: const TituloSeccion('Descubre algo nuevo'),
                             ),
                             const SizedBox(height: 10),
                             _CuadriculaPublicaciones(
@@ -667,9 +671,8 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
   /// El autoplay lo consulta desde un temporizador, que puede dispararse
   /// mientras la publicidad todavía está cargando: si contara siempre los
   /// banners locales, saltaría a una página que ya no existe.
-  int get _cantidadDiapositivas => _avisosVisibles.isNotEmpty
-      ? _avisosVisibles.length
-      : _banners.length;
+  int get _cantidadDiapositivas =>
+      _avisosVisibles.isNotEmpty ? _avisosVisibles.length : _banners.length;
 
   @override
   Widget build(BuildContext context) {
@@ -1277,7 +1280,12 @@ class _EscaparatePopular extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
-                    height: 246,
+                    // Antes 246 fijo. La tarjeta del carrusel mide 164 de
+                    // ancho, asi que su foto mide 123 de alto; lo demas es
+                    // texto, y el texto crece con los ajustes del telefono.
+                    height:
+                        164 / proporcionFotoProducto +
+                        _altoTextoTarjeta(context, conAcciones: true),
                     child: OverflowBox(
                       alignment: Alignment.center,
                       minWidth: anchoCarrusel,
@@ -1364,7 +1372,8 @@ class _CuadriculaPublicaciones extends StatelessWidget {
             // que la misma publicacion vista en otra pantalla.
             childAspectRatio:
                 anchoTarjeta /
-                (anchoTarjeta / proporcionFotoProducto + _altoTextoTarjeta),
+                (anchoTarjeta / proporcionFotoProducto +
+                    _altoTextoTarjeta(context)),
           ),
           itemBuilder: (_, indice) => _TarjetaPublicacion(
             publicacion: publicaciones[indice],
@@ -1378,8 +1387,16 @@ class _CuadriculaPublicaciones extends StatelessWidget {
   }
 }
 
-/// Nombre y precio bajo la foto, sin los botones (la cuadricula no los trae).
-const _altoTextoTarjeta = 76.0;
+/// Nombre y precio bajo la foto.
+///
+/// Escala con la letra del sistema por la misma razon que en la cuadricula
+/// del catalogo: un numero fijo se queda corto en cuanto alguien agranda el
+/// texto, y la tarjeta se desborda. [conAcciones] suma la fila de botones,
+/// que la cuadricula no trae pero el carrusel si.
+double _altoTextoTarjeta(BuildContext context, {bool conAcciones = false}) {
+  final escala = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
+  return (conAcciones ? 145 : 90) * escala;
+}
 
 class _TarjetaPublicacion extends StatelessWidget {
   static const Color _superficieDescubre = Color(0xFFF5F4F0);
@@ -1547,4 +1564,3 @@ class _ImagenPublicacionVacia extends StatelessWidget {
     ),
   );
 }
-

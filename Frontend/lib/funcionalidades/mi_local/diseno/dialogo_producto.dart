@@ -135,6 +135,7 @@ Future<DatosProducto?> mostrarDialogoProducto(
                 ),
                 const SizedBox(height: 20),
                 EditorVariantes(
+                  titulo: 'Sabores o tamaños',
                   variantes: variantes,
                   alCambiar: (nombres) =>
                       actualizar(() => variantes = nombres),

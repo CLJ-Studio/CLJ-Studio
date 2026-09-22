@@ -5,6 +5,7 @@ import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../mi_local/diseno/acciones_publicacion.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
 import '../../../configuracion_aplicacion/modo_local.dart';
+import '../../../elementos_compartidos/estructuras_aplicacion/hueco_barra_navegacion.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../configuracion_usuario/arbol/arbol_configuracion_usuario.dart';
@@ -206,7 +207,12 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(14, 3, 14, 120),
+                padding: EdgeInsets.fromLTRB(
+                  14,
+                  3,
+                  14,
+                  huecoBarraNavegacion(context),
+                ),
                 sliver: SliverGrid.builder(
                   itemCount: productos.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
