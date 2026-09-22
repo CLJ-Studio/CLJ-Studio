@@ -186,10 +186,9 @@
     <img src="icons/Icon-192.png" alt="" />
     <div id="arranque-girando"></div>
     <div id="arranque-fallo" hidden>
-      <p class="titulo">No pudimos abrir U market</p>
-      <p class="texto">
-        Puede que el teléfono haya guardado una versión vieja de la
-        aplicación. Esto la borra y vuelve a bajarla.
+      <p class="titulo">U market está tardando</p>
+      <p class="texto" id="arranque-texto">
+        Puede ser la conexión. Toca reintentar.
       </p>
       <button type="button" id="arranque-reintentar">Reintentar</button>
       <p class="detalle" id="arranque-detalle" hidden></p>
@@ -214,12 +213,23 @@
      * seria un bucle de recargas en vez de un arreglo.
      */
     (() => {
-      var DEMORA_LIMITE = 12000;
-      var YA_RECUPERE = 'umarket-recuperado';
+      /*
+       * Cuanto se espera antes de dar la aplicacion por colgada.
+       *
+       * Generoso a proposito. Lo que se espera es que el telefono termine de
+       * bajar main.dart.js y que el motor arranque, y en una conexion mala
+       * del campus eso puede tardar de verdad. Un plazo corto convierte
+       * "esto va lento" en "esto esta roto", que es peor que no avisar: la
+       * primera vez que esta pantalla salio en un telefono, la aplicacion no
+       * estaba rota, estaba cargando.
+       */
+      var DEMORA_LIMITE = 30000;
+      var YA_FALLE = 'umarket-arranque-fallido';
 
       var capa = document.getElementById('arranque');
       var girando = document.getElementById('arranque-girando');
       var fallo = document.getElementById('arranque-fallo');
+      var texto = document.getElementById('arranque-texto');
       var boton = document.getElementById('arranque-reintentar');
       var detalle = document.getElementById('arranque-detalle');
       if (!capa) return;
@@ -227,9 +237,9 @@
       /*
        * El primer error del arranque, guardado para ensenarlo si hace falta.
        *
-       * Esta pantalla ya aparecio varias veces y cada vez habia que adivinar
-       * la causa desde cero, porque un fondo de color no dice nada. Con esto,
-       * la proxima vez la pantalla trae su propio motivo escrito.
+       * Esta pantalla aparecio varias veces y cada vez hubo que adivinar la
+       * causa desde cero, porque un fondo de color no dice nada. Con esto, la
+       * proxima vez la pantalla trae su propio motivo escrito.
        */
       var primerError = '';
       function apunta(texto) {
@@ -238,19 +248,18 @@
       window.addEventListener('error', function (evento) {
         apunta(
           evento && evento.message
-            ? evento.message + (evento.filename ? ' · ' + evento.filename : '')
-            : 'error al cargar un archivo'
+            ? evento.message + (evento.filename ? ' | ' + evento.filename : '')
+            : 'no se pudo cargar un archivo'
         );
       }, true);
       window.addEventListener('unhandledrejection', function (evento) {
         apunta(evento && evento.reason ? evento.reason : 'promesa rechazada');
       });
 
-      // sessionStorage lanza excepcion en ventana privada o con los datos
-      // del sitio bloqueados. Sin memoria, se prefiere no recuperar sola:
-      // mejor ensenar el boton una vez que recargar sin fin.
+      // sessionStorage lanza excepcion en ventana privada o con los datos del
+      // sitio bloqueados; entonces se trata cada intento como el primero.
       function recuerda(clave) {
-        try { return !!sessionStorage.getItem(clave); } catch (_) { return true; }
+        try { return !!sessionStorage.getItem(clave); } catch (_) { return false; }
       }
       function anota(clave) {
         try { sessionStorage.setItem(clave, '1'); } catch (_) {}
@@ -264,18 +273,10 @@
         if (arranco) return;
         arranco = true;
         if (vigilante) clearTimeout(vigilante);
+        try { sessionStorage.removeItem(YA_FALLE); } catch (_) {}
         capa.remove();
       }
       window.addEventListener('flutter-first-frame', arrancoBien);
-
-      function mostrarFallo() {
-        girando.hidden = true;
-        fallo.hidden = false;
-        if (primerError) {
-          detalle.textContent = primerError;
-          detalle.hidden = false;
-        }
-      }
 
       /* Deja el dispositivo como en la primera visita y vuelve a empezar. */
       function borrarYRecargar() {
@@ -307,21 +308,41 @@
 
       vigilante = setTimeout(function () {
         if (arranco) return;
-        if (recuerda(YA_RECUPERE)) {
-          // Ya se limpio en esta sesion y sigue sin arrancar: el problema no
-          // era la copia guardada. Se lo decimos en vez de recargar en bucle.
-          mostrarFallo();
-          return;
-        }
-        anota(YA_RECUPERE);
-        borrarYRecargar();
-      }, DEMORA_LIMITE);
 
-      boton.addEventListener('click', function () {
-        boton.disabled = true;
-        boton.textContent = 'Limpiando...';
-        borrarYRecargar();
-      });
+        /*
+         * Primera vez: se ofrece recargar y nada mas. NO se borra la copia
+         * guardada, porque si el problema era la conexion, borrarla obliga a
+         * bajarlo todo otra vez justo cuando la red no da para eso.
+         *
+         * Segunda vez en la misma sesion: recargar ya se intento y no fue,
+         * asi que ahora si tiene sentido sospechar de la copia guardada.
+         */
+        var reincidente = recuerda(YA_FALLE);
+        anota(YA_FALLE);
+
+        girando.hidden = true;
+        fallo.hidden = false;
+        if (primerError) {
+          detalle.textContent = primerError;
+          detalle.hidden = false;
+        }
+
+        if (reincidente) {
+          texto.textContent =
+            'Recargar no alcanzo. Esto borra la copia guardada en el telefono y vuelve a bajar la aplicacion.';
+          boton.textContent = 'Borrar y volver a bajar';
+          boton.onclick = function () {
+            boton.disabled = true;
+            boton.textContent = 'Limpiando...';
+            borrarYRecargar();
+          };
+        } else {
+          boton.onclick = function () {
+            boton.disabled = true;
+            window.location.reload();
+          };
+        }
+      }, DEMORA_LIMITE);
     })();
   </script>
   <script>
