@@ -1,0 +1,77 @@
+<!--
+  Correo con el codigo de acceso de U market.
+
+  Se pega en Supabase: Authentication -> Emails -> el template del codigo.
+  Se guarda tambien aqui para que no viva unicamente en el panel, donde nadie
+  puede ver que cambio ni volver atras.
+
+  `{{ .Token }}` es la variable de Supabase. No se toca ni se traduce.
+
+  Por que todo va en tablas y con estilos escritos en cada etiqueta: Outlook y
+  Gmail descartan las hojas de estilo y buena parte del CSS moderno. Lo que
+  se ve aqui es feo de escribir pero es lo unico que llega igual a todos.
+-->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background:#f8f4ec;padding:32px 16px;font-family:
+              -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <tr>
+    <td align="center">
+
+      <!-- Lo que se lee en la bandeja antes de abrir. Sin esto, el gestor de
+           correo muestra el primer texto que encuentre, que suele ser el
+           nombre de la marca repetido. El codigo NO va aqui: quedaria a la
+           vista de cualquiera que mire la pantalla de espaldas. -->
+      <div style="display:none;max-height:0;overflow:hidden;opacity:0;
+                  mso-hide:all;">
+        Tu código para entrar a U market.
+      </div>
+
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="max-width:460px;background:#ffffff;border-radius:18px;
+                    padding:36px 32px;">
+        <tr>
+          <td>
+            <p style="margin:0 0 6px;font-size:15px;color:#6a554b;
+                      font-weight:800;">
+              <span style="font-weight:900;">U</span> market
+            </p>
+
+            <h1 style="margin:0 0 18px;font-size:22px;line-height:1.3;
+                       color:#474646;font-weight:800;">
+              Tu código para entrar
+            </h1>
+
+            <p style="margin:0 0 22px;font-size:15px;line-height:1.55;
+                      color:#6f6e6c;">
+              Escríbelo en la aplicación para entrar con tu correo de la
+              universidad.
+            </p>
+
+            <!-- El text-indent compensa el espaciado entre letras: sin el, el
+                 hueco que queda detras del ultimo digito corre el codigo
+                 hacia la izquierda y se ve descentrado. -->
+            <p style="margin:0 0 22px;font-size:34px;letter-spacing:10px;
+                      text-indent:10px;font-weight:800;color:#474646;
+                      text-align:center;background:#e6e1d5;border-radius:14px;
+                      padding:18px 0;">
+              {{ .Token }}
+            </p>
+
+            <p style="margin:0 0 6px;font-size:13px;line-height:1.55;
+                      color:#848381;">
+              Vence en una hora y solo sirve una vez.
+            </p>
+            <p style="margin:0;font-size:13px;line-height:1.55;color:#848381;">
+              Si no lo pediste, no hagas nada: sin el código nadie puede entrar
+              a tu cuenta.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:18px 0 0;font-size:12px;color:#9aa09a;">
+        U market · Universidad Privada de Santa Cruz de la Sierra
+      </p>
+    </td>
+  </tr>
+</table>
