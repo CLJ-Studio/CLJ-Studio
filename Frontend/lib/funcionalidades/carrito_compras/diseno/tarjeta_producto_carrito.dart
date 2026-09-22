@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../elementos_compartidos/imagenes/foto_red.dart';
+import '../../../elementos_compartidos/imagenes/foto_producto.dart';
+import '../../../elementos_compartidos/tarjetas_aplicacion/estilo_tarjeta_producto.dart';
 import '../modelos/elemento_carrito.dart';
 import 'selector_cantidad_producto.dart';
 
@@ -25,30 +26,31 @@ class TarjetaProductoCarrito extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 108,
-          height: 138,
-          clipBehavior: Clip.antiAlias,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFE9E9E9)),
-          ),
-          child: switch (elemento.producto.imagenUrl) {
-            final String url => FotoRed(
-              url: url,
-              anchoVisible: 96,
-              alFallar: Text(
-                elemento.producto.emoji,
-                style: const TextStyle(fontSize: 52),
+        // La miniatura era vertical (108 x 138) y las fotos son apaisadas:
+        // `cover` se comia los lados y el producto llegaba al carrito
+        // irreconocible respecto a como se veia en el catalogo.
+        SizedBox(
+          width: 112,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: EstiloTarjetaProducto.borde,
+              border: Border.all(color: const Color(0xFFE9E9E9)),
+            ),
+            child: ClipRRect(
+              borderRadius: EstiloTarjetaProducto.borde,
+              child: FotoProducto(
+                url: elemento.producto.imagenUrl,
+                anchoVisible: 112,
+                alFallar: Center(
+                  child: Text(
+                    elemento.producto.emoji,
+                    style: const TextStyle(fontSize: 44),
+                  ),
+                ),
               ),
             ),
-            _ => Text(
-              elemento.producto.emoji,
-              style: const TextStyle(fontSize: 52),
-            ),
-          },
+          ),
         ),
         const SizedBox(width: 14),
         Expanded(

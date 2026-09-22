@@ -7,6 +7,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/imagenes/foto_producto.dart';
 import '../../mi_local/diseno/dialogo_producto.dart';
 import '../../mi_local/datos/repositorio_mi_local.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
@@ -423,8 +424,16 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
           animation: _animacionModoImagen,
           builder: (context, _) {
             final progreso = _animacionModoImagen.value;
+            // La foto se ve con la proporcion con la que se guardo, no con un
+            // alto suelto. Con 330 fijos el recorte dependia del ancho de la
+            // pantalla: en un telefono salia casi cuadrada y en una tableta
+            // muy apaisada, y ninguna de las dos coincidia con la tarjeta del
+            // inicio desde la que se venia. `maxWidth` se limita a 620 porque
+            // es el tope que pone el `ConstrainedBox` de mas abajo.
+            final anchoContenido = limites.maxWidth.clamp(0.0, 620.0);
+            final altoBase = anchoContenido / proporcionFotoProducto;
             final altoGaleria =
-                330 + ((limites.maxHeight + 30) - 330) * progreso;
+                altoBase + ((limites.maxHeight + 30) - altoBase) * progreso;
 
             return SingleChildScrollView(
               controller: _desplazamiento,

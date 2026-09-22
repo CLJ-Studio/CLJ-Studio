@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../elementos_compartidos/imagenes/foto_red.dart';
+import '../../../elementos_compartidos/imagenes/foto_producto.dart';
 
 import '../modelos/pedido.dart';
 
@@ -77,6 +78,7 @@ class TarjetaPedido extends StatelessWidget {
                         emoji: pedido.emojiLocal,
                         tamanio: 72,
                         radio: 18,
+                        esLogo: true,
                       ),
                       if (mensajesSinLeer > 0)
                         Positioned(
@@ -186,7 +188,8 @@ class TarjetaPedido extends StatelessWidget {
         if (pedido.items.isNotEmpty) ...[
           const SizedBox(height: 14),
           SizedBox(
-            height: 70,
+            // El alto sale del ancho de cada miniatura y su proporcion.
+            height: 70 / proporcionFotoProducto,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               physics: const NeverScrollableScrollPhysics(),
@@ -252,12 +255,16 @@ class _ImagenPedido extends StatelessWidget {
     required this.emoji,
     required this.tamanio,
     required this.radio,
+    this.esLogo = false,
   });
 
   final String? url;
   final String emoji;
   final double tamanio;
   final double radio;
+
+  /// El logotipo del local si es cuadrado; una foto de producto, no.
+  final bool esLogo;
 
   @override
   Widget build(BuildContext context) {
@@ -269,16 +276,28 @@ class _ImagenPedido extends StatelessWidget {
     );
     return Container(
       width: tamanio,
-      height: tamanio,
+      // Cuadrada recortaba los lados de una foto apaisada: el producto del
+      // pedido no se parecia al que se habia visto en el catalogo.
+      height: esLogo ? tamanio : null,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: const Color(0xFFF4F3F5),
         borderRadius: BorderRadius.circular(radio),
         border: Border.all(color: const Color(0xFFE7E5E9)),
       ),
-      child: url == null
-          ? reemplazo
-          : FotoRed(url: url!, anchoVisible: 96, alFallar: reemplazo),
+      child: esLogo
+          ? (url == null
+                ? reemplazo
+                : FotoRed(
+                    url: url!,
+                    anchoVisible: tamanio,
+                    alFallar: reemplazo,
+                  ))
+          : FotoProducto(
+              url: url,
+              anchoVisible: tamanio,
+              alFallar: reemplazo,
+            ),
     );
   }
 }

@@ -7,7 +7,8 @@ import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
-import '../../../elementos_compartidos/imagenes/foto_red.dart';
+import '../../../elementos_compartidos/imagenes/foto_producto.dart';
+import '../../../elementos_compartidos/tarjetas_aplicacion/estilo_tarjeta_producto.dart';
 import '../../../elementos_compartidos/marca/marca_u_market.dart';
 import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
@@ -1356,7 +1357,13 @@ class _CuadriculaPublicaciones extends StatelessWidget {
             crossAxisCount: columnas,
             crossAxisSpacing: separacion,
             mainAxisSpacing: separacion,
-            childAspectRatio: anchoTarjeta / 205,
+            // El alto lo fija la foto, que tiene proporcion propia, mas lo que
+            // ocupan nombre y precio. Antes era 205 fijo: con la columna mas
+            // ancha la foto se quedaba con el mismo alto y salia mas apaisada
+            // que la misma publicacion vista en otra pantalla.
+            childAspectRatio:
+                anchoTarjeta /
+                (anchoTarjeta / proporcionFotoProducto + _altoTextoTarjeta),
           ),
           itemBuilder: (_, indice) => _TarjetaPublicacion(
             publicacion: publicaciones[indice],
@@ -1369,6 +1376,9 @@ class _CuadriculaPublicaciones extends StatelessWidget {
     );
   }
 }
+
+/// Nombre y precio bajo la foto, sin los botones (la cuadricula no los trae).
+const _altoTextoTarjeta = 76.0;
 
 class _TarjetaPublicacion extends StatelessWidget {
   static const Color _superficieDescubre = Color(0xFFF5F4F0);
@@ -1408,7 +1418,7 @@ class _TarjetaPublicacion extends StatelessWidget {
           : superficieSuave
           ? _superficieDescubre
           : Colors.white,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: EstiloTarjetaProducto.borde,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => _abrir(context),
@@ -1419,25 +1429,19 @@ class _TarjetaPublicacion extends StatelessWidget {
                 : superficieSuave
                 ? _superficieDescubre
                 : Colors.white,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: EstiloTarjetaProducto.borde,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 132,
-                width: double.infinity,
-                child: publicacion.imagenUrl == null
-                    ? const _ImagenPublicacionVacia()
-                    : FotoRed(
-                        url: publicacion.imagenUrl!,
-                        // Fijo, no medido: la cuadricula es de dos
-                        // columnas y ninguna tarjeta pasa de esto. Medir la
-                        // pantalla aqui hacia que el numero cambiara entre
-                        // reconstrucciones y la foto se volviera a bajar.
-                        anchoVisible: 220,
-                        alFallar: const _ImagenPublicacionVacia(),
-                      ),
+              FotoProducto(
+                url: publicacion.imagenUrl,
+                // Fijo, no medido: la cuadricula es de dos
+                // columnas y ninguna tarjeta pasa de esto. Medir la
+                // pantalla aqui hacia que el numero cambiara entre
+                // reconstrucciones y la foto se volviera a bajar.
+                anchoVisible: 220,
+                alFallar: const _ImagenPublicacionVacia(),
               ),
               Expanded(
                 child: Padding(
@@ -1449,22 +1453,14 @@ class _TarjetaPublicacion extends StatelessWidget {
                         publicacion.nombre,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          height: 1.08,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: EstiloTarjetaProducto.nombre(context),
                       ),
                       const Spacer(),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Bs ${publicacion.precio.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            color: ConfiguracionTema.terracota,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: EstiloTarjetaProducto.precio(context),
                         ),
                       ),
                       if (mostrarAcciones) ...[

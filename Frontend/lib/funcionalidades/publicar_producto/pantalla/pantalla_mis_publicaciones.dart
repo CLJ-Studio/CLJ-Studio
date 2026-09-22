@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../elementos_compartidos/imagenes/foto_red.dart';
+import '../../../elementos_compartidos/imagenes/foto_producto.dart';
+import '../../../elementos_compartidos/tarjetas_aplicacion/estilo_tarjeta_producto.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
@@ -129,7 +130,7 @@ class _TarjetaPublicacion extends StatelessWidget {
     margin: const EdgeInsets.only(bottom: 14),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: EstiloTarjetaProducto.borde,
       border: Border.all(color: Theme.of(context).dividerColor),
     ),
     child: Column(
@@ -160,33 +161,26 @@ class _TarjetaPublicacion extends StatelessWidget {
           trailing: _Origen(local: publicacion.local),
         ),
         Container(
-          height: 190,
           width: double.infinity,
           margin: const EdgeInsets.symmetric(horizontal: 14),
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary.withValues(alpha: .12),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: EstiloTarjetaProducto.borde,
           ),
-          child: switch (publicacion.imagenUrl) {
-            final String url => FotoRed(
-              url: url,
-              // La tarjeta ocupa el ancho, con un tope de 720.
-              anchoVisible: 720,
-              alFallar: Center(
-                child: Text(
-                  publicacion.emoji,
-                  style: const TextStyle(fontSize: 76),
-                ),
-              ),
-            ),
-            _ => Center(
+          // Antes 190 px de alto: la misma foto salia mas apaisada aqui que
+          // en el catalogo, y al vendedor le costaba reconocer lo suyo.
+          child: FotoProducto(
+            url: publicacion.imagenUrl,
+            // La tarjeta ocupa el ancho, con un tope de 720.
+            anchoVisible: 720,
+            alFallar: Center(
               child: Text(
                 publicacion.emoji,
                 style: const TextStyle(fontSize: 76),
               ),
             ),
-          },
+          ),
         ),
         Padding(
           padding: const EdgeInsets.all(18),
@@ -195,17 +189,15 @@ class _TarjetaPublicacion extends StatelessWidget {
             children: [
               Text(
                 'Bs ${publicacion.precio.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: Color(0xFF474646),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: EstiloTarjetaProducto.precio(context),
               ),
               if (publicacion.descripcion.isNotEmpty) ...[
                 const SizedBox(height: 7),
+                // El color venia fijo en grafito, que en tema oscuro es el
+                // mismo del fondo: el texto estaba ahi y no se leia.
                 Text(
                   publicacion.descripcion,
-                  style: const TextStyle(color: Color(0xFF474646), height: 1.4),
+                  style: EstiloTarjetaProducto.apoyo(context),
                 ),
               ],
             ],

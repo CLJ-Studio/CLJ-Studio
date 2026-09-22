@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../elementos_compartidos/imagenes/foto_red.dart';
+import '../../../elementos_compartidos/imagenes/foto_producto.dart';
+import '../../../elementos_compartidos/tarjetas_aplicacion/estilo_tarjeta_producto.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
@@ -27,15 +28,26 @@ class ListaProductosLocal extends StatelessWidget {
             : restricciones.maxWidth >= 560
             ? 3
             : 2;
+        const separacion = 12.0;
+        final anchoTarjeta =
+            (restricciones.maxWidth - separacion * (columnas - 1)) / columnas;
+        // El alto de la celda se calcula, no se elige. Antes era un numero
+        // suelto (270) y la foto se quedaba con lo que sobrara: en un telefono
+        // ancho salia con otra forma que en uno angosto, y distinta de como se
+        // veia la misma publicacion en el inicio. Ahora manda la foto, que
+        // tiene proporcion fija, y al texto se le reserva su parte.
+        final altoTexto =
+            _altoTexto *
+            MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: productos.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columnas,
-            crossAxisSpacing: 12,
+            crossAxisSpacing: separacion,
             mainAxisSpacing: 14,
-            mainAxisExtent: columnas == 2 ? 270 : 282,
+            mainAxisExtent: anchoTarjeta / proporcionFotoProducto + altoTexto,
           ),
           itemBuilder: (_, indice) =>
               _TarjetaProducto(producto: productos[indice], local: local),
@@ -44,6 +56,9 @@ class ListaProductosLocal extends StatelessWidget {
     ),
   );
 }
+
+/// Lo que ocupa el bloque de texto bajo la foto, con la tipografia comun.
+const _altoTexto = 134.0;
 
 class _TarjetaProducto extends StatefulWidget {
   const _TarjetaProducto({required this.producto, this.local});
@@ -97,10 +112,9 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
   @override
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
-    final colorTexto = oscuro ? Color(0xFFE6E1D5) : Color(0xFF474646);
     return Material(
       color: oscuro ? const Color(0xFF474646) : Colors.white,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: EstiloTarjetaProducto.borde,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: _abrirDetalle,
@@ -109,7 +123,7 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
             border: Border.all(
               color: oscuro ? const Color(0xFF474646) : Colors.white,
             ),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: EstiloTarjetaProducto.borde,
             boxShadow: oscuro
                 ? null
                 : const [
@@ -123,128 +137,109 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    switch (widget.producto.imagenUrl) {
-                      final String url => FotoRed(
-                        url: url,
-                        // Fijo: con mas columnas las tarjetas son aun mas
-                        // chicas, asi que esto sobra en todos los tamanos.
-                        anchoVisible: 220,
-                        alFallar: _FondoEmoji(emoji: widget.producto.emoji),
-                      ),
-                      _ => _FondoEmoji(emoji: widget.producto.emoji),
-                    },
-                    Positioned(
-                      top: 7,
-                      right: 7,
-                      child: IconButton(
-                        tooltip: 'Guardar en favoritos',
-                        onPressed: () => ControladorFavoritos.instancia
-                            .alternar(widget.producto),
-                        style: IconButton.styleFrom(
-                          foregroundColor: const Color(0xFFAE7960),
-                        ),
-                        icon: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            _favorito
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            key: ValueKey(_favorito),
-                            size: 22,
+              Stack(
+                children: [
+                  FotoProducto(
+                    url: widget.producto.imagenUrl,
+                    // Fijo: con mas columnas las tarjetas son aun mas
+                    // chicas, asi que esto sobra en todos los tamanos.
+                    anchoVisible: 220,
+                    alFallar: _FondoEmoji(emoji: widget.producto.emoji),
+                  ),
+                  Positioned(
+                    top: 7,
+                    right: 7,
+                    child: IconButton(
+                      tooltip: 'Guardar en favoritos',
+                      onPressed: () =>
+                          ControladorFavoritos.instancia.alternar(
+                            widget.producto,
                           ),
+                      style: IconButton.styleFrom(
+                        foregroundColor: const Color(0xFFAE7960),
+                      ),
+                      icon: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          _favorito
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          key: ValueKey(_favorito),
+                          size: 22,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(13, 11, 11, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.producto.nombre,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colorTexto,
-                        fontSize: 15,
-                        height: 1.05,
-                        fontWeight: FontWeight.w900,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(13, 11, 11, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.producto.nombre,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: EstiloTarjetaProducto.nombre(context),
                       ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      widget.producto.descripcion.isEmpty
-                          ? (widget.producto.esServicio
-                                ? 'Servicio disponible'
-                                : 'Producto disponible')
-                          : widget.producto.descripcion,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colorTexto,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(height: 5),
+                      Text(
+                        widget.producto.descripcion.isEmpty
+                            ? (widget.producto.esServicio
+                                  ? 'Servicio disponible'
+                                  : 'Producto disponible')
+                            : widget.producto.descripcion,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: EstiloTarjetaProducto.apoyo(context),
                       ),
-                    ),
-                    // Quien vende, en la propia tarjeta: sin esto habia que
-                    // abrir cada publicacion para saber de quien era, y en un
-                    // campus eso es justo lo que decide si te interesa.
-                    if (widget.producto.local?.nombreVisible
-                        case final String vendedor
-                        when vendedor.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            widget.producto.local!.esPersonal
-                                ? Icons.person_rounded
-                                : Icons.storefront_rounded,
-                            size: 11,
-                            color: colorTexto,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              vendedor,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: colorTexto,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
+                      // Quien vende, en la propia tarjeta: sin esto habia que
+                      // abrir cada publicacion para saber de quien era, y en
+                      // un campus eso es justo lo que decide si te interesa.
+                      if (widget.producto.local?.nombreVisible
+                          case final String vendedor
+                          when vendedor.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              widget.producto.local!.esPersonal
+                                  ? Icons.person_rounded
+                                  : Icons.storefront_rounded,
+                              size: 12,
+                              color: EstiloTarjetaProducto.apoyo(context).color,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                vendedor,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: EstiloTarjetaProducto.apoyo(context),
                               ),
                             ),
+                          ],
+                        ),
+                      ],
+                      const Spacer(),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Bs ${widget.producto.precio.toStringAsFixed(2)}',
+                              style: EstiloTarjetaProducto.precio(context),
+                            ),
+                          ),
+                          IndicadorVistas(
+                            total: widget.producto.vistas,
+                            compacto: true,
                           ),
                         ],
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Bs ${widget.producto.precio.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              color: colorTexto,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        IndicadorVistas(
-                          total: widget.producto.vistas,
-                          compacto: true,
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
