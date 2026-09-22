@@ -29,10 +29,10 @@ class ControladorCarritoCompras extends ChangeNotifier {
   int get unidades =>
       _elementos.fold(0, (total, item) => total + item.cantidad);
 
-  double get subtotal => _elementos.fold(
-    0,
-    (total, item) => total + item.producto.precio * item.cantidad,
-  );
+  // Por linea y no por producto: dos sabores del mismo producto pueden
+  // costar distinto, asi que el precio vive en la linea.
+  double get subtotal =>
+      _elementos.fold(0, (total, item) => total + item.subtotal);
 
   /// El envio lo define cada local; antes estaba fijo en 3 Bs.
   double get costoEntrega =>

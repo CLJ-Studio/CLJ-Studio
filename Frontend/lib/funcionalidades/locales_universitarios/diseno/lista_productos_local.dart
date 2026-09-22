@@ -242,7 +242,11 @@ class _TarjetaProductoState extends State<_TarjetaProducto> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Bs ${widget.producto.precio.toStringAsFixed(2)}',
+                              widget.producto.preciosVarian
+                                  ? 'desde Bs ${widget.producto.precioMinimo.toStringAsFixed(2)}'
+                                  : 'Bs ${widget.producto.precio.toStringAsFixed(2)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: EstiloTarjetaProducto.precio(context),
                             ),
                           ),

@@ -73,7 +73,11 @@ void main() {
       return r > b ? 0 : 1; // 0 = rojo, 1 = azul
     }
 
-    expect(pixelEn(imagen.width ~/ 2, 10), 0, reason: 'arriba deberia ser rojo');
+    expect(
+      pixelEn(imagen.width ~/ 2, 10),
+      0,
+      reason: 'arriba deberia ser rojo',
+    );
     expect(
       pixelEn(imagen.width ~/ 2, imagen.height - 10),
       1,

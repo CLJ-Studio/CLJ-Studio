@@ -5,6 +5,7 @@ import '../../../elementos_compartidos/imagenes/selector_galeria.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../inicio_marketplace/modelos/variante_producto.dart';
 import '../../publicar_producto/diseno/selector_categoria_publicacion.dart';
 
 /// Datos con los que se crea o edita un producto del inventario.
@@ -27,8 +28,8 @@ class DatosProducto {
   final String emoji;
   final List<String> galeria;
 
-  /// Los sabores, por nombre. El repositorio se encarga de los ids.
-  final List<String> variantes;
+  /// Los sabores con su precio. El repositorio se encarga de los ids.
+  final List<VarianteEditable> variantes;
   final String categoriaId;
 }
 
@@ -71,8 +72,9 @@ Future<DatosProducto?> mostrarDialogoProducto(
     if (producto?.imagePath != null) producto!.imagePath!,
     ...?producto?.imagenes,
   ];
-  var variantes = <String>[
-    for (final variante in producto?.variantes ?? const []) variante.nombre,
+  var variantes = <VarianteEditable>[
+    for (final variante in producto?.variantes ?? const <VarianteProducto>[])
+      VarianteEditable(nombre: variante.nombre, precio: variante.precio),
   ];
 
   return showDialog<DatosProducto>(
@@ -136,6 +138,9 @@ Future<DatosProducto?> mostrarDialogoProducto(
                 const SizedBox(height: 20),
                 EditorVariantes(
                   titulo: 'Sabores o tamaños',
+                  precioProducto: double.tryParse(
+                    precio.text.replaceAll(',', '.'),
+                  ),
                   variantes: variantes,
                   alCambiar: (nombres) =>
                       actualizar(() => variantes = nombres),

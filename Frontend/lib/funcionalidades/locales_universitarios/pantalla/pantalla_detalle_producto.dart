@@ -585,8 +585,20 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                               const SizedBox(height: 10),
                               Row(
                                 children: [
+                                  // Sigue al sabor elegido. Sin elegir, y si
+                                  // los sabores no valen todos lo mismo, se
+                                  // anuncia el mas barato con un "desde":
+                                  // poner un precio exacto que luego cambia al
+                                  // elegir se siente como una trampa.
                                   Text(
-                                    'Bs ${_producto.precio.toStringAsFixed(2)}',
+                                    switch (_variante) {
+                                      final elegida? =>
+                                        'Bs ${elegida.precioSobre(_producto.precio).toStringAsFixed(2)}',
+                                      _ when _producto.preciosVarian =>
+                                        'desde Bs ${_producto.precioMinimo.toStringAsFixed(2)}',
+                                      _ =>
+                                        'Bs ${_producto.precio.toStringAsFixed(2)}',
+                                    },
                                     style: const TextStyle(
                                       color: Color(0xFF474646),
                                       fontSize: 25,
@@ -738,13 +750,29 @@ class _SelectorVariante extends StatelessWidget {
           for (final variante in variantes)
             DropdownMenuItem(
               value: variante,
-              child: Text(
-                variante.nombre,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: ConfiguracionTema.grafito,
-                  fontWeight: FontWeight.w700,
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      variante.nombre,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: ConfiguracionTema.grafito,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  // Solo se nombra el precio del sabor que lo cambia: repetir
+                  // el mismo numero en los doce no informa de nada.
+                  if (variante.precio case final double suyo)
+                    Text(
+                      'Bs ${suyo.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: ConfiguracionTema.terracota,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                ],
               ),
             ),
         ],

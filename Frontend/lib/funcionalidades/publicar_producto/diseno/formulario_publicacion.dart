@@ -8,6 +8,7 @@ import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../../elementos_compartidos/campos_aplicacion/editor_variantes.dart';
 import '../../../elementos_compartidos/imagenes/selector_galeria.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
+import '../../inicio_marketplace/modelos/variante_producto.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../datos/borrador_publicacion.dart';
 import '../logica/controlador_publicacion.dart';
@@ -44,7 +45,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   final stock = TextEditingController();
 
   late List<String> _galeria;
-  List<String> _variantes = const [];
+  List<VarianteEditable> _variantes = const [];
   List<CategoriaMarketplace> _categorias = const [];
   String? _categoriaId;
   bool _publicando = false;
@@ -475,6 +476,9 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                 child: _TarjetaFormulario(
                   titulo: 'Sabores o tamaños',
                   child: EditorVariantes(
+                    precioProducto: double.tryParse(
+                      precio.text.replaceAll(',', '.'),
+                    ),
                     variantes: _variantes,
                     alCambiar: (nombres) {
                       setState(() => _variantes = nombres);

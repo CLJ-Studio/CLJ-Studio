@@ -189,7 +189,7 @@ class RepositorioMiLocal {
     String? descripcion,
     bool esServicio = false,
     List<String> galeria = const [],
-    List<String> variantes = const [],
+    List<VarianteEditable> variantes = const [],
     required String categoriaId,
   }) async {
     final creado = await _cliente
@@ -221,13 +221,16 @@ class RepositorioMiLocal {
   /// vuelve a estar disponible manana sin volver a escribirlo.
   Future<List<VarianteProducto>> guardarVariantes(
     String productoId,
-    List<String> nombres,
+    List<VarianteEditable> variantes,
   ) async {
-    final limpios = <String>[];
-    for (final nombre in nombres) {
-      final texto = nombre.trim();
-      if (texto.isNotEmpty && !limpios.contains(texto)) limpios.add(texto);
+    final limpias = <VarianteEditable>[];
+    for (final variante in variantes) {
+      final nombre = variante.nombre.trim();
+      if (nombre.isEmpty) continue;
+      if (limpias.any((otra) => otra.nombre == nombre)) continue;
+      limpias.add(VarianteEditable(nombre: nombre, precio: variante.precio));
     }
+    final limpios = [for (final variante in limpias) variante.nombre];
 
     final existentes = await _cliente
         .from('product_variants')
@@ -247,22 +250,25 @@ class RepositorioMiLocal {
           .inFilter('name', retiradas);
     }
 
-    if (limpios.isEmpty) return const [];
+    if (limpias.isEmpty) return const [];
 
     // upsert sobre (product_id, name): revive las que vuelven conservando su
     // id, y de paso fija el orden en que el vendedor las dejo.
     final filas = await _cliente
         .from('product_variants')
         .upsert([
-          for (var i = 0; i < limpios.length; i++)
+          for (var i = 0; i < limpias.length; i++)
             {
               'product_id': productoId,
-              'name': limpios[i],
+              'name': limpias[i].nombre,
+              // Nulo a proposito: significa "vale lo que el producto", y hay
+              // que escribirlo igual para borrar un precio que ya no aplica.
+              'price': limpias[i].precio,
               'position': i,
               'is_available': true,
             },
         ], onConflict: 'product_id,name')
-        .select('id, name, position');
+        .select('id, name, price, position');
 
     return filas.map(VarianteProducto.desdeMapa).toList(growable: false);
   }
@@ -288,7 +294,7 @@ class RepositorioMiLocal {
     required String categoriaId,
     String? descripcion,
     List<String> galeria = const [],
-    List<String> variantes = const [],
+    List<VarianteEditable> variantes = const [],
   }) async {
     await _cliente
         .from('products')

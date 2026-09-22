@@ -34,14 +34,8 @@ void main() {
       Publicidad.desdeMapa(fila(placement: 'company_carousel'))?.ubicacion,
       UbicacionPublicidad.carruselEmpresas,
     );
-    expect(
-      UbicacionPublicidad.bannerPrincipal.valor,
-      'main_banner',
-    );
-    expect(
-      UbicacionPublicidad.carruselEmpresas.valor,
-      'company_carousel',
-    );
+    expect(UbicacionPublicidad.bannerPrincipal.valor, 'main_banner');
+    expect(UbicacionPublicidad.carruselEmpresas.valor, 'company_carousel');
   });
 
   test('ignora una ubicación que esta versión no conoce', () {
@@ -74,7 +68,10 @@ void main() {
 
   test('las proporciones son las que esperan los anunciantes', () {
     // 1680x1000 y 1620x624, las medidas que se les pide preparar.
-    expect(UbicacionPublicidad.bannerPrincipal.proporcion, closeTo(1.68, 0.001));
+    expect(
+      UbicacionPublicidad.bannerPrincipal.proporcion,
+      closeTo(1.68, 0.001),
+    );
     expect(
       UbicacionPublicidad.carruselEmpresas.proporcion,
       closeTo(2.596, 0.001),

@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../inicio_marketplace/modelos/variante_producto.dart';
+
 /// Publicacion a medias, guardada en el dispositivo.
 class BorradorPublicacion {
   const BorradorPublicacion({
@@ -26,8 +28,18 @@ class BorradorPublicacion {
         emoji: (json['emoji'] as String?) ?? '🛍️',
         galeria: ((json['galeria'] as List?) ?? const []).cast<String>(),
         // Los borradores guardados antes de que existieran las variantes no
-        // traen la clave; se leen igual, con la lista vacia.
-        variantes: ((json['variantes'] as List?) ?? const []).cast<String>(),
+        // traen la clave; se leen igual, con la lista vacia. Los guardados
+        // antes de que tuvieran precio son una lista de textos sueltos: se
+        // leen tambien, sin precio, en vez de tirar el borrador entero.
+        variantes: [
+          for (final cruda in (json['variantes'] as List?) ?? const [])
+            switch (cruda) {
+              final String nombre => VarianteEditable(nombre: nombre),
+              final Map<String, dynamic> mapa =>
+                VarianteEditable.desdeJson(mapa),
+              _ => const VarianteEditable(nombre: ''),
+            },
+        ]..removeWhere((variante) => variante.nombre.isEmpty),
         categoriaId: json['categoria_id'] as String?,
       );
 
@@ -38,7 +50,7 @@ class BorradorPublicacion {
   final String stock;
   final String emoji;
   final List<String> galeria;
-  final List<String> variantes;
+  final List<VarianteEditable> variantes;
   final String? categoriaId;
 
   Map<String, dynamic> aJson() => {
@@ -49,7 +61,7 @@ class BorradorPublicacion {
     'stock': stock,
     'emoji': emoji,
     'galeria': galeria,
-    'variantes': variantes,
+    'variantes': [for (final variante in variantes) variante.aJson()],
     'categoria_id': categoriaId,
   };
 

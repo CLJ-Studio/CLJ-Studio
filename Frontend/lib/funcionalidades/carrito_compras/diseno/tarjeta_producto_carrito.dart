@@ -99,7 +99,7 @@ class TarjetaProductoCarrito extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               Text(
-                'Bs ${elemento.producto.precio.toStringAsFixed(2)}',
+                'Bs ${elemento.precioUnitario.toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 16, color: Color(0xFF474646)),
               ),
               const SizedBox(height: 12),

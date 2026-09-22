@@ -97,7 +97,10 @@ void main() {
                                 ),
                               ),
                             ),
-                            IndicadorVistas(total: producto.vistas, compacto: true),
+                            IndicadorVistas(
+                              total: producto.vistas,
+                              compacto: true,
+                            ),
                           ],
                         ),
                       ],
@@ -110,9 +113,7 @@ void main() {
         ),
       );
 
-      final alto = tester
-          .getSize(find.byType(Padding).at(0))
-          .height;
+      final alto = tester.getSize(find.byType(Padding).at(0)).height;
       debugPrint('MEDIDA escala=$escala alto=$alto');
     });
   }

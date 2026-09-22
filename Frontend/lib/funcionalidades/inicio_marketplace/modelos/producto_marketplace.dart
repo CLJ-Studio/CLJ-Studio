@@ -135,6 +135,21 @@ class ProductoMarketplace {
   /// Si hay que elegir algo antes de poder pedirlo.
   bool get exigeVariante => variantes.isNotEmpty;
 
+  /// Todos los precios posibles de esta publicacion: el del producto para las
+  /// variantes que no lo cambian, y el propio de las que si.
+  Iterable<double> get _preciosPosibles => variantes.isEmpty
+      ? [precio]
+      : variantes.map((variante) => variante.precioSobre(precio));
+
+  /// El mas barato. Es lo que anuncia la tarjeta cuando los sabores no valen
+  /// todos lo mismo: poner el mas caro espanta y poner el del producto seria
+  /// mentir si ninguna variante lo cobra.
+  double get precioMinimo =>
+      _preciosPosibles.reduce((a, b) => a < b ? a : b);
+
+  /// Si hay mas de un precio, la tarjeta tiene que decir "desde".
+  bool get preciosVarian => _preciosPosibles.toSet().length > 1;
+
   /// La que decide en que filtro cae.
   String get categoriaEfectiva => categoriaId ?? local?.categoriaId ?? '';
 

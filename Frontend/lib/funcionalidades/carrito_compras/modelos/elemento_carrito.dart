@@ -22,6 +22,14 @@ class ElementoCarrito {
   /// Lo que hace unica a una linea. El producto no basta.
   String get clave => '${producto.id}|${variante?.id ?? ''}';
 
+  /// Lo que se cobra por unidad: el del sabor si lo tiene, si no el del
+  /// producto. El servidor vuelve a calcularlo al crear el pedido; esto es
+  /// para que el carrito muestre lo mismo que se va a cobrar.
+  double get precioUnitario =>
+      variante?.precioSobre(producto.precio) ?? producto.precio;
+
+  double get subtotal => precioUnitario * cantidad;
+
   ElementoCarrito copiarCon({int? cantidad}) => ElementoCarrito(
     producto: producto,
     cantidad: cantidad ?? this.cantidad,

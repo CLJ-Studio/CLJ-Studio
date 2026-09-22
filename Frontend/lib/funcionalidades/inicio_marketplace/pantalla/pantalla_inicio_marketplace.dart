@@ -1477,7 +1477,11 @@ class _TarjetaPublicacion extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Bs ${publicacion.precio.toStringAsFixed(2)}',
+                          publicacion.preciosVarian
+                              ? 'desde Bs ${publicacion.precioMinimo.toStringAsFixed(2)}'
+                              : 'Bs ${publicacion.precio.toStringAsFixed(2)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: EstiloTarjetaProducto.precio(context),
                         ),
                       ),

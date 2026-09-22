@@ -5,6 +5,7 @@ import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../inicio_marketplace/modelos/variante_producto.dart';
 import '../datos/repositorio_mi_local.dart';
 
 /// Local del estudiante y su inventario, persistidos en Supabase.
@@ -191,7 +192,7 @@ class ControladorMiLocal extends ChangeNotifier {
     String? descripcion,
     bool esServicio = false,
     List<String> galeria = const [],
-    List<String> variantes = const [],
+    List<VarianteEditable> variantes = const [],
     bool alLocal = false,
     required String categoriaId,
   }) async {
@@ -252,7 +253,7 @@ class ControladorMiLocal extends ChangeNotifier {
     required String categoriaId,
     String? descripcion,
     List<String> galeria = const [],
-    List<String> variantes = const [],
+    List<VarianteEditable> variantes = const [],
   }) async {
     if (ModoLocal.activo) {
       final indice = productos.indexWhere((p) => p.id == productoId);
