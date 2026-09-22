@@ -176,7 +176,8 @@ class RepositorioMiLocal {
 
   /// [galeria] son las fotos adicionales; la primera de todas viaja como
   /// `image_path` porque es la que se ve en las tarjetas del catalogo.
-  Future<void> agregarProducto({
+  /// Devuelve el id de la publicacion recien creada, para poder abrirla.
+  Future<String> agregarProducto({
     required String localId,
     required String nombre,
     required double precio,
@@ -203,7 +204,9 @@ class RepositorioMiLocal {
         .select('id')
         .single();
 
-    await _guardarGaleria(creado['id'] as String, galeria);
+    final id = creado['id'] as String;
+    await _guardarGaleria(id, galeria);
+    return id;
   }
 
   /// Las fotos secundarias van en `product_images`; se reescriben enteras

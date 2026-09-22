@@ -6,6 +6,7 @@ import 'selector_categoria_publicacion.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../../elementos_compartidos/imagenes/selector_galeria.dart';
+import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../datos/borrador_publicacion.dart';
 import '../logica/controlador_publicacion.dart';
@@ -216,7 +217,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
     RetroalimentacionHaptica.accion();
     setState(() => _publicando = true);
     try {
-      await widget.miLocal.agregarProducto(
+      final creada = await widget.miLocal.agregarProducto(
         nombre: nombre.text,
         precio: double.parse(precio.text.replaceAll(',', '.')),
         // La cantidad es opcional. Una publicación nueva conserva una unidad
@@ -264,6 +265,27 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
             behavior: SnackBarBehavior.floating,
           ),
         );
+
+      // Se abre lo que se acaba de publicar. Antes el formulario se vaciaba y
+      // ya esta: quien publicaba no veia como le habia quedado, y para
+      // comprobarlo tenia que ir a buscarse a si mismo en el catalogo. Ver el
+      // resultado es parte de publicar.
+      if (creada?.local != null) {
+        // Antes de navegar: si no, el boton se queda en "publicando" todo el
+        // rato que la publicacion este abierta encima.
+        setState(() => _publicando = false);
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => PantallaDetalleProducto(
+              producto: creada!,
+              local: creada.local!,
+              // Se llega desde el propio formulario: el enlace al vendedor
+              // lleva al perfil de quien acaba de publicar, o sea a uno mismo.
+              vendedorNavegable: false,
+            ),
+          ),
+        );
+      }
     } catch (fallo) {
       if (!mounted) return;
       RetroalimentacionHaptica.advertencia();

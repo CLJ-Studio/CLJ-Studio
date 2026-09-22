@@ -178,7 +178,12 @@ class ControladorMiLocal extends ChangeNotifier {
   /// escribian en el espacio personal, asi que lo que se subia desde "Tu
   /// local" acababa como publicacion suelta: no aparecia en el inventario y
   /// en su ficha ponia "Vende por su cuenta".
-  Future<void> agregarProducto({
+  /// Devuelve la publicacion creada para que quien la publico pueda verla tal
+  /// como le quedo, sin tener que ir a buscarla al catalogo.
+  ///
+  /// Null solo cuando no se pudo crear (pedir publicar en un negocio que no
+  /// existe) o en modo local, donde no hay servidor que devuelva un id.
+  Future<ProductoMarketplace?> agregarProducto({
     required String nombre,
     required double precio,
     required int cantidad,
@@ -191,12 +196,13 @@ class ControladorMiLocal extends ChangeNotifier {
   }) async {
     // Solo se crea el espacio personal si de verdad hace falta: si va al
     // local, crearlo dejaria una tienda vacia colgando.
-    if (alLocal && negocio == null) return;
+    if (alLocal && negocio == null) return null;
     if (!alLocal) await asegurarEspacioPersonal();
 
     final destino = alLocal ? negocio! : espacioPersonal!;
+    if (ModoLocal.activo) return null;
 
-    await _repositorio.agregarProducto(
+    final id = await _repositorio.agregarProducto(
       localId: destino.id,
       nombre: nombre.trim(),
       precio: precio,
@@ -212,6 +218,24 @@ class ControladorMiLocal extends ChangeNotifier {
       productos = await _repositorio.cargarInventario(negocio!.id);
     }
     notifyListeners();
+
+    // Se arma con lo que se acaba de enviar en vez de volver a leerlo del
+    // servidor: son exactamente los mismos datos y ahorra un viaje justo
+    // cuando la publicacion se esta abriendo.
+    return ProductoMarketplace(
+      id: id,
+      localId: destino.id,
+      nombre: nombre.trim(),
+      descripcion: descripcion?.trim() ?? '',
+      precio: precio,
+      emoji: emoji,
+      stock: cantidad,
+      esServicio: esServicio,
+      categoriaId: categoriaId,
+      local: destino,
+      imagePath: galeria.firstOrNull,
+      imagenes: galeria.length <= 1 ? const [] : galeria.sublist(1),
+    );
   }
 
   Future<void> editarProducto({
