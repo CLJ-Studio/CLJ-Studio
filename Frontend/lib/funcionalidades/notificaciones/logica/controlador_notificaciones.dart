@@ -5,13 +5,14 @@ import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../datos/servicio_push.dart';
 import '../modelos/notificacion.dart';
+import '../../../elementos_compartidos/estados_aplicacion/aviso_seguro.dart';
 
 /// Notificaciones del usuario y su contador de no leidas.
 ///
 /// Singleton porque lo comparten la campana del encabezado (contador) y la
 /// pantalla de la lista. Escucha Realtime para reaccionar al instante y,
 /// como respaldo ante cortes del websocket, refresca al abrir la pantalla.
-class ControladorNotificaciones extends ChangeNotifier {
+class ControladorNotificaciones extends ChangeNotifier with AvisoSeguro {
   ControladorNotificaciones._();
 
   static final ControladorNotificaciones instancia =
@@ -31,7 +32,7 @@ class ControladorNotificaciones extends ChangeNotifier {
     if (ModoLocal.activo) {
       cargando = false;
       error = null;
-      notifyListeners();
+      avisar();
       return;
     }
     final usuario = _cliente.auth.currentUser;
@@ -39,7 +40,7 @@ class ControladorNotificaciones extends ChangeNotifier {
 
     cargando = true;
     error = null;
-    notifyListeners();
+    avisar();
     try {
       final filas = await _cliente
           .from('notifications')

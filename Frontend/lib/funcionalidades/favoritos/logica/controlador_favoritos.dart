@@ -4,9 +4,10 @@ import '../../../configuracion_aplicacion/modo_local.dart';
 import '../../../elementos_compartidos/interaccion/retroalimentacion_haptica.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../datos/repositorio_favoritos.dart';
+import '../../../elementos_compartidos/estados_aplicacion/aviso_seguro.dart';
 
 /// Productos marcados con corazon, respaldados por la tabla `favorites`.
-class ControladorFavoritos extends ChangeNotifier {
+class ControladorFavoritos extends ChangeNotifier with AvisoSeguro {
   ControladorFavoritos._();
 
   static final ControladorFavoritos instancia = ControladorFavoritos._();
@@ -28,12 +29,12 @@ class ControladorFavoritos extends ChangeNotifier {
     if (ModoLocal.activo) {
       cargando = false;
       error = null;
-      notifyListeners();
+      avisar();
       return;
     }
     cargando = true;
     error = null;
-    notifyListeners();
+    avisar();
     try {
       final guardados = await _repositorio.cargar();
       _productos

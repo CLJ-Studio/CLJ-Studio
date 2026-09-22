@@ -4,13 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../funcionalidades/acceso_upsa/datos/cuentas_recordadas.dart';
 import '../../funcionalidades/configuracion_usuario/datos/repositorio_configuracion.dart';
 import '../../funcionalidades/configuracion_usuario/modelos/usuario_upsa.dart';
+import '../estados_aplicacion/aviso_seguro.dart';
 
 /// Perfil del usuario autenticado, cargado una sola vez y compartido.
 ///
 /// Evita que cada pantalla consulte `profiles` por su cuenta: el saludo del
 /// inicio y la pantalla de configuracion leen la misma fuente, asi que si el
 /// perfil cambia se refleja en ambos sitios.
-class SesionUsuario extends ChangeNotifier {
+class SesionUsuario extends ChangeNotifier with AvisoSeguro {
   SesionUsuario._();
 
   static final SesionUsuario instancia = SesionUsuario._();
@@ -33,7 +34,7 @@ class SesionUsuario extends ChangeNotifier {
     if (Supabase.instance.client.auth.currentUser == null) return;
 
     cargando = true;
-    notifyListeners();
+    avisar();
     try {
       perfil = await _repositorio.cargarPerfil();
       final perfilActual = perfil;
