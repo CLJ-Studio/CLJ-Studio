@@ -191,6 +191,7 @@ class ControladorMiLocal extends ChangeNotifier {
     String? descripcion,
     bool esServicio = false,
     List<String> galeria = const [],
+    List<String> variantes = const [],
     bool alLocal = false,
     required String categoriaId,
   }) async {
@@ -202,7 +203,7 @@ class ControladorMiLocal extends ChangeNotifier {
     final destino = alLocal ? negocio! : espacioPersonal!;
     if (ModoLocal.activo) return null;
 
-    final id = await _repositorio.agregarProducto(
+    final creado = await _repositorio.agregarProducto(
       localId: destino.id,
       nombre: nombre.trim(),
       precio: precio,
@@ -211,6 +212,7 @@ class ControladorMiLocal extends ChangeNotifier {
       descripcion: descripcion,
       esServicio: esServicio,
       galeria: galeria,
+      variantes: variantes,
       categoriaId: categoriaId,
     );
     // Solo el negocio tiene inventario visible en "Tu local".
@@ -223,7 +225,7 @@ class ControladorMiLocal extends ChangeNotifier {
     // servidor: son exactamente los mismos datos y ahorra un viaje justo
     // cuando la publicacion se esta abriendo.
     return ProductoMarketplace(
-      id: id,
+      id: creado.id,
       localId: destino.id,
       nombre: nombre.trim(),
       descripcion: descripcion?.trim() ?? '',
@@ -235,6 +237,9 @@ class ControladorMiLocal extends ChangeNotifier {
       local: destino,
       imagePath: galeria.firstOrNull,
       imagenes: galeria.length <= 1 ? const [] : galeria.sublist(1),
+      // Las que devolvio el servidor, no las que se mandaron: sus ids los
+      // genera el, y el desplegable del detalle los necesita para poder pedir.
+      variantes: creado.variantes,
     );
   }
 
@@ -247,6 +252,7 @@ class ControladorMiLocal extends ChangeNotifier {
     required String categoriaId,
     String? descripcion,
     List<String> galeria = const [],
+    List<String> variantes = const [],
   }) async {
     if (ModoLocal.activo) {
       final indice = productos.indexWhere((p) => p.id == productoId);
@@ -278,6 +284,7 @@ class ControladorMiLocal extends ChangeNotifier {
       categoriaId: categoriaId,
       descripcion: descripcion,
       galeria: galeria,
+      variantes: variantes,
     );
     await _refrescarInventario();
   }

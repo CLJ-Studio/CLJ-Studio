@@ -12,6 +12,7 @@ class BorradorPublicacion {
     this.stock = '1',
     this.emoji = '🛍️',
     this.galeria = const [],
+    this.variantes = const [],
     this.categoriaId,
   });
 
@@ -24,6 +25,9 @@ class BorradorPublicacion {
         stock: (json['stock'] as String?) ?? '1',
         emoji: (json['emoji'] as String?) ?? '🛍️',
         galeria: ((json['galeria'] as List?) ?? const []).cast<String>(),
+        // Los borradores guardados antes de que existieran las variantes no
+        // traen la clave; se leen igual, con la lista vacia.
+        variantes: ((json['variantes'] as List?) ?? const []).cast<String>(),
         categoriaId: json['categoria_id'] as String?,
       );
 
@@ -34,6 +38,7 @@ class BorradorPublicacion {
   final String stock;
   final String emoji;
   final List<String> galeria;
+  final List<String> variantes;
   final String? categoriaId;
 
   Map<String, dynamic> aJson() => {
@@ -44,6 +49,7 @@ class BorradorPublicacion {
     'stock': stock,
     'emoji': emoji,
     'galeria': galeria,
+    'variantes': variantes,
     'categoria_id': categoriaId,
   };
 
@@ -53,7 +59,8 @@ class BorradorPublicacion {
       descripcion.trim().isNotEmpty ||
       precio.trim().isNotEmpty ||
       categoriaId != null ||
-      galeria.isNotEmpty;
+      galeria.isNotEmpty ||
+      variantes.isNotEmpty;
 
   /// Resumen para el aviso de "tienes una publicacion sin terminar".
   String get resumen {

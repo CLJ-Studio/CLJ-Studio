@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/campos_aplicacion/editor_variantes.dart';
 import '../../../elementos_compartidos/imagenes/selector_galeria.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
@@ -15,6 +16,7 @@ class DatosProducto {
     required this.cantidad,
     required this.emoji,
     required this.galeria,
+    required this.variantes,
     required this.categoriaId,
   });
 
@@ -24,6 +26,9 @@ class DatosProducto {
   final int cantidad;
   final String emoji;
   final List<String> galeria;
+
+  /// Los sabores, por nombre. El repositorio se encarga de los ids.
+  final List<String> variantes;
   final String categoriaId;
 }
 
@@ -65,6 +70,9 @@ Future<DatosProducto?> mostrarDialogoProducto(
   var galeria = <String>[
     if (producto?.imagePath != null) producto!.imagePath!,
     ...?producto?.imagenes,
+  ];
+  var variantes = <String>[
+    for (final variante in producto?.variantes ?? const []) variante.nombre,
   ];
 
   return showDialog<DatosProducto>(
@@ -125,6 +133,12 @@ Future<DatosProducto?> mostrarDialogoProducto(
                   rutas: galeria,
                   alCambiar: (rutas) => actualizar(() => galeria = rutas),
                 ),
+                const SizedBox(height: 20),
+                EditorVariantes(
+                  variantes: variantes,
+                  alCambiar: (nombres) =>
+                      actualizar(() => variantes = nombres),
+                ),
               ],
             ),
           ),
@@ -161,6 +175,7 @@ Future<DatosProducto?> mostrarDialogoProducto(
                   cantidad: int.tryParse(cantidad.text) ?? 0,
                   emoji: emoji,
                   galeria: galeria,
+                  variantes: variantes,
                   categoriaId: categoriaId!,
                 ),
               );

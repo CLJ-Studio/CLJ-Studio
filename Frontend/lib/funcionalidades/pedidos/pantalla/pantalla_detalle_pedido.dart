@@ -471,7 +471,7 @@ class _Items extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    item.nombre,
+                    item.nombreConVariante,
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),

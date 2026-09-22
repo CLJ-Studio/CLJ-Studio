@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../inicio_marketplace/modelos/variante_producto.dart';
 
 /// Local del usuario y su inventario, respaldados por `stores` y `products`.
 ///
@@ -26,6 +27,7 @@ class RepositorioMiLocal {
       'id, store_id, category_id, name, description, price, emoji, stock, kind, '
       'image_path, is_available, view_count, '
       'product_images(storage_path, position), '
+      'product_variants(id, name, position, is_available), '
       'stores!inner('
       'id, name, description, category_id, emoji, color_hex, '
       'estimated_time, delivery_cost, is_open, rating_average, '
@@ -176,8 +178,9 @@ class RepositorioMiLocal {
 
   /// [galeria] son las fotos adicionales; la primera de todas viaja como
   /// `image_path` porque es la que se ve en las tarjetas del catalogo.
-  /// Devuelve el id de la publicacion recien creada, para poder abrirla.
-  Future<String> agregarProducto({
+  /// Devuelve la publicacion recien creada: su id, para poder abrirla, y sus
+  /// variantes ya con los ids que genero el servidor.
+  Future<({String id, List<VarianteProducto> variantes})> agregarProducto({
     required String localId,
     required String nombre,
     required double precio,
@@ -186,6 +189,7 @@ class RepositorioMiLocal {
     String? descripcion,
     bool esServicio = false,
     List<String> galeria = const [],
+    List<String> variantes = const [],
     required String categoriaId,
   }) async {
     final creado = await _cliente
@@ -206,7 +210,61 @@ class RepositorioMiLocal {
 
     final id = creado['id'] as String;
     await _guardarGaleria(id, galeria);
-    return id;
+    return (id: id, variantes: await guardarVariantes(id, variantes));
+  }
+
+  /// Guarda los sabores de una publicacion y devuelve como quedaron.
+  ///
+  /// Las que desaparecen se RETIRAN, no se borran. Borrarlas cambiaria los
+  /// ids al volver a crearlas, y un comprador que tuviera esa variante en su
+  /// carrito veria su pedido rechazado sin entender por que. Ademas el nombre
+  /// vuelve a estar disponible manana sin volver a escribirlo.
+  Future<List<VarianteProducto>> guardarVariantes(
+    String productoId,
+    List<String> nombres,
+  ) async {
+    final limpios = <String>[];
+    for (final nombre in nombres) {
+      final texto = nombre.trim();
+      if (texto.isNotEmpty && !limpios.contains(texto)) limpios.add(texto);
+    }
+
+    final existentes = await _cliente
+        .from('product_variants')
+        .select('name')
+        .eq('product_id', productoId);
+
+    final retiradas = existentes
+        .map((fila) => fila['name'] as String)
+        .where((nombre) => !limpios.contains(nombre))
+        .toList();
+
+    if (retiradas.isNotEmpty) {
+      await _cliente
+          .from('product_variants')
+          .update({'is_available': false})
+          .eq('product_id', productoId)
+          .inFilter('name', retiradas);
+    }
+
+    if (limpios.isEmpty) return const [];
+
+    // upsert sobre (product_id, name): revive las que vuelven conservando su
+    // id, y de paso fija el orden en que el vendedor las dejo.
+    final filas = await _cliente
+        .from('product_variants')
+        .upsert([
+          for (var i = 0; i < limpios.length; i++)
+            {
+              'product_id': productoId,
+              'name': limpios[i],
+              'position': i,
+              'is_available': true,
+            },
+        ], onConflict: 'product_id,name')
+        .select('id, name, position');
+
+    return filas.map(VarianteProducto.desdeMapa).toList(growable: false);
   }
 
   /// Las fotos secundarias van en `product_images`; se reescriben enteras
@@ -230,6 +288,7 @@ class RepositorioMiLocal {
     required String categoriaId,
     String? descripcion,
     List<String> galeria = const [],
+    List<String> variantes = const [],
   }) async {
     await _cliente
         .from('products')
@@ -245,6 +304,7 @@ class RepositorioMiLocal {
         .eq('id', productoId);
 
     await _guardarGaleria(productoId, galeria);
+    await guardarVariantes(productoId, variantes);
   }
 
   /// Ocultar en vez de borrar: conserva historial y favoritos.

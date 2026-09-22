@@ -82,6 +82,7 @@ class ItemPedido {
     required this.cantidad,
     this.productoId,
     this.imagenPath,
+    this.variante,
   });
 
   factory ItemPedido.desdeMapa(Map<String, dynamic> fila) {
@@ -92,6 +93,7 @@ class ItemPedido {
       precioUnitario: (fila['unit_price'] as num?)?.toDouble() ?? 0,
       cantidad: (fila['quantity'] as num?)?.toInt() ?? 0,
       productoId: fila['product_id'] as String?,
+      variante: fila['variant_name'] as String?,
       imagenPath:
           (fila['image_path'] as String?) ?? producto?['image_path'] as String?,
     );
@@ -103,6 +105,15 @@ class ItemPedido {
   final int cantidad;
   final String? productoId;
   final String? imagenPath;
+
+  /// El sabor tal como se llamaba al pedirlo. Congelado como el nombre y el
+  /// precio: el vendedor puede renombrarlo o retirarlo manana, y el pedido de
+  /// hoy tiene que seguir diciendo que fue lo que se pidio.
+  final String? variante;
+
+  /// Como se nombra la linea en una lista: "Empanada (queso)".
+  String get nombreConVariante =>
+      variante == null ? nombre : '$nombre ($variante)';
 
   double get subtotal => precioUnitario * cantidad;
   String? get imagenUrl => ServicioImagenes.urlPublica(imagenPath);

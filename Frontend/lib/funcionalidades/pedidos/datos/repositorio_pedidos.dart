@@ -75,7 +75,7 @@ class RepositorioPedidos {
           .from('order_items')
           .select(
             'order_id, product_id, product_name, product_emoji, '
-            'unit_price, quantity, products(image_path)',
+            'variant_name, unit_price, quantity, products(image_path)',
           )
           .inFilter('order_id', pedidosIds),
       _cliente

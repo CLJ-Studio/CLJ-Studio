@@ -156,8 +156,8 @@ class TarjetaPedido extends StatelessWidget {
                           pedido.items
                               .map(
                                 (item) => item.cantidad > 1
-                                    ? '${item.cantidad}× ${item.nombre}'
-                                    : item.nombre,
+                                    ? '${item.cantidad}× ${item.nombreConVariante}'
+                                    : item.nombreConVariante,
                               )
                               .join(' · '),
                           maxLines: 2,

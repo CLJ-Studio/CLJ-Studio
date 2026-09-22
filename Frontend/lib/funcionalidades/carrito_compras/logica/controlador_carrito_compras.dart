@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../inicio_marketplace/modelos/variante_producto.dart';
 import '../modelos/elemento_carrito.dart';
 
 /// Carrito de compras compartido por toda la aplicacion.
@@ -44,17 +45,28 @@ class ControladorCarritoCompras extends ChangeNotifier {
 
   /// Agrega o incrementa. Si el producto es de otro local, reemplaza el
   /// carrito completo: quien llama debe confirmarlo antes con el usuario.
-  void agregar(ProductoMarketplace producto, LocalUniversitario localProducto) {
+  void agregar(
+    ProductoMarketplace producto,
+    LocalUniversitario localProducto, {
+    VarianteProducto? variante,
+  }) {
     if (esDeOtroLocal(producto)) _elementos.clear();
     local = localProducto;
 
-    final indice = _elementos.indexWhere((e) => e.producto.id == producto.id);
+    // Se compara la linea entera, no solo el producto: dos empanadas de
+    // sabores distintos no pueden fundirse en una sola cantidad.
+    final nuevo = ElementoCarrito(
+      producto: producto,
+      cantidad: 1,
+      variante: variante,
+    );
+    final indice = _elementos.indexWhere((e) => e.clave == nuevo.clave);
     if (indice >= 0) {
       _elementos[indice] = _elementos[indice].copiarCon(
         cantidad: _elementos[indice].cantidad + 1,
       );
     } else {
-      _elementos.add(ElementoCarrito(producto: producto, cantidad: 1));
+      _elementos.add(nuevo);
     }
     notifyListeners();
   }
@@ -90,8 +102,14 @@ class ControladorCarritoCompras extends ChangeNotifier {
 
   /// Payload de `crear_pedido`: solo ids y cantidades. Los precios los pone
   /// el servidor, nunca el cliente.
+  /// Del sabor viaja el id y no el nombre: el servidor lee el nombre de la
+  /// base, igual que hace con el precio.
   List<Map<String, dynamic>> aItemsDePedido() => [
     for (final elemento in _elementos)
-      {'product_id': elemento.producto.id, 'quantity': elemento.cantidad},
+      {
+        'product_id': elemento.producto.id,
+        'quantity': elemento.cantidad,
+        'variant_id': ?elemento.variante?.id,
+      },
   ];
 }

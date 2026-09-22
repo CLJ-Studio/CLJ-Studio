@@ -5,6 +5,7 @@ import '../../../elementos_compartidos/interaccion/retroalimentacion_haptica.dar
 import 'selector_categoria_publicacion.dart';
 import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
+import '../../../elementos_compartidos/campos_aplicacion/editor_variantes.dart';
 import '../../../elementos_compartidos/imagenes/selector_galeria.dart';
 import '../../locales_universitarios/pantalla/pantalla_detalle_producto.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
@@ -43,6 +44,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   final stock = TextEditingController();
 
   late List<String> _galeria;
+  List<String> _variantes = const [];
   List<CategoriaMarketplace> _categorias = const [];
   String? _categoriaId;
   bool _publicando = false;
@@ -150,6 +152,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
       widget.controlador.seleccionarEmoji(borrador.emoji);
       setState(() {
         _galeria = borrador.galeria;
+        _variantes = borrador.variantes;
         _categoriaId = borrador.categoriaId;
       });
     } else {
@@ -169,6 +172,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         stock: stock.text,
         emoji: widget.controlador.emoji,
         galeria: _galeria,
+        variantes: _variantes,
         categoriaId: _categoriaId,
       ),
     );
@@ -227,6 +231,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         descripcion: descripcion.text,
         esServicio: false,
         galeria: _galeria,
+        variantes: _variantes,
         categoriaId: _categoriaId!,
       );
 
@@ -244,6 +249,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         widget.controlador.seleccionarEmoji('🛍️');
         setState(() {
           _galeria = const [];
+          _variantes = const [];
           _categoriaId = null;
         });
         await AlmacenBorrador.borrar();
@@ -447,13 +453,31 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                 numero: '04',
                 completo: _galeria.isNotEmpty,
                 activo: pasoActivo == -1,
-                ultimo: true,
                 child: _TarjetaFormulario(
                   titulo: 'Fotos opcionales',
                   child: SelectorGaleria(
                     rutas: _galeria,
                     alCambiar: (rutas) {
                       setState(() => _galeria = rutas);
+                      _guardarBorrador();
+                    },
+                  ),
+                ),
+              ),
+              // Va al final y es opcional: la mayoria de lo que se publica no
+              // tiene sabores, y quien no los necesita no deberia tropezarse
+              // con este paso antes de llegar al boton de publicar.
+              _PasoPublicacion(
+                numero: '05',
+                completo: _variantes.isNotEmpty,
+                activo: pasoActivo == -1,
+                ultimo: true,
+                child: _TarjetaFormulario(
+                  titulo: 'Sabores o tamaños',
+                  child: EditorVariantes(
+                    variantes: _variantes,
+                    alCambiar: (nombres) {
+                      setState(() => _variantes = nombres);
                       _guardarBorrador();
                     },
                   ),

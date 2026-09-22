@@ -18,6 +18,7 @@ import '../../mi_local/diseno/dialogo_ajustar_stock.dart';
 import '../diseno/hoja_reportar_publicacion.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../inicio_marketplace/modelos/variante_producto.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../../visualizaciones/indicador_vistas.dart';
 import '../../visualizaciones/servicio_visualizaciones.dart';
@@ -61,6 +62,12 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
   int _pagina = 0;
   bool _imagenExpandida = false;
   late int _vistas = widget.producto.vistas;
+
+  /// El sabor elegido. Con una sola variante se elige sola: preguntar por
+  /// algo que no tiene alternativa es un paso de mas.
+  late VarianteProducto? _variante = widget.producto.variantes.length == 1
+      ? widget.producto.variantes.single
+      : null;
 
   /// Copia viva: editar desde aqui debe verse sin salir y volver a entrar.
   late ProductoMarketplace _producto = widget.producto;
@@ -147,6 +154,13 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
       return;
     }
 
+    // Sin sabor elegido el vendedor recibe "una empanada" y no sabe cual
+    // preparar. El servidor tambien lo rechaza; esto lo dice antes y mejor.
+    if (_producto.exigeVariante && _variante == null) {
+      _avisar('Elige una opción antes de agregarlo.');
+      return;
+    }
+
     if (carrito.esDeOtroLocal(_producto)) {
       final reemplazar = await showDialog<bool>(
         context: context,
@@ -174,7 +188,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
       if (reemplazar != true) return;
     }
 
-    carrito.agregar(_producto, widget.local);
+    carrito.agregar(_producto, widget.local, variante: _variante);
   }
 
   void _abrirCarrito() => Navigator.of(context).push(
@@ -195,6 +209,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
         categoriaId: datos.categoriaId,
         descripcion: datos.descripcion,
         galeria: datos.galeria,
+        variantes: datos.variantes,
       );
       final actualizado = await const RepositorioInicioMarketplace()
           .obtenerPublicacion(_producto.id);
@@ -593,6 +608,15 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                                   ),
                                 ],
                               ),
+                              if (_producto.exigeVariante) ...[
+                                const SizedBox(height: 20),
+                                _SelectorVariante(
+                                  variantes: _producto.variantes,
+                                  elegida: _variante,
+                                  alElegir: (variante) =>
+                                      setState(() => _variante = variante),
+                                ),
+                              ],
                               const SizedBox(height: 20),
                               SizedBox(
                                 width: double.infinity,
@@ -669,6 +693,61 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
       ),
     );
   }
+}
+
+/// Elegir el sabor, el tamano o la version antes de pedir.
+///
+/// Es un desplegable y no una fila de botones porque un vendedor puede tener
+/// diez sabores: en botones se comen media pantalla y empujan el boton de
+/// pedir fuera de la vista.
+class _SelectorVariante extends StatelessWidget {
+  const _SelectorVariante({
+    required this.variantes,
+    required this.elegida,
+    required this.alElegir,
+  });
+
+  final List<VarianteProducto> variantes;
+  final VarianteProducto? elegida;
+  final ValueChanged<VarianteProducto> alElegir;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Elige una opción',
+        style: TextStyle(
+          color: Color(0xFF474646),
+          fontSize: 16,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      const SizedBox(height: 8),
+      DropdownButtonFormField<VarianteProducto>(
+        initialValue: elegida,
+        isExpanded: true,
+        hint: const Text('Sin elegir'),
+        decoration: const InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        ),
+        items: [
+          for (final variante in variantes)
+            DropdownMenuItem(
+              value: variante,
+              child: Text(
+                variante.nombre,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+        ],
+        onChanged: (variante) {
+          if (variante != null) alElegir(variante);
+        },
+      ),
+    ],
+  );
 }
 
 class _DescripcionProducto extends StatefulWidget {

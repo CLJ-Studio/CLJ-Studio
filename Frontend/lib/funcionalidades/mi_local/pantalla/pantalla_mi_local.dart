@@ -26,6 +26,7 @@ class PantallaMiLocal extends StatelessWidget {
       emoji: datos.emoji,
       descripcion: datos.descripcion,
       galeria: datos.galeria,
+      variantes: datos.variantes,
       categoriaId: datos.categoriaId,
       alLocal: true,
     );
@@ -47,6 +48,7 @@ class PantallaMiLocal extends StatelessWidget {
       categoriaId: datos.categoriaId,
       descripcion: datos.descripcion,
       galeria: datos.galeria,
+      variantes: datos.variantes,
     );
   }
 

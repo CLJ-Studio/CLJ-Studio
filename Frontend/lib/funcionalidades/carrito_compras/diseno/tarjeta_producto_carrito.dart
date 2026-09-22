@@ -67,6 +67,29 @@ class TarjetaProductoCarrito extends StatelessWidget {
                   color: Color(0xFF474646),
                 ),
               ),
+              // El sabor elegido, porque dos lineas del mismo producto solo se
+              // diferencian en esto: sin verlo, el carrito parece repetido.
+              if (elemento.variante case final variante?) ...[
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE6E1D5),
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  ),
+                  child: Text(
+                    variante.nombre,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF474646),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 6),
               Text(
                 vendedor,

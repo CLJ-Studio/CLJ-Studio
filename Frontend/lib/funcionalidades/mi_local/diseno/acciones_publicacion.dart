@@ -122,6 +122,7 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
           categoriaId: datos.categoriaId,
           descripcion: datos.descripcion,
           galeria: datos.galeria,
+          variantes: datos.variantes,
         );
         return ResultadoAccion.editada;
 

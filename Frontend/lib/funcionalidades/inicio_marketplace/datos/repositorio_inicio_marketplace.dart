@@ -15,7 +15,8 @@ class RepositorioInicioMarketplace {
   static const camposProducto =
       'id, store_id, category_id, name, description, price, emoji, stock, kind, '
       'image_path, is_available, view_count, '
-      'product_images(storage_path, position)';
+      'product_images(storage_path, position), '
+      'product_variants(id, name, position, is_available)';
 
   Future<List<CategoriaMarketplace>> obtenerCategorias() async {
     final filas = await _cliente

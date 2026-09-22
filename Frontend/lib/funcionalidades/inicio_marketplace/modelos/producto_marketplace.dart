@@ -1,5 +1,6 @@
 import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import 'local_universitario.dart';
+import 'variante_producto.dart';
 
 /// Producto ofrecido por un local universitario.
 class ProductoMarketplace {
@@ -18,6 +19,7 @@ class ProductoMarketplace {
     this.imagenes = const [],
     this.vistas = 0,
     this.categoriaId,
+    this.variantes = const [],
   });
 
   /// Mapea una fila de `products`. Si la consulta unio `stores`, el local
@@ -53,7 +55,32 @@ class ProductoMarketplace {
               .map((i) => i['storage_path'] as String)
               .toList()
             ..sort(),
+      variantes: _variantesDesde(fila),
     );
+  }
+
+  /// Las de `product_variants`, en el orden en que el vendedor las puso.
+  ///
+  /// La consulta pide `position` justo para esto: sin ordenar, el desplegable
+  /// cambia de orden entre una carga y otra y el sabor de siempre nunca esta
+  /// donde uno lo dejo.
+  static List<VarianteProducto> _variantesDesde(Map<String, dynamic> fila) {
+    // Las retiradas se quedan en la base para que los pedidos viejos sigan
+    // nombrandolas, pero nadie debe poder elegir hoy el sabor que se acabo.
+    final filas = ((fila['product_variants'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .where((variante) => (variante['is_available'] as bool?) ?? true)
+        .toList();
+    filas.sort((a, b) {
+      final posicion = ((a['position'] as num?) ?? 0).compareTo(
+        (b['position'] as num?) ?? 0,
+      );
+      if (posicion != 0) return posicion;
+      return ((a['name'] as String?) ?? '').compareTo(
+        (b['name'] as String?) ?? '',
+      );
+    });
+    return filas.map(VarianteProducto.desdeMapa).toList(growable: false);
   }
 
   ProductoMarketplace copiarCon({int? stock, bool? disponible, int? vistas}) =>
@@ -72,6 +99,7 @@ class ProductoMarketplace {
         imagenes: imagenes,
         vistas: vistas ?? this.vistas,
         categoriaId: categoriaId,
+        variantes: variantes,
       );
 
   final String id;
@@ -99,6 +127,13 @@ class ProductoMarketplace {
   /// Categoria propia de la publicacion. Null en lo publicado antes de que
   /// existiera: entonces manda la del local, que es lo que se usaba.
   final String? categoriaId;
+
+  /// Sabores, tamanos o versiones de esta misma publicacion. Vacio es lo
+  /// normal: la mayoria de lo que se publica no tiene variantes.
+  final List<VarianteProducto> variantes;
+
+  /// Si hay que elegir algo antes de poder pedirlo.
+  bool get exigeVariante => variantes.isNotEmpty;
 
   /// La que decide en que filtro cae.
   String get categoriaEfectiva => categoriaId ?? local?.categoriaId ?? '';
