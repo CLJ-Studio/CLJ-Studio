@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../datos/repositorio_chat_pedido.dart';
@@ -15,6 +17,7 @@ class PantallaChatPedido extends StatefulWidget {
   const PantallaChatPedido({
     required this.pedidoId,
     required this.contraparte,
+    this.fotoUrl,
     super.key,
   });
 
@@ -22,6 +25,9 @@ class PantallaChatPedido extends StatefulWidget {
 
   /// Nombre de la otra persona, para el encabezado.
   final String contraparte;
+
+  /// Su foto de perfil, si la bandeja la trae. Sin ella van las iniciales.
+  final String? fotoUrl;
 
   @override
   State<PantallaChatPedido> createState() => _PantallaChatPedidoState();
@@ -173,24 +179,53 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    // El fondo de la conversacion, distinto del de la cabecera a proposito.
+    backgroundColor: _ColoresChat.fondo(context),
     appBar: AppBar(
       surfaceTintColor: Colors.transparent,
+      backgroundColor: _ColoresChat.cabecera(context),
       titleSpacing: 0,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      // La cabecera se apoyaba en el mismo color que los mensajes y no habia
+      // linea entre una cosa y otra: el nombre de la otra persona parecia el
+      // primer mensaje del hilo. Ahora tiene su propia superficie, su foto y
+      // una raya fina que marca donde empieza la conversacion.
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: _ColoresChat.separador(context)),
+      ),
+      title: Row(
         children: [
-          Text(
-            widget.contraparte,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+          _AvatarContraparte(
+            nombre: widget.contraparte,
+            fotoUrl: widget.fotoUrl,
           ),
-          Text(
-            'Sobre tu pedido',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).textTheme.bodySmall?.color,
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.contraparte,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 17,
+                  ),
+                ),
+                Text(
+                  'Sobre tu pedido',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                ),
+              ],
             ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
     ),
@@ -250,6 +285,82 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
 // ---------------------------------------------------------------------------
 // Burbuja
 // ---------------------------------------------------------------------------
+/// Los cuatro colores del chat, juntos porque solo tienen sentido entre ellos.
+///
+/// En tema oscuro las dos burbujas eran grafito y el fondo tambien: la
+/// conversacion entera era un solo bloque del mismo color y no se distinguia
+/// quien decia que. Lo que importa aqui no es cada color por separado, sino
+/// que los cuatro se separen entre si.
+abstract final class _ColoresChat {
+  static bool _oscuro(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  /// Detras de los mensajes. Mas apagado que la cabecera.
+  static Color fondo(BuildContext context) => _oscuro(context)
+      ? const Color(0xFF383737)
+      : ConfiguracionTema.cremaSuperficie;
+
+  /// La barra con el perfil, un escalon por encima del fondo.
+  static Color cabecera(BuildContext context) =>
+      _oscuro(context) ? ConfiguracionTema.grafito : Colors.white;
+
+  static Color separador(BuildContext context) =>
+      _oscuro(context) ? const Color(0xFF2E2D2D) : const Color(0xFFE3E0D8);
+
+  /// Lo que escribo yo.
+  static Color miBurbuja(BuildContext context) =>
+      _oscuro(context) ? const Color(0xFF6E7260) : ConfiguracionTema.grafito;
+
+  /// Lo que escribe la otra persona.
+  static Color suBurbuja(BuildContext context) =>
+      _oscuro(context) ? const Color(0xFF565454) : ConfiguracionTema.crema;
+}
+
+/// La foto de la otra persona en la cabecera.
+class _AvatarContraparte extends StatelessWidget {
+  const _AvatarContraparte({required this.nombre, required this.fotoUrl});
+
+  final String nombre;
+  final String? fotoUrl;
+
+  String get _iniciales {
+    final partes = nombre.trim().split(RegExp(r'\s+'))
+      ..removeWhere((parte) => parte.isEmpty);
+    if (partes.isEmpty) return '?';
+    return partes.take(2).map((parte) => parte[0].toUpperCase()).join();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final respaldo = ColoredBox(
+      color: ConfiguracionTema.salviaClara,
+      child: Center(
+        child: Text(
+          _iniciales,
+          style: const TextStyle(
+            color: ConfiguracionTema.grafito,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+    return ClipOval(
+      child: SizedBox.square(
+        dimension: 38,
+        child: switch (fotoUrl) {
+          final String url when url.isNotEmpty => FotoRed(
+            url: url,
+            anchoVisible: 38,
+            alFallar: respaldo,
+          ),
+          _ => respaldo,
+        },
+      ),
+    );
+  }
+}
+
 class _Burbuja extends StatelessWidget {
   const _Burbuja({required this.mensaje, required this.anterior});
 
@@ -261,15 +372,12 @@ class _Burbuja extends StatelessWidget {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final seguido = mensaje.continuaA(anterior);
 
-    // El verde de la marca para lo propio; la superficie del tema para lo
-    // ajeno, que es lo que mantiene el chat legible en modo oscuro sin
-    // inventar una paleta aparte.
     final fondo = mensaje.mio
-        ? const Color(0xFF474646)
-        : (oscuro ? const Color(0xFF474646) : const Color(0xFFE6E1D5));
-    final color = mensaje.mio
-        ? Color(0xFFE6E1D5)
-        : (oscuro ? Color(0xFFE6E1D5) : const Color(0xFF474646));
+        ? _ColoresChat.miBurbuja(context)
+        : _ColoresChat.suBurbuja(context);
+    final color = mensaje.mio || oscuro
+        ? ConfiguracionTema.crema
+        : ConfiguracionTema.grafito;
 
     return Padding(
       padding: EdgeInsets.only(top: seguido ? 3 : 12),
@@ -438,74 +546,83 @@ class _Redaccion extends StatelessWidget {
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: TextField(
-                controller: campo,
-                focusNode: foco,
-                minLines: 1,
-                maxLines: 4,
-                maxLength: 1000,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => alEnviar(),
-                decoration: InputDecoration(
-                  hintText: 'Escribe un mensaje',
-                  filled: true,
-                  fillColor: oscuro
-                      ? const Color(0xFF474646)
-                      : const Color(0xFFE6E1D5),
-                  isDense: true,
-                  // El contador de 1000 caracteres en un chat solo estorba.
-                  counterText: '',
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 13,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
+    // La barra de escribir tambien es superficie, no conversacion: lleva el
+    // color de la cabecera y su propia raya, para que el hilo de mensajes
+    // quede enmarcado arriba y abajo.
+    return Container(
+      decoration: BoxDecoration(
+        color: _ColoresChat.cabecera(context),
+        border: Border(top: BorderSide(color: _ColoresChat.separador(context))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: campo,
+                  focusNode: foco,
+                  minLines: 1,
+                  maxLines: 4,
+                  maxLength: 1000,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => alEnviar(),
+                  decoration: InputDecoration(
+                    hintText: 'Escribe un mensaje',
+                    filled: true,
+                    fillColor: oscuro
+                        ? const Color(0xFF474646)
+                        : const Color(0xFFE6E1D5),
+                    isDense: true,
+                    // El contador de 1000 caracteres en un chat solo estorba.
+                    counterText: '',
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 13,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Material(
-              color: const Color(0xFF474646),
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: enviando ? null : alEnviar,
-                child: Padding(
-                  padding: const EdgeInsets.all(13),
-                  child: enviando
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: IndicadorCarga(tamanio: 22),
-                        )
-                      : const Icon(
-                          Icons.send_rounded,
-                          color: Color(0xFFE6E1D5),
-                          size: 22,
-                        ),
+              const SizedBox(width: 8),
+              Material(
+                color: const Color(0xFF474646),
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: enviando ? null : alEnviar,
+                  child: Padding(
+                    padding: const EdgeInsets.all(13),
+                    child: enviando
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: IndicadorCarga(tamanio: 22),
+                          )
+                        : const Icon(
+                            Icons.send_rounded,
+                            color: Color(0xFFE6E1D5),
+                            size: 22,
+                          ),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

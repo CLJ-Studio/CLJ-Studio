@@ -123,6 +123,7 @@ class ContenidoChats extends StatelessWidget {
         builder: (_) => PantallaChatPedido(
           pedidoId: chat.pedidoId,
           contraparte: chat.contraparte,
+          fotoUrl: chat.fotoUrl,
         ),
       ),
     );
