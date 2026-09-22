@@ -100,6 +100,29 @@ abstract final class ServicioPush {
     return trabajadores.getRegistration(_ambitoPush).toDart;
   }
 
+  /// Espera a que el service worker recien registrado este ACTIVO.
+  ///
+  /// POR QUE: `register()` devuelve la inscripcion en cuanto existe, NO
+  /// cuando el trabajador arranca. Entre una cosa y otra hay un hueco en el
+  /// que `pushManager.subscribe()` falla con "Subscription failed - no active
+  /// Service Worker", que es un error que no dice nada a quien lo lee y que
+  /// aparece justo la primera vez que alguien activa las notificaciones, o
+  /// despues de borrar los datos del sitio.
+  ///
+  /// Se consulta en bucle en vez de escuchar `statechange` porque `active` es
+  /// un getter vivo de la propia inscripcion: preguntarle es mas corto y no
+  /// deja escuchas colgadas si el trabajador nunca arranca.
+  static Future<bool> _esperarActivo(
+    web.ServiceWorkerRegistration registro, {
+    Duration tope = const Duration(seconds: 10),
+  }) async {
+    final limite = DateTime.now().add(tope);
+    while (registro.active == null && DateTime.now().isBefore(limite)) {
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+    }
+    return registro.active != null;
+  }
+
   /// Si este dispositivo esta recibiendo push ahora mismo. Es lo que refleja
   /// el interruptor: el permiso por si solo no basta.
   static Future<bool> estaActivo() async {
@@ -128,6 +151,13 @@ abstract final class ServicioPush {
       final registro = await _registro(crear: true);
       if (registro == null) {
         ultimoError = 'No se pudo registrar el service worker.';
+        return false;
+      }
+
+      if (!await _esperarActivo(registro)) {
+        ultimoError =
+            'El navegador todavía está preparando las notificaciones. '
+            'Vuelve a intentarlo en unos segundos.';
         return false;
       }
 
@@ -162,11 +192,29 @@ abstract final class ServicioPush {
 
       return true;
     } catch (fallo) {
-      ultimoError = fallo is PostgrestException
-          ? '${fallo.code ?? ''} ${fallo.message}'.trim()
-          : fallo.toString();
+      ultimoError = _explicar(fallo);
       return false;
     }
+  }
+
+  /// Traduce el fallo a algo que se pueda leer y sobre lo que se pueda actuar.
+  ///
+  /// Lo que llegaba antes era el texto crudo del navegador, en ingles y
+  /// hablando de service workers: nadie puede hacer nada con eso.
+  static String _explicar(Object fallo) {
+    if (fallo is PostgrestException) {
+      return '${fallo.code ?? ''} ${fallo.message}'.trim();
+    }
+    final texto = fallo.toString();
+    if (texto.contains('no active Service Worker')) {
+      return 'El navegador todavía está preparando las notificaciones. '
+          'Vuelve a intentarlo en unos segundos.';
+    }
+    if (texto.contains('permission') || texto.contains('NotAllowedError')) {
+      return 'El navegador bloqueó las notificaciones para este sitio. '
+          'Se activan desde los ajustes del navegador.';
+    }
+    return texto;
   }
 
   /// Deja de recibir push en este dispositivo.
