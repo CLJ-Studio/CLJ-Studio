@@ -7,6 +7,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/estructuras_aplicacion/titulo_seccion.dart';
 import '../../../elementos_compartidos/imagenes/foto_producto.dart';
 import '../../mi_local/diseno/dialogo_producto.dart';
 import '../../mi_local/datos/repositorio_mi_local.dart';
@@ -650,13 +651,11 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                                 height: 38,
                                 color: Color(0xFFE9E9E9),
                               ),
-                              const Text(
+                              // La ficha es blanca en los dos temas, asi que
+                              // el titulo no puede aclararse con el oscuro.
+                              const TituloSeccion(
                                 'Acerca de este producto',
-                                style: TextStyle(
-                                  color: Color(0xFF474646),
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w900,
-                                ),
+                                color: ConfiguracionTema.grafito,
                               ),
                               const SizedBox(height: 10),
                               _DescripcionProducto(
@@ -665,13 +664,9 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                                     : _producto.descripcion,
                               ),
                               const SizedBox(height: 26),
-                              const Text(
+                              const TituloSeccion(
                                 'Publicado por',
-                                style: TextStyle(
-                                  color: Color(0xFF474646),
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w900,
-                                ),
+                                color: ConfiguracionTema.grafito,
                               ),
                               const SizedBox(height: 8),
                               _Vendedor(
@@ -727,8 +722,16 @@ class _SelectorVariante extends StatelessWidget {
       DropdownButtonFormField<VarianteProducto>(
         initialValue: elegida,
         isExpanded: true,
-        hint: const Text('Sin elegir'),
+        hint: const Text(
+          'Sin elegir',
+          style: TextStyle(color: ConfiguracionTema.grisCalido),
+        ),
+        // Colores fijos, como el resto de la ficha: esta es una superficie
+        // blanca en los dos temas, y los del tema oscuro quedarian sueltos
+        // dentro de ella.
+        dropdownColor: Colors.white,
         decoration: const InputDecoration(
+          fillColor: ConfiguracionTema.cremaSuperficie,
           contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         ),
         items: [
@@ -738,7 +741,10 @@ class _SelectorVariante extends StatelessWidget {
               child: Text(
                 variante.nombre,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  color: ConfiguracionTema.grafito,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
         ],

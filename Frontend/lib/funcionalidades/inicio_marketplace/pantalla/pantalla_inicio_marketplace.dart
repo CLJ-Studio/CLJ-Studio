@@ -7,6 +7,7 @@ import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../../elementos_compartidos/estructuras_aplicacion/titulo_seccion.dart';
 import '../../../elementos_compartidos/imagenes/foto_producto.dart';
 import '../../../elementos_compartidos/tarjetas_aplicacion/estilo_tarjeta_producto.dart';
 import '../../../elementos_compartidos/marca/marca_u_market.dart';
@@ -175,8 +176,8 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                             // El banner principal abre el contenido. Justo
                             // debajo se muestran los locales destacados y,
                             // después, la publicidad propia de empresas.
-                            _TituloSeccion(
-                              titulo: 'Los mejores del campus',
+                            TituloSeccion(
+                              'Los mejores del campus',
                               alVerTodo:
                                   alVerLocalesDestacados ??
                                   () =>
@@ -222,8 +223,8 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                             const SizedBox(height: 28),
                             KeyedSubtree(
                               key: _claveResultados,
-                              child: const _TituloSeccion(
-                                titulo: 'Descubre algo nuevo',
+                              child: const TituloSeccion(
+                                'Descubre algo nuevo',
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -1547,34 +1548,3 @@ class _ImagenPublicacionVacia extends StatelessWidget {
   );
 }
 
-class _TituloSeccion extends StatelessWidget {
-  const _TituloSeccion({required this.titulo, this.alVerTodo});
-
-  final String titulo;
-  final VoidCallback? alVerTodo;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(
-        child: Text(
-          titulo,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
-      ),
-      if (alVerTodo != null)
-        TextButton(
-          onPressed: alVerTodo,
-          child: const Text(
-            'Ver todo',
-            style: TextStyle(
-              color: ConfiguracionTema.primario,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-    ],
-  );
-}
