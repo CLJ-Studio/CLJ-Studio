@@ -4,6 +4,7 @@ import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../datos/repositorio_mi_local.dart';
 import 'dialogo_ajustar_stock.dart';
 import 'dialogo_producto.dart';
+import '../../../elementos_compartidos/estados_aplicacion/mensaje_fallo.dart';
 
 /// Qué se hizo con la publicación, para que quien llamó sepa si refrescar.
 enum ResultadoAccion {
@@ -172,10 +173,17 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
         await repositorio.eliminarProducto(producto.id);
         return ResultadoAccion.eliminada;
     }
-  } catch (_) {
+  } catch (fallo) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo completar la acción.')),
+        SnackBar(
+          content: Text(
+            mensajeDeFallo(
+              fallo,
+              porDefecto: 'No se pudo completar la acción.',
+            ),
+          ),
+        ),
       );
     }
     return ResultadoAccion.sinCambios;

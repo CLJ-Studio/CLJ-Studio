@@ -23,6 +23,7 @@ import '../../inicio_marketplace/modelos/variante_producto.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../../visualizaciones/indicador_vistas.dart';
 import '../../visualizaciones/servicio_visualizaciones.dart';
+import '../../../elementos_compartidos/estados_aplicacion/mensaje_fallo.dart';
 
 /// Detalle del producto con su galeria de fotos.
 ///
@@ -217,8 +218,12 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
       if (!mounted) return;
       if (actualizado != null) setState(() => _producto = actualizado);
       _avisar('Publicación actualizada.');
-    } catch (_) {
-      if (mounted) _avisar('No se pudo guardar el cambio.');
+    } catch (fallo) {
+      if (mounted) {
+        _avisar(
+          mensajeDeFallo(fallo, porDefecto: 'No se pudo guardar el cambio.'),
+        );
+      }
     }
   }
 

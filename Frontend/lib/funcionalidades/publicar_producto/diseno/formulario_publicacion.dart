@@ -16,6 +16,7 @@ import 'boton_confirmar_publicacion.dart';
 import 'campo_descripcion_publicacion.dart';
 import 'campo_nombre_publicacion.dart';
 import 'campo_precio_publicacion.dart';
+import '../../../elementos_compartidos/estados_aplicacion/mensaje_fallo.dart';
 
 /// Publica un producto. No exige local: si el estudiante no tiene, el
 /// controlador crea su espacio personal por detrás.
@@ -301,9 +302,10 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         ..showSnackBar(
           SnackBar(
             content: Text(
-              fallo.toString().contains('CONTENIDO_NO_PERMITIDO')
-                  ? 'Revisa el texto: contiene palabras no permitidas.'
-                  : 'No se pudo publicar. Intenta de nuevo.',
+              mensajeDeFallo(
+                fallo,
+                porDefecto: 'No se pudo publicar. Intenta de nuevo.',
+              ),
             ),
             behavior: SnackBarBehavior.floating,
           ),

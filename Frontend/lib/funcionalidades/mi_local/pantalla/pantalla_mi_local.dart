@@ -6,6 +6,7 @@ import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../../visualizaciones/indicador_vistas.dart';
 import '../diseno/dialogo_producto.dart';
 import '../logica/controlador_mi_local.dart';
+import '../../../elementos_compartidos/estados_aplicacion/mensaje_fallo.dart';
 
 /// Panel para administrar el inventario del local.
 class PantallaMiLocal extends StatelessWidget {
@@ -15,20 +16,24 @@ class PantallaMiLocal extends StatelessWidget {
 
   Future<void> _agregar(BuildContext context) async {
     final datos = await mostrarDialogoProducto(context);
-    if (datos == null) return;
+    if (datos == null || !context.mounted) return;
 
     // Desde aqui el destino es el local, no el espacio personal: es la
     // diferencia entre un producto del catalogo y una publicacion suelta.
-    await controlador.agregarProducto(
-      nombre: datos.nombre,
-      precio: datos.precio,
-      cantidad: datos.cantidad,
-      emoji: datos.emoji,
-      descripcion: datos.descripcion,
-      galeria: datos.galeria,
-      variantes: datos.variantes,
-      categoriaId: datos.categoriaId,
-      alLocal: true,
+    await _conAviso(
+      context,
+      'No se pudo agregar el producto.',
+      () => controlador.agregarProducto(
+        nombre: datos.nombre,
+        precio: datos.precio,
+        cantidad: datos.cantidad,
+        emoji: datos.emoji,
+        descripcion: datos.descripcion,
+        galeria: datos.galeria,
+        variantes: datos.variantes,
+        categoriaId: datos.categoriaId,
+        alLocal: true,
+      ),
     );
   }
 
@@ -37,19 +42,41 @@ class PantallaMiLocal extends StatelessWidget {
     ProductoMarketplace producto,
   ) async {
     final datos = await mostrarDialogoProducto(context, producto: producto);
-    if (datos == null) return;
+    if (datos == null || !context.mounted) return;
 
-    await controlador.editarProducto(
-      productoId: producto.id,
-      nombre: datos.nombre,
-      precio: datos.precio,
-      cantidad: datos.cantidad,
-      emoji: datos.emoji,
-      categoriaId: datos.categoriaId,
-      descripcion: datos.descripcion,
-      galeria: datos.galeria,
-      variantes: datos.variantes,
+    await _conAviso(
+      context,
+      'No se pudo guardar el cambio.',
+      () => controlador.editarProducto(
+        productoId: producto.id,
+        nombre: datos.nombre,
+        precio: datos.precio,
+        cantidad: datos.cantidad,
+        emoji: datos.emoji,
+        categoriaId: datos.categoriaId,
+        descripcion: datos.descripcion,
+        galeria: datos.galeria,
+        variantes: datos.variantes,
+      ),
     );
+  }
+
+  /// Agregar y editar no tenian manejo de error: si el servidor rechazaba
+  /// algo (un sabor con una palabra no permitida, sin ir mas lejos), se
+  /// tocaba "Guardar" y no pasaba nada visible.
+  Future<void> _conAviso(
+    BuildContext context,
+    String porDefecto,
+    Future<Object?> Function() accion,
+  ) async {
+    try {
+      await accion();
+    } catch (fallo) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mensajeDeFallo(fallo, porDefecto: porDefecto))),
+      );
+    }
   }
 
   Future<void> _confirmarBorrado(BuildContext context, int indice) async {

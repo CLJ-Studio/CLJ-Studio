@@ -209,8 +209,22 @@ class RepositorioMiLocal {
         .single();
 
     final id = creado['id'] as String;
-    await _guardarGaleria(id, galeria);
-    return (id: id, variantes: await guardarVariantes(id, variantes));
+    // El producto ya existe, pero sus fotos y sabores todavia no. Si alguno
+    // de los dos falla -por ejemplo, un sabor con una palabra que el filtro
+    // rechaza-, el producto se borra: si no, quedaria publicado a medias, y
+    // al corregir el sabor y volver a publicar se duplicaria.
+    try {
+      await _guardarGaleria(id, galeria);
+      return (id: id, variantes: await guardarVariantes(id, variantes));
+    } catch (_) {
+      try {
+        await _cliente.from('products').delete().eq('id', id);
+      } catch (_) {
+        // Si tampoco se puede borrar, lo que importa es avisar del fallo
+        // original, que es el que la persona puede corregir.
+      }
+      rethrow;
+    }
   }
 
   /// Guarda los sabores de una publicacion y devuelve como quedaron.
