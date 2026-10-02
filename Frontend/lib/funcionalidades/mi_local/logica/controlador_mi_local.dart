@@ -28,6 +28,18 @@ class ControladorMiLocal extends ChangeNotifier {
   bool cargando = true;
   String? error;
 
+  /// Sube cada vez que cambia lo publicado: algo nuevo, algo editado, algo
+  /// borrado.
+  ///
+  /// Existe para el perfil. Las pestanas de la navegacion principal se
+  /// mantienen vivas al cambiar de una a otra (si no, las fotos se volvian a
+  /// bajar cada vez), asi que el perfil ya no se reconstruye al volver a el:
+  /// sin un aviso, lo recien publicado no aparecia ahi nunca. Y no puede
+  /// escuchar `notifyListeners` a secas, porque este controlador avisa
+  /// tambien con cada cambio de stock que llega en vivo, y el perfil
+  /// recargaria todo el rato.
+  int revisionPublicaciones = 0;
+
   /// El stock baja solo cuando alguien compra: el inventario debe reflejarlo
   /// sin que el dueno recargue.
   late final _escucha = EscuchaTabla(
@@ -220,6 +232,7 @@ class ControladorMiLocal extends ChangeNotifier {
     if (negocio != null) {
       productos = await _repositorio.cargarInventario(negocio!.id);
     }
+    revisionPublicaciones++;
     notifyListeners();
 
     // Se arma con lo que se acaba de enviar en vez de volver a leerlo del
@@ -287,6 +300,7 @@ class ControladorMiLocal extends ChangeNotifier {
       galeria: galeria,
       variantes: variantes,
     );
+    revisionPublicaciones++;
     await _refrescarInventario();
   }
 
@@ -361,6 +375,8 @@ class ControladorMiLocal extends ChangeNotifier {
 
     try {
       await _repositorio.eliminarProducto(producto.id);
+      revisionPublicaciones++;
+      notifyListeners();
     } catch (_) {
       productos = anteriores;
       error = 'No se pudo eliminar el producto.';

@@ -63,7 +63,7 @@ class PantallaMiLocal extends StatelessWidget {
           'Si solo quieres dejar de mostrarla, usa "Ocultar".',
         ),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.of(contexto).pop(false),
             child: const Text('Cancelar'),
           ),

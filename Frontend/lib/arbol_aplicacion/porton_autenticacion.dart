@@ -133,7 +133,7 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           ),
           actionsAlignment: MainAxisAlignment.center,
           actions: [
-            TextButton(
+            OutlinedButton(
               onPressed: () => Navigator.of(contextoDialogo).pop(false),
               child: const Text('Ahora no'),
             ),

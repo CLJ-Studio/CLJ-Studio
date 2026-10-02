@@ -55,19 +55,33 @@ class _EditorVariantesState extends State<EditorVariantes> {
     for (final variante in widget.variantes) _FilaVariante.desde(variante),
   ];
 
+  /// La ultima lista que este editor le entrego al formulario.
+  ///
+  /// El formulario la guarda y la vuelve a pasar en cada redibujo. Si lo que
+  /// llega es esa misma lista, el cambio salio de aqui y no hay nada que
+  /// sincronizar. Solo una lista DISTINTA viene de fuera: recuperar un
+  /// borrador, o vaciar el formulario despues de publicar.
+  List<VarianteEditable>? _ultimaEntregada;
+
   @override
   void didUpdateWidget(covariant EditorVariantes anterior) {
     super.didUpdateWidget(anterior);
-    // Solo cuando el cambio viene de fuera (recuperar un borrador), no cuando
-    // viene de escribir aqui: reconstruir en cada tecla perderia el cursor.
-    if (widget.variantes.length != _filas.length) {
-      for (final fila in _filas) {
-        fila.liberar();
-      }
-      _filas = [
-        for (final variante in widget.variantes) _FilaVariante.desde(variante),
-      ];
+    // ANTES se comparaba la CANTIDAD de variantes con la de filas, y eso
+    // estaba mal: las filas vacias no se entregan (una variante sin nombre no
+    // es nada), asi que tras tocar "Agregar otra" el editor tenia una fila mas
+    // de las que el formulario conocia. Al primer redibujo -abrir el teclado
+    // alcanza- creia que el cambio venia de fuera, se reiniciaba, y la fila
+    // nueva desaparecia antes de poder escribir en ella.
+    if (identical(widget.variantes, anterior.variantes) ||
+        identical(widget.variantes, _ultimaEntregada)) {
+      return;
     }
+    for (final fila in _filas) {
+      fila.liberar();
+    }
+    _filas = [
+      for (final variante in widget.variantes) _FilaVariante.desde(variante),
+    ];
   }
 
   @override
@@ -80,10 +94,14 @@ class _EditorVariantesState extends State<EditorVariantes> {
 
   /// Las filas sin nombre no se emiten: una fila recien agregada esta vacia
   /// hasta que se escriba algo, y una variante sin nombre no significa nada.
-  void _avisar() => widget.alCambiar([
-    for (final fila in _filas)
-      if (fila.nombre.text.trim().isNotEmpty) fila.aVariante(),
-  ]);
+  void _avisar() {
+    final entregadas = [
+      for (final fila in _filas)
+        if (fila.nombre.text.trim().isNotEmpty) fila.aVariante(),
+    ];
+    _ultimaEntregada = entregadas;
+    widget.alCambiar(entregadas);
+  }
 
   void _agregar() {
     if (_filas.length >= maximoVariantes) return;
@@ -210,10 +228,14 @@ class _Fila extends StatelessWidget {
           maxLength: 40,
           textCapitalization: TextCapitalization.sentences,
           onChanged: (_) => alEscribir(),
+          // Relleno propio, mas chico que el del tema: el del tema son 20 px
+          // por lado, y en una fila con dos campos eso dejaba "Por ejem..."
+          // y "Bs ..." en vez de la pista entera.
           decoration: const InputDecoration(
-            hintText: 'Por ejemplo: queso',
+            hintText: 'Ej: queso',
             counterText: '',
             isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           ),
         ),
       ),
@@ -229,6 +251,10 @@ class _Fila extends StatelessWidget {
             // vacio no es un error ni un cero, es "el mismo de siempre".
             hintText: pistaPrecio,
             isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
+            ),
           ),
         ),
       ),

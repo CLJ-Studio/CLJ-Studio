@@ -42,11 +42,31 @@ class _PantallaPerfilVendedorState extends State<PantallaPerfilVendedor> {
   List<ProductoMarketplace> publicacionesPersonales = const [];
   bool cargandoPublicaciones = false;
 
+  /// La ultima revision de lo publicado que esta pantalla ya mostro.
+  late int _revisionVista = widget.controlador.revisionPublicaciones;
+
   @override
   void initState() {
     super.initState();
     sesion.cargar();
     favoritos.cargar();
+    _cargarPublicacionesPersonales();
+    // Esta pestana se mantiene viva al cambiar de seccion, asi que initState
+    // no vuelve a correr despues de publicar: sin esto, lo recien creado no
+    // aparecia en el perfil hasta cerrar y abrir la aplicacion.
+    widget.controlador.addListener(_alCambiarPublicaciones);
+  }
+
+  @override
+  void dispose() {
+    widget.controlador.removeListener(_alCambiarPublicaciones);
+    super.dispose();
+  }
+
+  void _alCambiarPublicaciones() {
+    final revision = widget.controlador.revisionPublicaciones;
+    if (revision == _revisionVista) return;
+    _revisionVista = revision;
     _cargarPublicacionesPersonales();
   }
 

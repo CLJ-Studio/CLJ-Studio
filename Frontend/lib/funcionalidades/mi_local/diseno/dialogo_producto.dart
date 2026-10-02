@@ -150,7 +150,7 @@ Future<DatosProducto?> mostrarDialogoProducto(
           ),
         ),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancelar'),
           ),

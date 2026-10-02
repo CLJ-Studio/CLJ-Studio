@@ -60,7 +60,7 @@ class _PantallaContactandoVendedorState
         ),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Volver'),
           ),

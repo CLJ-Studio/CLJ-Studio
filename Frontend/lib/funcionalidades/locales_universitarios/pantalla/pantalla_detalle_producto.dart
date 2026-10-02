@@ -172,7 +172,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
             'Solo puedes pedir de un local a la vez.',
           ),
           actions: [
-            TextButton(
+            OutlinedButton(
               onPressed: () => Navigator.of(contexto).pop(false),
               child: const Text('Cancelar'),
             ),
@@ -266,7 +266,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
           'Si solo quieres dejar de mostrarla, usa "Ocultar".',
         ),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.of(contexto).pop(false),
             child: const Text('Cancelar'),
           ),

@@ -110,7 +110,7 @@ class _PantallaPedidosState extends State<PantallaPedidos>
               'en el carrito.',
             ),
             actions: [
-              TextButton(
+              OutlinedButton(
                 onPressed: () => Navigator.of(contexto).pop(false),
                 child: const Text('Conservar carrito'),
               ),

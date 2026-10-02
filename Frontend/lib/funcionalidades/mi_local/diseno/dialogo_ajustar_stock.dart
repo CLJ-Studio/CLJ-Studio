@@ -145,7 +145,7 @@ class _DialogoAjustarStockState extends State<_DialogoAjustarStock> {
         ],
       ),
       actions: [
-        TextButton(
+        OutlinedButton(
           onPressed: _guardando ? null : () => Navigator.of(context).pop(false),
           child: const Text('Cancelar'),
         ),

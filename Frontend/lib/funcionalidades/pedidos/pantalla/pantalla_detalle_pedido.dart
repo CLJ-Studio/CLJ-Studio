@@ -90,7 +90,7 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
               : 'Se avisará a $otro de que ya no lo quieres.',
         ),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.of(contexto).pop(false),
             child: const Text('Volver'),
           ),

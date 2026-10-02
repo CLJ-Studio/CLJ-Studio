@@ -41,7 +41,7 @@ class SalirSinGuardarFoto extends StatelessWidget {
         ),
         content: Text(detalle),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.of(contexto).pop(false),
             child: const Text('Seguir editando'),
           ),

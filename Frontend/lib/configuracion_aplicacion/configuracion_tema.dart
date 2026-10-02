@@ -160,6 +160,22 @@ abstract final class ConfiguracionTema {
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
+      // La accion secundaria de un dialogo ("Descartar", "Cancelar").
+      //
+      // Antes era un TextButton: solo letras, sin forma, sobre el mismo fondo
+      // del dialogo. Al lado del boton relleno parecia un texto y no un boton,
+      // y la diferencia entre "esto confirma" y "esto se arrepiente" quedaba
+      // en adivinar cual de los dos se podia tocar. Con contorno se ve que es
+      // un boton y que es el secundario, con la misma forma de pildora que el
+      // relleno para que los dos se lean como pareja.
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: esOscuro ? crema : grafito,
+          side: BorderSide(color: esOscuro ? salviaClara : grafito, width: 1.2),
+          shape: const StadiumBorder(),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
       chipTheme: ChipThemeData(
         backgroundColor: superficieAlta,
         selectedColor: esOscuro ? salvia : salviaClara,

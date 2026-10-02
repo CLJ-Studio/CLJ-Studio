@@ -33,7 +33,7 @@ class PantallaAdministrarLocal extends StatelessWidget {
           'conservará.',
         ),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.of(dialogo).pop(false),
             child: const Text('Cancelar'),
           ),

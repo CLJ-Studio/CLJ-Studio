@@ -128,7 +128,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
           'Dejaste "${borrador.resumen}" a medias. ¿Quieres continuarla?',
         ),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.of(contexto).pop(false),
             child: const Text('Descartar'),
           ),
@@ -340,17 +340,28 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
             inputDecorationTheme: Theme.of(context).inputDecorationTheme
                 .copyWith(
                   filled: true,
-                  fillColor: oscuro
-                      ? const Color(0xFF474646)
-                      : const Color(0xFFE6E1D5),
+                  // El campo NO puede ser del color de la tarjeta. Antes los
+                  // dos eran 0xFFE6E1D5: crema sobre crema y sin borde, asi
+                  // que el campo no se veia y la pista parecia un texto
+                  // suelto que no se podia tocar. Blanco con un borde fino lo
+                  // separa sin salirse de la paleta.
+                  fillColor: oscuro ? const Color(0xFF5A5858) : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(
+                      color: oscuro
+                          ? const Color(0xFF6E6C6C)
+                          : const Color(0xFFD3CDBF),
+                    ),
                   ),
+                  // La pista explica que va en cada campo, y cortada en "Un
+                  // nombre claro para tu p..." no explicaba nada. Dos lineas
+                  // alcanzan para todas las del formulario.
+                  hintMaxLines: 2,
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(18),
                     borderSide: const BorderSide(
