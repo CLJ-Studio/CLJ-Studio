@@ -35,9 +35,16 @@ class PantallaPrivacidad extends StatelessWidget {
               icono: Icons.badge_outlined,
               titulo: 'Qué datos guardamos',
               parrafos: [
-                'Tu nombre y tu correo institucional, tal como los entrega '
-                    'Google al iniciar sesión. El nombre no se puede editar: '
-                    'es el que respalda la universidad.',
+                // Decia que el nombre y el correo "los entrega Google al
+                // iniciar sesion" y que el nombre "lo respalda la
+                // universidad". Ya no se entra con Google: se entra con un
+                // codigo al correo, y el nombre lo escribe el estudiante. Un
+                // texto de privacidad que describe mal que datos se toman es
+                // peor que no tenerlo.
+                'Tu correo institucional, al que llega el código para entrar, '
+                    'y el nombre y apellido que escribes al crear tu perfil. '
+                    'El nombre no se puede cambiar después: es con el que te '
+                    'esperan quienes te compran o te venden.',
                 'Tu carrera y tu número de WhatsApp, que tú mismo escribes '
                     'al completar el perfil.',
                 'Lo que publicas: títulos, descripciones, precios y fotos.',
