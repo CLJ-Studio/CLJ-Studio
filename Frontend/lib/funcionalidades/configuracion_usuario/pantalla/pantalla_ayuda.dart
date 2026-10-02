@@ -6,6 +6,10 @@ import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado
 /// Ayuda y contacto de soporte.
 const _whatsappSoporte = '59167972211';
 
+/// El correo de contacto de U market. Las tiendas de aplicaciones piden uno,
+/// y hay gente que prefiere escribir antes que chatear.
+const correoSoporte = 'contacto.umarketbo@gmail.com';
+
 class PantallaAyuda extends StatelessWidget {
   const PantallaAyuda({super.key});
 
@@ -55,14 +59,16 @@ class PantallaAyuda extends StatelessWidget {
               pregunta: '¿Cómo se paga?',
               respuesta:
                   'La app no procesa pagos. Cuando el vendedor acepta tu '
-                  'pedido se habilita el WhatsApp de ambos para que acuerden '
-                  'el pago y el punto de entrega dentro del campus.',
+                  'pedido se abre un chat entre los dos para que acuerden el '
+                  'pago y el punto de entrega dentro del campus.',
             ),
             const _Pregunta(
               pregunta: '¿Quién ve mi número de WhatsApp?',
               respuesta:
-                  'Nadie, hasta que un pedido es aceptado. Ahí se comparte '
-                  'solo entre comprador y vendedor de ese pedido.',
+                  'Nadie mientras navega la app. Con un pedido aceptado, '
+                  'todo se habla por el chat de la app; solo si alguien deja '
+                  'de responder aparece la opción de seguir por WhatsApp, y '
+                  'solo entre el comprador y el vendedor de ese pedido.',
             ),
             const _Pregunta(
               pregunta: 'Mi publicación quedó muy abajo, ¿qué hago?',
@@ -147,6 +153,25 @@ class _Contacto extends StatelessWidget {
             // El numero no se muestra: quedaria expuesto a cualquiera. El
             // enlace igual abre el chat correcto.
             label: const Text('Contactar a soporte'),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton.icon(
+            onPressed: () => launchUrl(
+              Uri(
+                scheme: 'mailto',
+                path: correoSoporte,
+                query: 'subject=${Uri.encodeComponent('Ayuda con U market')}',
+              ),
+            ),
+            icon: const Icon(Icons.mail_outline_rounded),
+            // El correo SI se muestra: es una casilla de contacto, no un
+            // numero personal, y quien no tiene un cliente de correo
+            // configurado al menos puede copiarlo.
+            label: const Text(correoSoporte),
           ),
         ),
       ],

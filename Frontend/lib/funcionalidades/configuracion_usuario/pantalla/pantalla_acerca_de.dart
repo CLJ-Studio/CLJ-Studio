@@ -74,11 +74,14 @@ class PantallaAcercaDe extends StatelessWidget {
                 'correo institucional, así que sabes que del otro lado hay '
                 'alguien de la universidad.',
               ),
+              // Decia que al aceptar un pedido "se comparte el WhatsApp de
+              // ambos". Ya no: se abre un chat dentro de la aplicacion, y
+              // WhatsApp queda solo de respaldo si alguien deja de responder.
               _Parrafo(
                 'La aplicación no cobra comisiones ni procesa pagos. Cuando '
-                'el vendedor acepta un pedido se comparte el WhatsApp de '
-                'ambos y el acuerdo se cierra entre las dos personas, dentro '
-                'del campus.',
+                'el vendedor acepta un pedido se abre un chat entre los dos, '
+                'y ahí acuerdan el pago y el punto de entrega dentro del '
+                'campus.',
               ),
               const SizedBox(height: 26),
               Text(
