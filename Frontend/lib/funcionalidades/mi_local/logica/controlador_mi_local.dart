@@ -42,9 +42,15 @@ class ControladorMiLocal extends ChangeNotifier {
 
   /// El stock baja solo cuando alguien compra: el inventario debe reflejarlo
   /// sin que el dueno recargue.
+  ///
+  /// La escucha es de toda la tabla, y cada visita a cualquier publicacion
+  /// del campus la cambia. Por eso los avisos se juntan de a 5 segundos: el
+  /// stock y las visitas propias siguen al dia sin recargar por cada visita
+  /// ajena.
   late final _escucha = EscuchaTabla(
     tabla: 'products',
     alCambiar: _refrescarInventario,
+    minimoEntreAvisos: const Duration(seconds: 5),
   );
 
   void iniciarTiempoReal() => _escucha.iniciar();

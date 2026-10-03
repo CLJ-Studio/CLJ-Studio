@@ -30,9 +30,13 @@ class ControladorLocales extends ChangeNotifier {
   List<LocalUniversitario> get catalogoCompleto =>
       List.unmodifiable(_todos.where((local) => !local.esPersonal));
 
+  /// Cada visita a un local tambien cambia `stores` (su contador), asi que
+  /// los avisos se juntan: los numeros se ponen al dia igual, sin redibujar
+  /// la lista por cada persona que entra a un local.
   late final _escucha = EscuchaTabla(
     tabla: 'stores',
     alCambiar: _recargarEnSilencio,
+    minimoEntreAvisos: const Duration(seconds: 8),
   );
 
   void iniciarTiempoReal() => _escucha.iniciar();

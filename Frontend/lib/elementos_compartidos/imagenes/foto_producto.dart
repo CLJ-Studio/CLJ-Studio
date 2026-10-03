@@ -58,3 +58,66 @@ class FotoProducto extends StatelessWidget {
     );
   }
 }
+
+/// A que ancho se decodifica la foto de una tarjeta de publicacion.
+///
+/// Es parte de la identidad de la imagen en memoria: quien quiera reusar la
+/// foto que la tarjeta ya tiene cargada (el detalle, mientras baja la grande)
+/// tiene que pedirla con este mismo numero.
+const anchoFotoTarjeta = 220.0;
+
+/// La etiqueta que une una foto de publicacion entre dos pantallas.
+///
+/// [prefijo] distingue el lugar de donde se abrio: la misma publicacion puede
+/// estar a la vez en el carrusel de populares y en la cuadricula, y dos
+/// `Hero` con la misma etiqueta en una pantalla no pueden convivir.
+String etiquetaFotoProducto(String prefijo, int indice) =>
+    '$prefijo-imagen-producto-$indice';
+
+/// La foto de una tarjeta que, al abrir la publicacion, viaja hasta su lugar
+/// en el detalle, y al volver regresa a la tarjeta.
+///
+/// En el vuelo se dibuja siempre la foto de la tarjeta, que ya esta cargada.
+/// Si se usara la del detalle (lo normal en un `Hero`), volaria un recuadro
+/// vacio mientras la version grande todavia baja. Las esquinas de arriba se
+/// enderezan en el camino, porque en el detalle la foto va a sangre.
+class FotoProductoViajera extends StatelessWidget {
+  const FotoProductoViajera({
+    required this.etiqueta,
+    required this.radio,
+    required this.child,
+    super.key,
+  });
+
+  final String etiqueta;
+
+  /// Radio de las esquinas de arriba en la tarjeta.
+  final double radio;
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      Hero(tag: etiqueta, flightShuttleBuilder: _enVuelo, child: child);
+
+  Widget _enVuelo(
+    BuildContext contextoVuelo,
+    Animation<double> animacion,
+    HeroFlightDirection direccion,
+    BuildContext desde,
+    BuildContext hacia,
+  ) {
+    final deLaTarjeta =
+        (direccion == HeroFlightDirection.push ? desde : hacia).widget as Hero;
+    return AnimatedBuilder(
+      animation: animacion,
+      builder: (_, foto) => ClipRRect(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(radio * (1 - animacion.value)),
+        ),
+        child: foto,
+      ),
+      child: deLaTarjeta.child,
+    );
+  }
+}

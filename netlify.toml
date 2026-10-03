@@ -16,7 +16,7 @@
       git clone https://github.com/flutter/flutter.git -b stable --depth 1;
     fi
     flutter/bin/flutter config --enable-web
-    flutter/bin/flutter build web --release       --dart-define=VERSION_APP="${COMMIT_REF:-local}"       --dart-define=FECHA_VERSION="$(TZ=BOT4 date +%-d.%-m.%H%M)"
+    flutter/bin/flutter build web --release --wasm       --dart-define=VERSION_APP="${COMMIT_REF:-local}"       --dart-define=FECHA_VERSION="$(TZ=BOT4 date +%-d.%-m.%H%M)"
   """
 
 [build.environment]
@@ -68,18 +68,19 @@
 # ----------------------------------------------------------------------------
 # Que se cachea y que no
 #
-# Los archivos que Flutter genera con un hash en el nombre pueden guardarse
-# para siempre: si cambia el contenido, cambia el nombre.
+# NADA se guarda a largo plazo, y es a proposito. Flutter web NO pone un hash
+# en el nombre de sus archivos: la fuente de iconos se recorta en cada build
+# con solo los iconos que se usan, pero sigue llamandose igual; el motor de
+# canvaskit/ cambia cada vez que Netlify baja una version nueva de Flutter, y
+# tambien se llama igual. Guardarlos un anio (como estuvo del 22 de septiembre
+# al 3 de octubre) hacia que un telefono mezclara una version vieja con una
+# nueva: iconos que se veian como cuadrados vacios, o un motor que no
+# coincidia con la aplicacion.
 #
-# Los tres con los que arranca la aplicacion no llevan hash y por tanto NO
-# pueden cachearse. Si el navegador se queda con un flutter_service_worker.js
-# viejo, ese service worker sigue sirviendo la version anterior y pidiendo
-# archivos que ya se borraron del servidor: la aplicacion queda congelada en
-# el telefono y desplegar arreglos no cambia nada, porque el arreglo nunca
-# llega a bajarse.
-#
-# `no-cache` no significa "no guardar": significa "pregunta antes de usar".
-# Es justo lo que hace falta aqui.
+# `no-cache` no significa "no guardar": el navegador guarda igual, pero
+# pregunta antes de usar. Si el archivo no cambio, el servidor contesta 304
+# (unos pocos bytes) y se usa lo guardado. Es lo que Netlify ya hace por
+# defecto con todo; aqui se deja escrito para los archivos de arranque.
 # ----------------------------------------------------------------------------
 [[headers]]
   for = "/index.html"
@@ -106,12 +107,71 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# ----------------------------------------------------------------------------
+# Fluidez: el motor de WebAssembly, dibujando en un hilo aparte
+# ----------------------------------------------------------------------------
+# La app se compila con --wasm. Los navegadores que soportan WebAssembly
+# moderno (Chrome y Firefox actuales, Safari 18.2+) usan el motor skwasm; los
+# demas caen solos a la version de JavaScript, que tambien se publica. Nadie
+# se queda sin app.
+#
+# Estas dos cabeceras dejan a skwasm dibujar en un hilo aparte, y es de donde
+# sale casi toda la mejora. Medido en Chrome sobre la animacion de apertura y
+# la pantalla de acceso (4 corridas cada uno):
+#
+#   motor JavaScript de antes          5-6 cuadros lentos, el peor de 83-90 ms
+#   WebAssembly en un solo hilo        5 cuadros lentos,   el peor de 63-69 ms
+#   WebAssembly en hilo aparte         1 cuadro lento,     el peor de 35 ms
+#
+# `credentialless` y no `require-corp`: con require-corp el navegador exige que
+# cada recurso de otro dominio lo autorice con una cabecera propia, y las
+# fotos de Supabase no la mandan. Con credentialless se piden sin cookies,
+# que es justo como se piden igual. Comprobado con una foto real del bucket:
+# carga por fetch, por <img> y por <img crossorigin>.
+#
+# Safari no entiende credentialless: ahi la pagina simplemente no queda
+# aislada y skwasm corre en un solo hilo. Funciona igual, sin la mejora extra.
 [[headers]]
-  for = "/assets/*"
+  for = "/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "credentialless"
+
+# El tipo de cada archivo del motor, escrito a mano. Si el .mjs llegara como
+# texto plano, el navegador se niega a cargarlo como modulo y la app NO
+# arranca: ese fallo no tiene vuelta atras automatica a la version de
+# JavaScript. Paso en las pruebas locales con un servidor que no lo conocia.
+[[headers]]
+  for = "/main.dart.mjs"
+  [headers.values]
+    Content-Type = "text/javascript"
 
 [[headers]]
-  for = "/canvaskit/*"
+  for = "/main.dart.wasm"
   [headers.values]
-    Cache-Control = "public, max-age=31536000"
+    Content-Type = "application/wasm"
+
+[[headers]]
+  for = "/canvaskit/skwasm.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+
+[[headers]]
+  for = "/canvaskit/skwasm_heavy.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+
+[[headers]]
+  for = "/canvaskit/canvaskit.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+
+[[headers]]
+  for = "/canvaskit/chromium/canvaskit.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+
+[[headers]]
+  for = "/canvaskit/wimp.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"

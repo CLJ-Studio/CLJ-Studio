@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/titulo_seccion.dart';
 import '../../../elementos_compartidos/imagenes/foto_producto.dart';
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 import '../../mi_local/diseno/dialogo_producto.dart';
 import '../../mi_local/datos/repositorio_mi_local.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
@@ -34,6 +35,7 @@ class PantallaDetalleProducto extends StatefulWidget {
     required this.producto,
     required this.local,
     this.vendedorNavegable = true,
+    this.prefijoHero,
     super.key,
   });
 
@@ -48,6 +50,10 @@ class PantallaDetalleProducto extends StatefulWidget {
   /// vendedor -> perfil sin fin. El enlace solo existe cuando lleva a algo
   /// que todavia no se esta viendo.
   final bool vendedorNavegable;
+
+  /// Con que etiqueta llega volando la foto desde la tarjeta que se toco.
+  /// Ver `etiquetaFotoProducto`. Sin el, se usa el id del producto.
+  final String? prefijoHero;
 
   @override
   State<PantallaDetalleProducto> createState() =>
@@ -472,7 +478,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                           _Galeria(
                             fotos: fotos,
                             emoji: _producto.emoji,
-                            prefijoHero: _producto.id,
+                            prefijoHero: widget.prefijoHero ?? _producto.id,
                             controlador: _paginas,
                             pagina: _pagina,
                             alCambiarPagina: (i) => setState(() => _pagina = i),
@@ -1005,6 +1011,18 @@ class _GaleriaState extends State<_Galeria> {
     Widget imagen(String url, BoxFit ajuste) => Image.network(
       url,
       fit: ajuste,
+      // Mientras baja la foto grande se ve la de la tarjeta, que ya esta en
+      // memoria si se llego desde el inicio. Antes quedaba un hueco blanco
+      // justo donde termina de aterrizar la foto que viene volando.
+      frameBuilder: (_, hijo, cuadro, sincronica) =>
+          cuadro != null || sincronica
+          ? hijo
+          : FotoRed(
+              url: url,
+              ajuste: ajuste,
+              anchoVisible: anchoFotoTarjeta,
+              marcador: const SizedBox.shrink(),
+            ),
       errorBuilder: (_, _, _) => ColoredBox(
         color: Colors.white,
         child: Center(
@@ -1042,7 +1060,7 @@ class _GaleriaState extends State<_Galeria> {
                 onPageChanged: widget.alCambiarPagina,
                 itemCount: widget.fotos.length,
                 itemBuilder: (_, i) => Hero(
-                  tag: '${widget.prefijoHero}-imagen-producto-$i',
+                  tag: etiquetaFotoProducto(widget.prefijoHero, i),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [

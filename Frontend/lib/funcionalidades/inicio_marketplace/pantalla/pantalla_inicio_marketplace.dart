@@ -9,6 +9,7 @@ import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/titulo_seccion.dart';
+import '../../../elementos_compartidos/animaciones/escala_al_presionar.dart';
 import '../../../elementos_compartidos/imagenes/foto_producto.dart';
 import '../../../elementos_compartidos/tarjetas_aplicacion/estilo_tarjeta_producto.dart';
 import '../../../elementos_compartidos/marca/marca_u_market.dart';
@@ -154,92 +155,124 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                   sliver: SliverToBoxAdapter(
                     child: ContenidoCentrado(
                       anchoMaximo: 1000,
-                      child: switch (estado) {
-                        EstadoInicioMarketplace(cargando: true) =>
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 60),
-                            child: Center(child: IndicadorCarga(tamanio: 140)),
-                          ),
-                        EstadoInicioMarketplace(error: final String mensaje) =>
-                          MensajeCatalogo(
-                            mensaje: mensaje,
-                            alReintentar: controlador.cargar,
-                          ),
-                        _ => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _AnuncioPrincipal(
-                              categoriasConContenido: _categoriasConContenido(
-                                estado.categorias,
-                                controlador.catalogoCompleto,
-                              ),
-                              alSeleccionar: controlador.seleccionarCategoria,
-                              publicidad: controlador.publicidadDe(
-                                UbicacionPublicidad.bannerPrincipal,
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            // El banner principal abre el contenido. Justo
-                            // debajo se muestran los locales destacados y,
-                            // después, la publicidad propia de empresas.
-                            TituloSeccion(
-                              'Los mejores del campus',
-                              alVerTodo:
-                                  alVerLocalesDestacados ??
-                                  () =>
-                                      controlador.seleccionarCategoria('todas'),
-                            ),
-                            const SizedBox(height: 6),
-                            CarruselLocalesDestacados(
-                              locales: localesMasVistos,
-                              construirDetalle: (_, local) =>
-                                  PantallaDetalleLocal(local: local),
-                            ),
-                            const SizedBox(height: 18),
-                            // La sección desaparece por completo cuando no hay
-                            // anuncios de empresas vigentes.
-                            Builder(
-                              builder: (_) {
-                                final avisos = controlador.publicidadDe(
-                                  UbicacionPublicidad.carruselEmpresas,
-                                );
-                                if (avisos.isEmpty) {
-                                  return const SizedBox.shrink();
-                                }
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 18),
-                                  child: CarruselPublicidadEmpresas(
-                                    avisos: avisos,
-                                  ),
-                                );
-                              },
-                            ),
-                            _CategoriasInicio(
-                              categorias: estado.categorias,
-                              categoriaId: estado.categoriaId,
-                              alSeleccionar:
-                                  _seleccionarCategoriaYMostrarResultados,
-                            ),
-                            const SizedBox(height: 26),
-                            _EscaparatePopular(
-                              publicaciones: publicacionesPopulares,
-                              alVerTodo: () =>
-                                  controlador.seleccionarCategoria('todas'),
-                            ),
-                            const SizedBox(height: 28),
-                            KeyedSubtree(
-                              key: _claveResultados,
-                              child: const TituloSeccion('Descubre algo nuevo'),
-                            ),
-                            const SizedBox(height: 10),
-                            _CuadriculaPublicaciones(
-                              publicaciones: publicacionesHome,
-                            ),
-                            const SizedBox(height: 18),
-                            const AvisoInstalacion(),
-                          ],
+                      // Al terminar de cargar, el contenido sube y aparece
+                      // sobre el indicador en vez de reemplazarlo de golpe.
+                      // Solo anima al cambiar de estado (cargando, error,
+                      // contenido): las recargas del mismo contenido lo
+                      // actualizan en su lugar, sin repetir la entrada.
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 420),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeIn,
+                        layoutBuilder: (actual, anteriores) => Stack(
+                          alignment: Alignment.topCenter,
+                          children: [...anteriores, ?actual],
                         ),
-                      },
+                        transitionBuilder: (hijo, animacion) => FadeTransition(
+                          opacity: animacion,
+                          child: AnimatedBuilder(
+                            animation: animacion,
+                            builder: (_, hijo) => Transform.translate(
+                              offset: Offset(0, 24 * (1 - animacion.value)),
+                              child: hijo,
+                            ),
+                            child: hijo,
+                          ),
+                        ),
+                        child: switch (estado) {
+                          EstadoInicioMarketplace(cargando: true) =>
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 60),
+                              child: Center(
+                                child: IndicadorCarga(tamanio: 140),
+                              ),
+                            ),
+                          EstadoInicioMarketplace(
+                            error: final String mensaje,
+                          ) =>
+                            MensajeCatalogo(
+                              mensaje: mensaje,
+                              alReintentar: controlador.cargar,
+                            ),
+                          _ => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _AnuncioPrincipal(
+                                categoriasConContenido: _categoriasConContenido(
+                                  estado.categorias,
+                                  controlador.catalogoCompleto,
+                                ),
+                                alSeleccionar: controlador.seleccionarCategoria,
+                                publicidad: controlador.publicidadDe(
+                                  UbicacionPublicidad.bannerPrincipal,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              // El banner principal abre el contenido. Justo
+                              // debajo se muestran los locales destacados y,
+                              // después, la publicidad propia de empresas.
+                              TituloSeccion(
+                                'Los mejores del campus',
+                                alVerTodo:
+                                    alVerLocalesDestacados ??
+                                    () => controlador.seleccionarCategoria(
+                                      'todas',
+                                    ),
+                              ),
+                              const SizedBox(height: 6),
+                              CarruselLocalesDestacados(
+                                locales: localesMasVistos,
+                                construirDetalle: (_, local) =>
+                                    PantallaDetalleLocal(local: local),
+                              ),
+                              const SizedBox(height: 18),
+                              // La sección desaparece por completo cuando no hay
+                              // anuncios de empresas vigentes.
+                              Builder(
+                                builder: (_) {
+                                  final avisos = controlador.publicidadDe(
+                                    UbicacionPublicidad.carruselEmpresas,
+                                  );
+                                  if (avisos.isEmpty) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 18),
+                                    child: CarruselPublicidadEmpresas(
+                                      avisos: avisos,
+                                    ),
+                                  );
+                                },
+                              ),
+                              _CategoriasInicio(
+                                categorias: estado.categorias,
+                                categoriaId: estado.categoriaId,
+                                alSeleccionar:
+                                    _seleccionarCategoriaYMostrarResultados,
+                              ),
+                              const SizedBox(height: 26),
+                              _EscaparatePopular(
+                                publicaciones: publicacionesPopulares,
+                                alVerTodo: () =>
+                                    controlador.seleccionarCategoria('todas'),
+                              ),
+                              const SizedBox(height: 28),
+                              KeyedSubtree(
+                                key: _claveResultados,
+                                child: const TituloSeccion(
+                                  'Descubre algo nuevo',
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              _CuadriculaPublicaciones(
+                                publicaciones: publicacionesHome,
+                              ),
+                              const SizedBox(height: 18),
+                              const AvisoInstalacion(),
+                            ],
+                          ),
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -1331,8 +1364,10 @@ class _CarruselPublicaciones extends StatelessWidget {
     padding: EdgeInsets.symmetric(horizontal: margenHorizontal),
     itemCount: publicaciones.length,
     separatorBuilder: (_, _) => const SizedBox(width: 10),
-    itemBuilder: (_, indice) =>
-        _TarjetaPublicacion(publicacion: publicaciones[indice]),
+    itemBuilder: (_, indice) => _TarjetaPublicacion(
+      publicacion: publicaciones[indice],
+      lugar: 'populares',
+    ),
   );
 }
 
@@ -1377,6 +1412,7 @@ class _CuadriculaPublicaciones extends StatelessWidget {
           ),
           itemBuilder: (_, indice) => _TarjetaPublicacion(
             publicacion: publicaciones[indice],
+            lugar: 'descubre',
             ancho: double.infinity,
             superficieSuave: true,
             mostrarAcciones: false,
@@ -1406,12 +1442,21 @@ class _TarjetaPublicacion extends StatelessWidget {
     this.ancho = 164,
     this.superficieSuave = false,
     this.mostrarAcciones = true,
+    this.lugar,
   });
 
   final ProductoMarketplace publicacion;
   final double ancho;
   final bool superficieSuave;
   final bool mostrarAcciones;
+
+  /// En que seccion del inicio esta. Con el id forma la etiqueta con la que
+  /// la foto viaja al detalle; sin lugar, la foto no viaja.
+  final String? lugar;
+
+  String? get _prefijoFoto => lugar == null || publicacion.imagenUrl == null
+      ? null
+      : '$lugar-${publicacion.id}';
 
   void _abrir(BuildContext context) {
     final local = publicacion.local;
@@ -1422,133 +1467,155 @@ class _TarjetaPublicacion extends StatelessWidget {
           producto: publicacion,
           local: local,
           vendedorNavegable: true,
+          prefijoHero: _prefijoFoto,
         ),
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: ancho,
-    child: Material(
-      color: Theme.of(context).brightness == Brightness.dark
-          ? ConfiguracionTema.grafito
-          : superficieSuave
-          ? _superficieDescubre
-          : Colors.white,
-      borderRadius: EstiloTarjetaProducto.borde,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _abrir(context),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? ConfiguracionTema.grafito
-                : superficieSuave
-                ? _superficieDescubre
-                : Colors.white,
-            borderRadius: EstiloTarjetaProducto.borde,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FotoProducto(
-                url: publicacion.imagenUrl,
-                // Fijo, no medido: la cuadricula es de dos
-                // columnas y ninguna tarjeta pasa de esto. Medir la
-                // pantalla aqui hacia que el numero cambiara entre
-                // reconstrucciones y la foto se volviera a bajar.
-                anchoVisible: 220,
-                alFallar: const _ImagenPublicacionVacia(),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 10, 9),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        publicacion.nombre,
-                        maxLines: 2,
+  Widget build(BuildContext context) {
+    final foto = FotoProducto(
+      url: publicacion.imagenUrl,
+      // Fijo, no medido: la cuadricula es de dos columnas y ninguna tarjeta
+      // pasa de esto. Medir la pantalla aqui hacia que el numero cambiara
+      // entre reconstrucciones y la foto se volviera a bajar.
+      anchoVisible: anchoFotoTarjeta,
+      alFallar: const _ImagenPublicacionVacia(),
+    );
+    final prefijo = _prefijoFoto;
+    return SizedBox(
+      width: ancho,
+      child: EscalaAlPresionar(
+        builder: (context, alResaltar) => _cuerpo(
+          context,
+          alResaltar: alResaltar,
+          foto: prefijo == null
+              ? foto
+              : FotoProductoViajera(
+                  etiqueta: etiquetaFotoProducto(prefijo, 0),
+                  radio: EstiloTarjetaProducto.radio,
+                  child: foto,
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cuerpo(
+    BuildContext context, {
+    required ValueChanged<bool> alResaltar,
+    required Widget foto,
+  }) => Material(
+    color: Theme.of(context).brightness == Brightness.dark
+        ? ConfiguracionTema.grafito
+        : superficieSuave
+        ? _superficieDescubre
+        : Colors.white,
+    borderRadius: EstiloTarjetaProducto.borde,
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: () => _abrir(context),
+      onHighlightChanged: alResaltar,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? ConfiguracionTema.grafito
+              : superficieSuave
+              ? _superficieDescubre
+              : Colors.white,
+          borderRadius: EstiloTarjetaProducto.borde,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            foto,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 10, 9),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      publicacion.nombre,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: EstiloTarjetaProducto.nombre(context),
+                    ),
+                    const Spacer(),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        publicacion.preciosVarian
+                            ? 'desde Bs ${publicacion.precioMinimo.toStringAsFixed(2)}'
+                            : 'Bs ${publicacion.precio.toStringAsFixed(2)}',
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: EstiloTarjetaProducto.nombre(context),
+                        style: EstiloTarjetaProducto.precio(context),
                       ),
-                      const Spacer(),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          publicacion.preciosVarian
-                              ? 'desde Bs ${publicacion.precioMinimo.toStringAsFixed(2)}'
-                              : 'Bs ${publicacion.precio.toStringAsFixed(2)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: EstiloTarjetaProducto.precio(context),
-                        ),
+                    ),
+                    if (mostrarAcciones) ...[
+                      const SizedBox(height: 3),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          AnimatedBuilder(
+                            animation: ControladorFavoritos.instancia,
+                            builder: (context, _) {
+                              final favorito = ControladorFavoritos.instancia
+                                  .contiene(publicacion);
+                              final colorInactivo =
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Color(0xFFE6E1D5)
+                                  : Color(0xFF474646);
+                              return IconButton(
+                                tooltip: favorito
+                                    ? 'Quitar de favoritos'
+                                    : 'Agregar a favoritos',
+                                onPressed: () => ControladorFavoritos.instancia
+                                    .alternar(publicacion),
+                                style: IconButton.styleFrom(
+                                  foregroundColor: favorito
+                                      ? const Color(0xFFAE7960)
+                                      : colorInactivo,
+                                  minimumSize: const Size(30, 30),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                ),
+                                icon: Icon(
+                                  favorito
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  size: 24,
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton.filled(
+                            tooltip: 'Ver publicación',
+                            onPressed: () => _abrir(context),
+                            style: IconButton.styleFrom(
+                              backgroundColor: ConfiguracionTema.primario,
+                              foregroundColor: Color(0xFFE6E1D5),
+                              minimumSize: const Size(30, 30),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                            ),
+                            icon: const Icon(Icons.add_rounded, size: 20),
+                          ),
+                        ],
                       ),
-                      if (mostrarAcciones) ...[
-                        const SizedBox(height: 3),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            AnimatedBuilder(
-                              animation: ControladorFavoritos.instancia,
-                              builder: (context, _) {
-                                final favorito = ControladorFavoritos.instancia
-                                    .contiene(publicacion);
-                                final colorInactivo =
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Color(0xFFE6E1D5)
-                                    : Color(0xFF474646);
-                                return IconButton(
-                                  tooltip: favorito
-                                      ? 'Quitar de favoritos'
-                                      : 'Agregar a favoritos',
-                                  onPressed: () => ControladorFavoritos
-                                      .instancia
-                                      .alternar(publicacion),
-                                  style: IconButton.styleFrom(
-                                    foregroundColor: favorito
-                                        ? const Color(0xFFAE7960)
-                                        : colorInactivo,
-                                    minimumSize: const Size(30, 30),
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                    visualDensity: VisualDensity.compact,
-                                    padding: EdgeInsets.zero,
-                                  ),
-                                  icon: Icon(
-                                    favorito
-                                        ? Icons.favorite_rounded
-                                        : Icons.favorite_border_rounded,
-                                    size: 24,
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton.filled(
-                              tooltip: 'Ver publicación',
-                              onPressed: () => _abrir(context),
-                              style: IconButton.styleFrom(
-                                backgroundColor: ConfiguracionTema.primario,
-                                foregroundColor: Color(0xFFE6E1D5),
-                                minimumSize: const Size(30, 30),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                                padding: EdgeInsets.zero,
-                              ),
-                              icon: const Icon(Icons.add_rounded, size: 20),
-                            ),
-                          ],
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     ),

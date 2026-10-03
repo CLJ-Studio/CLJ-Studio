@@ -50,6 +50,9 @@ class FotoRed extends StatelessWidget {
   /// Que mostrar si la foto no existe o falla la descarga.
   final Widget? alFallar;
 
+  /// Lo mismo que tarda en aparecer en el telefono.
+  static const _fundido = Duration(milliseconds: 180);
+
   @override
   Widget build(BuildContext context) {
     final vacio = alFallar ?? const SizedBox.shrink();
@@ -99,10 +102,33 @@ class FotoRed extends StatelessWidget {
         // parpadear a vacio.
         gaplessPlayback: true,
         errorBuilder: (_, _, _) => vacio,
-        frameBuilder: (_, hijo, cuadro, vinoDeLaMemoria) =>
-            cuadro != null || vinoDeLaMemoria
-            ? hijo
-            : marcador ?? const _Marcador(),
+        frameBuilder: (_, hijo, cuadro, vinoDeLaMemoria) {
+          // Ya estaba: aparece de una, sin fundido (ver punto 3).
+          if (vinoDeLaMemoria) return hijo;
+          // Hubo que esperarla: entra fundiendose sobre el marcador, como en
+          // el telefono, en vez de saltar de gris a foto en un cuadro.
+          // `passthrough` deja a la foto con las mismas medidas que tenia
+          // sola; el marcador solo rellena lo que ella ocupe.
+          final llego = cuadro != null;
+          return Stack(
+            fit: StackFit.passthrough,
+            children: [
+              Positioned.fill(
+                child: AnimatedOpacity(
+                  opacity: llego ? 0 : 1,
+                  duration: _fundido,
+                  child: marcador ?? const _Marcador(),
+                ),
+              ),
+              AnimatedOpacity(
+                opacity: llego ? 1 : 0,
+                duration: _fundido,
+                curve: Curves.easeOut,
+                child: hijo,
+              ),
+            ],
+          );
+        },
       );
     }
 
@@ -115,7 +141,7 @@ class FotoRed extends StatelessWidget {
       memCacheWidth: anchoEnMemoria,
       // Sin fundido cuando ya estaba guardada: el efecto es para tapar una
       // espera, y si no hay espera solo hace parpadear la lista.
-      fadeInDuration: const Duration(milliseconds: 180),
+      fadeInDuration: _fundido,
       placeholderFadeInDuration: Duration.zero,
       placeholder: (_, _) => marcador ?? const _Marcador(),
       errorWidget: (_, _, _) => vacio,
