@@ -22,6 +22,7 @@ class PantallaLocalesUniversitarios extends StatefulWidget {
     this.controladorExterno,
     this.mostrarEncabezado = true,
     this.mostrarUbicacion = false,
+    this.alAbrirPerfil,
     super.key,
   });
 
@@ -30,6 +31,9 @@ class PantallaLocalesUniversitarios extends StatefulWidget {
   final ControladorLocales? controladorExterno;
   final bool mostrarEncabezado;
   final bool mostrarUbicacion;
+
+  /// Lo que hace el avatar del encabezado. Ver `CampusCollapsingHeader`.
+  final VoidCallback? alAbrirPerfil;
 
   @override
   State<PantallaLocalesUniversitarios> createState() =>
@@ -73,6 +77,7 @@ class _PantallaLocalesUniversitariosState
                 CampusCollapsingHeader(
                   nombre: SesionUsuario.instancia.primerNombre,
                   avatarUrl: SesionUsuario.instancia.perfil?.avatarUrl,
+                  alAbrirPerfil: widget.alAbrirPerfil,
                   mostrarCategorias: false,
                   mostrarUbicacion: widget.mostrarUbicacion,
                   categorias: controlador.categorias,

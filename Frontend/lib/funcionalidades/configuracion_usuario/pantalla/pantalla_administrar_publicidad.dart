@@ -305,7 +305,8 @@ class _FormularioPublicidadState extends State<_FormularioPublicidad> {
   DateTime? _terminaEn;
   Uint8List? _imagenOriginal;
   Uint8List? _imagenNueva;
-  String _tipoImagen = 'image/png';
+  // JPEG: es lo que entrega `prepararImagenPublicidad`.
+  String _tipoImagen = 'image/jpeg';
   bool _guardando = false;
   String? _error;
 
@@ -342,7 +343,7 @@ class _FormularioPublicidadState extends State<_FormularioPublicidad> {
     setState(() {
       _imagenOriginal = elegida.bytes;
       _imagenNueva = recortada;
-      _tipoImagen = 'image/png';
+      _tipoImagen = 'image/jpeg';
     });
   }
 
@@ -372,7 +373,7 @@ class _FormularioPublicidadState extends State<_FormularioPublicidad> {
     setState(() {
       _ubicacion = ubicacion;
       _imagenNueva = recortada;
-      _tipoImagen = 'image/png';
+      _tipoImagen = 'image/jpeg';
     });
   }
 

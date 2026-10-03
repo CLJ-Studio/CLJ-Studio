@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/animaciones/escala_al_presionar.dart';
+import '../../../elementos_compartidos/imagenes/foto_red.dart';
 import '../../notificaciones/diseno/boton_campana.dart';
 import '../logica/ubicacion_comprador.dart';
 import '../modelos/categoria_marketplace.dart';
@@ -22,6 +24,7 @@ class CampusCollapsingHeader extends StatelessWidget {
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
     this.avatarUrl,
+    this.alAbrirPerfil,
     this.mostrarCategorias = true,
     this.mostrarUbicacion = false,
     super.key,
@@ -35,6 +38,10 @@ class CampusCollapsingHeader extends StatelessWidget {
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
   final String? avatarUrl;
+
+  /// Que hace el avatar al tocarlo. Sin esto es solo la foto: quien monte
+  /// el encabezado fuera de la navegacion principal no tiene a donde llevar.
+  final VoidCallback? alAbrirPerfil;
   final bool mostrarCategorias;
   final bool mostrarUbicacion;
 
@@ -50,6 +57,7 @@ class CampusCollapsingHeader extends StatelessWidget {
       alAbrirCarrito: alAbrirCarrito,
       alAbrirPedidos: alAbrirPedidos,
       avatarUrl: avatarUrl,
+      alAbrirPerfil: alAbrirPerfil,
       mostrarCategorias: mostrarCategorias,
       mostrarUbicacion: mostrarUbicacion,
     ),
@@ -68,6 +76,7 @@ class CampusFixedHeader extends StatelessWidget {
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
     this.avatarUrl,
+    this.alAbrirPerfil,
     this.mostrarCategorias = true,
     this.mostrarUbicacion = false,
     super.key,
@@ -81,6 +90,10 @@ class CampusFixedHeader extends StatelessWidget {
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
   final String? avatarUrl;
+
+  /// Que hace el avatar al tocarlo. Sin esto es solo la foto: quien monte
+  /// el encabezado fuera de la navegacion principal no tiene a donde llevar.
+  final VoidCallback? alAbrirPerfil;
   final bool mostrarCategorias;
   final bool mostrarUbicacion;
 
@@ -96,6 +109,7 @@ class CampusFixedHeader extends StatelessWidget {
       alAbrirCarrito: alAbrirCarrito,
       alAbrirPedidos: alAbrirPedidos,
       avatarUrl: avatarUrl,
+      alAbrirPerfil: alAbrirPerfil,
       mostrarCategorias: mostrarCategorias,
       mostrarUbicacion: mostrarUbicacion,
     ).build(context, 0, false),
@@ -112,6 +126,7 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.alAbrirCarrito,
     required this.alAbrirPedidos,
     this.avatarUrl,
+    this.alAbrirPerfil,
     this.mostrarCategorias = true,
     this.mostrarUbicacion = false,
   });
@@ -124,6 +139,10 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
   final VoidCallback alAbrirCarrito;
   final VoidCallback alAbrirPedidos;
   final String? avatarUrl;
+
+  /// Que hace el avatar al tocarlo. Sin esto es solo la foto: quien monte
+  /// el encabezado fuera de la navegacion principal no tiene a donde llevar.
+  final VoidCallback? alAbrirPerfil;
   final bool mostrarCategorias;
   final bool mostrarUbicacion;
 
@@ -265,7 +284,11 @@ class CampusHeaderDelegate extends SliverPersistentHeaderDelegate {
                       ),
                       const BotonCampana(sobreFondoMarca: true),
                       const SizedBox(width: 4),
-                      _AvatarEncabezado(nombre: nombre, avatarUrl: avatarUrl),
+                      _AvatarEncabezado(
+                        nombre: nombre,
+                        avatarUrl: avatarUrl,
+                        alPresionar: alAbrirPerfil,
+                      ),
                     ],
                   ),
                 ),
@@ -354,10 +377,15 @@ class _AccionEncabezado extends StatelessWidget {
 }
 
 class _AvatarEncabezado extends StatelessWidget {
-  const _AvatarEncabezado({required this.nombre, this.avatarUrl});
+  const _AvatarEncabezado({
+    required this.nombre,
+    this.avatarUrl,
+    this.alPresionar,
+  });
 
   final String nombre;
   final String? avatarUrl;
+  final VoidCallback? alPresionar;
 
   @override
   Widget build(BuildContext context) {
@@ -386,27 +414,54 @@ class _AvatarEncabezado extends StatelessWidget {
       ),
     );
 
+    final circulo = Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Color(0xFFE6E1D5).withValues(alpha: .82),
+          width: 2,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      // FotoRed y no Image.network: el encabezado se reconstruye en cada
+      // cuadro mientras se contrae, y asi la foto se guarda en disco y se
+      // decodifica a 38 puntos en vez de a su tamano original. Mientras
+      // baja se ve la inicial, que es lo mismo que se ve si no hay foto.
+      child: url == null || url.isEmpty
+          ? respaldo()
+          : FotoRed(
+              url: url,
+              anchoVisible: 38,
+              marcador: respaldo(),
+              alFallar: respaldo(),
+            ),
+    );
+
+    final presionar = alPresionar;
+    if (presionar == null) {
+      return Semantics(label: 'Foto de perfil', image: true, child: circulo);
+    }
     return Semantics(
-      label: 'Foto de perfil',
-      image: true,
-      child: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Color(0xFFE6E1D5).withValues(alpha: .82),
-            width: 2,
+      button: true,
+      label: 'Tu perfil',
+      excludeSemantics: true,
+      child: Tooltip(
+        message: 'Tu perfil',
+        child: EscalaAlPresionar(
+          escala: .9,
+          builder: (_, alResaltar) => Material(
+            type: MaterialType.transparency,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: presionar,
+              onHighlightChanged: alResaltar,
+              child: circulo,
+            ),
           ),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: url == null || url.isEmpty
-            ? respaldo()
-            : Image.network(
-                url,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => respaldo(),
-              ),
       ),
     );
   }

@@ -86,7 +86,11 @@ class _TarjetaPublicidad extends StatelessWidget {
       onTap: aviso.tieneEnlace
           ? () => abrirEnlacePublicidad(context, aviso)
           : null,
-      child: ImagenPublicidad(aviso: aviso, alFallar: alFallar),
+      child: ImagenPublicidad(
+        aviso: aviso,
+        anchoVisible: _CarruselPublicidadEmpresasState._ancho,
+        alFallar: alFallar,
+      ),
     ),
   );
 }

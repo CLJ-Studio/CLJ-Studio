@@ -128,6 +128,20 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
     );
   }
 
+  /// El avatar del encabezado lleva a Perfil, igual que la barra de abajo.
+  ///
+  /// Cambia de pestana en vez de abrir una pantalla encima: asi no hay forma
+  /// de apilar un perfil sobre otro tocando el avatar varias veces, y Atras
+  /// sigue haciendo lo mismo que hacia. El teclado se cierra porque, si la
+  /// busqueda estaba abierta, quedaria flotando sobre el perfil.
+  void _abrirPerfil() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    controlador.seleccionarIndice(_indicePerfil);
+  }
+
+  /// Posicion de Perfil en `pantallas`, mas abajo.
+  static const _indicePerfil = 3;
+
   void _usarImagenesCamara(List<String> imagenes) {
     if (!mounted || imagenes.isEmpty) return;
     setState(() {
@@ -149,6 +163,7 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
             locales.mostrarSoloDestacados();
             controlador.seleccionarIndice(1);
           },
+          alAbrirPerfil: _abrirPerfil,
         ),
         PantallaLocalesUniversitarios(
           alCrearLocal: _abrirLocal,
@@ -157,6 +172,7 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
           yaTieneLocal: miLocal.tieneLocalFormal,
           mostrarUbicacion: miLocal.tieneLocalFormal,
           controladorExterno: locales,
+          alAbrirPerfil: _abrirPerfil,
         ),
         ArbolPublicarProducto(
           miLocal: miLocal,

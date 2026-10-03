@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -39,12 +40,16 @@ class PantallaInicioMarketplace extends StatefulWidget {
   const PantallaInicioMarketplace({
     required this.controlador,
     this.alVerLocalesDestacados,
+    this.alAbrirPerfil,
     this.mostrarEncabezado = true,
     this.mostrarUbicacion = false,
     super.key,
   });
   final ControladorInicioMarketplace controlador;
   final VoidCallback? alVerLocalesDestacados;
+
+  /// Lo que hace el avatar del encabezado. Ver `CampusCollapsingHeader`.
+  final VoidCallback? alAbrirPerfil;
   final bool mostrarEncabezado;
   final bool mostrarUbicacion;
 
@@ -130,6 +135,7 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                   CampusCollapsingHeader(
                     nombre: SesionUsuario.instancia.primerNombre,
                     avatarUrl: SesionUsuario.instancia.perfil?.avatarUrl,
+                    alAbrirPerfil: widget.alAbrirPerfil,
                     categorias: estado.categorias,
                     categoriaId: estado.categoriaId,
                     alBuscar: controlador.buscar,
@@ -644,6 +650,39 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
     _iniciarAutoPlay();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precargarAvisos();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnuncioPrincipal anterior) {
+    super.didUpdateWidget(anterior);
+    if (anterior.publicidad != widget.publicidad) _precargarAvisos();
+  }
+
+  /// Ancho con el que se ve el banner. Lo usan la precarga y el dibujo, y
+  /// tiene que ser el mismo en los dos: ver `proveedorImagenPublicidad`.
+  double get _anchoBanner => math.min(MediaQuery.sizeOf(context).width, 1000);
+
+  /// Urls ya pedidas, para no repetir la precarga en cada reconstruccion.
+  final Set<String> _precargados = {};
+
+  /// Baja todos los avisos de una vez, no solo el que se ve.
+  ///
+  /// El carrusel construye una diapositiva a la vez: sin esto, el segundo
+  /// aviso recien empezaba a bajar cuando el autoplay llegaba a el, y se veia
+  /// su marcador en vez del aviso.
+  void _precargarAvisos() {
+    final ancho = _anchoBanner;
+    for (final aviso in widget.publicidad) {
+      if (_precargados.add('${aviso.urlImagen}@$ancho')) {
+        precargarPublicidad(context, aviso, anchoVisible: ancho);
+      }
+    }
+  }
+
   /// Avanza periódicamente y vuelve al inicio después de la última página.
   void _iniciarAutoPlay() {
     _temporizador?.cancel();
@@ -711,7 +750,10 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
   Widget build(BuildContext context) {
     final oscuro = Theme.of(context).brightness == Brightness.dark;
     final avisos = _avisosVisibles;
-    final banners = avisos.isEmpty ? _banners : const <BannerData>[];
+    // Tambien hacen falta cuando hay avisos: son lo que se ve mientras baja
+    // cada uno.
+    final banners = _banners;
+    final anchoBanner = _anchoBanner;
     final cantidad = _cantidadDiapositivas;
     final paginaActual = _paginaActual.clamp(0, cantidad - 1);
     return AspectRatio(
@@ -740,6 +782,11 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
                     ? BannerSlide(data: banners[indice], oscuro: oscuro)
                     : _DiapositivaPublicidad(
                         aviso: avisos[indice],
+                        anchoVisible: anchoBanner,
+                        marcador: BannerSlide(
+                          data: banners[indice % banners.length],
+                          oscuro: oscuro,
+                        ),
                         alFallar: () => _descartar(avisos[indice]),
                       ),
               ),
@@ -782,20 +829,34 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
 /// Los banners de `assets/` llevan su texto puesto por la app porque son
 /// nuestros. Un aviso de un anunciante ya viene con su propio diseño, y
 /// superponerle nuestra tipografía y nuestro degradado lo taparía.
+///
+/// Mientras el aviso baja se ve uno de nuestros banners, entero y con su
+/// boton funcionando, y el aviso aparece encima con un fundido cuando llega.
+/// Antes se veia un recuadro casi blanco, que parecia el inicio roto.
 class _DiapositivaPublicidad extends StatelessWidget {
-  const _DiapositivaPublicidad({required this.aviso, this.alFallar});
+  const _DiapositivaPublicidad({
+    required this.aviso,
+    required this.anchoVisible,
+    required this.marcador,
+    this.alFallar,
+  });
 
   final Publicidad aviso;
+  final double anchoVisible;
+  final Widget marcador;
   final VoidCallback? alFallar;
 
   @override
   Widget build(BuildContext context) => ClipRRect(
     borderRadius: BorderRadius.circular(30),
-    child: GestureDetector(
-      onTap: aviso.tieneEnlace
+    child: ImagenPublicidad(
+      aviso: aviso,
+      anchoVisible: anchoVisible,
+      marcador: marcador,
+      alFallar: alFallar,
+      alTocar: aviso.tieneEnlace
           ? () => abrirEnlacePublicidad(context, aviso)
           : null,
-      child: ImagenPublicidad(aviso: aviso, alFallar: alFallar),
     ),
   );
 }
