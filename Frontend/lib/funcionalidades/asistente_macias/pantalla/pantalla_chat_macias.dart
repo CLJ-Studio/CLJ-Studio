@@ -236,8 +236,6 @@ class _PantallaChatMaciasState extends State<PantallaChatMacias> {
         backgroundColor: ColoresChatMacias.fondo(context),
         appBar: _Cabecera(
           escribiendo: escribiendo,
-          modoMeme: controlador.modoMeme,
-          alAlternarMeme: controlador.alternarModoMeme,
           alBorrarConversacion: _borrarConversacion,
           alOlvidar: controlador.olvidarLoQueSabe,
         ),
@@ -312,20 +310,16 @@ class _PantallaChatMaciasState extends State<PantallaChatMacias> {
 // ---------------------------------------------------------------------------
 // Cabecera
 // ---------------------------------------------------------------------------
-enum _OpcionCabecera { meme, borrar, olvidar }
+enum _OpcionCabecera { borrar, olvidar }
 
 class _Cabecera extends StatelessWidget implements PreferredSizeWidget {
   const _Cabecera({
     required this.escribiendo,
-    required this.modoMeme,
-    required this.alAlternarMeme,
     required this.alBorrarConversacion,
     required this.alOlvidar,
   });
 
   final bool escribiendo;
-  final bool modoMeme;
-  final VoidCallback alAlternarMeme;
   final VoidCallback alBorrarConversacion;
   final VoidCallback alOlvidar;
 
@@ -337,8 +331,6 @@ class _Cabecera extends StatelessWidget implements PreferredSizeWidget {
     final secundario = Theme.of(context).textTheme.bodySmall?.color;
     final estado = escribiendo
         ? 'escribiendo…'
-        : modoMeme
-        ? 'Modo meme activado'
         : 'Asistente virtual de U market';
     return AppBar(
       surfaceTintColor: Colors.transparent,
@@ -386,13 +378,11 @@ class _Cabecera extends StatelessWidget implements PreferredSizeWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: escribiendo || modoMeme
+                            fontWeight: escribiendo
                                 ? FontWeight.w700
                                 : FontWeight.w500,
                             color: escribiendo
                                 ? ConfiguracionTema.interruptorActivo
-                                : modoMeme
-                                ? ConfiguracionTema.moradoPromocional
                                 : secundario,
                           ),
                         ),
@@ -410,17 +400,11 @@ class _Cabecera extends StatelessWidget implements PreferredSizeWidget {
           tooltip: 'Más opciones',
           icon: const Icon(Icons.more_vert_rounded),
           onSelected: (opcion) => switch (opcion) {
-            _OpcionCabecera.meme => alAlternarMeme(),
             _OpcionCabecera.borrar => alBorrarConversacion(),
             _OpcionCabecera.olvidar => alOlvidar(),
           },
-          itemBuilder: (_) => [
-            CheckedPopupMenuItem(
-              value: _OpcionCabecera.meme,
-              checked: modoMeme,
-              child: const Text('Modo meme'),
-            ),
-            const PopupMenuItem(
+          itemBuilder: (_) => const [
+            PopupMenuItem(
               value: _OpcionCabecera.borrar,
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -428,7 +412,7 @@ class _Cabecera extends StatelessWidget implements PreferredSizeWidget {
                 title: Text('Borrar la conversación'),
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: _OpcionCabecera.olvidar,
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -473,7 +457,7 @@ Future<void> mostrarPerfilMacias(BuildContext context) =>
               const SizedBox(height: 16),
               const _DatoPerfil(
                 icono: Icons.bolt_rounded,
-                titulo: 'Responde al instante',
+                titulo: 'Responde al toque',
                 detalle: 'A cualquier hora, sin esperar a nadie.',
               ),
               const _DatoPerfil(
@@ -481,7 +465,15 @@ Future<void> mostrarPerfilMacias(BuildContext context) =>
                 titulo: 'Te ayuda a estudiar',
                 detalle:
                     'Álgebra, cálculo integral y C++, con ejemplos. Hace '
-                    'cuentas y resuelve ecuaciones paso a paso.',
+                    'cuentas, resuelve ecuaciones, deriva e integra paso a '
+                    'paso.',
+              ),
+              const _DatoPerfil(
+                icono: Icons.event_note_outlined,
+                titulo: 'Se acuerda de ti',
+                detalle:
+                    'De tus exámenes (y después te pregunta cómo te fue), de '
+                    'lo que le pides recordar y de lo que te gusta.',
               ),
               const _DatoPerfil(
                 icono: Icons.verified_outlined,
@@ -562,8 +554,8 @@ class _InicioConversacion extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'MacIAs responde al instante con información verificada de '
-                  'U market. La conversación se guarda solo en este teléfono.',
+                  'MacIAs responde al toque con información verificada de U '
+                  'market. Lo que hablen queda solo en este teléfono.',
                   style: TextStyle(fontSize: 12.5, height: 1.35, color: texto),
                 ),
               ),
@@ -588,7 +580,10 @@ class _Sugerencias extends StatelessWidget {
     'o:util' => Icons.thumb_up_alt_outlined,
     'o:no_util' => Icons.thumb_down_alt_outlined,
     'o:ampliar' => Icons.lightbulb_outline_rounded,
-    'o:meme' => Icons.theater_comedy_outlined,
+    'o:juegos' => Icons.sports_esports_outlined,
+    'o:ppt_piedra' ||
+    'o:ppt_papel' ||
+    'o:ppt_tijera' => Icons.sports_esports_outlined,
     't:${ConocimientoMacias.humano}' => Icons.support_agent_rounded,
     _ => Icons.chevron_right_rounded,
   };
@@ -683,7 +678,7 @@ class _Redaccion extends StatelessWidget {
                   textCapitalization: TextCapitalization.sentences,
                   onSubmitted: (_) => alEnviar(),
                   decoration: InputDecoration(
-                    hintText: 'Escribe tu pregunta o un número',
+                    hintText: 'Escribe lo que quieras o un número',
                     filled: true,
                     fillColor: oscuro
                         ? const Color(0xFF474646)

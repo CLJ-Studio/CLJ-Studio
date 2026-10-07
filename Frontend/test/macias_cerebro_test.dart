@@ -51,7 +51,7 @@ void main() {
       for (final seccion in ConocimientoMacias.secciones) {
         expect(seccion.temas, isNotEmpty, reason: seccion.id);
         for (final entrada in seccion.temas) {
-          if (entrada == ConocimientoMacias.ordenMeme) continue;
+          if (entrada.startsWith('o:')) continue;
           if (entrada.startsWith('s:')) {
             expect(
               ConocimientoMacias.seccion(entrada.substring(2)),
@@ -189,7 +189,7 @@ void main() {
 
     test('un numero elige de la ultima lista que se mostro', () {
       final cerebro = _cerebro()..bienvenida();
-      expect(_todo(cerebro.escribir('3')), contains('Sobre publicar'));
+      expect(_todo(cerebro.escribir('3')), contains('¿Vas a vender algo?'));
       // Ahora el 1 es el primer tema de esa seccion, no del menu principal.
       expect(cerebro.escribir('1').temaId, 'como_publicar');
     });
@@ -238,7 +238,9 @@ void main() {
       final cerebro = _cerebro()..bienvenida();
       final primera = cerebro.escribir('zxqw plorf');
       expect(primera.burbujas.single.opciones, isEmpty);
-      expect(_todo(primera), contains('menú'));
+      // Corto: pide que lo repita, sin la lista de todo lo que sabe.
+      expect(_todo(primera), isNot(contains('álgebra')));
+      expect(_todo(primera).length, lessThan(70));
 
       final segunda = cerebro.escribir('blorf zxqw');
       expect(
@@ -257,12 +259,12 @@ void main() {
 
     test('las cortesias tienen su respuesta', () {
       expect(
-        _todo(_cerebro().escribir('muchas gracias!')),
-        anyOf(contains('De nada'), contains('Para eso'), contains('gusto')),
+        _cerebro().escribir('muchas gracias!').intencion,
+        'charla:gracias',
       );
-      expect(_todo(_cerebro().escribir('chau')), contains('Juan'));
-      expect(_todo(_cerebro().escribir('ok')), contains('Perfecto'));
-      expect(_todo(_cerebro().escribir('eres un tonto')), contains('Ouch'));
+      expect(_cerebro().escribir('chau').intencion, 'charla:despedida');
+      expect(_cerebro().escribir('ok').intencion, 'charla:acuerdo');
+      expect(_cerebro().escribir('eres un tonto').intencion, 'charla:insulto');
       expect(
         _todo(_cerebro().escribir('👍')),
         anyOf(contains('ayudado'), contains('Para eso estoy')),
@@ -310,7 +312,7 @@ void main() {
 
     test('un numero solo sigue siendo una opcion, no una cuenta', () {
       final cerebro = _cerebro()..bienvenida();
-      expect(_todo(cerebro.escribir('3')), contains('Sobre publicar'));
+      expect(_todo(cerebro.escribir('3')), contains('¿Vas a vender algo?'));
     });
 
     test('"calcula" sin cuenta explica como usar la calculadora', () {
@@ -328,7 +330,7 @@ void main() {
       );
       expect(memoria.nombre, 'Juan Diego');
       expect(_todo(cerebro.escribir('como me llamo?')), contains('Juan Diego'));
-      expect(_todo(cerebro.escribir('chau')), contains('Juan Diego'));
+      expect(_todo(cerebro.escribir('hola')), contains('Juan Diego'));
     });
 
     test('reconoce la carrera aunque la escriban corta', () {
@@ -350,14 +352,14 @@ void main() {
       expect(_todo(pregunta), contains('¿A ti te gusta?'));
 
       expect(_todo(cerebro.escribir('sí')), contains('Anotado'));
-      expect(memoria.gustos, contains('hamburguesa'));
+      expect(memoria.gustos, contains('la hamburguesa'));
       expect(_todo(cerebro.escribir('que me gusta')), contains('hamburguesa'));
     });
 
     test('anota lo que no te gusta', () {
       final memoria = MemoriaMacias();
       _cerebro(memoria: memoria).escribir('odio el surazo');
-      expect(memoria.disgustos, contains('surazo'));
+      expect(memoria.disgustos, contains('el surazo'));
     });
 
     test('olvida cuando se le pide', () {
@@ -415,13 +417,11 @@ void main() {
     });
 
     test('ante una crisis responde con cuidado y con a quien llamar', () {
-      final memoria = MemoriaMacias(modoMeme: true);
-      final texto = _todo(
-        _cerebro(memoria: memoria).escribir('me quiero morir'),
-      );
+      final cerebro = _cerebro()..escribir('adivina el numero');
+      // Aunque este a mitad de un juego, lo primero es esto.
+      final texto = _todo(cerebro.escribir('me quiero morir'));
       expect(texto, contains('110'));
       expect(texto, contains('118'));
-      // Sin bromas, aunque el modo meme este prendido.
       expect(texto, isNot(contains('Baldor')));
     });
 
@@ -447,36 +447,33 @@ void main() {
     });
   });
 
-  group('modo meme', () {
-    test('se prende y se apaga, y queda en la memoria', () {
-      final memoria = MemoriaMacias();
-      final cerebro = _cerebro(memoria: memoria);
-      expect(_todo(cerebro.escribir('modo meme')), contains('activado'));
-      expect(memoria.modoMeme, isTrue);
-      expect(_todo(cerebro.escribir('modo serio')), contains('desactivado'));
-      expect(memoria.modoMeme, isFalse);
+  group('el modo meme ya no existe', () {
+    test('pedirlo explica que ahora habla relajado siempre', () {
+      final respuesta = _cerebro().escribir('modo meme');
+      expect(respuesta.intencion, 'charla:meme');
+      expect(_todo(respuesta), contains('se jubiló'));
     });
 
-    test('las respuestas siguen siendo las mismas, con una broma', () {
-      final memoria = MemoriaMacias(modoMeme: true);
-      final respuesta = _cerebro(
-        memoria: memoria,
-      ).escribir('productos notables');
-      expect(respuesta.temaId, 'a_productos_notables');
-      expect(respuesta.burbujas.first.texto, contains('(a + b)²'));
-      expect(respuesta.burbujas.last.texto.split('\n').first, isNotEmpty);
-    });
-
-    test('la opcion del menu dice si prende o apaga', () {
-      final memoria = MemoriaMacias();
-      final cerebro = _cerebro(memoria: memoria)..bienvenida();
-      cerebro.escribir('11');
-      final meme = cerebro.opcionesVigentes.firstWhere(
-        (o) => o.id == ConocimientoMacias.ordenMeme,
+    test('una opcion vieja de una conversacion guardada no rompe nada', () {
+      final respuesta = _cerebro().elegir(
+        const OpcionMacias(id: 'o:meme', texto: 'Activar el modo meme'),
       );
-      expect(meme.texto, 'Activar el modo meme');
-      cerebro.elegir(meme);
-      expect(memoria.modoMeme, isTrue);
+      expect(respuesta.intencion, 'charla:meme');
+    });
+
+    test('lo guardado con modoMeme se lee igual, sin el modo meme', () {
+      final memoria = MemoriaMacias.desdeJson({
+        'nombre': 'Ana',
+        'modoMeme': true,
+      });
+      expect(memoria.nombre, 'Ana');
+      expect(memoria.aJson().containsKey('modoMeme'), isFalse);
+    });
+
+    test('las secciones ya no ofrecen el modo meme', () {
+      for (final seccion in ConocimientoMacias.secciones) {
+        expect(seccion.temas, isNot(contains('o:meme')), reason: seccion.id);
+      }
     });
   });
 
@@ -506,7 +503,8 @@ void main() {
       'que es el stock': 'stock',
       'como edito mi publicacion': 'editar_publicacion',
       'cuantas publicaciones puedo hacer': 'limite_publicaciones',
-      'no me deja publicar': 'limite_publicaciones',
+      // Repasa las causas posibles, el limite entre ellas.
+      'no me deja publicar': 'app_no_puedo_publicar',
       'deje una publicacion a medias': 'borrador',
       'que gano con un local': 'que_es_local',
       'como abro mi local': 'crear_local',

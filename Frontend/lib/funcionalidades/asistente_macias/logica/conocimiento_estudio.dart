@@ -84,12 +84,15 @@ abstract final class ConocimientoEstudio {
         'calculos',
       ],
       respuesta: (c) =>
-          'Hago cuentas y resuelvo ecuaciones de primer y segundo grado, con '
-          'los pasos. Escribe, por ejemplo:\n'
+          'Hago cuentas y resuelvo ecuaciones, con los pasos. Prueba, por '
+          'ejemplo:\n'
           '• **calcula (3 + 4) * 2^3**\n'
-          '• **cuánto es raiz(144) / 3**\n'
-          '• **resuelve 2x + 3 = 11**\n'
-          '• **resuelve x^2 - 5x + 6 = 0**\n\n'
+          '• **resuelve x^2 - 5x + 6 = 0** (hasta grado 4, si tiene raíces '
+          'racionales)\n'
+          '• **derivada de x^3 + 2x** o **integral de x^2 de 0 a 2**\n'
+          '• **factoriza x^2 - 9** o **desarrolla (x + 2)^3**\n'
+          '• **15% de 200** o **promedio de 70, 80 y 95**\n'
+          '• **5 km a millas** o **30 grados a fahrenheit**\n\n'
           'Usa ^ para potencias y raiz() para la raíz cuadrada. También '
           'entiendo sen, cos, tan, ln, log y pi, y cuentas dictadas como '
           '"2 más 3 al cuadrado".',

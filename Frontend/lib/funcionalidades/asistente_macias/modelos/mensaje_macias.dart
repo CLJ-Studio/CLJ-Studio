@@ -87,6 +87,7 @@ class RespuestaMacias {
     this.burbujas, {
     this.sugerencias = const [],
     this.temaId,
+    this.intencion,
   });
 
   final List<BurbujaMacias> burbujas;
@@ -94,6 +95,11 @@ class RespuestaMacias {
   /// El tema que se respondio, si fue uno. Sirve para saber que entendio
   /// MacIAs sin leer el texto.
   final String? temaId;
+
+  /// Que se entendio cuando no fue un tema: `charla:insulto`,
+  /// `util:fecha`, `no_entendi`... Igual que [temaId], para no tener que
+  /// leer el texto.
+  final String? intencion;
 
   /// Atajos que quedan sobre el campo de escribir hasta la proxima respuesta.
   final List<OpcionMacias> sugerencias;

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/diseno/burbujas_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/controlador_chat_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/memoria_macias.dart';
+import 'package:upsa_eat/funcionalidades/asistente_macias/modelos/mensaje_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/pantalla/pantalla_chat_macias.dart';
 import 'package:upsa_eat/funcionalidades/configuracion_usuario/pantalla/pantalla_ayuda.dart';
 
@@ -91,7 +92,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.textContaining('Sobre publicar lo que vendes', findRichText: true),
+      find.textContaining('¿Vas a vender algo?', findRichText: true),
       findsOneWidget,
     );
   });
@@ -183,13 +184,49 @@ void main() {
     );
   });
 
-  testWidgets('el modo meme se nota en la cabecera', (tester) async {
-    await _abrirChat(tester);
-    await _escribir(tester, 'modo meme');
-    expect(find.text('Modo meme activado'), findsOneWidget);
+  testWidgets('al volver despues de un examen, pregunta como le fue', (
+    tester,
+  ) async {
+    final almacen = AlmacenMaciasEnMemoria();
+    final hace2Dias = DateTime.now().subtract(const Duration(days: 2));
+    await almacen.guardar(
+      [
+        MensajeMacias(
+          id: 0,
+          autor: AutorMensaje.persona,
+          texto: 'tengo parcial de cálculo',
+        ),
+      ],
+      MemoriaMacias(
+        examenes: [
+          ExamenMacias(materia: 'cálculo', fecha: hace2Dias, tipo: 'parcial'),
+        ],
+      ),
+    );
+    await _abrirChat(tester, almacen: almacen);
 
-    await _escribir(tester, 'modo serio');
-    expect(find.text('Asistente virtual de U market'), findsOneWidget);
+    expect(
+      find.textContaining(
+        '¿Cómo te fue en el parcial de cálculo',
+        findRichText: true,
+      ),
+      findsOneWidget,
+    );
+    await _escribir(tester, 'bien!');
+    expect(
+      find.textContaining('Felicidades', findRichText: true),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('el menú de la cabecera ya no tiene modo meme', (tester) async {
+    await _abrirChat(tester);
+    await tester.tap(find.byTooltip('Más opciones'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Borrar la conversación'), findsOneWidget);
+    expect(find.text('Olvidar lo que sabe de mí'), findsOneWidget);
+    expect(find.text('Modo meme'), findsNothing);
   });
 
   testWidgets('desde Ayuda se llega a MacIAs', (tester) async {

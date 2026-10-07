@@ -57,8 +57,6 @@ class ControladorChatMacias extends ChangeNotifier {
   /// Cuantos mensajes vinieron de una visita anterior: esos no se animan.
   int restaurados = 0;
 
-  bool get modoMeme => cerebro.memoria.modoMeme;
-
   final _pendientes = Queue<BurbujaMacias>();
   List<OpcionMacias> _sugerenciasPendientes = const [];
   Timer? _temporizador;
@@ -70,18 +68,7 @@ class ControladorChatMacias extends ChangeNotifier {
   Future<void> iniciar() async {
     final guardado = await almacen.cargar();
     if (_desechado) return;
-    final memoria = cerebro.memoria;
-    final leida = guardado.memoria;
-    memoria
-      ..nombre = leida.nombre
-      ..carrera = leida.carrera
-      ..modoMeme = leida.modoMeme;
-    memoria.gustos
-      ..clear()
-      ..addAll(leida.gustos);
-    memoria.disgustos
-      ..clear()
-      ..addAll(leida.disgustos);
+    cerebro.memoria.copiarDe(guardado.memoria);
 
     cargando = false;
     if (guardado.mensajes.isEmpty) {
@@ -100,6 +87,14 @@ class ControladorChatMacias extends ChangeNotifier {
         )
         .opciones;
     cerebro.retomar(ultimaLista);
+    // Si hay algo que decir (un examen, un cumpleaños, un recordatorio),
+    // MacIAs lo dice apenas se vuelve.
+    final novedad = cerebro.alVolver();
+    if (novedad != null) {
+      notifyListeners();
+      _encolar(novedad);
+      return;
+    }
     sugerencias = const [
       CerebroMacias.chipMenu,
       CerebroMacias.chipMaterias,
@@ -136,10 +131,6 @@ class ControladorChatMacias extends ChangeNotifier {
 
   /// Olvida lo que la persona le conto. La conversacion queda.
   void olvidarLoQueSabe() => elegirComoOrden('Olvida lo que sabes de mí');
-
-  void alternarModoMeme() => elegirComoOrden(
-    modoMeme ? 'Desactiva el modo meme' : 'Activa el modo meme',
-  );
 
   /// Lo que se pide desde el menu de la pantalla entra como si la persona
   /// lo hubiera escrito: asi queda en la conversacion y MacIAs lo confirma.

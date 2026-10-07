@@ -15,6 +15,7 @@ class ContextoMacias {
     this.esWeb = true,
     this.sorteo = 0,
     MemoriaMacias? memoria,
+    this.recientes = const [],
   }) : memoria = memoria ?? MemoriaMacias();
 
   /// Como llamar a quien escribe: lo que pidio en el chat, o su primer nombre.
@@ -31,6 +32,10 @@ class ContextoMacias {
   /// Lo que se sabe de la persona: su carrera, lo que le gusta.
   final MemoriaMacias memoria;
 
+  /// Lo ultimo que dijo MacIAs, para no repetir la misma frase dos veces
+  /// seguidas: nada delata tanto a un robot como contestar igual.
+  final List<String> recientes;
+
   bool get esDeNoche => ahora.hour >= 22 || ahora.hour < 6;
 
   String get saludoDelMomento => ahora.hour < 12
@@ -39,8 +44,14 @@ class ContextoMacias {
       ? 'Buenas tardes'
       : 'Buenas noches';
 
-  /// Elige una de varias frases, la misma durante toda esta respuesta.
-  String alguna(List<String> frases) => frases[sorteo % frases.length];
+  /// Elige una de varias frases: al azar, pero no una que se dijo hace poco.
+  String alguna(List<String> frases) {
+    for (var k = 0; k < frases.length; k++) {
+      final frase = frases[(sorteo + k) % frases.length];
+      if (!recientes.any((dicho) => dicho.contains(frase))) return frase;
+    }
+    return frases[sorteo % frases.length];
+  }
 }
 
 /// Una pregunta que MacIAs sabe responder.
@@ -103,7 +114,7 @@ class SeccionMacias {
   final String intro;
 
   /// Lo que lista la seccion. Un id suelto es un tema; `s:` es otra seccion
-  /// y `o:` una orden de la conversacion, como prender el modo meme.
+  /// y `o:` una orden de la conversacion, como empezar un juego.
   final List<String> temas;
 
   /// Si alguien escribe exactamente esto ("pedidos", "mi cuenta"), se abre
@@ -113,7 +124,7 @@ class SeccionMacias {
   /// La seccion de la que cuelga, para "volver" un nivel y no al principio.
   final String? padre;
 
-  /// De que trata: elige el tipo de broma del modo meme.
+  /// De que trata: app, algebra, calculo, cpp o general.
   final String area;
 
   OpcionMacias get comoOpcion => OpcionMacias(id: 's:$id', texto: titulo);
@@ -127,13 +138,15 @@ class SeccionMacias {
 /// "verificado" confunde mas que no tener asistente.
 abstract final class ConocimientoMacias {
   static const humano = 'humano';
-  static const ordenMeme = 'o:meme';
+
+  /// La linea de "Sobre MacIAs" que abre los juegos.
+  static const ordenJuegos = 'o:juegos';
 
   static const secciones = <SeccionMacias>[
     SeccionMacias(
       id: 'compras',
       titulo: 'Comprar paso a paso',
-      intro: 'Sobre comprar en $_app:',
+      intro: 'Comprar en $_app es fácil. ¿Qué quieres saber?',
       temas: [
         'como_comprar',
         'buscar',
@@ -147,7 +160,7 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'pedidos',
       titulo: 'Mis pedidos y entregas',
-      intro: 'Sobre tus pedidos y las entregas:',
+      intro: 'Hablemos de tus pedidos y las entregas:',
       temas: [
         'donde_pedidos',
         'estados',
@@ -160,7 +173,7 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'publicar',
       titulo: 'Publicar para vender',
-      intro: 'Sobre publicar lo que vendes:',
+      intro: '¿Vas a vender algo? Esto es lo que más se pregunta:',
       temas: [
         'como_publicar',
         'sabores',
@@ -175,7 +188,7 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'local',
       titulo: 'Mi propio local',
-      intro: 'Sobre tener tu propio local:',
+      intro: 'Tener tu propio local tiene lo suyo:',
       temas: [
         'que_es_local',
         'crear_local',
@@ -189,14 +202,14 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'vender_mas',
       titulo: 'Vender más',
-      intro: 'Para vender más:',
+      intro: 'Para vender más, esto es lo que funciona:',
       temas: ['tips_vender', 'ranking', 'visitas', 'ideas_vender'],
       claves: ['vender mas', 'consejos', 'tips'],
     ),
     SeccionMacias(
       id: 'ubicacion',
       titulo: 'Ubicación y encuentros',
-      intro: 'Sobre ubicaciones y encuentros en el campus:',
+      intro: 'Sobre dónde encontrarse en el campus:',
       temas: ['entrega_en', 'punto_encuentro', 'zonas', 'donde_local'],
       claves: ['ubicacion', 'ubicaciones', 'encuentros', 'lugares'],
     ),
@@ -217,7 +230,7 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'privacidad',
       titulo: 'Privacidad y seguridad',
-      intro: 'Sobre privacidad y seguridad:',
+      intro: 'Tu privacidad y tu seguridad, sin letra chica:',
       temas: [
         'que_datos',
         'perfil_publico',
@@ -228,12 +241,14 @@ abstract final class ConocimientoMacias {
     ),
     SeccionMacias(
       id: 'app',
-      titulo: 'Instalar la app y avisos',
-      intro: 'Sobre instalar la app y los avisos:',
+      titulo: 'La app: instalar, avisos y fallas',
+      intro: 'Sobre la app, instalarla y los avisos:',
       temas: [
+        'que_es_app',
         'instalar_iphone',
         'instalar_android',
         'notificaciones_avisos',
+        'problemas_app',
         'version',
       ],
       claves: ['instalar', 'app', 'aplicacion', 'notificaciones', 'avisos'],
@@ -241,23 +256,23 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'reglas',
       titulo: 'Reglas de la comunidad',
-      intro: 'Sobre las reglas de la comunidad:',
-      temas: ['reglas_publicar', 'comision', 'oficial'],
+      intro: 'Las reglas de la comunidad, en corto:',
+      temas: ['reglas_publicar', 'comision', 'oficial', 'sugerencias'],
       claves: ['reglas', 'normas'],
     ),
     SeccionMacias(
       id: 'extra',
       titulo: 'Materias, calculadora y más',
       intro:
-          'Además de la app, te ayudo a estudiar. Elige una materia, '
-          'prueba la calculadora o cámbiame el humor:',
+          'Además de la app, te ayudo a estudiar (y a distraerte un rato). '
+          'Elige:',
       temas: [
         's:algebra',
         's:calculo',
         's:cpp',
         'calculadora',
+        'consejos_estudio',
         's:macias',
-        ordenMeme,
       ],
       claves: ['materias', 'estudiar', 'estudio', 'mas', 'extra'],
       area: 'general',
@@ -265,9 +280,7 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'algebra',
       titulo: 'Álgebra',
-      intro:
-          'Álgebra, con el orden de siempre (el del Baldor). '
-          'Elige un tema:',
+      intro: 'Álgebra, en el orden del Baldor. ¿Qué tema te toca?',
       temas: ConocimientoEstudio.algebra,
       claves: ['algebra', 'baldor', 'el baldor'],
       padre: 'extra',
@@ -276,7 +289,7 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'calculo',
       titulo: 'Cálculo integral',
-      intro: 'Cálculo integral. Elige un tema:',
+      intro: 'Cálculo integral. ¿Con qué tema le damos?',
       temas: ConocimientoEstudio.calculo,
       claves: ['calculo', 'calculo integral', 'calculo 2', 'calculo ii'],
       padre: 'extra',
@@ -285,7 +298,7 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'cpp',
       titulo: 'Programación en C++',
-      intro: 'Programación en C++. Elige un tema:',
+      intro: 'C++. ¿Por dónde empezamos?',
       temas: ConocimientoEstudio.cpp,
       claves: ['c', 'cpp', 'c plus plus', 'programacion', 'programar'],
       padre: 'extra',
@@ -294,13 +307,14 @@ abstract final class ConocimientoMacias {
     SeccionMacias(
       id: 'macias',
       titulo: 'Sobre MacIAs',
-      intro: 'Sobre mí:',
+      intro: 'Todo sobre mí (bueno, casi todo):',
       temas: [
         'quien_eres',
         'que_sabes',
         'que_sabes_de_mi',
         'chiste',
         'dato_curioso',
+        ordenJuegos,
       ],
       claves: ['macias'],
       padre: 'extra',
@@ -313,6 +327,7 @@ abstract final class ConocimientoMacias {
     ...ConocimientoEstudio.temas,
     ..._temasDeMacias,
     ..._temasDeAyuda,
+    ..._temasSueltos,
   ];
 
   static final _porId = {for (final tema in temas) tema.id: tema};
@@ -337,7 +352,9 @@ abstract final class ConocimientoMacias {
   /// De que trata un tema: app, algebra, calculo, cpp o general.
   static String areaDe(String temaId) =>
       seccionDe(temaId)?.area ??
-      (temaId.startsWith('faq_') ? 'app' : 'general');
+      (temaId.startsWith('faq_') || temaId.startsWith('app_')
+          ? 'app'
+          : 'general');
 
   /// Las doce lineas del menu principal: diez de la app, las materias, y
   /// hablar con una persona como ultima opcion, como en cualquier menu de
@@ -368,7 +385,7 @@ abstract final class ConocimientoMacias {
         'encargo',
       ],
       respuesta: (c) =>
-          'Así:\n'
+          'Fácil, en cuatro pasos:\n'
           '1. Toca la publicación que te interesa. Si tiene sabores o '
           'tamaños, elige uno.\n'
           '2. Toca **Agregar al carrito**.\n'
@@ -428,6 +445,10 @@ abstract final class ConocimientoMacias {
       claves: [
         'no responde',
         'no contesta',
+        'nadie responde',
+        'nadie me responde',
+        'nadie contesta',
+        'nadie me contesta',
         'no acepta',
         'no acepto',
         'venci*',
@@ -439,7 +460,7 @@ abstract final class ConocimientoMacias {
         'quince minutos',
       ],
       respuesta: (c) =>
-          'Tu solicitud espera **15 minutos**. Si en ese tiempo no la '
+          'Tranqui: tu solicitud espera **15 minutos**. Si en ese tiempo no la '
           'acepta, queda como **Vencido**: no se te cobra ni se reserva nada, '
           'y puedes pedir de nuevo más tarde o probar con otro local.\n\n'
           'Mientras estás en la pantalla de espera, también puedes tocar '
@@ -462,7 +483,7 @@ abstract final class ConocimientoMacias {
         'pedir igual',
       ],
       respuesta: (c) =>
-          'Sí. En **Mis pedidos** busca uno que ya hiciste y toca '
+          '¡Sí! En **Mis pedidos** busca uno que ya hiciste y toca '
           '**Repetir**: tu carrito se arma con lo mismo.\n\n'
           'Si ya tenías otras cosas, te pregunta si quieres reemplazarlas. Lo '
           'que ya no esté disponible no se agrega.',
@@ -619,6 +640,10 @@ abstract final class ConocimientoMacias {
         'poner venta',
         'vender algo',
         'quiero vender',
+        'como vendo',
+        'como vender',
+        'como puedo vender',
+        'vendo',
         'ofrecer',
       ],
       respuesta: (c) =>
@@ -698,6 +723,7 @@ abstract final class ConocimientoMacias {
         'elimin* public*',
         'modificar',
         'cambiar precio',
+        'cambi* precio',
         'borro',
         'elimino',
         'mis publicaciones',
@@ -723,11 +749,13 @@ abstract final class ConocimientoMacias {
         'cuantas publicaciones',
         'cuantas cosas',
         'cuantos productos',
-        'limite',
+        // "Límite" solo no: "¿qué es un límite?" es de cálculo.
+        'limite publicaciones',
+        'limite publicar',
+        'limite de publicaciones',
         'maximo',
         'tope',
         'cupo',
-        'no me deja publicar',
       ],
       respuesta: (c) =>
           'Hasta **20 publicaciones nuevas por hora** y **40 por día**. Es '
@@ -748,7 +776,8 @@ abstract final class ConocimientoMacias {
         'perdi lo que escribi',
       ],
       respuesta: (c) =>
-          'No se perdió: la app guarda lo que ibas escribiendo. La próxima '
+          'Tranqui, no se perdió: la app guarda lo que ibas escribiendo. La '
+          'próxima '
           'vez que entres a **Publicar** te pregunta si quieres '
           '**continuarla** donde la dejaste.',
       relacionados: ['como_publicar', 'fotos'],
@@ -883,6 +912,10 @@ abstract final class ConocimientoMacias {
       claves: [
         'vender mas',
         'mas ventas',
+        'promocionar',
+        'promociono',
+        'hacer publicidad',
+        'dar a conocer',
         'consejo*',
         'tips',
         'tip',
@@ -1011,7 +1044,10 @@ abstract final class ConocimientoMacias {
         'pascana',
         'mozza',
         'cafeteria',
-        'bloque*',
+        'bloque',
+        'bloques',
+        'bloque a',
+        'bloque b',
       ],
       respuesta: (c) =>
           'Estas son las zonas de $_app:\n'
@@ -1058,11 +1094,14 @@ abstract final class ConocimientoMacias {
         'registro',
         'acceder',
         'correo',
+        'contrasena',
+        'olvide mi contrasena',
+        'password',
       ],
       respuesta: (c) =>
           'Con tu **número de registro** de la UPSA (8 dígitos). Te llega un '
           '**código** a tu correo **@estudiantes.upsa.edu.bo**: lo escribes y '
-          'listo.\n\n'
+          'listo. No hay contraseña que recordar.\n\n'
           'Si caducó, pide uno nuevo. Y si pediste varios seguidos, espera '
           'un minuto antes de volver a intentar.',
       relacionados: ['completar_perfil', 'verificada'],
@@ -1076,6 +1115,9 @@ abstract final class ConocimientoMacias {
         'foto perfil',
         'cambi* carrera',
         'cambi* whatsapp',
+        'pongo mi whatsapp',
+        'poner mi whatsapp',
+        'agreg* whatsapp',
         'cambi* numero',
         'cambi* nombre',
         'descripcion perfil',
@@ -1141,6 +1183,8 @@ abstract final class ConocimientoMacias {
       claves: [
         'borrar cuenta',
         'borrar mi cuenta',
+        'borr* cuenta',
+        'elimin* cuenta',
         'eliminar cuenta',
         'eliminar mi cuenta',
         'dar baja',
@@ -1149,8 +1193,8 @@ abstract final class ConocimientoMacias {
         'eliminar mis datos',
       ],
       respuesta: (c) =>
-          'Entendido, ${c.nombre}. Escríbenos y borramos tu cuenta junto con '
-          'todo lo asociado. Aquí tienes el contacto:',
+          'Pucha, qué pena que te vayas, ${c.nombre}. Escríbenos y borramos tu '
+          'cuenta con todo lo asociado:',
       acciones: [
         AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
         AccionMacias('Enviar un correo', DestinoMacias.correoSoporte),
@@ -1223,14 +1267,13 @@ abstract final class ConocimientoMacias {
       pregunta: 'Consejos para un encuentro seguro',
       claves: [
         'seguro',
+        'es seguro',
+        'seguro comprar',
         'segura',
         'seguridad',
         'confianza',
         'peligro',
         'cuidado',
-        'robo',
-        'fraude',
-        'estafa*',
       ],
       respuesta: (c) =>
           'Lo básico:\n'
@@ -1244,6 +1287,71 @@ abstract final class ConocimientoMacias {
     ),
 
     // ---------------------------------------------------------------- app
+    TemaMacias(
+      id: 'que_es_app',
+      pregunta: '¿Qué es $_app?',
+      claves: [
+        'que es u market',
+        'que es umarket',
+        'que es la app',
+        'que es esta app',
+        'para que sirve la app',
+        'para que sirve u market',
+        'como funciona la app',
+        'como funciona u market',
+        'que hace la app',
+        'que puedo hacer en la app',
+        'de que se trata la app',
+      ],
+      respuesta: (c) =>
+          '$_app es el mercado del campus: compras y vendes entre estudiantes '
+          'de la UPSA. Comida, ropa, apuntes, clases, tecnología... lo que '
+          'sea.\n\n'
+          'Así funciona: pides, el vendedor acepta, coordinan por el chat del '
+          'pedido y se encuentran en el campus. Sin comisiones, y solo con '
+          'correo institucional.',
+      acciones: [AccionMacias('Acerca de $_app', DestinoMacias.acercaDe)],
+      relacionados: ['como_comprar', 'como_publicar', 'oficial'],
+    ),
+    TemaMacias(
+      id: 'problemas_app',
+      pregunta: 'La app falla o no carga',
+      claves: [
+        'falla',
+        'fallas',
+        'la app falla',
+        'app falla',
+        'no carga',
+        'no abre',
+        'no funciona la app',
+        'la app no funciona',
+        'se cuelga',
+        'se traba',
+        'se cierra',
+        'se cierra sola',
+        'pantalla blanca',
+        'pantalla crema',
+        'se queda cargando',
+        'esta lenta',
+        'muy lenta',
+        'no anda',
+        'error en la app',
+        'bug en la app',
+      ],
+      respuesta: (c) =>
+          'Pucha. Prueba esto, en orden:\n'
+          '1. Revisa tu conexión a internet.\n'
+          '2. Cierra la app del todo (también desde las apps recientes) y '
+          'ábrela de nuevo.\n'
+          '${c.esWeb ? '3. Si la usas instalada desde el navegador, ciérrala '
+                    'y ábrela una vez más: así toma la última versión.\n' : '3. Fíjate si hay una actualización en la tienda.\n'}'
+          '4. Si sigue igual, escríbenos con una captura y lo arreglamos.',
+      acciones: [
+        AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
+        AccionMacias('Enviar un correo', DestinoMacias.correoSoporte),
+      ],
+      relacionados: ['version', 'notificaciones_avisos'],
+    ),
     TemaMacias(
       id: 'instalar_iphone',
       pregunta: '¿Cómo la instalo en iPhone?',
@@ -1304,6 +1412,9 @@ abstract final class ConocimientoMacias {
         'notificacion*',
         'alertas',
         'activar notificaciones',
+        'desactiv* notificaciones',
+        'apag* notificaciones',
+        'quit* notificaciones',
       ],
       respuesta: (c) =>
           'Solo lo importante:\n'
@@ -1312,7 +1423,7 @@ abstract final class ConocimientoMacias {
           '• Te marcaron una entrega para confirmar.\n'
           '• Mensajes del chat de tus pedidos.\n'
           '• Abrió un local nuevo en el campus.\n\n'
-          'Se activan en **Configuración > Notificaciones**.',
+          'Se activan y se apagan en **Configuración > Notificaciones**.',
       relacionados: ['instalar_iphone', 'instalar_android'],
     ),
     TemaMacias(
@@ -1325,6 +1436,8 @@ abstract final class ConocimientoMacias {
         'actualizar',
         'nueva version',
         'ultima version',
+        'novedades',
+        'que hay de nuevo',
       ],
       respuesta: (c) =>
           'Tienes $_app **${c.version}**.\n\n'
@@ -1385,6 +1498,12 @@ abstract final class ConocimientoMacias {
         'quienes hicieron',
         'creadores',
         'quien creo',
+        'dueno app',
+        'duenos app',
+        'quien es el dueno',
+        'de quien es la app',
+        'es de la upsa',
+        'es oficial',
       ],
       respuesta: (c) =>
           'No es un producto oficial de la UPSA: lo hizo un equipo de '
@@ -1393,6 +1512,34 @@ abstract final class ConocimientoMacias {
           'Eso sí, solo pueden entrar cuentas con correo institucional.',
       acciones: [AccionMacias('Acerca de $_app', DestinoMacias.acercaDe)],
       relacionados: ['comision', 'quien_eres'],
+    ),
+    TemaMacias(
+      id: 'sugerencias',
+      pregunta: 'Tengo una idea para la app',
+      claves: [
+        'sugerencia',
+        'sugerencias',
+        'sugerir',
+        'idea para la app',
+        'tengo una idea',
+        'deberian agregar',
+        'deberian poner',
+        'estaria bueno que',
+        'me gustaria que la app',
+        'agreguen',
+        'feedback',
+        'opinion sobre la app',
+        'mejorar la app',
+      ],
+      respuesta: (c) =>
+          '¡Buenísimo! Las ideas de quienes usan la app son las que más '
+          'sirven. Mándasela al equipo por WhatsApp o por correo: la leen de '
+          'verdad.',
+      acciones: [
+        AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
+        AccionMacias('Enviar un correo', DestinoMacias.correoSoporte),
+      ],
+      relacionados: ['oficial', 'comision'],
     ),
 
     // ------------------------------------------------------------- humano
@@ -1418,8 +1565,9 @@ abstract final class ConocimientoMacias {
         'equipo',
       ],
       respuesta: (c) =>
-          'Claro, ${c.nombre}. Te paso con el equipo de $_app: escríbenos '
-          'por WhatsApp o por correo y te respondemos lo antes posible.',
+          '¡Claro, ${c.nombre}! Te paso con el equipo de $_app (personas de '
+          'verdad). Escríbeles por WhatsApp o por correo y te responden lo '
+          'antes posible.',
       acciones: [
         AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
         AccionMacias('Enviar un correo', DestinoMacias.correoSoporte),
@@ -1449,10 +1597,11 @@ abstract final class ConocimientoMacias {
         'inteligencia artificial',
       ],
       respuesta: (c) =>
-          'Soy **MacIAs**, el asistente virtual de $_app. Respondo al '
-          'instante, a cualquier hora: sobre la app, y también sobre álgebra, '
-          'cálculo integral y C++. Además hago cuentas y resuelvo '
-          'ecuaciones.\n\n'
+          'Soy **MacIAs**, el asistente de $_app. Respondo al toque, a '
+          'cualquier hora: sobre la app, y también te ayudo con álgebra, '
+          'cálculo integral y C++. Hago cuentas, resuelvo ecuaciones, me '
+          'acuerdo de lo que me cuentas y, si estás aburrido, hasta jugamos.'
+          '\n\n'
           'No soy una persona: si necesitas una, escribe **persona** y te '
           'paso el contacto.',
       relacionados: ['que_sabes', 'chiste'],
@@ -1465,16 +1614,19 @@ abstract final class ConocimientoMacias {
         'que puedes hacer',
         'en que ayudas',
         'en que me ayudas',
-        'que haces',
+        'que sabes hacer',
+        'para que sirves',
       ],
       respuesta: (c) =>
           'En casi todo lo de $_app: comprar, tus pedidos, publicar, tu '
           'local, tu cuenta, privacidad, instalar la app y las reglas.\n\n'
-          'Y para estudiar: álgebra (al estilo Baldor), cálculo integral y '
-          'C++, con ejemplos. Hago cuentas (**calcula 3*(4+5)**) y resuelvo '
-          'ecuaciones de primer y segundo grado (**resuelve x^2 - 5x + 6 = '
-          '0**).\n\n'
-          'Escríbeme con tus palabras o escribe **menú**.',
+          'Para estudiar: álgebra (al estilo Baldor), cálculo integral y C++, '
+          'con ejemplos. Hago cuentas, resuelvo ecuaciones, derivo, integro, '
+          'factorizo, convierto unidades y saco porcentajes y promedios.\n\n'
+          'Y además charlamos: me acuerdo de tus exámenes, te recuerdo cosas '
+          '(**recuérdame comprar fotocopias**), te digo cuánto falta para '
+          'Carnaval y jugamos un rato. Escríbeme con tus palabras o toca '
+          '**menú**.',
       relacionados: ['quien_eres', 'calculadora'],
     ),
     TemaMacias(
@@ -1498,8 +1650,7 @@ abstract final class ConocimientoMacias {
         'hazme reir',
         'algo gracioso',
         'broma',
-        'aburrido',
-        'aburrida',
+        'otro chiste',
       ],
       respuesta: (c) => c.alguna(const [
         '¿Por qué el libro de álgebra estaba triste?\n\nPorque tenía '
@@ -1513,6 +1664,46 @@ abstract final class ConocimientoMacias {
             'siempre tratando de despejarme.',
         'El WiFi de la universidad es como un límite que tiende a cero: '
             'cuanto más lo necesitas, menos hay.',
+        '—Profe, ¿me puede sancionar por algo que no hice?\n—No, claro que '
+            'no.\n—Qué bueno, porque no hice la tarea.',
+        'Un SQL entra a un bar, se acerca a dos mesas y les pregunta: '
+            '"¿Puedo unirme?"',
+        '¿Cuántos programadores hacen falta para cambiar un foco? Ninguno: '
+            'es un problema de hardware.',
+        'Hay 10 tipos de personas: las que entienden binario y las que no.',
+        '¿Qué le dijo la x a la y?\n\n—Despéjate, que te veo muy complicada.',
+        '¿Por qué el ángulo recto es tan confiable? Porque siempre va '
+            'derecho.',
+        'El profe: "Esto es inmediato". El curso, cuarenta minutos después: '
+            '"¿Inmediato para quién?"',
+        'Mi código no funcionaba y no sabía por qué. Ahora funciona... y '
+            'tampoco sé por qué.',
+        '¿Qué le dice un bit a otro?\n\nNos vemos en el bus.',
+        '—¿Ya estudiaste para el examen?\n—Sí, estudié la posibilidad de no '
+            'ir.',
+        '—¿Va a tomar asistencia, profe?\n—Sí.\n—Ah, entonces me quedo.',
+        'Llega el surazo y medio campus saca chamarra, gorro y bufanda. La '
+            'otra mitad sigue en chinelas.',
+        '¿Qué le dijo una salteña a otra?\n\n—No te derrames, que nos están '
+            'mirando.',
+        '—¿Cuál es tu plato favorito?\n—El hondo, que entra más.',
+        'Error 404: motivación para estudiar no encontrada. Reintentando en '
+            '5 minutos...',
+        '¿Por qué el libro de cálculo fue al psicólogo? Porque sentía que '
+            'nadie lo integraba.',
+        '¿Qué hace una abeja en el gimnasio?\n\nZumba.',
+        '—Mamá, en la U me dijeron que soy un genio.\n—¿Quién?\n—El profe de '
+            'cálculo. Creo que con sarcasmo.',
+        '¿Cuál es el colmo de un matemático? Que su esposa le diga: "Tú y '
+            'yo tenemos que hablar de nuestros problemas".',
+        'Estudiar a las 3 de la mañana no es mala organización: es '
+            'estrategia avanzada.',
+        '¿Por qué los programadores confunden Halloween con Navidad? Porque '
+            'OCT 31 = DEC 25.',
+        'Puse "contraseña incorrecta" como contraseña. Ahora, cuando me '
+            'equivoco, me la recuerda.',
+        '¿Qué le dijo el 3 al 30?\n\nPara ser como yo, tienes que ser '
+            'sincero.',
       ]),
       relacionados: ['chiste', 'dato_curioso'],
     ),
@@ -1527,6 +1718,8 @@ abstract final class ConocimientoMacias {
         'cuentame algo',
         'dime algo',
         'sabias que',
+        'sorprendeme',
+        'dime algo que no sepa',
       ],
       respuesta: (c) => c.alguna(const [
         'El señor de la portada del Álgebra de Baldor es Al-Juarismi, un '
@@ -1544,32 +1737,174 @@ abstract final class ConocimientoMacias {
             'que los pares son la mitad.',
         'El Álgebra de Baldor se publicó por primera vez en 1941 y todavía '
             'se usa en colegios y universidades de media Latinoamérica.',
+        'Bolivia tiene dos capitales: Sucre, la constitucional, y La Paz, '
+            'sede de gobierno.',
+        'El Salar de Uyuni es el desierto de sal más grande del mundo. En '
+            'época de lluvias se vuelve un espejo gigante.',
+        'Un pulpo tiene tres corazones y sangre azul.',
+        'Ada Lovelace escribió el primer programa de la historia en el siglo '
+            'XIX, para una máquina que nunca se terminó de construir: la '
+            'máquina analítica de Charles Babbage.',
+        'Las abejas pueden aprender a reconocer caras humanas.',
+        'Si doblaras una hoja de papel 42 veces, su grosor llegaría a la '
+            'Luna. En la práctica, no pasarás de unos 7 dobleces.',
+        'Tu corazón late unas 100 000 veces al día.',
+        'La miel no se echa a perder: se encontró miel comestible en tumbas '
+            'egipcias de miles de años.',
+        'Un día en Venus dura más que un año en Venus: tarda más en girar '
+            'sobre sí mismo que en dar la vuelta al Sol.',
+        'Los flamencos son rosados por lo que comen: algas y camarones con '
+            'pigmentos.',
+        'Un adulto tiene 206 huesos, pero un bebé nace con unos 300 que '
+            'después se van uniendo.',
+        'El Salar de Uyuni es tan plano que se usa para calibrar satélites.',
+        'Bolivia y Paraguay son los dos países de Sudamérica sin salida al '
+            'mar.',
+        'Bolivia tiene una de las reservas de litio más grandes del planeta: '
+            'el metal de la batería de tu celular.',
+        'Los aztecas usaban el cacao como moneda.',
+        'Las jirafas tienen las mismas vértebras en el cuello que tú: '
+            'siete.',
+        'Un rayo es unas cinco veces más caliente que la superficie del Sol.',
+        'La Gran Muralla China no se ve a simple vista desde la Luna. Es un '
+            'mito.',
+        'Tu cerebro pesa cerca del 2 % de tu cuerpo, pero gasta alrededor '
+            'del 20 % de tu energía.',
+        'Un "googol" es un 1 seguido de cien ceros. De ahí sacaron el nombre '
+            'de Google.',
+        'El primer mensaje entre dos computadoras de la red que dio origen a '
+            'internet (1969) fue "LO": iban a escribir "LOGIN" y el sistema '
+            'se colgó.',
+        'Hay más formas de ordenar un mazo de 52 cartas que átomos en la '
+            'Tierra. Cada vez que barajas bien, casi seguro creas un orden que '
+            'nunca existió.',
+        'En ciertas condiciones, el agua caliente se congela más rápido que '
+            'la fría: se llama efecto Mpemba.',
+        'Los tiburones existen desde antes que los árboles.',
+        'La Torre Eiffel crece unos 15 centímetros en verano: el calor dilata '
+            'el metal.',
+        'El corazón de la ballena azul es del tamaño de un auto pequeño.',
+        'La Paz tiene la red de teleféricos urbanos más grande del mundo.',
+        'Jaime Escalante, profesor boliviano de matemáticas, tiene una '
+            'película sobre su vida: llevó a un curso entero a aprobar cálculo '
+            'avanzado en Los Ángeles.',
+        'El número π ya se calculó con más de 100 billones de decimales. '
+            'Para casi todo, con 3,1416 alcanza.',
+        'En tu cuerpo viven unos 38 billones de bacterias: muchísimas más que '
+            'las estrellas de la Vía Láctea.',
       ]),
       relacionados: ['dato_curioso', 'chiste'],
     ),
+    TemaMacias(
+      id: 'consejos_estudio',
+      pregunta: 'Tips para estudiar mejor',
+      claves: [
+        'tips para estudiar',
+        'consejos para estudiar',
+        'tecnicas de estudio',
+        'tecnica de estudio',
+        'como estudiar mejor',
+        'estudiar mejor',
+        'pomodoro',
+        'como concentrarme',
+        'como memorizar',
+      ],
+      respuesta: (c) => tipsEstudio,
+      relacionados: ['calculadora', 'chiste'],
+    ),
   ];
+
+  /// Lo que mejor funciona para estudiar. Tambien lo dice la charla.
+  static const tipsEstudio =
+      'Lo que mejor funciona, según los que saben:\n'
+      '• **Pomodoro**: 25 minutos de estudio sin el celular, 5 de descanso.\n'
+      '• **Practica, no solo leas**: haz ejercicios y explícalo en voz alta, '
+      'como si le enseñaras a alguien.\n'
+      '• **Repasa espaciado**: un poquito cada día rinde más que todo la '
+      'noche anterior.\n'
+      '• **Duerme**: lo que estudias se fija mientras duermes.\n\n'
+      'Y si es álgebra, cálculo o C++, aquí te explico con ejemplos.';
 
   /// "¿Qué sabes de mí?": lo que la persona le conto, o como contarselo.
   static String _loQueSeDeTi(ContextoMacias c) {
     final memoria = c.memoria;
     if (memoria.vacia) {
       return 'Todavía no me contaste nada de ti. Puedes decirme cosas como '
-          '**me llamo Ana**, **estudio sistemas** o **me gusta la pizza**, y '
-          'me acuerdo la próxima vez.\n\n'
+          '**me llamo Ana**, **estudio sistemas**, **me gusta la pizza**, '
+          '**tengo examen de cálculo el viernes** o **recuérdame comprar '
+          'fotocopias**, y me acuerdo la próxima vez.\n\n'
           'Lo que me cuentas queda solo en este teléfono.';
     }
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    final hoy = DateTime(c.ahora.year, c.ahora.month, c.ahora.day);
+    final proximos = [
+      for (final e in memoria.examenes)
+        if (!e.fecha.isBefore(hoy)) e,
+    ];
     final datos = <String>[
       if (memoria.nombre != null) '• Te llamo **${memoria.nombre}**.',
       if (memoria.carrera != null) '• Estudias **${memoria.carrera}**.',
+      if (memoria.edad != null) '• Tienes **${memoria.edad} años**.',
+      if (memoria.ciudad != null) '• Eres de **${memoria.ciudad}**.',
+      if (memoria.tieneCumple)
+        '• Tu cumpleaños es el **${memoria.cumpleDia} de '
+            '${meses[memoria.cumpleMes! - 1]}**.',
       if (memoria.gustos.isNotEmpty)
         '• Te gusta: ${memoria.gustos.join(', ')}.',
       if (memoria.disgustos.isNotEmpty)
         '• No te gusta: ${memoria.disgustos.join(', ')}.',
+      for (final MapEntry(key: que, value: cual) in memoria.favoritos.entries)
+        '• Tu $que favorit${_esFemenino(que) ? 'a' : 'o'}: $cual.',
+      for (final e in proximos)
+        '• Tienes ${e.nombre} el ${e.fecha.day} de ${meses[e.fecha.month - 1]}.',
+      if (memoria.notas.isNotEmpty)
+        '• Me pediste recordarte: ${memoria.notas.join('; ')}.',
+      if (memoria.trabajo != null) '• Trabajas ${memoria.trabajo}.',
+      for (final MapEntry(key: rol, value: nombre) in memoria.personas.entries)
+        '• Tu ${_rolEscrito(rol)} se llama $nombre.',
     ];
     return 'Esto es lo que sé de ti:\n${datos.join('\n')}\n\n'
         'Queda solo en este teléfono. Para que lo olvide, escribe **olvida '
         'lo que sabes de mí**.';
   }
+
+  static const _femeninos = {
+    'comida',
+    'materia',
+    'cancion',
+    'pelicula',
+    'serie',
+    'bebida',
+    'banda',
+    'fruta',
+    'musica',
+  };
+
+  static bool _esFemenino(String categoria) => _femeninos.contains(categoria);
+
+  static String _rolEscrito(String rol) => switch (rol) {
+    'mama' => 'mamá',
+    'papa' => 'papá',
+    'tio' => 'tío',
+    'tia' => 'tía',
+    'companero' => 'compañero',
+    'companera' => 'compañera',
+    'hamster' => 'hámster',
+    _ => rol,
+  };
 
   // =====================================================================
   // Ya respondidas en Preguntas frecuentes: se entienden, no se ofrecen.
@@ -1655,6 +1990,7 @@ abstract final class ConocimientoMacias {
       claves: [
         'ocultar',
         'oculto',
+        'ocult* public*',
         'esconder',
         'pausar',
         'sin borrar',
@@ -1712,18 +2048,544 @@ abstract final class ConocimientoMacias {
         'reportar',
         'reporto',
         'denunciar',
+        'denuncio',
+        'report* public*',
+        'denunci* public*',
+        'report* producto',
         'inapropiado',
-        'acoso',
-        'me estafaron',
+        'banderita',
       ],
       respuesta: (c) =>
-          'Gracias por avisar. Escríbenos con el nombre de la publicación y '
-          'la revisamos. Hay un filtro automático, pero no atrapa todo.',
+          'Gracias por avisar. Abre la publicación y toca la **banderita** de '
+          'arriba (**Reportar publicación**): eliges el motivo y lo revisa '
+          'una persona del equipo. Reportar no la oculta al instante, así que '
+          'dale un tiempito.\n\n'
+          'Si es otra cosa (una persona, un mensaje), escríbenos.',
       acciones: [
         AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
         AccionMacias('Enviar un correo', DestinoMacias.correoSoporte),
       ],
       relacionados: ['reglas_publicar', 'seguridad_encuentro'],
+    ),
+  ];
+
+  // =====================================================================
+  // Preguntas puntuales: se entienden si alguien las escribe, pero no se
+  // ofrecen en los menus. Cada una salio de algo que alguien pregunto.
+  // =====================================================================
+  static final _temasSueltos = <TemaMacias>[
+    TemaMacias(
+      id: 'app_no_puedo_publicar',
+      pregunta: 'No puedo publicar',
+      enMenu: false,
+      claves: [
+        'no puedo publicar',
+        'no me deja publicar',
+        'error al publicar',
+        'error publicar',
+        'no se publica',
+        'falla al publicar',
+      ],
+      respuesta: (c) =>
+          'Casi siempre es una de estas:\n'
+          '1. **Tu perfil está incompleto**: para publicar necesitas tu nombre '
+          'real, tu carrera y tu WhatsApp.\n'
+          '2. **Llegaste al límite**: 20 publicaciones nuevas por hora y 40 por '
+          'día.\n'
+          '3. **El filtro**: si te sale **Revisa el texto: tiene palabras que '
+          'no se permiten**, cambia esa palabra.\n'
+          '4. **La conexión**: revisa tu internet y prueba de nuevo.\n\n'
+          'Si no es nada de eso, escríbenos con una captura.',
+      acciones: [
+        AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
+      ],
+      relacionados: ['completar_perfil', 'limite_publicaciones'],
+    ),
+    TemaMacias(
+      id: 'app_foto_no_sube',
+      pregunta: 'Mi foto no se sube',
+      enMenu: false,
+      claves: [
+        'foto no se sube',
+        'no se sube la foto',
+        'no sube la foto',
+        'no puedo subir foto*',
+        'no se suben las fotos',
+        'foto no carga',
+        'no carga la foto',
+        'error foto*',
+      ],
+      respuesta: (c) =>
+          'Prueba esto:\n'
+          '1. Revisa tu conexión: las fotos son lo más pesado de subir.\n'
+          '2. Intenta con otra foto (una tomada con la cámara o una captura).\n'
+          '3. Cierra la app, ábrela de nuevo y vuelve a intentar.\n\n'
+          'Si sigue sin subir, escríbenos con una captura y lo vemos.',
+      acciones: [
+        AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
+      ],
+      relacionados: ['fotos', 'problemas_app'],
+    ),
+    TemaMacias(
+      id: 'app_pedir_para_otro',
+      pregunta: '¿Puedo pedir para otra persona?',
+      enMenu: false,
+      claves: [
+        'para otra persona',
+        'para un amigo',
+        'para una amiga',
+        'para alguien mas',
+        'de regalo',
+        'regalar',
+      ],
+      respuesta: (c) =>
+          'Sí. El pedido sale a tu nombre: en **¿Dónde te lo entregan?** pon la '
+          'zona y una referencia de dónde va a estar esa persona, y avísale al '
+          'vendedor por el chat del pedido.',
+      relacionados: ['como_comprar', 'punto_encuentro'],
+    ),
+    TemaMacias(
+      id: 'app_problema_pedido',
+      pregunta: 'Tuve un problema con un pedido',
+      enMenu: false,
+      claves: [
+        'estafa*',
+        'me estafo',
+        'fraude',
+        'robo',
+        'me robaron',
+        'robaron',
+        'no me entrego',
+        'no me entregaron',
+        'nunca llego',
+        'no llego mi pedido',
+        'pague y no',
+        'me cobro de mas',
+        'me cobraron de mas',
+        'llego mal',
+        'vino mal',
+        'en mal estado',
+        'devolucion',
+        'devolver pedido',
+        'devolver producto',
+        'devolver plata',
+        'devuelvan',
+        'reembolso',
+        'cobraron por error',
+        'cobro por error',
+      ],
+      respuesta: (c) =>
+          'Pucha, lo siento, ${c.nombre}. Así lo vemos:\n'
+          '1. Si el pedido sigue abierto, háblalo por el chat del pedido: '
+          'queda registrado.\n'
+          '2. Si no lo recibiste, **no confirmes la entrega**.\n'
+          '3. Escríbenos con el nombre de quien vendió y qué pasó: lo '
+          'revisamos.\n\n'
+          'Si fue un robo dentro del campus, avisa también a seguridad de la '
+          'universidad.',
+      acciones: [
+        AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
+        AccionMacias('Enviar un correo', DestinoMacias.correoSoporte),
+      ],
+      relacionados: ['seguridad_encuentro', 'confirmar_entrega'],
+    ),
+    TemaMacias(
+      id: 'app_bloquear',
+      pregunta: 'Alguien me molesta',
+      enMenu: false,
+      claves: [
+        'bloquear',
+        'bloqueo',
+        'bloquearlo',
+        'bloquearla',
+        'me acosa',
+        'me acosan',
+        'acosa*',
+        'acoso',
+        'bloqueo a',
+        'spam',
+        'mensajes raros',
+        'me manda cosas raras',
+        'me escribe cosas raras',
+        'me molesta un vendedor',
+      ],
+      respuesta: (c) =>
+          'Todavía no hay un botón para bloquear. Si alguien te molesta o te '
+          'manda cosas raras, no le sigas el juego, no aceptes sus pedidos y '
+          'escríbenos con su nombre: lo revisamos.\n\n'
+          'Si es una publicación (spam, repetida u ofensiva), repórtala con '
+          'la **banderita** de arriba.',
+      acciones: [
+        AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
+        AccionMacias('Enviar un correo', DestinoMacias.correoSoporte),
+      ],
+      relacionados: ['seguridad_encuentro', 'reglas_publicar'],
+    ),
+    TemaMacias(
+      id: 'app_resenas',
+      pregunta: '¿Puedo calificar a un vendedor?',
+      enMenu: false,
+      claves: [
+        'resena*',
+        'calificar',
+        'califico',
+        'calificacion vendedor',
+        'puntuar',
+        'estrellas',
+        'valorar',
+        'opinion vendedor',
+        'comentario vendedor',
+      ],
+      respuesta: (c) =>
+          'Por ahora la app no tiene calificaciones ni reseñas. Si te fue '
+          'bien, lo mejor es volver a pedirle (y contarle a tus amigos). Si te '
+          'fue mal, cuéntanos qué pasó y lo revisamos.',
+      acciones: [
+        AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
+      ],
+      relacionados: ['repetir_pedido', 'sugerencias'],
+    ),
+    TemaMacias(
+      id: 'app_delivery',
+      pregunta: '¿Hay delivery?',
+      enMenu: false,
+      claves: [
+        'delivery',
+        'domicilio',
+        'envio*',
+        'mandan a mi casa',
+        'llevan a mi casa',
+        'a mi casa',
+        'fuera del campus',
+        'costo de entrega',
+        'costo entrega',
+        'entrega gratis',
+      ],
+      respuesta: (c) =>
+          'Las entregas son dentro del campus: en el carrito eliges tu zona y '
+          'una referencia (mesa, piso o puerta) y lo coordinan por el chat del '
+          'pedido. Algunos locales cobran un **costo de entrega**: lo ves en su '
+          'página antes de pedir.\n\n'
+          'Fuera del campus depende de cada vendedor: pregúntale por el chat.',
+      relacionados: ['punto_encuentro', 'zonas'],
+    ),
+    TemaMacias(
+      id: 'app_descuentos',
+      pregunta: '¿Hay descuentos?',
+      enMenu: false,
+      claves: [
+        'descuento*',
+        'oferta*',
+        'promo',
+        'promos',
+        'promocion',
+        'promociones',
+        'cupon*',
+        'rebaja*',
+        'mas barato',
+        'precio especial',
+      ],
+      respuesta: (c) =>
+          'La app no tiene cupones propios: cada vendedor pone sus precios. Si '
+          'compras varias cosas, pregúntale por el chat si te hace precio; '
+          'muchos aceptan.',
+      relacionados: ['buscar', 'chat_vendedor'],
+    ),
+    TemaMacias(
+      id: 'app_permitido',
+      pregunta: '¿Qué puedo vender y qué no?',
+      enMenu: false,
+      claves: [
+        'puedo vender',
+        'se puede vender',
+        'permiten vender',
+        'permitido vender',
+        'esta permitido',
+        'permiso para vender',
+        'necesito permiso',
+        'comida casera',
+        'dar clases',
+        'puedo dar clases',
+        'clases particulares',
+        'vender servicios',
+        'ofrecer servicios',
+        'ropa usada',
+        'cosas usadas',
+        'segunda mano',
+      ],
+      respuesta: (c) =>
+          'Casi todo lo legal se puede: comida casera, ropa nueva o usada, '
+          'apuntes, tecnología, servicios… Y para publicar no necesitas ningún '
+          'permiso, solo tu cuenta.\n\n'
+          'Lo que **no**: alcohol, drogas, armas y cualquier cosa prohibida, ni '
+          'contenido ofensivo o sexual. Si vendes comida, cuida la higiene y '
+          'escribe bien qué lleva.',
+      relacionados: ['ideas_vender', 'reglas_publicar'],
+    ),
+    TemaMacias(
+      id: 'app_prohibido',
+      pregunta: '¿Puedo vender alcohol?',
+      enMenu: false,
+      claves: [
+        'vender alcohol',
+        'puedo vender alcohol',
+        'se puede vender alcohol',
+        'vender cerveza',
+        'puedo vender cerveza',
+        'se puede vender cerveza',
+        'puedo vender trago',
+        'puedo vender licor',
+        'puedo vender armas',
+        'vender trago',
+        'vender tragos',
+        'vender licor',
+        'vender singani',
+        'bebidas alcoholicas',
+        'vender armas',
+        'vender un arma',
+      ],
+      respuesta: (c) =>
+          'No: alcohol, drogas y armas no se pueden vender en la app, igual '
+          'que cualquier otra cosa prohibida. Si ves que alguien lo hace, '
+          'repórtalo con la **banderita** de la publicación.',
+      relacionados: ['reglas_publicar', 'ideas_vender'],
+    ),
+    TemaMacias(
+      id: 'app_no_aparece',
+      pregunta: 'Mi publicación no aparece',
+      enMenu: false,
+      claves: [
+        'aparec* public*',
+        'aparec* producto',
+        'no veo mi producto',
+        'no sale mi public*',
+        'no veo mi public*',
+        'no se ve mi public*',
+        'donde esta mi public*',
+        'tarda* public*',
+        'demora* public*',
+        'desaparecio public*',
+      ],
+      respuesta: (c) =>
+          'Aparece al toque: apenas tocas **Publicar ahora** ya está en el '
+          'inicio, y la lista se actualiza sola. Si no la ves:\n'
+          '1. Revisa en tu **Perfil** que no esté **oculta**.\n'
+          '2. Si al publicar te salió **Revisa el texto: tiene palabras que no '
+          'se permiten**, el filtro la frenó: cambia esa palabra y prueba de '
+          'nuevo.\n'
+          '3. Si sigue sin aparecer, cierra la app, ábrela otra vez, y si '
+          'nada, escríbenos.',
+      relacionados: ['editar_publicacion', 'reglas_publicar'],
+    ),
+    TemaMacias(
+      id: 'app_borre_sin_querer',
+      pregunta: 'Borré algo sin querer',
+      enMenu: false,
+      claves: [
+        'sin querer',
+        'por error',
+        'por accidente',
+        'borr* sin querer',
+        'elimin* sin querer',
+        'borr* por error',
+        'elimin* por error',
+        'deshacer',
+        'recuper* public*',
+      ],
+      respuesta: (c) =>
+          'Pucha: una publicación eliminada no se puede recuperar. Toca '
+          'subirla de nuevo (y ojo, eso usa cupo).\n\n'
+          'Para la próxima, si no estás seguro, usa **Ocultar**: sale del '
+          'catálogo sin borrarse.',
+      relacionados: ['editar_publicacion', 'limite_publicaciones'],
+    ),
+    TemaMacias(
+      id: 'app_tema_oscuro',
+      pregunta: '¿Hay modo oscuro?',
+      enMenu: false,
+      claves: [
+        'modo oscuro',
+        'tema oscuro',
+        'dark mode',
+        'modo noche',
+        'modo nocturno',
+        'fondo negro',
+        'fondo oscuro',
+      ],
+      respuesta: (c) =>
+          'Por ahora no: la app va solo en tema claro. Si te gustaría el '
+          'oscuro, cuéntaselo al equipo, que las ideas se leen de verdad.',
+      relacionados: ['sugerencias'],
+    ),
+    TemaMacias(
+      id: 'app_idioma',
+      pregunta: '¿Está en otros idiomas?',
+      enMenu: false,
+      claves: [
+        'cambi* idioma',
+        'idioma app',
+        'idiomas app',
+        'otro idioma',
+        'otros idiomas',
+        'app ingles',
+        'app espanol',
+        'poner en ingles',
+        'disponible ingles',
+        'version en ingles',
+      ],
+      respuesta: (c) =>
+          'Por ahora la app está solo en español. Y yo igual: entiendo un '
+          'poquito de inglés, pero respondo en español.',
+      relacionados: ['sugerencias'],
+    ),
+    TemaMacias(
+      id: 'app_peso',
+      pregunta: '¿Cuánto espacio ocupa?',
+      enMenu: false,
+      claves: [
+        'pesa app',
+        'peso app',
+        'app pesada',
+        'espacio app',
+        'ocupa app',
+        'megas app',
+        'almacenamiento',
+      ],
+      respuesta: (c) => c.esWeb
+          ? 'Casi nada: como la instalas desde el navegador, no es una '
+                'descarga pesada como las de la tienda. Si tu teléfono anda '
+                'lleno, lo que más ocupa suelen ser las fotos y los videos.'
+          : 'Es liviana. Si tu teléfono anda lleno, lo que más ocupa suelen '
+                'ser las fotos y los videos.',
+      relacionados: ['problemas_app', 'version'],
+    ),
+    TemaMacias(
+      id: 'app_sin_internet',
+      pregunta: '¿Funciona sin internet?',
+      enMenu: false,
+      claves: [
+        'sin internet',
+        'necesito internet',
+        'necesita internet',
+        'internet para usar',
+        'sin conexion',
+        'offline',
+        'sin datos',
+        'sin wifi',
+        'modo avion',
+      ],
+      respuesta: (c) =>
+          'Para comprar, vender y chatear necesitas internet: todo pasa en '
+          'vivo. Yo sí te respondo sin conexión, porque todo lo que sé está en '
+          'tu teléfono.',
+      relacionados: ['problemas_app'],
+    ),
+    TemaMacias(
+      id: 'app_usuarios',
+      pregunta: '¿Cuánta gente usa la app?',
+      enMenu: false,
+      claves: [
+        'cuantos usuarios',
+        'cuantas personas usan',
+        'cuanta gente usa',
+        'quien usa la app',
+        'quienes usan',
+        'quien mas usa',
+        'cuantos vendedores',
+        'cuantas personas venden',
+        'cuantos venden',
+      ],
+      respuesta: (c) =>
+          'Ese número no lo tengo: no veo la base de datos. Lo que sí sé es '
+          'quiénes la usan: solo estudiantes de la UPSA con correo '
+          'institucional. Para ver quién vende, date una vuelta por '
+          '**Locales** y el inicio.',
+      relacionados: ['que_es_app', 'verificada'],
+    ),
+    TemaMacias(
+      id: 'app_como_se_hizo',
+      pregunta: '¿Con qué está hecha la app?',
+      enMenu: false,
+      claves: [
+        'esta hecha',
+        'en que esta hecha',
+        'hecha con',
+        'con que la hicieron',
+        'con que hicieron',
+        'como hicieron app',
+        'programaron app',
+        'programaron la app',
+        'que tecnologia',
+        'hacer una app',
+        'hago una app',
+        'crear una app',
+        'creo una app',
+        'app como esta',
+        'cuanto cuesta hacer una app',
+      ],
+      respuesta: (c) =>
+          'Está hecha con **Flutter**, el framework de Google que usa el '
+          'lenguaje **Dart** (yo también estoy hecho en Dart), y los datos '
+          'viven en un servidor en la nube.\n\n'
+          'Si quieres hacer una así: aprende lo básico de programación (el C++ '
+          'de la U ya te sirve), después Dart y Flutter con la documentación '
+          'oficial, y empieza por una app chiquita. Publicarla en Play Store '
+          'cuesta un pago único de 25 dólares; en la App Store, 99 dólares al '
+          'año. Como página web instalable, desde el navegador, sale gratis.',
+      relacionados: ['oficial', 'sugerencias'],
+    ),
+    TemaMacias(
+      id: 'app_ganancias',
+      pregunta: '¿Cómo gana plata la app?',
+      enMenu: false,
+      claves: [
+        'cuanto ganan',
+        'como ganan',
+        'como gana',
+        'gana dinero',
+        'gana plata',
+        'ganan dinero',
+        'ganan plata',
+        'ganan con la app',
+        'de que viven',
+        'como se financia',
+        'modelo de negocio',
+      ],
+      respuesta: (c) =>
+          'Usar la app es gratis y no cobramos comisión por lo que vendes. De '
+          'las cuentas del equipo no sé nada (no me pasan esa info): si te '
+          'interesa, pregúntales directo.',
+      acciones: [
+        AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
+      ],
+      relacionados: ['comision', 'oficial'],
+    ),
+    TemaMacias(
+      id: 'app_equipo',
+      pregunta: '¿Puedo trabajar con ustedes?',
+      enMenu: false,
+      claves: [
+        'trabajar con ustedes',
+        'trabajo con ustedes',
+        'trabajar en u market',
+        'trabajar en umarket',
+        'trabajar en la app',
+        'unirme al equipo',
+        'ser parte del equipo',
+        'formar parte del equipo',
+        'estan contratando',
+        'contratan',
+        'buscan gente',
+        'colaborar con ustedes',
+      ],
+      respuesta: (c) =>
+          '¡Qué buena onda! Escríbele al equipo y cuéntales qué sabes hacer: '
+          'diseño, programación, redes, lo que sea. Son estudiantes como tú.',
+      acciones: [
+        AccionMacias('Escribir por WhatsApp', DestinoMacias.whatsappSoporte),
+        AccionMacias('Enviar un correo', DestinoMacias.correoSoporte),
+      ],
+      relacionados: ['oficial', 'sugerencias'],
     ),
   ];
 }

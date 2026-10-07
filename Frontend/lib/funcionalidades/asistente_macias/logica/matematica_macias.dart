@@ -13,6 +13,8 @@ abstract final class MatematicaMacias {
   /// como cuenta algo que sea claramente matematico, para no robarle a la
   /// conversacion un "2 pedidos" cualquiera.
   static String? responder(String mensaje) {
+    final operacion = _operacion(mensaje);
+    if (operacion != null) return operacion;
     final (pedido: pedido, resto: resto) = _quitarPedido(mensaje.trim());
     if (resto.isEmpty) return null;
 
@@ -84,9 +86,9 @@ abstract final class MatematicaMacias {
       izquierda = _Lector(_fichas(lados[0])).polinomioCompleto();
       derecha = _Lector(_fichas(lados[1])).polinomioCompleto();
     } on _GradoAlto {
-      return 'Por ahora resuelvo ecuaciones de primer y segundo grado. Esa '
-          'tiene grado mayor: prueba factorizarla primero (te explico cómo si '
-          'escribes **factorización**).';
+      return 'Resuelvo ecuaciones hasta grado 4 (las de grado 3 y 4, si se '
+          'pueden factorizar). Esa tiene grado mayor: prueba factorizarla '
+          'primero (te explico cómo si escribes **factorización**).';
     } on FormatException {
       return 'No pude leer esa ecuación. Usa x como incógnita, ^ para '
           'potencias y * si hace falta, por ejemplo: '
@@ -95,8 +97,10 @@ abstract final class MatematicaMacias {
 
     final p = izquierda - derecha;
     if (p.grado > 2) {
-      return 'Por ahora resuelvo ecuaciones de primer y segundo grado. Esa '
-          'tiene grado ${p.grado}.';
+      return _porFactores(
+        '${_mostrarExpresion(lados[0])} = ${_mostrarExpresion(lados[1])}',
+        p,
+      );
     }
     final a = p[2], b = p[1], c = p[0];
     final enunciado =
@@ -311,6 +315,530 @@ abstract final class MatematicaMacias {
   /// "(−5)" si es negativo, para que no queden dos signos pegados.
   static String _enParentesis(BigInt n) =>
       n.isNegative ? '(${_entero(n)})' : '$n';
+
+  // ------------------------------------------ operaciones con polinomios
+  static const _prefijoOperacion =
+      r'^(?:(?:cual es|cuanto es|cuanto da|dime|me das|me dices|calcula|'
+      r'calculame|halla|hallame|encuentra|saca|sacame|resuelve|resuelveme|'
+      r'haz|hazme|necesito|quiero|ayudame con|ayudame a)\s+)?'
+      r'(?:la |el |una |un )?';
+
+  static final _derivar = RegExp(
+    '$_prefijoOperacion(?:derivada|derivadas|deriva|derivar|derivame|derive)'
+    r'(?: de| del)?(?: la funcion| la expresion| el polinomio)?\s+(.+)$',
+  );
+  static final _integrar = RegExp(
+    '$_prefijoOperacion(?:integral|integra|integrar|integrame|integre|'
+    r'antiderivada|primitiva)(?: indefinida| definida)?(?: de| del)?'
+    r'(?: la funcion| la expresion| el polinomio)?\s+(.+)$',
+  );
+  static final _factorizar = RegExp(
+    '$_prefijoOperacion(?:factoriza|factorizar|factorizame|factorice|'
+    r'factorizacion de|factorizacion del|descompon|descomponer)\s+(.+)$',
+  );
+  static final _expandir = RegExp(
+    '$_prefijoOperacion(?:expande|expandir|expandeme|desarrolla|desarrollar|'
+    r'desarrollame|multiplica|multiplicar|simplifica|simplificar|reduce|'
+    r'reducir)\s+(.+)$',
+  );
+
+  /// Lo que se puede pedir sobre un polinomio: derivarlo, integrarlo,
+  /// factorizarlo o desarrollarlo.
+  static String? _operacion(String mensaje) {
+    final t = _sinTildes(mensaje.trim().toLowerCase())
+        .replaceAll('∫', ' integral ')
+        .replaceAll(RegExp(r'^[¿¡\s]+|[?!.\s]+$'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    // "Derivada" e "integral" tambien son temas: "integral definida" se
+    // explica, no se calcula. Solo es cuenta si lo que sigue es una
+    // expresion.
+    final derivar = _derivar.firstMatch(t);
+    if (derivar != null) {
+      final expresion = _soloExpresion(derivar[1]!);
+      return _pareceExpresion(expresion) ? _derivada(expresion) : null;
+    }
+    final integrar = _integrar.firstMatch(t);
+    if (integrar != null) {
+      final sinLimites = _soloExpresion(
+        integrar[1]!.replaceAll(
+          RegExp(r'\b(?:de|del|desde|entre|a|hasta|y)\b'),
+          ' ',
+        ),
+      );
+      return _pareceExpresion(sinLimites) ? _integral(integrar[1]!) : null;
+    }
+    // "Factoriza" y "simplifica" tambien se dicen fuera de matematicas:
+    // solo se toman si lo que sigue parece una expresion.
+    final factorizar = _factorizar.firstMatch(t);
+    if (factorizar != null) {
+      final expresion = _soloExpresion(factorizar[1]!);
+      return _pareceExpresion(expresion) ? _factorizada(expresion) : null;
+    }
+    final expandir = _expandir.firstMatch(t);
+    if (expandir != null) {
+      final expresion = _soloExpresion(expandir[1]!);
+      return _pareceExpresion(expresion) ? _expandida(expresion) : null;
+    }
+    return null;
+  }
+
+  /// Sin "f(x) =", sin "dx", sin "respecto a x": la expresion sola.
+  static String _soloExpresion(String texto) => texto
+      .replaceFirst(RegExp(r'^[:\s]+'), '')
+      .replaceFirst(RegExp(r'^[fghy]\s*(?:\(\s*x\s*\))?\s*=\s*'), '')
+      .replaceAll(RegExp(r'\s*(?:con )?respecto (?:a|de) x\s*'), ' ')
+      .replaceAll(RegExp(r'\s*d\s*x\s*$'), '')
+      .trim();
+
+  static bool _pareceExpresion(String texto) {
+    if (!RegExp(r'[x\d]').hasMatch(texto)) return false;
+    final resto = texto
+        .replaceAll(
+          RegExp(
+            r'\b(?:raiz|sqrt|sen|sin|cos|tan|tg|sec|ln|log|abs|pi|mas|menos|'
+            r'por|entre|al cuadrado|al cubo|elevado a la|elevado a)\b',
+          ),
+          ' ',
+        )
+        .replaceAll(RegExp(r'[x\d\s+\-*/^().,²³√−·×÷e]'), '');
+    return resto.isEmpty;
+  }
+
+  static Polinomio _polinomio(String expresion) => _Lector(
+    _fichas(_preparar(expresion)),
+    gradoMaximo: 12,
+  ).polinomioCompleto();
+
+  /// Para buscar en las tablas: "sen(x)", "sen x" y "sin x" son lo mismo.
+  static String _clave(String expresion) => expresion
+      .replaceAll(' ', '')
+      .replaceAll('*', '')
+      .replaceAll('·', '')
+      .replaceAll('(x)', 'x')
+      .replaceAll('sin', 'sen')
+      .replaceAll('tg', 'tan')
+      .replaceAll('sqrt', '√')
+      .replaceAll('raiz', '√')
+      .replaceAll('²', '^2')
+      .replaceAll('e^(x)', 'e^x');
+
+  static const _nombresBasicos = {
+    'senx': 'sen(x)',
+    'cosx': 'cos(x)',
+    'tanx': 'tan(x)',
+    'e^x': 'e^x',
+    'lnx': 'ln(x)',
+    '√x': '√x',
+    '1/x': '1/x',
+    'sec^2x': 'sec²(x)',
+  };
+  static const _derivadasBasicas = {
+    'senx': 'cos(x)',
+    'cosx': '−sen(x)',
+    'tanx': 'sec²(x)',
+    'e^x': 'e^x',
+    'lnx': '1/x',
+    '√x': '1 / (2√x)',
+    '1/x': '−1/x²',
+  };
+  static const _integralesBasicas = {
+    'senx': '−cos(x) + C',
+    'cosx': 'sen(x) + C',
+    'tanx': '−ln|cos(x)| + C',
+    'e^x': 'e^x + C',
+    'lnx': 'x·ln(x) − x + C',
+    '√x': '(2/3)x^(3/2) + C',
+    '1/x': 'ln|x| + C',
+    'sec^2x': 'tan(x) + C',
+  };
+
+  static String _derivada(String expresion) {
+    if (expresion.isEmpty) {
+      return 'Escribe la función, por ejemplo: **derivada de x^3 + 2x**';
+    }
+    final clave = _clave(expresion);
+    final basica = _derivadasBasicas[clave];
+    if (basica != null) {
+      return '**d/dx ${_nombresBasicos[clave]} = $basica**\n'
+          'Es de las derivadas básicas: conviene sabérsela de memoria.';
+    }
+    final Polinomio p;
+    try {
+      p = _polinomio(expresion);
+    } on _GradoAlto {
+      return 'Uf, ese polinomio pasa de grado 12: es demasiado largo para mí.';
+    } on FormatException {
+      return 'Por ahora derivo polinomios (como **3x^2 + 2x − 5**) y las '
+          'funciones básicas: sen, cos, tan, e^x, ln y √x. Esa todavía no.';
+    }
+    return '**d/dx (${p.texto}) = ${p.derivada.texto}**\n'
+        'Término a término: la derivada de a·x^n es a·n·x^(n−1), y la de una '
+        'constante es 0.';
+  }
+
+  static final _limitesAlFinal = RegExp(
+    r'\s(?:de|desde|entre)\s+(-?\d+(?:[.,]\d+)?(?:/\d+)?)\s+(?:a|hasta|y)\s+'
+    r'(-?\d+(?:[.,]\d+)?(?:/\d+)?)(?=\s|$)',
+  );
+  static final _limitesAlPrincipio = RegExp(
+    r'^(-?\d+(?:[.,]\d+)?(?:/\d+)?)\s+(?:a|hasta)\s+'
+    r'(-?\d+(?:[.,]\d+)?(?:/\d+)?)\s+(?:de\s+)?',
+  );
+
+  static Racional _racionalDe(String texto) {
+    final limpio = texto.replaceAll(',', '.');
+    final partes = limpio.split('/');
+    if (partes.length == 2) {
+      return Racional.desdeTexto(partes[0]) / Racional.desdeTexto(partes[1]);
+    }
+    return Racional.desdeTexto(limpio);
+  }
+
+  static String _integral(String texto) {
+    var expresion = texto;
+    Racional? desde;
+    Racional? hasta;
+    final alPrincipio = _limitesAlPrincipio.firstMatch(texto);
+    final alFinal = _limitesAlFinal.firstMatch(' $texto');
+    try {
+      if (alPrincipio != null) {
+        desde = _racionalDe(alPrincipio[1]!);
+        hasta = _racionalDe(alPrincipio[2]!);
+        expresion = texto.substring(alPrincipio.end);
+      } else if (alFinal != null) {
+        desde = _racionalDe(alFinal[1]!);
+        hasta = _racionalDe(alFinal[2]!);
+        expresion = ' $texto'.replaceRange(alFinal.start, alFinal.end, ' ');
+      }
+    } on FormatException {
+      desde = null;
+      hasta = null;
+    }
+    expresion = _soloExpresion(
+      expresion.trim().replaceFirst(RegExp(r'^(?:de|del)\s+'), ''),
+    );
+    if (expresion.isEmpty) {
+      return '¿De qué función? Por ejemplo: **integral de x^2** o **integral '
+          'de x^2 de 0 a 2**';
+    }
+    final clave = _clave(expresion);
+    final basica = _integralesBasicas[clave];
+    if (basica != null && desde == null) {
+      return '**∫ ${_nombresBasicos[clave]} dx = $basica**\n'
+          'Es de las integrales inmediatas: viene directo de la tabla.';
+    }
+    final Polinomio p;
+    try {
+      p = _polinomio(expresion);
+    } on _GradoAlto {
+      return 'Uf, ese polinomio pasa de grado 12: es demasiado largo para mí.';
+    } on FormatException {
+      return 'Por ahora integro polinomios (como **3x^2 + 2x**) y las funciones '
+          'de la tabla: sen, cos, e^x, 1/x, √x. Esa ya pide un método: mira '
+          '**integración por partes** o **sustitución**.';
+    }
+    final primitiva = p.primitiva;
+    if (desde != null && hasta != null) {
+      final arriba = primitiva.evaluar(hasta);
+      final abajo = primitiva.evaluar(desde);
+      final valor = arriba - abajo;
+      return '**∫ de ${desde.texto} a ${hasta.texto} de (${p.texto}) dx = '
+          '${valor.textoConDecimal}**\n'
+          'Primitiva: F(x) = ${primitiva.texto}\n'
+          'F(${hasta.texto}) − F(${desde.texto}) = ${arriba.texto} − '
+          '${abajo.numerador.isNegative ? '(${abajo.texto})' : abajo.texto} = '
+          '${valor.texto}';
+    }
+    final resultado = primitiva.grado == 0 && primitiva[0].esCero
+        ? 'C'
+        : '${primitiva.texto} + C';
+    return '**∫ (${p.texto}) dx = $resultado**\n'
+        'Término a término: ∫ a·x^n dx = a·x^(n+1) / (n+1). Y no te olvides la '
+        '+ C.';
+  }
+
+  static String _expandida(String expresion) {
+    final Polinomio p;
+    try {
+      p = _polinomio(expresion);
+    } on _GradoAlto {
+      return 'Uf, eso da un polinomio de grado mayor que 12: es demasiado '
+          'largo para mí.';
+    } on FormatException {
+      return 'Desarrollo expresiones en x, por ejemplo: **desarrolla (x + 2)^3**';
+    }
+    return '${_mostrarExpresion(expresion)} = **${p.texto}**';
+  }
+
+  static String _factorizada(String expresion) {
+    final Polinomio p;
+    try {
+      p = _polinomio(expresion);
+    } on _GradoAlto {
+      return 'Uf, ese polinomio pasa de grado 12: es demasiado largo para mí.';
+    } on FormatException {
+      return 'Factorizo polinomios en x, por ejemplo: **factoriza x^2 − 5x + 6**';
+    }
+    if (p.grado < 1) return 'Eso es un número: no hay nada que factorizar.';
+    final f = _factores(p);
+    if (f.raices.isEmpty &&
+        f.potenciaX == 0 &&
+        f.constante == Racional.uno &&
+        f.resto != null) {
+      return '**${p.texto}** no se puede factorizar con números racionales.'
+          '${_notaDelResto(f.resto!)}';
+    }
+    final notas = [
+      if (f.constante != Racional.uno || f.potenciaX > 0)
+        'Primero saqué el factor común.',
+      if (f.raices.isNotEmpty)
+        'Cada raíz r que encontré (probando los divisores del término '
+            'independiente) da un factor (x − r).',
+      if (f.resto != null) _notaDelResto(f.resto!).trim(),
+    ];
+    return '**${p.texto} = ${_textoFactores(f)}**\n${notas.join(' ')}';
+  }
+
+  static String _notaDelResto(List<BigInt> resto) {
+    final escrito = Polinomio([
+      for (final c in resto) Racional.entero(c),
+    ]).texto;
+    if (resto.length == 3) {
+      final delta = resto[1] * resto[1] - BigInt.from(4) * resto[2] * resto[0];
+      return delta.isNegative
+          ? ' El factor $escrito no tiene raíces reales: no se separa más.'
+          : ' El factor $escrito tiene raíces irracionales: con números '
+                'racionales queda así.';
+    }
+    return ' El factor $escrito no tiene raíces racionales: con los métodos '
+        'del Baldor queda así.';
+  }
+
+  /// p = constante · x^potenciaX · (factores lineales) · resto.
+  static ({
+    Racional constante,
+    int potenciaX,
+    List<(BigInt, BigInt)> raices,
+    List<BigInt>? resto,
+  })
+  _factores(Polinomio p) {
+    var denominador = BigInt.one;
+    for (final c in p.coeficientes) {
+      denominador = _mcm(denominador, c.denominador);
+    }
+    final enteros = [
+      for (final c in p.coeficientes)
+        (c * Racional.entero(denominador)).numerador,
+    ];
+    var contenido = BigInt.zero;
+    for (final e in enteros) {
+      contenido = contenido.gcd(e);
+    }
+    if (enteros.last.isNegative) contenido = -contenido;
+    var a = [for (final e in enteros) e ~/ contenido];
+    final constante = Racional(contenido, denominador);
+
+    var potenciaX = 0;
+    while (a.length > 1 && a.first == BigInt.zero) {
+      a = a.sublist(1);
+      potenciaX++;
+    }
+    final raices = <(BigInt, BigInt)>[];
+    while (a.length > 2) {
+      final raiz = _raizRacional(a);
+      if (raiz == null) break;
+      raices.add(raiz);
+      a = _dividir(a, raiz.$1, raiz.$2);
+    }
+    if (a.length == 2) {
+      // Lo que queda es lineal: a1·x + a0, raiz −a0/a1.
+      final divisor = a[0].gcd(a[1]);
+      raices.add((-a[0] ~/ divisor, a[1] ~/ divisor));
+      a = [BigInt.one];
+    }
+    raices.sort(
+      (x, y) =>
+          Racional(x.$1, x.$2).valor.compareTo(Racional(y.$1, y.$2).valor),
+    );
+    return (
+      constante: constante,
+      potenciaX: potenciaX,
+      raices: raices,
+      resto: a.length > 2 ? a : null,
+    );
+  }
+
+  static (BigInt, BigInt)? _raizRacional(List<BigInt> a) {
+    for (final q in _divisores(a.last.abs())) {
+      for (final candidato in _divisores(a.first.abs())) {
+        for (final p in [candidato, -candidato]) {
+          if (p.gcd(q) != BigInt.one) continue;
+          if (_anula(a, p, q)) return (p, q);
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Si p/q es raiz: a_n·p^n + a_(n−1)·p^(n−1)·q + ... + a_0·q^n = 0.
+  static bool _anula(List<BigInt> a, BigInt p, BigInt q) {
+    final n = a.length - 1;
+    var suma = a[n];
+    var potenciaQ = BigInt.one;
+    for (var i = n - 1; i >= 0; i--) {
+      potenciaQ *= q;
+      suma = suma * p + a[i] * potenciaQ;
+    }
+    return suma == BigInt.zero;
+  }
+
+  /// a ÷ (q·x − p), sabiendo que divide exacto.
+  static List<BigInt> _dividir(List<BigInt> a, BigInt p, BigInt q) {
+    final n = a.length - 1;
+    final s = List<BigInt>.filled(n, BigInt.zero);
+    s[n - 1] = a[n] ~/ q;
+    for (var k = n - 1; k >= 1; k--) {
+      s[k - 1] = (a[k] + p * s[k]) ~/ q;
+    }
+    return s;
+  }
+
+  static List<BigInt> _divisores(BigInt n) {
+    if (n == BigInt.zero) return [BigInt.one];
+    final chicos = <BigInt>[];
+    final grandes = <BigInt>[];
+    var d = BigInt.one;
+    // Numeros enormes: no vale la pena seguir buscando.
+    final tope = BigInt.from(1000000);
+    while (d * d <= n && d <= tope) {
+      if (n % d == BigInt.zero) {
+        chicos.add(d);
+        if (d * d != n) grandes.add(n ~/ d);
+      }
+      d += BigInt.one;
+    }
+    return [...chicos, ...grandes.reversed];
+  }
+
+  static String _lineal(BigInt p, BigInt q) {
+    final x = q == BigInt.one ? 'x' : '${q}x';
+    if (p == BigInt.zero) return x;
+    return p.isNegative ? '$x + ${-p}' : '$x − $p';
+  }
+
+  static String _exponente(int n) => switch (n) {
+    1 => '',
+    2 => '²',
+    3 => '³',
+    _ => '^$n',
+  };
+
+  static String _textoFactores(
+    ({
+      Racional constante,
+      int potenciaX,
+      List<(BigInt, BigInt)> raices,
+      List<BigInt>? resto,
+    })
+    f,
+  ) {
+    final partes = StringBuffer();
+    final c = f.constante;
+    if (c == -Racional.uno) {
+      partes.write('−');
+    } else if (c != Racional.uno) {
+      partes.write(c.esEntero ? c.texto : '(${c.texto})');
+    }
+    if (f.potenciaX > 0) partes.write('x${_exponente(f.potenciaX)}');
+    final veces = <String, int>{};
+    for (final (p, q) in f.raices) {
+      final factor = _lineal(p, q);
+      veces[factor] = (veces[factor] ?? 0) + 1;
+    }
+    veces.forEach((factor, n) => partes.write('($factor)${_exponente(n)}'));
+    if (f.resto != null) {
+      partes.write(
+        '(${Polinomio([for (final e in f.resto!) Racional.entero(e)]).texto})',
+      );
+    }
+    return partes.toString();
+  }
+
+  /// Ecuaciones de grado 3 y 4: se resuelven si se pueden factorizar.
+  static String _porFactores(String enunciado, Polinomio p) {
+    final f = _factores(p);
+    final soluciones = <String>[];
+    void agregar(String solucion) {
+      if (!soluciones.contains(solucion)) soluciones.add(solucion);
+    }
+
+    if (f.potenciaX > 0) agregar('0');
+    for (final (raizP, raizQ) in f.raices) {
+      agregar(Racional(raizP, raizQ).texto);
+    }
+    final ordenada = Polinomio([
+      for (final c in p.coeficientes) c / f.constante,
+    ]).texto;
+    final pasos = StringBuffer()
+      ..writeln('**Ecuación de grado ${p.grado}**')
+      ..writeln(enunciado)
+      ..writeln('Ordenada: $ordenada = 0');
+    if (f.resto != null && f.resto!.length > 3) {
+      return '${pasos}No tiene raíces racionales, así que no la puedo resolver '
+          'exacta con los métodos del Baldor. Con un método numérico (como el '
+          'de Newton) se aproxima.';
+    }
+    if (f.resto != null) {
+      final r = f.resto!;
+      _raicesCuadratica(r[2], r[1], r[0]).forEach(agregar);
+    }
+    final factorizada = _textoFactores((
+      constante: Racional.uno,
+      potenciaX: f.potenciaX,
+      raices: f.raices,
+      resto: f.resto,
+    ));
+    pasos
+      ..writeln('Factorizada: $factorizada = 0')
+      ..writeln('Cada factor igualado a cero da una solución:')
+      ..write('**Soluciones: ${soluciones.map((s) => 'x = $s').join(', ')}**');
+    return pasos.toString();
+  }
+
+  /// Las raices exactas de a·x² + b·x + c, ya escritas.
+  static List<String> _raicesCuadratica(BigInt a, BigInt b, BigInt c) {
+    final delta = b * b - BigInt.from(4) * a * c;
+    final dosA = BigInt.two * a;
+    if (delta == BigInt.zero) return [Racional(-b, dosA).texto];
+    final (fuera, dentro) = _simplificarRaiz(delta.abs());
+    if (!delta.isNegative && dentro == BigInt.one) {
+      return [
+        Racional(-b + fuera, dosA).texto,
+        Racional(-b - fuera, dosA).texto,
+      ];
+    }
+    var real = -b;
+    var coeficiente = fuera;
+    var denominador = dosA;
+    final divisor = real.gcd(coeficiente).gcd(denominador);
+    if (divisor > BigInt.one) {
+      real ~/= divisor;
+      coeficiente ~/= divisor;
+      denominador ~/= divisor;
+    }
+    if (denominador.isNegative) {
+      real = -real;
+      denominador = -denominador;
+    }
+    final raiz =
+        '${coeficiente == BigInt.one ? '' : coeficiente}'
+        '${delta.isNegative ? 'i' : ''}'
+        '${dentro == BigInt.one ? '' : '√$dentro'}';
+    final arriba = real == BigInt.zero ? '±$raiz' : '${_entero(real)} ± $raiz';
+    return [denominador == BigInt.one ? arriba : '($arriba) / $denominador'];
+  }
 
   // -------------------------------------------------------- reconocer
   static const _pedidos = [
@@ -590,9 +1118,13 @@ class _GradoAlto implements Exception {}
 ///
 /// Asi "-2^2" es -4 y "2^-1" es 0.5, como en cualquier calculadora.
 class _Lector {
-  _Lector(this.fichas);
+  _Lector(this.fichas, {this.gradoMaximo = 4});
 
   final List<_Ficha> fichas;
+
+  /// Para ecuaciones alcanza con grado 4. Para derivar o desarrollar se
+  /// permite mas.
+  final int gradoMaximo;
   var _i = 0;
 
   /// Si alguna funcion trigonometrica tomo su angulo en grados.
@@ -744,7 +1276,7 @@ class _Lector {
         if (otro[0].esCero) throw const FormatException('division entre cero');
         valor = valor.porNumero(Racional.uno / otro[0]);
       }
-      if (valor.grado > 4) throw _GradoAlto();
+      if (valor.grado > gradoMaximo) throw _GradoAlto();
     }
     return valor;
   }
@@ -778,7 +1310,9 @@ class _Lector {
       if (base[0].esCero) throw const FormatException('cero a la negativa');
       return Polinomio([_potencia(Racional.uno / base[0], -n)]);
     }
-    if (n * math.max(base.grado, 1) > 4 && base.grado > 0) throw _GradoAlto();
+    if (n * math.max(base.grado, 1) > gradoMaximo && base.grado > 0) {
+      throw _GradoAlto();
+    }
     var resultado = Polinomio([Racional.uno]);
     for (var k = 0; k < n; k++) {
       resultado = resultado * base;
@@ -932,6 +1466,26 @@ class Polinomio {
 
   Polinomio porNumero(Racional numero) =>
       Polinomio([for (final c in coeficientes) c * numero]);
+
+  /// Termino a termino: a·x^n pasa a ser a·n·x^(n−1).
+  Polinomio get derivada => Polinomio([
+    for (var k = 1; k <= grado; k++) this[k] * Racional.entero(BigInt.from(k)),
+  ]);
+
+  /// Una primitiva, sin la constante: a·x^n pasa a ser a·x^(n+1)/(n+1).
+  Polinomio get primitiva => Polinomio([
+    Racional.cero,
+    for (var k = 0; k <= grado; k++)
+      this[k] / Racional.entero(BigInt.from(k + 1)),
+  ]);
+
+  Racional evaluar(Racional x) {
+    var resultado = Racional.cero;
+    for (var k = grado; k >= 0; k--) {
+      resultado = resultado * x + this[k];
+    }
+    return resultado;
+  }
 
   /// "x² − 5x + 6", de la potencia mas alta a la mas baja.
   String get texto {
