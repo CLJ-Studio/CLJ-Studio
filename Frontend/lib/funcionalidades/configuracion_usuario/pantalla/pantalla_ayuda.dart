@@ -1,30 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../asistente_macias/diseno/identidad_macias.dart';
+import '../../asistente_macias/pantalla/pantalla_chat_macias.dart';
+import '../datos/contacto_soporte.dart';
 
-/// Ayuda y contacto de soporte.
-const _whatsappSoporte = '59167972211';
-
-/// El correo de contacto de U market. Las tiendas de aplicaciones piden uno,
-/// y hay gente que prefiere escribir antes que chatear.
-const correoSoporte = 'contacto.umarketbo@gmail.com';
-
+/// Ayuda: MacIAs, el contacto con el equipo y las preguntas frecuentes.
 class PantallaAyuda extends StatelessWidget {
   const PantallaAyuda({super.key});
-
-  Future<void> _abrirWhatsapp(BuildContext context) async {
-    final url = Uri.parse(
-      'https://wa.me/$_whatsappSoporte'
-      '?text=${Uri.encodeComponent('Hola, necesito ayuda con U market.')}',
-    );
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication) &&
-        context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo abrir WhatsApp.')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -38,7 +21,15 @@ class PantallaAyuda extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Contacto(alEscribir: () => _abrirWhatsapp(context)),
+            _Contacto(
+              alChatear: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const PantallaChatMacias(),
+                ),
+              ),
+              alEscribir: () => ContactoSoporte.abrirWhatsapp(context),
+              alEnviarCorreo: () => ContactoSoporte.abrirCorreo(context),
+            ),
             const SizedBox(height: 30),
             Text(
               'Preguntas frecuentes',
@@ -99,10 +90,15 @@ class PantallaAyuda extends StatelessWidget {
             ),
             const _Pregunta(
               pregunta: '¿Cómo cancelo un pedido?',
+              // Decia "Por confirmar", que hoy es el nombre de otro estado
+              // (uno marco la entrega y falta el otro), y mandaba a
+              // WhatsApp cuando el pedido ya tiene su chat.
               respuesta:
-                  'Desde Pedidos, en la tarjeta del pedido que todavía '
-                  'diga "Por confirmar". Si el vendedor ya lo aceptó, '
-                  'coordina con él por WhatsApp.',
+                  'Mientras esperas la respuesta del vendedor, toca '
+                  '"Cancelar solicitud" en la pantalla de espera. Si ya '
+                  'saliste de ahí, no pasa nada: si no la acepta en 15 '
+                  'minutos, vence sola. Si ya la aceptó, háblalo en el chat '
+                  'del pedido: quien vende puede cancelarlo.',
             ),
           ],
         ),
@@ -112,9 +108,15 @@ class PantallaAyuda extends StatelessWidget {
 }
 
 class _Contacto extends StatelessWidget {
-  const _Contacto({required this.alEscribir});
+  const _Contacto({
+    required this.alChatear,
+    required this.alEscribir,
+    required this.alEnviarCorreo,
+  });
 
+  final VoidCallback alChatear;
   final VoidCallback alEscribir;
+  final VoidCallback alEnviarCorreo;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -135,10 +137,13 @@ class _Contacto extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         const Text(
-          'Escríbenos y te respondemos lo antes posible.',
+          'MacIAs te responde al instante. Si prefieres a una persona, '
+          'escríbenos y te respondemos lo antes posible.',
           style: TextStyle(height: 1.4),
         ),
         const SizedBox(height: 16),
+        BotonChatMacias(alPresionar: alChatear),
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           height: 50,
@@ -160,18 +165,12 @@ class _Contacto extends StatelessWidget {
           width: double.infinity,
           height: 50,
           child: OutlinedButton.icon(
-            onPressed: () => launchUrl(
-              Uri(
-                scheme: 'mailto',
-                path: correoSoporte,
-                query: 'subject=${Uri.encodeComponent('Ayuda con U market')}',
-              ),
-            ),
+            onPressed: alEnviarCorreo,
             icon: const Icon(Icons.mail_outline_rounded),
             // El correo SI se muestra: es una casilla de contacto, no un
             // numero personal, y quien no tiene un cliente de correo
             // configurado al menos puede copiarlo.
-            label: const Text(correoSoporte),
+            label: const Text(ContactoSoporte.correo),
           ),
         ),
       ],

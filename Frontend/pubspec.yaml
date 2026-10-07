@@ -88,8 +88,15 @@ flutter:
     - assets/images/marca/
     - assets/images/publicidad/
     - assets/images/virtual/
+    # La licencia de Roboto Mono (OFL) tiene que viajar con la fuente.
+    - assets/fonts/RobotoMono-OFL.txt
 
   fonts:
+    # Para el codigo que muestra MacIAs: sin una fuente monoespaciada propia,
+    # en la web el codigo se veria con letra proporcional y desalineado.
+    - family: RobotoMono
+      fonts:
+        - asset: assets/fonts/RobotoMono-Regular.ttf
     - family: Nunito
       fonts:
         - asset: assets/fonts/Nunito-Regular.ttf
