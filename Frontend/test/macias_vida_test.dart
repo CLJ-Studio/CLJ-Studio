@@ -585,6 +585,46 @@ void main() {
     });
   });
 
+  group('suena a persona', () {
+    test('la charla corta no suena a folleto', () {
+      for (final frase in [
+        'hola',
+        'que haces',
+        'como estas',
+        'gracias',
+        'ok',
+        'jaja',
+        'chau',
+        'estas ahi',
+      ]) {
+        for (var semilla = 0; semilla < 6; semilla++) {
+          final cerebro = CerebroMacias(
+            contexto: () =>
+                ContextoMacias(nombre: 'Juan', ahora: _hoy, version: '1.0'),
+            azar: Random(semilla),
+          );
+          final texto = _todo(cerebro.escribir(frase));
+          for (final robot in [
+            'Baldor',
+            'integrales',
+            'En qué te ayudo',
+            'Para eso estoy',
+            'Un gusto ayudarte',
+          ]) {
+            expect(texto, isNot(contains(robot)), reason: '$frase: $texto');
+          }
+        }
+      }
+    });
+
+    test('si le preguntan lo mismo dos veces, se da cuenta', () {
+      final cerebro = _cerebro();
+      cerebro.escribir('que haces?');
+      final segunda = _todo(cerebro.escribir('que haces?'));
+      expect(segunda, anyOf(contains('lo mismo'), contains('Sigo igual')));
+    });
+  });
+
   group('no se confunde', () {
     test('"idioma" no es "idiota" ni "hombre" es "hambre"', () {
       expect(LenguajeMacias.contiene(['idioma'], 'idiota'), isFalse);

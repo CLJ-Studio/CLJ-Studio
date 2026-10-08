@@ -755,7 +755,46 @@ class CerebroMacias {
   ];
 
   // ============================================================== charla
+  /// Lo que se contesta si preguntan lo mismo dos veces seguidas: una
+  /// persona se da cuenta, y repetir otra frase del mismo saco delata al
+  /// robot.
+  static const _repetidas = {
+    'charla:que_haces': [
+      'Jaja, lo mismo que hace un ratito: aquí nomás. ¿Y tú?',
+      'Sigo igual, jaja. ¿Por? ¿Pasó algo?',
+    ],
+    'charla:como_estas': [
+      'Igual de bien que hace un rato, jaja. ¿Y tú?',
+      'Bien todavía, jaja. ¿Todo bien contigo?',
+    ],
+    'charla:saludo': [
+      '¡Hola otra vez! Jaja, ¿qué pasó?',
+      'Holaa de nuevo. Dime.',
+    ],
+    'charla:presencia': ['Sí, sigo aquí, jaja. Dime.', 'Aquí sigo, no me fui.'],
+    'charla:gracias': ['De nada, de nada, jaja.', 'Jaja, ya, de nada.'],
+    'charla:risa': ['Jajaja.', 'Jaja, sí que te dio risa.'],
+    'charla:insulto': [
+      'Ya, ya, entendí, jaja. ¿Qué buscabas?',
+      'Jaja, ok, me lo merezco. ¿Qué necesitabas?',
+    ],
+    'charla:elogio': [
+      'Jaja, ya me lo dijiste, pero me encanta escucharlo.',
+      'Ya, me vas a hacer creérmela.',
+    ],
+  };
+
   RespuestaMacias _social(RespuestaCharla r, ContextoMacias c) {
+    final repetida = _repetidas[r.intencion];
+    if (repetida != null && r.intencion == _ultimaIntencion) {
+      return _deCharla(
+        RespuestaCharla(
+          c.alguna(repetida),
+          intencion: r.intencion,
+          espera: r.espera,
+        ),
+      );
+    }
     switch (r.intencion) {
       case 'charla:repetir':
         final ultima = _ultimaRespuesta;

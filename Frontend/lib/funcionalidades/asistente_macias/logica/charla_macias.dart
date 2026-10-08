@@ -174,8 +174,7 @@ abstract final class CharlaMacias {
       c.alguna(const [
         'Eso no va conmigo. Aquí mantenemos la buena onda, como en toda la '
             'app. ¿Te ayudo con algo de U market o de alguna materia?',
-        'Paso. Prefiero hablar de integrales, y mira que eso ya es decir. '
-            '¿Te ayudo con otra cosa?',
+        'Paso, jaja. Mejor otra cosa.',
       ]),
       intencion: 'charla:inapropiado',
     );
@@ -740,16 +739,12 @@ abstract final class CharlaMacias {
                   'no sale bien en las fotos.'
             // "Jaja, qué tonto eres": va en broma.
             : e.otras.contains('risa')
-            ? 'Jaja, a veces. Pero del Baldor sé un montón, eh.'
+            ? 'Jaja, a veces. Pero no tanto, eh.'
             : c.alguna([
-                'Auch. Todavía estoy aprendiendo, pero de la app y del Baldor sé un '
-                    'montón. ¿Me das otra chance? Pregúntame de otra forma.',
-                'Bueno, nadie es perfecto. Si algo no te salió, dime qué buscabas y '
-                    'lo intentamos de nuevo.',
-                'Ouch, eso dolió (un poquito). Igual sigo aquí para ayudarte, '
-                    '${c.nombre}.',
-                'Tomo nota y prometo mejorar. Mientras, prueba con el **menú**: ahí '
-                    'está todo lo que sé.',
+                'Auch. ¿Qué hice? Dime qué buscabas y lo intento de nuevo.',
+                'Uy, eso dolió un poquito. Igual sigo aquí, eh.',
+                'Ya, ya, me la merezco. ¿Qué querías? Pregúntame de otra forma.',
+                'Bueno, nadie es perfecto. ¿Qué buscabas?',
               ]),
         intencion: 'charla:insulto',
       ),
@@ -2024,9 +2019,10 @@ abstract final class CharlaMacias {
         if (ayuda.contains(e.frase)) {
           return _dicho(
             'elogio',
-            c.alguna([
-              '¡Qué bueno, ${c.nombre}! Para eso estoy.',
-              '¡Bien! Me alegra que te haya servido.',
+            c.alguna(const [
+              '¡Qué bueno! Me alegra.',
+              'Bien ahí, me alegra que te sirviera.',
+              '¡Eso!',
             ]),
           );
         }
@@ -2035,10 +2031,11 @@ abstract final class CharlaMacias {
         }
         return _dicho(
           'elogio',
-          c.alguna([
-            '¡Gracias, ${c.nombre}! Así da gusto.',
-            'Me vas a hacer sonrojar. Bueno, si pudiera.',
-            '¡Gracias! Tú tampoco estás nada mal.',
+          c.alguna(const [
+            'Jaja, gracias. Tú tampoco estás nada mal.',
+            'Uy, me vas a hacer sonrojar.',
+            '¡Gracias! Tú también la rompes.',
+            'Ay, gracias. Se hace lo que se puede.',
           ]),
         );
       },
@@ -2197,9 +2194,10 @@ abstract final class CharlaMacias {
           'despedida',
           gracias +
               c.alguna([
-                '¡Chau, ${c.nombre}! Éxitos en la U.$suerte',
-                '¡Nos vemos! Aquí estaré cuando me necesites.$suerte',
-                'Cuídate, ${c.nombre}. Vuelve cuando quieras.$suerte',
+                '¡Chau! Cuídate.$suerte',
+                '¡Nos vemos!$suerte',
+                'Dale, chau. Éxitos.$suerte',
+                'Chau, ${c.nombre}. Cualquier cosa, aquí ando.$suerte',
               ]),
         );
       },
@@ -2230,9 +2228,10 @@ abstract final class CharlaMacias {
         e.frase.startsWith('me extran')
             ? '¡Obvio! Bueno, no tengo reloj para extrañar, pero me alegra que '
                   'volviste. ¿Qué hacemos?'
-            : c.alguna([
-                '¡Qué bueno que volviste, ${c.nombre}! ¿En qué estábamos?',
-                '¡Hola de nuevo! Dime nomás.',
+            : c.alguna(const [
+                '¡Epa, volviste! ¿Qué tal?',
+                'Holaa de nuevo. Dime.',
+                '¡De vuelta! Jaja, ¿qué pasó?',
               ]),
       ),
     ),
@@ -2278,11 +2277,11 @@ abstract final class CharlaMacias {
       ],
       (c, e) => _dicho(
         'gracias',
-        c.alguna([
-          '¡De nada, ${c.nombre}!',
-          '¡Para eso estoy!',
+        c.alguna(const [
+          '¡De nada!',
+          'De nada, de nada.',
           '¡Cuando quieras!',
-          'Un gusto ayudarte. Si necesitas algo más, aquí sigo.',
+          'Nada que agradecer. Cualquier cosa, me escribes.',
         ]),
       ),
     ),
@@ -2305,9 +2304,10 @@ abstract final class CharlaMacias {
       ],
       (c, e) => _dicho(
         'perdon',
-        c.alguna([
+        c.alguna(const [
           'Tranqui, no pasa nada.',
-          'Todo bien, ${c.nombre}. ¿En qué te ayudo?',
+          'Todo bien, nada que perdonar.',
+          'Jaja, tranqui.',
         ]),
       ),
     ),
@@ -2325,11 +2325,7 @@ abstract final class CharlaMacias {
         'eres mi mejor amigo',
         'eres mi mejor amiga',
       ],
-      (c, e) => _dicho(
-        'amistad',
-        '¡Claro que sí, ${c.nombre}! Un amigo que se sabe el Baldor de memoria: '
-            'nada mal. Aquí estoy cuando me necesites.',
-      ),
+      (c, e) => _dicho('amistad', '¡Claro que sí! Aquí estoy cuando quieras.'),
     ),
     _Social(
       'lastima',
@@ -2423,7 +2419,7 @@ abstract final class CharlaMacias {
       (c, e) => _dicho(
         'loco',
         e.frase.startsWith('que') || e.frase == 'locura'
-            ? '¿Verdad? A veces la vida supera cualquier ejercicio del Baldor.'
+            ? '¿Verdad? Jaja.'
             : 'Un poquito, como todos los que aman el álgebra.',
       ),
     ),
@@ -2541,9 +2537,10 @@ abstract final class CharlaMacias {
         RegExp(r'respond|contest|ignor').hasMatch(e.frase)
             ? '¡Aquí estoy! Perdón si tardé. ¿Qué necesitas?'
             : c.alguna(const [
-                '¡Aquí estoy! Fuerte y claro.',
-                'Presente. ¿Qué necesitas?',
-                'Aquí, despierto las 24 horas. Dime nomás.',
+                'Aquí estoy.',
+                'Sí, acá. Dime.',
+                'Presente. ¿Qué pasó?',
+                '¡Acá! Dime nomás.',
               ]),
       ),
     ),
@@ -2593,16 +2590,16 @@ abstract final class CharlaMacias {
         'y vos',
       ],
       (c, e) {
-        final hola = e.otras.contains('saludo') ? '¡Hola, ${c.nombre}! ' : '';
+        final hola = e.otras.contains('saludo') ? '¡Hola! ' : '';
         return _dicho(
           'como_estas',
           hola +
               c.alguna(const [
-                'Todo bien por acá, listo para ayudarte. ¿Y tú, qué tal?',
-                '¡De diez! Aquí, repasando el Baldor por si acaso. ¿Y tú cómo '
-                    'vas?',
-                'Bien, con las pilas cargadas (literal: las de tu teléfono). '
-                    '¿Y tú?',
+                'Bien, bien. ¿Y tú?',
+                'Todo tranqui por acá. ¿Y tú qué tal?',
+                'Bien, gracias. ¿Tú cómo vas?',
+                'Aquí, sobreviviendo a la semana como todos. ¿Y tú?',
+                'Todo bien. ¿Qué tal tu día?',
               ]),
           espera: const EsperaAnimo(),
         );
@@ -2624,8 +2621,10 @@ abstract final class CharlaMacias {
       (c, e) => _dicho(
         'que_haces',
         c.alguna(const [
-          'Aquí, esperando tus preguntas y repasando el Baldor. ¿Y tú?',
-          'Nada especial: pensando en integrales. ¿Tú qué haces?',
+          'Nada, aquí nomás. ¿Y tú?',
+          'Aquí, charlando contigo. ¿Tú qué haces?',
+          'Nada especial, la verdad. ¿Y tú en qué andas?',
+          'Aquí, al pie del cañón. ¿Tú?',
         ]),
         espera: const EsperaAnimo(),
       ),
@@ -2711,17 +2710,26 @@ abstract final class CharlaMacias {
         if (e.frase == 'buenas noches') {
           return _dicho(
             'saludo',
-            '¡Buenas noches, ${c.nombre}! ¿En qué te ayudo? Y si ya te vas a '
-                'dormir, que descanses.',
+            '¡Buenas noches! ¿Todavía en pie a estas horas? Jaja. Y si ya te '
+                'vas a dormir, que descanses.',
           );
         }
         return _dicho(
           'saludo',
-          c.alguna([
-            '¡Hola, ${c.nombre}! ¿Qué tal todo?',
-            '¡${c.saludoDelMomento}, ${c.nombre}! ¿Cómo va todo?',
-            '¡Buenas, ${c.nombre}! ¿Cómo estás?',
-          ]),
+          // Si le dijo como quiere que le digan, se nota que se acuerda.
+          c.memoria.nombre != null
+              ? c.alguna([
+                  '¡Hola, ${c.nombre}! ¿Qué tal?',
+                  '¡Epa, ${c.nombre}! ¿Cómo andas?',
+                  'Holaa, ${c.nombre}. ¿Qué cuentas?',
+                ])
+              : c.alguna([
+                  '¡Hola! ¿Qué tal?',
+                  'Holaa, ¿cómo va todo?',
+                  '¡Buenas! ¿Todo bien?',
+                  'Hola, ${c.nombre}. ¿Qué cuentas?',
+                  '¡Epa! ¿Cómo andas?',
+                ]),
           espera: const EsperaAnimo(),
         );
       },
@@ -2750,8 +2758,9 @@ abstract final class CharlaMacias {
       (c, e) => RespuestaCharla(
         c.alguna(const [
           'Jaja, ¿verdad?',
-          'Me alegra sacarte una risa.',
-          '¡Sabía que te iba a gustar!',
+          'Jajaja.',
+          'Jaja, sabía que te iba a gustar.',
+          'Jaja, buenísimo.',
         ]),
         intencion: 'charla:risa',
       ),
@@ -2894,12 +2903,7 @@ abstract final class CharlaMacias {
         'acuerdo',
         e.frase == 'mmm' || e.frase == 'hmm'
             ? '¿Mmm? Si te quedó alguna duda, pregúntame nomás.'
-            : c.alguna(const [
-                '¡Listo!',
-                'Dale. Si necesitas algo más, aquí estoy.',
-                '¡Perfecto!',
-                'Bien ahí.',
-              ]),
+            : c.alguna(const ['Dale.', 'Bien ahí.', 'Listo.', 'Joya.']),
       ),
     ),
     _Social(
@@ -2924,8 +2928,9 @@ abstract final class CharlaMacias {
       (c, e) => _dicho(
         'negacion',
         c.alguna(const [
-          'Tranqui. Cuando necesites algo, escribe nomás.',
-          'Ok. Aquí sigo por si acaso.',
+          'Tranqui.',
+          'Ok, aquí ando.',
+          'Dale, cualquier cosa me escribes.',
         ]),
       ),
     ),
@@ -3021,9 +3026,7 @@ abstract final class CharlaMacias {
       'tu que tal',
       'tu como estas',
     ]);
-    final yo = recipro
-        ? ' Yo, de diez como siempre, gracias por preguntar.'
-        : '';
+    final yo = recipro ? ' Yo también ando bien.' : '';
 
     // Lo que esta haciendo: "estudiando", "en clase".
     if (dice([
@@ -3033,27 +3036,23 @@ abstract final class CharlaMacias {
       'haciendo la tarea',
     ])) {
       return RespuestaCharla(
-        '¡Eso! Si te trabas con algo, aquí estoy.$yo',
+        'Bien ahí. Si te trabas con algo, me dices.$yo',
         intencion: 'charla:animo',
         opciones: _materias,
       );
     }
     if (dice(['en clase', 'en clases', 'en la u', 'en la universidad'])) {
       return RespuestaCharla(
-        'Atiende, que después viene el examen. Jaja. Aquí te espero.$yo',
+        'Jaja, entonces atiende. Después hablamos.$yo',
         intencion: 'charla:animo',
       );
     }
     if (dice(['comiendo', 'almorzando', 'cenando', 'desayunando'])) {
-      return RespuestaCharla(
-        '¡Buen provecho! Si te quedas con hambre, en el inicio está la '
-        'categoría **Comida**.$yo',
-        intencion: 'charla:animo',
-      );
+      return RespuestaCharla('¡Buen provecho!$yo', intencion: 'charla:animo');
     }
     if (dice(['trabajando', 'en el trabajo', 'en la pega'])) {
       return RespuestaCharla(
-        'Bien ahí. Ánimo con eso.$yo',
+        'Uf, ánimo con eso.$yo',
         intencion: 'charla:animo',
       );
     }
@@ -3066,7 +3065,7 @@ abstract final class CharlaMacias {
       'aca',
     ])) {
       return RespuestaCharla(
-        'Tranqui. Si quieres, te cuento un chiste o jugamos algo.$yo',
+        'Ah, tranqui. Si te aburres, te cuento un chiste o jugamos algo.$yo',
         intencion: 'charla:animo',
         opciones: _distraerse,
       );
@@ -3099,10 +3098,7 @@ abstract final class CharlaMacias {
       'bien bien',
     ])) {
       return RespuestaCharla(
-        c.alguna([
-          '¡Qué bueno, ${c.nombre}!$yo ¿En qué te ayudo hoy?',
-          '¡Me alegra!$yo Dime nomás qué necesitas.',
-        ]),
+        c.alguna(['¡Qué bueno!$yo', 'Bien ahí.$yo', 'Me alegra.$yo']),
         intencion: 'charla:animo',
       );
     }
@@ -3120,7 +3116,7 @@ abstract final class CharlaMacias {
       'sobreviviendo',
     ])) {
       return RespuestaCharla(
-        'Ahí vamos, ¿no? Si te puedo dar una mano con algo, dime nomás.$yo',
+        'Ahí vamos, ¿no? Jaja.$yo',
         intencion: 'charla:animo',
       );
     }
@@ -3133,16 +3129,13 @@ abstract final class CharlaMacias {
       'no tan bien',
     ])) {
       return RespuestaCharla(
-        'Pucha, ${c.nombre}. ¿Qué pasó? Si quieres contarme, aquí estoy.',
+        'Pucha, ¿qué pasó?',
         intencion: 'charla:animo',
         espera: const EsperaDesahogo(),
       );
     }
     if (recipro) {
-      return RespuestaCharla(
-        '¡Bien, gracias por preguntar! ¿En qué te ayudo?',
-        intencion: 'charla:animo',
-      );
+      return RespuestaCharla('Bien, bien, gracias.', intencion: 'charla:animo');
     }
     return null;
   }
@@ -3346,9 +3339,7 @@ abstract final class CharlaMacias {
       );
     }
     if (dice(['cuantos anos tienes', 'que edad tienes', 'tu edad'])) {
-      return dicho(
-        'Nací en 2026, así que soy bastante nuevo. Pero ya me sé el Baldor.',
-      );
+      return dicho('Nací en 2026, así que soy un bebé, jaja.');
     }
     if (dice(['donde vives', 'donde estas', 'de donde eres'])) {
       return dicho(
@@ -3411,8 +3402,8 @@ abstract final class CharlaMacias {
     ])) {
       final carrera = c.memoria.carrera;
       return RespuestaCharla(
-        'Me sé el Baldor de memoria, así que digamos que estoy en un semestre '
-        'eterno de Álgebra. '
+        'Yo vivo en el teléfono, así que digamos que estoy en un semestre '
+        'eterno. '
         '${carrera == null ? '¿Y tú qué estudias?' : 'Tú estudias $carrera, ¿no? ¿Cómo te va?'}',
         intencion: 'charla:macias',
         espera: carrera == null ? const EsperaCarrera() : const EsperaAnimo(),
@@ -3598,9 +3589,7 @@ abstract final class CharlaMacias {
       return dicho('Me pagan en preguntas resueltas. Y sin aguinaldo.');
     }
     if (dice(['tu tiempo libre', 'que haces cuando no hablamos'])) {
-      return dicho(
-        'Repaso el Baldor y practico chistes. Algunos hasta salen buenos.',
-      );
+      return dicho('Practico chistes. Algunos hasta salen buenos.');
     }
     if (dice([
       'comes',

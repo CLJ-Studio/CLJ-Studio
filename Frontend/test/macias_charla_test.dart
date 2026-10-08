@@ -259,7 +259,7 @@ void main() {
       expect(cerebro.espera, isA<EsperaAnimo>());
       final respuesta = cerebro.escribir('bien y tu?');
       expect(respuesta.intencion, 'charla:animo');
-      expect(_todo(respuesta), contains('de diez'));
+      expect(_todo(respuesta), contains('Yo también'));
     });
 
     test(
