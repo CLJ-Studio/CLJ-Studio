@@ -198,6 +198,8 @@ abstract final class LenguajeMacias {
     'nse': 'no se',
     'ns': 'no se',
     'bs': 'bolivianos',
+    // La d esta al lado de la s: "dabes hacer bife".
+    'dabes': 'sabes',
     'profe': 'profesor',
     'uni': 'universidad',
   };
@@ -269,9 +271,14 @@ abstract final class LenguajeMacias {
     'pues',
     'puede',
     'puedo',
+    'puedes',
     'que',
     'quien',
     'quiero',
+    'quieres',
+    'sabe',
+    'sabes',
+    'tienes',
     'se',
     'ser',
     'si',

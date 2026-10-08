@@ -355,7 +355,9 @@ class CerebroMacias {
       respuesta = contenido ?? _noEntendi(resto, c);
     }
     // "Hola, me llamo Carla": el saludo ya va con el nombre nuevo.
-    if (saludo && respuesta.intencion == 'memoria:nombre') {
+    if (saludo &&
+        (respuesta.intencion == 'memoria:nombre' ||
+            respuesta.intencion == 'memoria:varios')) {
       return _conPrefijo(respuesta, '¡Hola! ');
     }
     if (saludo) return _conPrefijo(respuesta, '¡Hola, ${c.nombre}! ');
@@ -910,8 +912,13 @@ class CerebroMacias {
   }
 
   RespuestaMacias? _datoPersonal(_Mensaje m, ContextoMacias c) {
+    final varios = _variosDatos(m);
+    if (varios != null) return varios;
+
     final junto = m.junto;
-    final nombre = CharlaMacias.nombreEn(m.original);
+    final nombre =
+        CharlaMacias.nombreEn(m.original) ??
+        CharlaMacias.nombreSoyEn(m.limpio, m.original);
     if (nombre != null) {
       if (_groserias.any(LenguajeMacias.normalizar(nombre).contains)) {
         return _simple(
@@ -1094,6 +1101,67 @@ class CerebroMacias {
         return _social(CharlaMacias.antesDeLosTemas(pedido, c)!, c);
       case 'charla:chiste_malo':
         return _responderTema(ConocimientoMacias.tema('chiste')!);
+    }
+    return null;
+  }
+
+  /// "Soy Jotade, me gusta el fútbol": varias cosas de una vez. Solo si hay
+  /// al menos dos; con una sola, sigue el camino de siempre.
+  RespuestaMacias? _variosDatos(_Mensaje m) {
+    final partes = m.original.split(
+      RegExp(
+        r'\s*[,;]\s*|[.!]\s+|\s+y\s+(?=(?:me|mi|soy|estudio|tengo|odio|amo|'
+        r'vivo|trabajo)\b)',
+        caseSensitive: false,
+      ),
+    );
+    if (partes.length < 2) return null;
+    final datos = [
+      for (final parte in partes)
+        if (parte.trim().isNotEmpty) ?_unDato(_Mensaje.de(parte.trim())),
+    ];
+    if (datos.length < 2) return null;
+    for (final (_, anotar) in datos) {
+      anotar();
+    }
+    return _simple(
+      'Anotado: ${_lista([for (final (dicho, _) in datos) dicho])}. Me lo '
+      'voy a acordar.',
+      intencion: 'memoria:varios',
+    );
+  }
+
+  /// Un dato suelto y como anotarlo, sin anotarlo todavia.
+  (String, void Function())? _unDato(_Mensaje m) {
+    final nombre =
+        CharlaMacias.nombreEn(m.original) ??
+        CharlaMacias.nombreSoyEn(m.limpio, m.original);
+    if (nombre != null &&
+        !_groserias.any(LenguajeMacias.normalizar(nombre).contains)) {
+      return ('te llamo $nombre', () => memoria.nombre = nombre);
+    }
+    final carrera = CharlaMacias.carreraEn(m.junto);
+    if (carrera != null) {
+      return ('estudias $carrera', () => memoria.carrera = carrera);
+    }
+    final edad = CharlaMacias.edadEn(m.junto);
+    if (edad != null) return ('tienes $edad años', () => memoria.edad = edad);
+    final ciudad = CharlaMacias.ciudadEn(m.junto);
+    if (ciudad != null) {
+      return ('eres de $ciudad', () => memoria.ciudad = ciudad);
+    }
+    final gusto = CharlaMacias.gustoEn(m.limpio, m.fichas, m.original);
+    if (gusto != null) {
+      final cosa = CharlaMacias.conTildes(gusto.cosa);
+      final n =
+          RegExp(
+            r'^(?:los|las|unos|unas) ',
+          ).hasMatch(LenguajeMacias.normalizar(cosa))
+          ? 'n'
+          : '';
+      return gusto.gusta
+          ? ('te gusta$n $cosa', () => memoria.anotarGusto(cosa))
+          : ('no te gusta$n $cosa', () => memoria.anotarDisgusto(cosa));
     }
     return null;
   }

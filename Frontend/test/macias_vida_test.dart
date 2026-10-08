@@ -478,6 +478,113 @@ void main() {
     });
   });
 
+  group('cocina', () {
+    const recetas = {
+      'Y dabes hacer bife': '**Bife**',
+      'Si sabes hacer bife': '**Bife**',
+      'y sabes hacer fideos': '**Fideo con salsa**',
+      'receta de silpancho': '**Silpancho**',
+      'como se hace una salchipapa': '**Salchipapa**',
+      'sabes hacer sushi': 'nori',
+      'como preparo un frappe': '**Frappé**',
+      'receta de brownies': '**Brownies**',
+      'que lleva el pique macho': '**Pique macho**',
+      'ingredientes de la salteña': 'jigote',
+      'como hago arroz': '**Arroz blanco**',
+      'como se hace la llajua': 'locoto',
+      'receta de anticuchos': 'corazón',
+    };
+    for (final MapEntry(key: pregunta, value: esperado) in recetas.entries) {
+      test('"$pregunta"', () {
+        final respuesta = _cerebro().escribir(pregunta);
+        expect(respuesta.intencion, 'saber:receta');
+        expect(_todo(respuesta), contains(esperado));
+      });
+    }
+
+    _cadaUno(const {
+      'que es una salchipapa': 'saber:concepto',
+      'que es la llajua': 'saber:concepto',
+      'que puedo cocinar hoy': 'saber:recetas',
+      'receta de lasaña': 'saber:receta_desconocida',
+      'quiero una salchipapa': 'charla:antojo',
+    });
+
+    test('lo que no es comida no se confunde con una receta', () {
+      expect(
+        _cerebro().escribir('sabes hacer integrales').intencion,
+        isNot(startsWith('saber:receta')),
+      );
+      expect(
+        _cerebro().escribir('como hacer una app').temaId,
+        'app_como_se_hizo',
+      );
+    });
+
+    test('"si sabes hacer bife" no ofrece temas que no van', () {
+      final texto = _todo(_cerebro().escribir('si sabes hacer bife'));
+      expect(texto, isNot(contains('¿Qué sabes de mí?')));
+    });
+  });
+
+  group('memoria de varias cosas a la vez', () {
+    test('"soy Jotade" es un nombre', () {
+      final memoria = MemoriaMacias();
+      _cerebro(memoria: memoria).escribir('soy jotade');
+      expect(memoria.nombre, 'Jotade');
+    });
+
+    test('"soy Jotade, me gusta el fútbol" anota las dos', () {
+      final memoria = MemoriaMacias();
+      final texto = _todo(
+        _cerebro(memoria: memoria).escribir('soy Jotade, me gusta el futbol'),
+      );
+      expect(memoria.nombre, 'Jotade');
+      expect(memoria.gustos, contains('el fútbol'));
+      expect(texto, contains('te llamo Jotade y te gusta el fútbol'));
+    });
+
+    test('tres cosas en un mensaje', () {
+      final memoria = MemoriaMacias();
+      _cerebro(
+        memoria: memoria,
+      ).escribir('tengo 20 años, soy de la paz y me gustan los perros');
+      expect(memoria.edad, 20);
+      expect(memoria.ciudad, 'La Paz');
+      expect(memoria.gustos, contains('los perros'));
+    });
+
+    test('"soy feliz" o "soy camba" no son nombres', () {
+      for (final frase in ['soy feliz', 'soy camba', 'soy estudiante']) {
+        final memoria = MemoriaMacias();
+        _cerebro(memoria: memoria).escribir(frase);
+        expect(memoria.nombre, isNull, reason: frase);
+      }
+    });
+  });
+
+  group('el aviso de crisis, sin falsas alarmas', () {
+    test('lo grave se toma en serio', () {
+      for (final frase in ['me quiero morir', 'quiero cortarme las venas']) {
+        expect(_cerebro().escribir(frase).intencion, 'cuidado', reason: frase);
+      }
+    });
+
+    test('las frases de todos los dias no', () {
+      for (final frase in [
+        'me corto el pelo mañana',
+        'me quiero morir de risa',
+        'quiero cortarme el cabello',
+      ]) {
+        expect(
+          _cerebro().escribir(frase).intencion,
+          isNot('cuidado'),
+          reason: frase,
+        );
+      }
+    });
+  });
+
   group('no se confunde', () {
     test('"idioma" no es "idiota" ni "hombre" es "hambre"', () {
       expect(LenguajeMacias.contiene(['idioma'], 'idiota'), isFalse);

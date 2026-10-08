@@ -56,13 +56,28 @@ abstract final class CharlaMacias {
     'no vale la pena vivir',
   ];
 
+  static final _cortarAlgo = RegExp(
+    r'\bcort(?:arme|o|e) (?:el |la |las |los |mi |mis |un |una )?'
+    r'(?:pelo|cabello|unas|flequillo|fleco|barba|puntas|dedo)\b',
+  );
+  static final _exagerar = RegExp(
+    r'\b(?:morir|morirme) de (?:la )?(?:risa|verguenza|hambre|sueno|calor|'
+    r'frio|amor|ganas|aburrimiento|cansancio|nervios)\b',
+  );
+
   /// Lo primero que se revisa, antes que cualquier tema o broma.
   ///
   /// No hay forma de saber si es en serio, asi que se toma en serio: sin
   /// chistes, con a quien acudir. Los numeros son los de emergencia de
   /// Bolivia.
   static String? cuidado(String limpio) {
-    if (!_crisis.any(limpio.contains)) return null;
+    final t = ' $limpio ';
+    if (!_crisis.any((frase) => t.contains(' $frase'))) return null;
+    // "Me corto el pelo", "me quiero morir de risa": se dicen todos los
+    // dias y no son una crisis. Ante la duda, igual se toma en serio.
+    if (_cortarAlgo.hasMatch(limpio) || _exagerar.hasMatch(limpio)) {
+      return null;
+    }
     return 'Lamento mucho que te sientas así. No estás solo ni sola, y '
         'hablarlo ayuda de verdad.\n'
         '• Busca ahora a alguien de confianza: un amigo, tu familia, un '
@@ -2717,6 +2732,8 @@ abstract final class CharlaMacias {
         'jaja',
         'que risa',
         'me muero de risa',
+        'me quiero morir de risa',
+        'muero de risa',
         'me mato de risa',
         'muy gracioso',
         'que gracioso',
@@ -2961,6 +2978,32 @@ abstract final class CharlaMacias {
     'sopa de mani',
     'masaco',
     'pasankalla',
+    'bife',
+    'salchipapa',
+    'salchipapas',
+    'milanesa',
+    'frappe',
+    'brownie',
+    'brownies',
+    'flan',
+    'panqueques',
+    'anticuchos',
+    'anticucho',
+    'chicharron',
+    'locro',
+    'fricase',
+    'huminta',
+    'humintas',
+    'bunuelos',
+    'arroz chaufa',
+    'ceviche',
+    'limonada',
+    'licuado',
+    'milkshake',
+    'queque',
+    'empanada de queso',
+    'sandwich de chola',
+    'helado de canela',
   };
 
   // ============================================================ animo
@@ -3335,6 +3378,23 @@ abstract final class CharlaMacias {
       return dicho(
         'Algo parecido: me pongo contento cuando te sirvo. ¿Cansarme o '
         'aburrirme? Nunca: siempre hay alguien con una duda de cálculo.',
+      );
+    }
+    if (dice([
+      'soy estudiante',
+      'soy estudiante de la upsa',
+      'soy de la upsa',
+      'estudio en la upsa',
+      'soy universitario',
+      'soy universitaria',
+    ])) {
+      final carrera = c.memoria.carrera;
+      return RespuestaCharla(
+        carrera == null
+            ? '¡Como todos por acá! ¿Qué estudias?'
+            : '¡Como todos por acá! Tú estudias $carrera, ¿no?',
+        intencion: 'charla:macias',
+        espera: carrera == null ? const EsperaCarrera() : null,
       );
     }
     if (dice([
@@ -4649,6 +4709,142 @@ abstract final class CharlaMacias {
     'eso',
     'esto',
   };
+
+  static final _soy = RegExp(r'^(?:y )?(?:yo )?soy ([a-z]+)$');
+
+  /// Lo que va despues de "soy" y no es un nombre.
+  static const _noSoyNombre = {
+    'feliz',
+    'pobre',
+    'rico',
+    'rica',
+    'nuevo',
+    'nueva',
+    'estudiante',
+    'alumno',
+    'alumna',
+    'hombre',
+    'mujer',
+    'chico',
+    'chica',
+    'nino',
+    'nina',
+    'yo',
+    'ella',
+    'ese',
+    'esa',
+    'bueno',
+    'buena',
+    'malo',
+    'mala',
+    'lindo',
+    'linda',
+    'feo',
+    'fea',
+    'tonto',
+    'tonta',
+    'gay',
+    'soltero',
+    'soltera',
+    'novato',
+    'novata',
+    'mayor',
+    'menor',
+    'grande',
+    'joven',
+    'viejo',
+    'vieja',
+    'alto',
+    'alta',
+    'bajo',
+    'baja',
+    'flaco',
+    'flaca',
+    'gordo',
+    'gorda',
+    'camba',
+    'colla',
+    'chapaco',
+    'chapaca',
+    'boliviano',
+    'boliviana',
+    'cruceno',
+    'crucena',
+    'paceno',
+    'pacena',
+    'humano',
+    'humana',
+    'real',
+    'persona',
+    'bot',
+    'robot',
+    'ingeniero',
+    'ingeniera',
+    'abogado',
+    'abogada',
+    'profesor',
+    'profesora',
+    'docente',
+    'vendedor',
+    'vendedora',
+    'cliente',
+    'primero',
+    'primera',
+    'libre',
+    'fan',
+    'hincha',
+    'vegano',
+    'vegana',
+    'vegetariano',
+    'vegetariana',
+    'timido',
+    'timida',
+    'todo',
+    'tuyo',
+    'tuya',
+    'mejor',
+    'peor',
+    'nadie',
+    'alguien',
+    'ateo',
+    'atea',
+    'catolico',
+    'catolica',
+    'cristiano',
+    'cristiana',
+    'mama',
+    'papa',
+    'hijo',
+    'hija',
+    'malisimo',
+    'malisima',
+  };
+
+  static final _adjetivo = RegExp(
+    r'(?:ado|ada|ido|ida|oso|osa|ble|nte|dor|dora|ista|ivo|iva|ero|era)$',
+  );
+
+  /// "Soy Jotade": un nombre, salvo que sea "soy feliz", "soy camba" o "soy
+  /// ingeniero".
+  static String? nombreSoyEn(String limpio, String original) {
+    final encontrado = _soy.firstMatch(limpio);
+    if (encontrado == null) return null;
+    final palabra = encontrado[1]!;
+    if (palabra.length < 3 ||
+        palabra.length > 15 ||
+        _noSoyNombre.contains(palabra) ||
+        _noSonNombres.contains(palabra) ||
+        (palabra.length > 5 && _adjetivo.hasMatch(palabra)) ||
+        MemoriaMacias.carreraDe(palabra) != null ||
+        MemoriaMacias.ciudadDe(palabra) != null) {
+      return null;
+    }
+    // Tal como lo escribio ("Jotade", "José"), con mayuscula.
+    final escrito =
+        RegExp(r'(\p{L}+)\P{L}*$', unicode: true).firstMatch(original)?[1] ??
+        palabra;
+    return escrito[0].toUpperCase() + escrito.substring(1).toLowerCase();
+  }
 
   /// "me llamo Ana": el nombre tal como lo escribio, con mayuscula.
   static String? nombreEn(String original) {

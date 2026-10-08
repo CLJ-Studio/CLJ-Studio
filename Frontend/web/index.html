@@ -488,6 +488,50 @@
       };
     })();
   </script>
+  <script>
+    /*
+     * EL TECLADO QUE NO DEVUELVE LA PANTALLA (Android).
+     *
+     * Flutter web mide la pantalla con el visualViewport. Mientras hay un
+     * campo de texto activo, si el teclado se abre o se cierra, no cambia el
+     * tamaño de la app: lo cuenta como espacio ocupado por el teclado. Pero
+     * si en el momento justo el campo no estaba activo (al enviar un mensaje
+     * el foco se suelta y se vuelve a pedir), la app se achica de verdad. Y
+     * al cerrar el teclado con el campo otra vez activo, ya no vuelve a
+     * crecer: queda la app arriba y una franja crema abajo. Se arreglaba
+     * solo tocando fuera del campo.
+     *
+     * Aqui se hace eso mismo, automaticamente: cuando el teclado se cierra
+     * (el visualViewport vuelve a ocupar casi toda la ventana), se suelta el
+     * campo y se pide a Flutter que mida de nuevo. Soltar el campo es lo que
+     * ya pasa en Android al bajar el teclado; para seguir escribiendo, se
+     * toca el campo otra vez.
+     */
+    (() => {
+      if (!/Android/i.test(navigator.userAgent)) return;
+      const vista = window.visualViewport;
+      if (!vista) return;
+      let alto = vista.height;
+      let ancho = vista.width;
+      vista.addEventListener('resize', () => {
+        // Crecio sin girar el telefono: algo que ocupaba abajo se fue.
+        const crecio = vista.height - alto > 100 && Math.abs(vista.width - ancho) < 2;
+        alto = vista.height;
+        ancho = vista.width;
+        const sinTeclado = window.innerHeight - vista.height < 100;
+        if (!crecio || !sinTeclado) return;
+        const activo = document.activeElement;
+        if (activo && (activo.tagName === 'INPUT' || activo.tagName === 'TEXTAREA')) {
+          activo.blur();
+        }
+        // Flutter suelta el campo en un par de mensajes: se le pide medir
+        // cuando ya lo hizo. Volver a medir de mas no cambia nada.
+        for (const espera of [150, 450]) {
+          setTimeout(() => vista.dispatchEvent(new Event('resize')), espera);
+        }
+      });
+    })();
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

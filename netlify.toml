@@ -131,6 +131,12 @@
 #
 # Safari no entiende credentialless: ahi la pagina simplemente no queda
 # aislada y skwasm corre en un solo hilo. Funciona igual, sin la mejora extra.
+#
+# OJO, 2026-10-07: el hilo aparte esta APAGADO desde web/flutter_bootstrap.js
+# (forceSingleThreadedSkwasm). En Flutter 3.44 corrompe la cache de letras con
+# mucho texto (el chat de MacIAs salio con letras cambiadas en un Galaxy A15;
+# flutter/flutter#190039). Las cabeceras se quedan: al pasar a Flutter 3.48,
+# que trae el arreglo, basta con quitar esa opcion para recuperar el hilo.
 [[headers]]
   for = "/*"
   [headers.values]

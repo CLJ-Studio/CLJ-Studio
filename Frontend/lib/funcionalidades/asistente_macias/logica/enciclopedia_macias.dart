@@ -1,3 +1,4 @@
+import 'cocina_macias.dart';
 import 'conocimiento_macias.dart';
 import 'conversacion_macias.dart';
 import 'lenguaje_macias.dart';
@@ -38,119 +39,9 @@ abstract final class EnciclopediaMacias {
         _formula(t) ??
         _pais(t) ??
         _invento(t) ??
-        _receta(t) ??
+        CocinaMacias.responder(t) ??
         _pregunta(t) ??
         (soloPreguntas ? null : _palabraSuelta(t));
-  }
-
-  // ================================================================= recetas
-  static const _recetas = <_Entrada>[
-    (
-      ['saltena', 'saltenas'],
-      'La **salteña** es de las difíciles, pero sale:\n'
-          '1. **El jigote** (el relleno), de un día para otro: carne en '
-          'cubitos, cebolla, ají colorado, comino, papa y arvejas cocidas, con '
-          'caldo bien sazonado y gelatina para que cuaje. Al armar, huevo duro '
-          'y una aceituna.\n'
-          '2. **La masa**: harina, manteca derretida, azúcar, achiote para el '
-          'color y agua tibia con sal.\n'
-          '3. Rellena el disco con el jigote frío, ciérralo con el repulgue '
-          'arriba y al horno bien caliente hasta que dore.\n\n'
-          'El secreto: el jigote tiene que estar frío y cuajado; si no, se '
-          'escapa todo el jugo.',
-    ),
-    (
-      ['majadito'],
-      '**Majadito** (para 4):\n'
-          '1. Fríe cebolla y tomate con urucú (achiote) para el color.\n'
-          '2. Agrega el charque desmenuzado y sofríe un poco.\n'
-          '3. Echa 2 tazas de arroz, mezcla y cubre con unas 4 tazas de agua '
-          'caliente. Sal, y a fuego bajo hasta que el arroz esté.\n'
-          '4. Sirve con huevo frito, plátano frito y yuca.\n\n'
-          'Se llama así porque el charque se majaba (se golpeaba) para '
-          'desmenuzarlo.',
-    ),
-    (
-      ['sonso', 'sonso de yuca'],
-      '**Sonso de yuca**:\n'
-          '1. Cocina 1 kg de yuca pelada hasta que esté blandita y muélela '
-          'caliente.\n'
-          '2. Mézclala con unos 300 g de queso rallado, un poco de mantequilla '
-          'o leche y sal.\n'
-          '3. Arma en una fuente enmantequillada (o en palitos) y al horno o a '
-          'la parrilla hasta que dore.',
-    ),
-    (
-      ['cunape', 'cunapes'],
-      '**Cuñapé** (unos 20):\n'
-          '1. Mezcla 500 g de almidón de yuca con 500 g de queso fresco '
-          'rallado.\n'
-          '2. Agrega un huevo, una pizca de sal y leche de a poco, hasta tener '
-          'una masa suave.\n'
-          '3. Haz bolitas y al horno fuerte unos 15 a 20 minutos, hasta que '
-          'doren.\n\n'
-          'Se comen calentitos, con café.',
-    ),
-    (
-      ['api', 'api morado'],
-      '**Api morado**:\n'
-          '1. Disuelve unas 4 cucharadas de harina de maíz morado en agua '
-          'fría.\n'
-          '2. Hierve 1 litro de agua con canela y clavo de olor, y agrega la '
-          'mezcla moviendo sin parar para que no se hagan grumos.\n'
-          '3. Cocina unos 10 minutos a fuego bajo y endulza a gusto.\n\n'
-          'Va con buñuelos o con pastel.',
-    ),
-    (
-      ['masaco'],
-      '**Masaco**:\n'
-          '1. Cocina o fríe plátano verde (o yuca).\n'
-          '2. Machácalo caliente con queso rallado o con charque frito.\n'
-          '3. Forma bolitas y dóralas un poquito.\n\n'
-          'Perfecto con café o con un jugo.',
-    ),
-    (
-      ['pique macho', 'pique'],
-      '**Pique macho**:\n'
-          '1. Corta carne en tiras y fríela con cebolla, tomate y locoto. Suma '
-          'salchicha en rodajas.\n'
-          '2. Sirve todo sobre papas fritas.\n'
-          '3. Arriba, huevo duro y más locoto.\n\n'
-          'Es de Cochabamba y se come entre varios.',
-    ),
-    (
-      ['silpancho'],
-      '**Silpancho**:\n'
-          '1. Aplana la carne bien delgadita y apánala.\n'
-          '2. Fríela.\n'
-          '3. Sirve sobre arroz y papas en rodajas fritas, con un huevo frito '
-          'encima y una ensalada de tomate, cebolla y locoto.',
-    ),
-    (
-      ['sopa de mani'],
-      '**Sopa de maní**:\n'
-          '1. Licúa maní crudo con agua.\n'
-          '2. Hierve carne (costilla o pollo) con verduras.\n'
-          '3. Agrega el maní licuado, moviendo para que no se pegue, y fideo o '
-          'arroz.\n'
-          '4. Al servir, papas fritas encima y perejil.',
-    ),
-  ];
-
-  static final Map<String, String> _indiceRecetas = _indice(_recetas);
-
-  static final _comoSeHace = RegExp(
-    r'^(?:y )?(?:como (?:se hace|se hacen|se prepara|se preparan|hago|preparo|'
-    r'cocino|se cocina|hacer|preparar|cocinar)|receta (?:de|del|para)|'
-    r'la receta (?:de|del)|ensename a (?:hacer|preparar|cocinar)) (.+)$',
-  );
-
-  /// "¿Cómo se hace una salteña?", "receta de majadito".
-  static RespuestaCharla? _receta(String t) {
-    final pedido = _comoSeHace.firstMatch(t);
-    if (pedido == null) return null;
-    final texto = _buscar(_indiceRecetas, pedido[1]!.trim());
-    return texto == null ? null : _dicho(texto, 'saber:receta');
   }
 
   // ================================================================ inventos
@@ -327,6 +218,7 @@ abstract final class EnciclopediaMacias {
   static final Map<String, String> _conceptos = _indice([
     ..._glosario,
     ..._cultura,
+    ...CocinaMacias.platos,
   ]);
   static final Map<String, String> _personajes = _indice(_gente);
   static final Map<String, String> _sitios = _indice(_lugares);
@@ -473,7 +365,7 @@ abstract final class EnciclopediaMacias {
     ..._lugares,
     ..._inventos,
     ..._formulas,
-    ..._recetas,
+    ...CocinaMacias.entradas,
   ];
 
   // ======================================================== tabla periodica
