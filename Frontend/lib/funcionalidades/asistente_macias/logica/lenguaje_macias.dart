@@ -425,6 +425,8 @@ abstract final class LenguajeMacias {
     'gusten',
     'titulo',
     'titulos',
+    // "Los precios" no es "precioso".
+    'precios',
   };
 
   /// Igual, o con una falta de tipeo. Una letra de mas o de menos solo se

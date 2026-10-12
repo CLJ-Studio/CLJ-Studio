@@ -1623,10 +1623,12 @@ abstract final class ConocimientoMacias {
           'Para estudiar: álgebra (al estilo Baldor), cálculo integral y C++, '
           'con ejemplos. Hago cuentas, resuelvo ecuaciones, derivo, integro, '
           'factorizo, convierto unidades y saco porcentajes y promedios.\n\n'
+          'También sé de cultura general, filosofía, psicología e historia, '
+          'te paso recetas paso a paso (**un postre**, **tengo arroz y huevo, '
+          '¿qué cocino?**) y te saco de dudas de ortografía.\n\n'
           'Y además charlamos: me acuerdo de tus exámenes, te recuerdo cosas '
-          '(**recuérdame comprar fotocopias**), te digo cuánto falta para '
-          'Carnaval y jugamos un rato. Escríbeme con tus palabras o toca '
-          '**menú**.',
+          '(**recuérdame comprar fotocopias**), jugamos trivia y te cuento '
+          'chistes. Escríbeme con tus palabras o toca **menú**.',
       relacionados: ['quien_eres', 'calculadora'],
     ),
     TemaMacias(
@@ -1704,6 +1706,38 @@ abstract final class ConocimientoMacias {
             'equivoco, me la recuerda.',
         '¿Qué le dijo el 3 al 30?\n\nPara ser como yo, tienes que ser '
             'sincero.',
+        '¿Por qué el estudiante llevó una escalera a clases?\n\nPorque quería '
+            'pasar al siguiente nivel.',
+        '¿Qué le dijo una impresora a otra?\n\n—¿Esa hoja es tuya o es '
+            'impresión mía?',
+        '¿Por qué la computadora fue al médico?\n\nPorque tenía un virus.',
+        '¿Cuál es el café más peligroso del mundo?\n\nEl ex-preso.',
+        '¿Qué le dijo el café al azúcar?\n\nSin ti, mi vida es amarga.',
+        'El profe dijo que el examen iba a ser "sencillo". Parece que en su '
+            'idioma "sencillo" significa otra cosa.',
+        '¿Cómo se despiden los químicos?\n\nÁcido un placer.',
+        '¿Por qué el protón siempre está feliz?\n\nPorque es positivo.',
+        '¿Qué le dijo una pared a otra?\n\nNos vemos en la esquina.',
+        '¿Qué hace un perro con un taladro?\n\nTaladrando.',
+        '¿Por qué los pájaros no usan Facebook?\n\nPorque ya tienen Twitter.',
+        '¿Cuál es el animal más antiguo?\n\nLa cebra, porque está en blanco y '
+            'negro.',
+        'Mi celular y yo tenemos algo en común: los dos nos quedamos sin '
+            'batería a media tarde.',
+        'Mi plan de estudio: abrir el cuaderno, mirar el cuaderno, sentirme '
+            'culpable, cerrar el cuaderno.',
+        '¿Qué le dijo un techo a otro?\n\nTecho de menos.',
+        '¿Por qué el tomate no toma café?\n\nPorque toma-te.',
+        '¿Qué le dijo la luna al sol?\n\nTan grande y no te dejan salir de '
+            'noche.',
+        '¿Qué le dijo el semáforo al auto?\n\nNo me mires, que me estoy '
+            'cambiando.',
+        'Grupo de estudio: cinco minutos de estudio y dos horas de memes.',
+        '¿Cuál es el colmo de un electricista?\n\nQue su esposa se llame Luz '
+            'y sus hijos le sigan la corriente.',
+        '¿Qué le dijo un pez a otro?\n\nNada.',
+        'Si la vida te da limones, haz limonada. Si te da un parcial sorpresa, '
+            'haz lo que puedas.',
       ]),
       relacionados: ['chiste', 'dato_curioso'],
     ),
@@ -1792,6 +1826,43 @@ abstract final class ConocimientoMacias {
             'Para casi todo, con 3,1416 alcanza.',
         'En tu cuerpo viven unos 38 billones de bacterias: muchísimas más que '
             'las estrellas de la Vía Láctea.',
+        'El Titicaca, entre Bolivia y Perú, es el lago navegable más alto '
+            'del mundo: está a unos 3800 metros.',
+        'Las nutrias marinas duermen tomadas de la mano para que la corriente '
+            'no las separe.',
+        'Los koalas duermen hasta 20 horas al día.',
+        'Una cucharadita de estrella de neutrones pesaría miles de millones '
+            'de toneladas.',
+        'Si estiraras todo el ADN de tu cuerpo, alcanzaría para ir y volver '
+            'al Sol cientos de veces.',
+        'Los plátanos son un poquito radiactivos, por el potasio que tienen. '
+            'Tranqui: tendrías que comer millones para que importe.',
+        'Para la botánica, el plátano es una baya y la frutilla no.',
+        'Cleopatra vivió más cerca de la llegada del ser humano a la Luna que '
+            'de la construcción de la Gran Pirámide.',
+        'En Oxford ya se daban clases antes de que se fundara Tenochtitlan, '
+            'la capital azteca.',
+        'La Antártida es el desierto más grande del mundo: desierto es donde '
+            'casi no llueve, no donde hace calor.',
+        'El Amazonas lleva más agua que los siete ríos que le siguen juntos.',
+        'El Alto, junto a La Paz, pasa los 4000 metros de altura: es una de '
+            'las ciudades grandes más altas del mundo.',
+        'Bolivia tiene 37 idiomas oficiales: el castellano y 36 lenguas de '
+            'pueblos indígenas, como el quechua, el aymara y el guaraní.',
+        'El Parque Nacional Madidi, en el norte de La Paz, es uno de los '
+            'lugares con más especies del planeta.',
+        'La palabra "robot" viene del checo robota, trabajo forzado. Apareció '
+            'en una obra de teatro de Karel Čapek, en 1920.',
+        'Los delfines se llaman entre ellos con silbidos propios, como si '
+            'fueran nombres.',
+        'En el espacio no hay sonido: no hay aire que lo lleve. Las '
+            'explosiones de las películas serían silenciosas.',
+        'La luz del Sol tarda unos 8 minutos en llegar: el Sol que ves es el '
+            'de hace 8 minutos.',
+        'Se calcula que hay más estrellas en el universo que granos de arena '
+            'en todas las playas de la Tierra.',
+        'El cubo de Rubik tiene más de 43 trillones de combinaciones, y '
+            'cualquiera se resuelve en 20 movimientos o menos.',
       ]),
       relacionados: ['dato_curioso', 'chiste'],
     ),

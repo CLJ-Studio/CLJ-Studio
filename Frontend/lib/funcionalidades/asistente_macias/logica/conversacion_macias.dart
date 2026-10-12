@@ -79,6 +79,19 @@ final class EsperaCarrera extends EsperaMacias {
   const EsperaCarrera();
 }
 
+/// Hizo una pregunta de trivia: las opciones, cual es la buena y por que.
+final class EsperaTrivia extends EsperaMacias {
+  const EsperaTrivia(this.opciones, this.correcta, this.explicacion);
+  final List<String> opciones;
+  final int correcta;
+  final String explicacion;
+}
+
+/// Sugirio recetas ("¿cuál te paso?"): falta cual.
+final class EsperaReceta extends EsperaMacias {
+  const EsperaReceta();
+}
+
 /// Lo que contesta la charla, y lo que deja preguntado.
 class RespuestaCharla {
   const RespuestaCharla(

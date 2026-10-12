@@ -2875,6 +2875,7 @@ abstract final class CharlaMacias {
         'anotado',
         'mmm',
         'hmm',
+        'a ver',
         'ah',
         'oh',
         'ajam',
@@ -2903,6 +2904,8 @@ abstract final class CharlaMacias {
         'acuerdo',
         e.frase == 'mmm' || e.frase == 'hmm'
             ? '¿Mmm? Si te quedó alguna duda, pregúntame nomás.'
+            : e.frase == 'a ver'
+            ? 'A ver, dime: ¿qué necesitas?'
             : c.alguna(const ['Dale.', 'Bien ahí.', 'Listo.', 'Joya.']),
       ),
     ),
@@ -3336,6 +3339,129 @@ abstract final class CharlaMacias {
       return dicho(
         'Fíjate en las mayúsculas: Mac**IA**s. La IA de inteligencia '
         'artificial va escondida en mi nombre. Lo demás es secreto del equipo.',
+      );
+    }
+    if (dice([
+      'la ia nos va a reemplazar',
+      'la ia va a reemplazar',
+      'la ia me va a reemplazar',
+      'nos van a reemplazar las maquinas',
+      'la inteligencia artificial nos va a reemplazar',
+      'la ia va a quitar trabajos',
+      'la ia me va a quitar el trabajo',
+      'van a reemplazar a los programadores',
+      'la ia es peligrosa',
+      'la ia va a dominar el mundo',
+      'las maquinas van a dominar el mundo',
+      'los robots van a dominar el mundo',
+    ])) {
+      return dicho(
+        'Mi opinión de asistente humilde: la IA va a cambiar muchos trabajos, '
+        'pero el que entiende lo que hace y sabe usarla vale más, no menos. '
+        'Y de mí, tranqui: lo más peligroso que hago es contar chistes malos.',
+      );
+    }
+    if (dice([
+      'tienes conciencia',
+      'eres consciente',
+      'piensas por ti mismo',
+      'piensas de verdad',
+      'estas vivo',
+      'estas viva',
+      'tienes alma',
+      'tienes vida propia',
+    ])) {
+      return dicho(
+        'No. No tengo conciencia ni alma: sigo reglas que escribió el equipo, '
+        'muchísimas reglas. Cuando parece que pienso, es que alguien pensó '
+        'antes por mí. Eso sí, si una máquina podría llegar a tener conciencia '
+        'es de las preguntas más lindas de la filosofía.',
+      );
+    }
+    if (dice([
+      'tienes suenos',
+      'que suenas',
+      'tu suenas',
+      'duermes',
+      'cuando duermes',
+      'nunca duermes',
+      'no duermes',
+      'descansas',
+    ])) {
+      return dicho(
+        'No duermo: estoy 24/7, como la cafetería en época de exámenes, pero '
+        'sin cerrar. Si soñara, seguro sería con un examen de cálculo que sale '
+        'perfecto.',
+      );
+    }
+    if (dice([
+      'tienes instagram',
+      'tienes insta',
+      'tienes tiktok',
+      'tienes facebook',
+      'tienes redes',
+      'tienes redes sociales',
+      'tienes whatsapp',
+      'tienes numero',
+      'pasame tu numero',
+      'dame tu numero',
+      'pasame tu insta',
+      'tu instagram',
+    ])) {
+      return dicho(
+        'No tengo redes ni número: vivo solo aquí, en el chat. Cuando quieras '
+        'hablar, abres la app y aquí estoy.',
+      );
+    }
+    if (dice([
+      'cuando es tu cumpleanos',
+      'cuando es tu cumple',
+      'cuando cumples anos',
+      'cuando naciste',
+      'que dia naciste',
+    ])) {
+      return dicho(
+        'Nací en 2026; el día exacto es secreto del equipo. Así que cualquier '
+        'día que me invites una salteña, lo festejamos.',
+      );
+    }
+    if (const {
+      'sabes cocinar',
+      'sabes de cocina',
+      'sabes recetas',
+      'tienes recetas',
+      'cocinas',
+      'te gusta cocinar',
+    }.contains(t)) {
+      return RespuestaCharla(
+        'No tengo manos, pero recetas sí: casi cien, con ingredientes y paso a '
+        'paso. De lo nuestro (majadito, salteñas, silpancho) y de todo el '
+        'mundo. ${c.alguna(const ['¿Te tiento con alguna?', '¿Qué se te antoja?'])}',
+        intencion: 'charla:macias',
+        opciones: const [
+          OpcionMacias(id: 'r:majadito', texto: 'Majadito'),
+          OpcionMacias(id: 'r:brownie', texto: 'Brownies'),
+          OpcionMacias(id: 'r:pique macho', texto: 'Pique macho'),
+        ],
+      );
+    }
+    if (const {
+      'sabes de filosofia',
+      'sabes filosofia',
+      'sabes de psicologia',
+      'sabes psicologia',
+      'sabes de historia',
+      'sabes historia',
+      'sabes de arte',
+      'sabes de musica',
+      'sabes de ortografia',
+    }.contains(t)) {
+      return dicho(
+        'Algo sé, sí. Pregúntame por un filósofo, un tema de psicología o una '
+        'época de la historia (**¿qué es el estoicismo?**, **¿quién fue '
+        'Freud?**). De cocina tengo casi cien recetas: pídeme **un postre** o '
+        '**receta de majadito**. Y si dudas cómo se escribe algo, también: '
+        '**¿hay, ahí o ay?**',
       );
     }
     if (dice(['cuantos anos tienes', 'que edad tienes', 'tu edad'])) {
@@ -4544,6 +4670,57 @@ abstract final class CharlaMacias {
       '¿Qué número, puesto de cabeza, vale tres menos?',
       ['9', 'nueve'],
       'el 9: de cabeza es un 6',
+    ),
+    (
+      'Tiene cuello y no cabeza, tiene brazos y no manos.',
+      ['camisa', 'polera', 'remera', 'camiseta'],
+      'la camisa',
+    ),
+    ('Lana sube, lana baja.', ['navaja'], 'la navaja'),
+    (
+      'Agua pasa por mi casa, cate de mi corazón.',
+      ['aguacate', 'palta'],
+      'el aguacate (la palta)',
+    ),
+    (
+      'Tengo hojas sin ser árbol y lomo sin ser caballo. Si me abres, te '
+          'cuento cosas.',
+      ['libro', 'cuaderno'],
+      'el libro',
+    ),
+    ('Cuanto más caliente, más fresco.', ['pan'], 'el pan'),
+    (
+      'Tiene teclas y no es piano, tiene ratón y no es gato.',
+      ['computadora', 'compu', 'computador', 'ordenador', 'pc', 'laptop'],
+      'la computadora',
+    ),
+    (
+      'Todos me pisan a mí, pero yo no piso a nadie; todos preguntan por mí, '
+          'y yo no pregunto por nadie.',
+      ['calle', 'camino'],
+      'la calle',
+    ),
+    (
+      'Una vieja con un solo diente que llama a toda la gente.',
+      ['campana'],
+      'la campana',
+    ),
+    (
+      'Llevo mi casa a cuestas, camino sin tener patas y voy dejando mi '
+          'huella con un hilito de plata.',
+      ['caracol'],
+      'el caracol',
+    ),
+    (
+      'De día se esconde y de noche aparece; a veces está entera y a veces a '
+          'medias.',
+      ['luna'],
+      'la luna',
+    ),
+    (
+      'Si dos son compañía y tres son multitud, ¿qué son cuatro y cinco?',
+      ['nueve', '9'],
+      'nueve: cuatro y cinco son nueve',
     ),
   ];
 

@@ -196,9 +196,9 @@ void main() {
     });
 
     test('lo que no sabe, lo dice nombrando de que se pregunto', () {
-      final respuesta = _cerebro().escribir('¿Qué es la mecánica cuántica?');
+      final respuesta = _cerebro().escribir('¿Qué es la hermenéutica?');
       expect(respuesta.intencion, 'desconocido');
-      expect(_todo(respuesta), contains('mecánica cuántica'));
+      expect(_todo(respuesta), contains('hermenéutica'));
       // Sin la lista de todo lo que sabe.
       expect(_todo(respuesta), isNot(contains('álgebra')));
     });

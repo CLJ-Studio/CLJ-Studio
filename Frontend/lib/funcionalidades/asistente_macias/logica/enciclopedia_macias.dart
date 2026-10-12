@@ -1,6 +1,8 @@
+import '../modelos/mensaje_macias.dart';
 import 'cocina_macias.dart';
 import 'conocimiento_macias.dart';
 import 'conversacion_macias.dart';
+import 'humanidades_macias.dart';
 import 'lenguaje_macias.dart';
 
 /// Una entrada: las formas en que se la nombra (ya normalizadas) y lo que
@@ -39,7 +41,7 @@ abstract final class EnciclopediaMacias {
         _formula(t) ??
         _pais(t) ??
         _invento(t) ??
-        CocinaMacias.responder(t) ??
+        CocinaMacias.responder(t, c) ??
         _pregunta(t) ??
         (soloPreguntas ? null : _palabraSuelta(t));
   }
@@ -219,8 +221,12 @@ abstract final class EnciclopediaMacias {
     ..._glosario,
     ..._cultura,
     ...CocinaMacias.platos,
+    ...HumanidadesMacias.conceptos,
   ]);
-  static final Map<String, String> _personajes = _indice(_gente);
+  static final Map<String, String> _personajes = _indice([
+    ..._gente,
+    ...HumanidadesMacias.personas,
+  ]);
   static final Map<String, String> _sitios = _indice(_lugares);
 
   static Map<String, String> _indice(List<_Entrada> entradas) => {
@@ -268,7 +274,7 @@ abstract final class EnciclopediaMacias {
   static final _queEs = [
     RegExp(
       r'^(?:y )?(?:me puedes decir |sabes |me dices |dime |oye )?(?:que|q) '
-      r'(?:es|son|significa|significan|seria|era|eran) (.+)$',
+      r'(?:es|son|significa|significan|seria|era|eran|fue|fueron) (.+)$',
     ),
     RegExp(
       r'^(?:me puedes |puedes |podrias )?(?:explicar|explicarme|explicame|'
@@ -340,21 +346,49 @@ abstract final class EnciclopediaMacias {
           _buscar(_sitios, tema) ??
           _buscar(_personajes, tema) ??
           _elementoPorNombre(tema);
-      if (texto != null) return _dicho(texto, 'saber:concepto');
+      if (texto != null) return _conReceta(texto, tema);
     }
     return null;
   }
 
-  /// "fotosíntesis", "inflación", "Einstein": el tema solo, sin pregunta.
+  /// "fotosíntesis", "inflación", "Einstein": el tema solo, sin pregunta. Y
+  /// "¿y el existencialismo?", despues de otra pregunta.
   static RespuestaCharla? _palabraSuelta(String t) {
-    if (t.split(' ').length > 4) return null;
-    final concepto =
-        _conceptos[t] ?? _sitios[t] ?? _personajes[t] ?? _elementoPorNombre(t);
-    return concepto == null ? null : _dicho(concepto, 'saber:concepto');
+    final sinY = t.replaceFirst(RegExp(r'^y (?:que tal |sobre |de )?'), '');
+    final sinArticulo = sinY.replaceFirst(
+      RegExp(r'^(?:el|la|los|las|lo de) '),
+      '',
+    );
+    // Primero tal cual: "la paz" es un lugar, no "paz".
+    for (final tema in {t, sinY, sinArticulo}) {
+      if (tema.split(' ').length > 4) continue;
+      final concepto =
+          _conceptos[tema] ??
+          _sitios[tema] ??
+          _personajes[tema] ??
+          _elementoPorNombre(tema);
+      if (concepto != null) return _conReceta(concepto, tema);
+    }
+    // "nuggets", "lentejas": un plato que solo esta como receta.
+    return CocinaMacias.receta(sinArticulo, exacta: true);
   }
 
   static RespuestaCharla _dicho(String texto, String intencion) =>
       RespuestaCharla(texto, intencion: intencion);
+
+  /// Lo que es [tema], y si es un plato con receta, la receta a un toque.
+  static RespuestaCharla _conReceta(String texto, String tema) {
+    final receta = CocinaMacias.exacta(tema);
+    if (receta == null) return _dicho(texto, 'saber:concepto');
+    return RespuestaCharla(
+      '$texto ¿Te paso la receta?',
+      intencion: 'saber:concepto',
+      espera: EsperaSiNo('receta:${receta.nombres.first}'),
+      opciones: [
+        OpcionMacias(id: 'r:${receta.nombres.first}', texto: 'Ver la receta'),
+      ],
+    );
+  }
 
   /// Todos los nombres por los que se busca y todos los textos. Para las
   /// pruebas: que esten bien escritos y sin huecos.
@@ -366,6 +400,7 @@ abstract final class EnciclopediaMacias {
     ..._inventos,
     ..._formulas,
     ...CocinaMacias.entradas,
+    ...HumanidadesMacias.entradas,
   ];
 
   // ======================================================== tabla periodica

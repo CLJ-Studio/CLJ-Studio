@@ -666,6 +666,7 @@ abstract final class AzarMacias {
     OpcionMacias(id: 'o:juego_numero', texto: 'Adivina el número'),
     OpcionMacias(id: 'o:juego_ppt', texto: 'Piedra, papel o tijera'),
     OpcionMacias(id: 'o:juego_adivinanza', texto: 'Una adivinanza'),
+    OpcionMacias(id: 'o:juego_trivia', texto: 'Trivia'),
     OpcionMacias(id: 'o:juego_moneda', texto: 'Lanzar una moneda'),
     OpcionMacias(id: 'o:juego_dado', texto: 'Tirar un dado'),
   ];

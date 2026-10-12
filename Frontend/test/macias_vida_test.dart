@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/cerebro_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/charla_macias.dart';
+import 'package:upsa_eat/funcionalidades/asistente_macias/logica/cocina_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/conocimiento_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/lenguaje_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/memoria_macias.dart';
@@ -480,19 +481,29 @@ void main() {
 
   group('cocina', () {
     const recetas = {
-      'Y dabes hacer bife': '**Bife**',
-      'Si sabes hacer bife': '**Bife**',
+      'Y dabes hacer bife': '**Bife a la boliviana**',
+      'Si sabes hacer bife': '**Bife a la boliviana**',
       'y sabes hacer fideos': '**Fideo con salsa**',
       'receta de silpancho': '**Silpancho**',
       'como se hace una salchipapa': '**Salchipapa**',
       'sabes hacer sushi': 'nori',
-      'como preparo un frappe': '**Frappé**',
+      'como preparo un frappe': '**Frappé de café**',
       'receta de brownies': '**Brownies**',
       'que lleva el pique macho': '**Pique macho**',
-      'ingredientes de la salteña': 'jigote',
+      'ingredientes de la salteña': 'Jigote',
       'como hago arroz': '**Arroz blanco**',
       'como se hace la llajua': 'locoto',
       'receta de anticuchos': 'corazón',
+      'receta de lasaña': '**Bechamel:**',
+      'como se hace la sopa de quinua': 'amargor',
+      'receta de picante de pollo': 'chuño',
+      'como hago una pizza casera': '**Pizza casera**',
+      'receta de un buen majadito': 'charque',
+      'como hacer tortilla española': 'plato',
+      'como hago panqueques': '**Panqueques**',
+      'receta del cheesecake': 'galletas',
+      'como se prepara el api': 'maíz morado',
+      'receta de sajta de pollo': 'chuño phuti',
     };
     for (final MapEntry(key: pregunta, value: esperado) in recetas.entries) {
       test('"$pregunta"', () {
@@ -505,9 +516,67 @@ void main() {
     _cadaUno(const {
       'que es una salchipapa': 'saber:concepto',
       'que es la llajua': 'saber:concepto',
+      'que es la lasaña': 'saber:concepto',
       'que puedo cocinar hoy': 'saber:recetas',
-      'receta de lasaña': 'saber:receta_desconocida',
+      'receta de paella': 'saber:receta_desconocida',
       'quiero una salchipapa': 'charla:antojo',
+      'un postre': 'saber:recetas',
+      'recetas bolivianas': 'saber:recetas',
+      'que desayuno': 'saber:recetas',
+      'algo para tomar': 'saber:recetas',
+      'tengo arroz y huevo que cocino': 'saber:recetas',
+      'que puedo hacer con pollo': 'saber:recetas',
+      'receta de pollo': 'saber:recetas',
+      'otra receta': 'saber:receta',
+      'cuanto tiempo hierve un huevo': 'saber:cocina',
+      'cuanto tarda el pollo': 'saber:cocina',
+      'se me pega el arroz': 'saber:cocina',
+      'cuanto es una taza': 'saber:cocina',
+      'como cocinar en la altura': 'saber:cocina',
+      'no tengo horno': 'saber:cocina',
+      'se me paso la sal': 'saber:cocina',
+      'cuanto arroz por persona': 'saber:cocina',
+      'snacks para estudiar': 'saber:cocina',
+    });
+
+    test('"cuánto tarda" una receta dice su tiempo', () {
+      final texto = _todo(_cerebro().escribir('cuanto tarda la lasaña'));
+      expect(texto, contains('1 hora 30 minutos'));
+    });
+
+    test(
+      'con lo que hay en la cocina, la receta que mas lo usa va primero',
+      () {
+        final respuesta = _cerebro().escribir('tengo arroz y huevo que cocino');
+        final opciones = respuesta.burbujas.last.opciones;
+        expect(opciones, isNotEmpty);
+        expect(opciones.first.texto, 'Arroz chaufa');
+      },
+    );
+
+    test('"¿cuál te paso?" se contesta con el nombre o tocando', () {
+      final cerebro = _cerebro();
+      final ideas = cerebro.escribir('un postre');
+      expect(ideas.burbujas.last.opciones, hasLength(4));
+      final porNombre = cerebro.escribir(
+        ideas.burbujas.last.opciones.first.texto,
+      );
+      expect(porNombre.intencion, 'saber:receta');
+      expect(_todo(porNombre), contains('**Paso a paso**'));
+
+      final otro = _cerebro();
+      final sugeridas = otro.escribir('que puedo cocinar hoy');
+      final tocada = otro.elegir(sugeridas.burbujas.last.opciones.first);
+      expect(tocada.intencion, 'saber:receta');
+      expect(_todo(tocada), contains('**Ingredientes**'));
+    });
+
+    test('"otra" despues de una receta es otra receta', () {
+      final cerebro = _cerebro();
+      final primera = _todo(cerebro.escribir('receta de flan'));
+      final otra = cerebro.escribir('otra');
+      expect(otra.intencion, 'saber:receta');
+      expect(_todo(otra), isNot(primera));
     });
 
     test('lo que no es comida no se confunde con una receta', () {
@@ -519,6 +588,51 @@ void main() {
         _cerebro().escribir('como hacer una app').temaId,
         'app_como_se_hizo',
       );
+      for (final frase in const [
+        'que puedo hacer con mi vida',
+        'tengo examen que hago',
+        'como hago para bajar de peso',
+        'como preparo mi examen',
+        'que lleva un cv',
+        'cuanto tarda el pedido',
+        'me queme con aceite caliente',
+      ]) {
+        expect(
+          _cerebro().escribir(frase).intencion,
+          isNot(startsWith('saber:receta')),
+          reason: frase,
+        );
+        expect(
+          _cerebro().escribir(frase).intencion,
+          isNot('saber:cocina'),
+          reason: frase,
+        );
+      }
+    });
+
+    test('cada receta sugerida existe', () {
+      for (final nombre in CocinaMacias.sugeridas) {
+        expect(CocinaMacias.buscar(nombre), isNotNull, reason: nombre);
+      }
+    });
+
+    test('ningun nombre de receta se repite', () {
+      final vistos = <String>{};
+      for (final receta in CocinaMacias.recetas) {
+        for (final nombre in receta.nombres) {
+          expect(vistos.add(nombre), isTrue, reason: nombre);
+        }
+      }
+    });
+
+    test('cada receta trae ingredientes, pasos y tiempo', () {
+      expect(CocinaMacias.recetas.length, greaterThan(80));
+      for (final receta in CocinaMacias.recetas) {
+        expect(receta.ingredientes, isNotEmpty, reason: receta.titulo);
+        expect(receta.pasos, isNotEmpty, reason: receta.titulo);
+        expect(receta.tiempo, isNotEmpty, reason: receta.titulo);
+        expect(receta.rinde, isNotEmpty, reason: receta.titulo);
+      }
     });
 
     test('"si sabes hacer bife" no ofrece temas que no van', () {

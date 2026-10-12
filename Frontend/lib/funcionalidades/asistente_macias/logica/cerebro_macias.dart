@@ -1,15 +1,20 @@
 import 'dart:math';
 
 import '../modelos/mensaje_macias.dart';
+import 'bienestar_macias.dart';
 import 'charla_macias.dart';
+import 'cocina_macias.dart';
 import 'conocimiento_macias.dart';
 import 'conversacion_macias.dart';
 import 'ejercicios_macias.dart';
 import 'enciclopedia_macias.dart';
+import 'humanidades_macias.dart';
 import 'lenguaje_macias.dart';
 import 'matematica_macias.dart';
 import 'memoria_macias.dart';
+import 'ortografia_macias.dart';
 import 'saber_general_macias.dart';
+import 'trivia_macias.dart';
 import 'universidad_macias.dart';
 import 'utilidades_macias.dart';
 
@@ -193,6 +198,8 @@ class CerebroMacias {
   }
 
   RespuestaMacias _elegir(OpcionMacias opcion) {
+    // Una opcion de trivia se lee contra la pregunta que estaba abierta.
+    final espera = _espera;
     _espera = null;
     final c = _nuevoContexto();
     final separador = opcion.id.indexOf(':');
@@ -207,6 +214,9 @@ class CerebroMacias {
       case 't':
         final tema = ConocimientoMacias.tema(valor);
         if (tema != null) return _responderTema(tema);
+      case 'r':
+        final receta = CocinaMacias.receta(valor);
+        if (receta != null) return _deCharla(receta);
       case 'o':
         switch (valor) {
           case 'menu':
@@ -231,6 +241,19 @@ class CerebroMacias {
             return _deCharla(AzarMacias.moneda(_azar));
           case 'juego_dado':
             return _deCharla(AzarMacias.dados(_azar, 1));
+          case 'juego_trivia':
+            return _deCharla(TriviaMacias.pregunta(c));
+          case 'trivia_0' || 'trivia_1' || 'trivia_2':
+            if (espera is EsperaTrivia) {
+              return _deCharla(
+                TriviaMacias.resultado(
+                  espera,
+                  int.parse(valor.substring(7)),
+                  c,
+                ),
+              );
+            }
+            return _deCharla(TriviaMacias.pregunta(c));
           case 'ppt_piedra' || 'ppt_papel' || 'ppt_tijera':
             return _deCharla(AzarMacias.jugarPpt(valor.substring(4), _azar));
           case 'meme':
@@ -394,11 +417,24 @@ class CerebroMacias {
     final util =
         FechasMacias.responder(junto, c) ??
         AzarMacias.responder(m.limpio, m.fichas, m.original, _azar) ??
+        TriviaMacias.responder(junto, c) ??
         SaberGeneralMacias.responder(junto);
     if (util != null) return _deCharla(util);
 
+    // "Una frase de Séneca", "un refrán", "cuéntame una fábula", "¿hay o
+    // ahí?": pedidos con forma propia, antes que la charla suelta.
+    final humanidades =
+        HumanidadesMacias.responder(junto, c) ??
+        OrtografiaMacias.responder(junto);
+    if (humanidades != null) return _deCharla(humanidades);
+
     final antes = CharlaMacias.antesDeLosTemas(junto, c);
     if (antes != null) return _social(antes, c);
+
+    // "¿Cómo subo mi autoestima?", "¿cómo tomo apuntes?", "me quemé con
+    // aceite": consejos que no son de la app.
+    final consejo = BienestarMacias.responder(junto, c);
+    if (consejo != null) return _deCharla(consejo);
 
     // La U: tramites, el campus, los profes. Va antes que los temas: "el
     // wifi de la U" no es una pregunta de la app.
@@ -521,8 +557,14 @@ class CerebroMacias {
         if (siNo == null) return null;
         return _anotarGusto(CharlaMacias.conTildes(cosa), siNo);
       case EsperaFavorito(:final categoria):
+        // "Me siento solo" no es una comida favorita: es como esta.
         if (m.palabras.length > 6 ||
-            CharlaMacias.esPregunta(m.original, m.limpio)) {
+            CharlaMacias.esPregunta(m.original, m.limpio) ||
+            CharlaMacias.animoEnFrase(m.palabras, c) != null ||
+            RegExp(
+              r'^(?:me siento|me duele|estoy|ando|tengo|soy|necesito|'
+              r'ayudame|ayuda)\b',
+            ).hasMatch(m.junto)) {
           return null;
         }
         if (CharlaMacias.respuestaSiNo(m.limpio) == false) {
@@ -558,6 +600,14 @@ class CerebroMacias {
         final fecha = FechasMacias.fechaEn(m.junto, c.ahora);
         if (fecha == null) return null;
         return _anotarExamen(materia, fecha, c, tipo: tipo);
+      case EsperaTrivia(:final opciones):
+        final elegida = TriviaMacias.elegida(m.limpio, opciones);
+        if (elegida == null && !_seRinde(m)) return null;
+        return _deCharla(TriviaMacias.resultado(espera, elegida, c));
+      case EsperaReceta():
+        // "¿Cuál te paso?" → "el majadito". Un numero lo resuelve la lista.
+        final receta = CocinaMacias.elegida(m.junto);
+        return receta == null ? null : _deCharla(receta);
       case EsperaCarrera():
         final carrera = MemoriaMacias.carreraDe(m.junto);
         if (carrera == null) return null;
@@ -606,6 +656,17 @@ class CerebroMacias {
   static bool _seRinde(_Mensaje m) => _rendirse.contains(m.junto);
 
   RespuestaMacias _siNo(String para, bool si, ContextoMacias c) {
+    if (para.startsWith('receta:')) {
+      final receta = CocinaMacias.receta(para.substring(7));
+      if (si && receta != null) return _deCharla(receta);
+      return _simple(
+        c.alguna(const [
+          'Dale. ¿Algo más?',
+          'Ok. Cuando quieras, me la pides.',
+        ]),
+        intencion: 'charla:negacion',
+      );
+    }
     if (para.startsWith('repaso:')) {
       final seccion = ConocimientoMacias.seccion(para.substring(7));
       if (si && seccion != null) return _abrirSeccion(seccion);
@@ -658,6 +719,12 @@ class CerebroMacias {
       case 'adivinanza':
         if (si) return _deCharla(CharlaMacias.adivinanza(c));
         return _simple('Ok. ¡Buena esa!', intencion: 'juego:fin');
+      case 'trivia':
+        if (si) return _deCharla(TriviaMacias.pregunta(c));
+        return _simple(
+          'Dale. Cuando quieras, otra ronda.',
+          intencion: 'juego:fin',
+        );
     }
     return _simple('¡Listo!', intencion: 'charla:acuerdo');
   }
@@ -1140,6 +1207,19 @@ class CerebroMacias {
         return _social(CharlaMacias.antesDeLosTemas(pedido, c)!, c);
       case 'charla:chiste_malo':
         return _responderTema(ConocimientoMacias.tema('chiste')!);
+      case 'juego:trivia':
+        return _deCharla(TriviaMacias.pregunta(c));
+      case 'saber:receta':
+        return _deCharla(CocinaMacias.otra(c));
+      case 'saber:recetas':
+        return _deCharla(CocinaMacias.ideas('facil', c));
+      case 'saber:frase' || 'saber:refran' || 'charla:cuento':
+        final pedido = switch (_ultimaIntencion) {
+          'saber:frase' => 'frase celebre',
+          'saber:refran' => 'refran',
+          _ => 'cuento',
+        };
+        return _deCharla(HumanidadesMacias.responder(pedido, c)!);
     }
     return null;
   }
