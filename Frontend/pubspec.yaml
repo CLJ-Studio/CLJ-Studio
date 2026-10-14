@@ -52,6 +52,7 @@ dependencies:
   # Codifica JPEG, que dart:ui no sabe hacer: solo entrega PNG, y un PNG
   # fotografico pesa cuatro o seis veces mas que el mismo JPEG.
   image: ^4.5.4
+  audioplayers: ^6.8.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -82,6 +83,9 @@ flutter:
 
   assets:
     - assets/animations/
+    # Los sonidos de la mesa de blackjack de MacIAs (ver
+    # tool/generar_sonidos_blackjack.dart).
+    - assets/audio/blackjack/
     - assets/images/banners/
     - assets/images/categorias/
     - assets/images/locales/

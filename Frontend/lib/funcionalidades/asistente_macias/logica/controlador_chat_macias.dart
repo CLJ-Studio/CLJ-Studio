@@ -51,6 +51,10 @@ class ControladorChatMacias extends ChangeNotifier {
 
   bool escribiendo = false;
 
+  /// Una pantalla que la ultima respuesta pide abrir sola (la mesa de
+  /// blackjack). La pantalla del chat la abre y la limpia.
+  DestinoMacias? porAbrir;
+
   /// Mientras se lee lo guardado. La pantalla muestra a MacIAs escribiendo.
   bool cargando = true;
 
@@ -173,15 +177,18 @@ class ControladorChatMacias extends ChangeNotifier {
     escribiendo = false;
   }
 
-  void _agregarBurbuja(BurbujaMacias burbuja) => _mensajes.add(
-    MensajeMacias(
-      id: _siguienteId++,
-      autor: AutorMensaje.macias,
-      texto: burbuja.texto,
-      opciones: burbuja.opciones,
-      acciones: burbuja.acciones,
-    ),
-  );
+  void _agregarBurbuja(BurbujaMacias burbuja) {
+    _mensajes.add(
+      MensajeMacias(
+        id: _siguienteId++,
+        autor: AutorMensaje.macias,
+        texto: burbuja.texto,
+        opciones: burbuja.opciones,
+        acciones: burbuja.acciones,
+      ),
+    );
+    if (burbuja.abrir != null) porAbrir = burbuja.abrir;
+  }
 
   void _agregar(AutorMensaje autor, String texto) {
     _mensajes.add(

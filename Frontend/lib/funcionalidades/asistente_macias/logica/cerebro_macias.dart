@@ -243,6 +243,10 @@ class CerebroMacias {
             return _deCharla(AzarMacias.dados(_azar, 1));
           case 'juego_trivia':
             return _deCharla(TriviaMacias.pregunta(c));
+          case 'blackjack_si':
+            return _aLaMesa(c);
+          case 'blackjack_no':
+            return _otroDiaBlackjack();
           case 'trivia_0' || 'trivia_1' || 'trivia_2':
             if (espera is EsperaTrivia) {
               return _deCharla(
@@ -397,6 +401,9 @@ class CerebroMacias {
     final junto = m.junto;
     final orden = _orden(junto);
     if (orden != null) return orden;
+
+    // La mesa secreta.
+    if (_pidenBlackjack.contains(junto)) return _invitarBlackjack(c);
 
     if (recortado) {
       final cuenta = _cuentas(m.original);
@@ -719,6 +726,8 @@ class CerebroMacias {
       case 'adivinanza':
         if (si) return _deCharla(CharlaMacias.adivinanza(c));
         return _simple('Ok. ¡Buena esa!', intencion: 'juego:fin');
+      case 'blackjack':
+        return si ? _aLaMesa(c) : _otroDiaBlackjack();
       case 'trivia':
         if (si) return _deCharla(TriviaMacias.pregunta(c));
         return _simple(
@@ -814,6 +823,72 @@ class CerebroMacias {
     }
     return null;
   }
+
+  // ============================================================= blackjack
+  /// La palabra secreta. No esta en ningun menu: el que la sabe, la sabe.
+  static const _pidenBlackjack = {
+    'blackjack',
+    'black jack',
+    'blackjak',
+    'blakjack',
+    'blackyack',
+    'jugar blackjack',
+    'juguemos blackjack',
+    'juguemos un blackjack',
+    'juguemos al blackjack',
+    'quiero jugar blackjack',
+    'quiero jugar al blackjack',
+    'vamos a jugar blackjack',
+    'un blackjack',
+    'mesa de blackjack',
+    'casino',
+  };
+
+  RespuestaMacias _invitarBlackjack(ContextoMacias c) => _deCharla(
+    RespuestaCharla(
+      c.alguna(const [
+        'Shh... encontraste la mesa secreta. Me pongo el traje y reparto yo. '
+            '¿Jugamos blackjack?',
+        'Psst. Hay una mesa de blackjack escondida, y el crupier soy yo. '
+            '¿Te animas?',
+        'Ah, ¿sabes la palabra mágica? Moño puesto, sabot barajado. '
+            '¿Jugamos?',
+      ]),
+      intencion: 'juego:blackjack',
+      espera: const EsperaSiNo('blackjack'),
+      opciones: const [
+        OpcionMacias(id: 'o:blackjack_si', texto: 'Sí, ¡a jugar!'),
+        OpcionMacias(id: 'o:blackjack_no', texto: 'No, otro día'),
+      ],
+    ),
+  );
+
+  /// Dijo que si: la burbuja abre la mesa sola, y deja el boton para volver.
+  RespuestaMacias _aLaMesa(ContextoMacias c) {
+    _espera = null;
+    return RespuestaMacias(
+      [
+        BurbujaMacias(
+          c.alguna(const [
+            '¡Eso! Traje puesto, sabot barajado. Vamos a la mesa.',
+            '¡A la mesa! Las fichas corren por mi cuenta.',
+            'Pasa, que reparto yo. Y no se vale contar cartas.',
+          ]),
+          acciones: const [
+            AccionMacias('Ir a la mesa', DestinoMacias.blackjack),
+          ],
+          abrir: DestinoMacias.blackjack,
+        ),
+      ],
+      sugerencias: _sugerenciasBase,
+      intencion: 'juego:blackjack_mesa',
+    );
+  }
+
+  RespuestaMacias _otroDiaBlackjack() => _simple(
+    'Dale. La mesa queda abierta: cuando quieras, escríbeme **blackjack**.',
+    intencion: 'juego:fin',
+  );
 
   static const _materiasComoOpciones = [
     OpcionMacias(id: 's:algebra', texto: 'Álgebra'),

@@ -17,11 +17,14 @@ import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../../publicar_producto/pantalla/pantalla_mis_publicaciones.dart';
 import '../diseno/burbujas_macias.dart';
 import '../diseno/identidad_macias.dart';
+import '../logica/almacen_blackjack.dart';
 import '../logica/cerebro_macias.dart';
 import '../logica/conocimiento_macias.dart';
 import '../logica/controlador_chat_macias.dart';
 import '../logica/memoria_macias.dart';
+import '../logica/sonidos_blackjack.dart';
 import '../modelos/mensaje_macias.dart';
+import 'pantalla_blackjack.dart';
 
 /// El chat con MacIAs, el asistente virtual de U market.
 ///
@@ -123,6 +126,17 @@ class _PantallaChatMaciasState extends State<PantallaChatMacias> {
       _escribiaAntes = escribe;
       _irAlFinal();
     }
+    // "¡A la mesa!": se deja leer la burbuja un momento y se abre sola.
+    final destino = controlador.porAbrir;
+    if (destino != null) {
+      controlador.porAbrir = null;
+      Future<void>.delayed(
+        Duration(milliseconds: _sinMovimiento ? 0 : 650),
+        () {
+          if (mounted) _abrir(destino);
+        },
+      );
+    }
   }
 
   /// Se hace despues de pintar: antes, la lista todavia no tiene la altura
@@ -195,6 +209,21 @@ class _PantallaChatMaciasState extends State<PantallaChatMacias> {
         );
       case DestinoMacias.correoSoporte:
         ContactoSoporte.abrirCorreo(context);
+      case DestinoMacias.blackjack:
+        navegador.push(
+          PantallaBlackjack.ruta(
+            // Como lo llama MacIAs en el chat: el nombre que le pidio, o el
+            // primero de su perfil.
+            nombre:
+                controlador.cerebro.memoria.nombre ??
+                SesionUsuario.instancia.primerNombre,
+            almacen: widget.almacen == null
+                ? AlmacenBlackjackLocal(_cuenta())
+                : AlmacenBlackjackEnMemoria(),
+            // Un chat de prueba (con su propio almacen) no suena.
+            sonidos: widget.almacen == null ? null : const SonidosMesa.mudos(),
+          ),
+        );
       default:
         break;
     }

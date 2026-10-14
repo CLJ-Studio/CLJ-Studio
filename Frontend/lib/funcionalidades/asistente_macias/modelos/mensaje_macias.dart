@@ -20,6 +20,9 @@ enum DestinoMacias {
   acercaDe,
   whatsappSoporte,
   correoSoporte,
+
+  /// La mesa secreta: se llega escribiendo "blackjack".
+  blackjack,
 }
 
 /// Un boton dentro de una respuesta, como "Abrir mis pedidos".
@@ -71,6 +74,7 @@ class BurbujaMacias {
     this.texto, {
     this.opciones = const [],
     this.acciones = const [],
+    this.abrir,
   });
 
   final String texto;
@@ -79,6 +83,11 @@ class BurbujaMacias {
   final List<OpcionMacias> opciones;
 
   final List<AccionMacias> acciones;
+
+  /// Una pantalla que se abre sola apenas aparece la burbuja, como la mesa
+  /// de blackjack despues de decirle que si. No se guarda: al volver a la
+  /// conversacion no se abre de nuevo (para eso queda el boton).
+  final DestinoMacias? abrir;
 }
 
 /// Todo lo que MacIAs contesta a un mensaje.
