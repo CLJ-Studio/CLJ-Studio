@@ -5,22 +5,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
-import '../../../elementos_compartidos/animaciones/escala_al_presionar.dart';
 import '../../../elementos_compartidos/interaccion/frecuencia_pantalla.dart';
 import '../../../elementos_compartidos/interaccion/retroalimentacion_haptica.dart';
 import '../diseno/cartas_blackjack.dart';
 import '../diseno/crupier_macias.dart';
 import '../diseno/fichas_blackjack.dart';
 import '../diseno/pano_blackjack.dart';
-import '../logica/almacen_blackjack.dart';
+import '../diseno/mesa_casino.dart';
+import '../logica/almacen_casino.dart';
 import '../logica/estrategia_blackjack.dart';
 import '../logica/frases_crupier.dart';
 import '../logica/mesa_blackjack.dart';
-import '../logica/sonidos_blackjack.dart';
+import '../logica/sonidos_casino.dart';
 
 /// La mesa secreta de blackjack de MacIAs.
 ///
-/// Se llega escribiendole "blackjack" en el chat. MacIAs reparte con chaleco
+/// Una de las mesas del casino de MacIAs (se llega escribiendole "casino"
+/// en el chat). MacIAs reparte con chaleco
 /// y moño, y cambia de cara como el personaje de una novela visual; las
 /// fichas son de juego (no valen dinero) y quedan guardadas en el telefono.
 ///
@@ -41,8 +42,9 @@ class PantallaBlackjack extends StatefulWidget {
   /// Como llamar a quien juega.
   final String nombre;
 
-  /// Donde se guardan las fichas. Sin indicarlo, en memoria (pruebas).
-  final AlmacenBlackjack? almacen;
+  /// Donde se guardan las fichas (las del casino) y las estadisticas. Sin
+  /// indicarlo, en memoria (pruebas).
+  final AlmacenCasino? almacen;
 
   /// Lo que suena. Sin indicarlo, los sonidos del telefono o del navegador.
   final SonidosMesa? sonidos;
@@ -55,7 +57,7 @@ class PantallaBlackjack extends StatefulWidget {
   /// las luces del casino.
   static Route<void> ruta({
     String nombre = '',
-    AlmacenBlackjack? almacen,
+    AlmacenCasino? almacen,
     SonidosMesa? sonidos,
   }) => PageRouteBuilder<void>(
     transitionDuration: const Duration(milliseconds: 520),
@@ -264,9 +266,31 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
     azar: _azar,
     nombre: widget.nombre,
   );
-  late final AlmacenBlackjack _almacen =
-      widget.almacen ?? AlmacenBlackjackEnMemoria();
-  late final SonidosMesa _sonidos = widget.sonidos ?? SonidosMesa.delSistema();
+  late final AlmacenCasino _almacen =
+      widget.almacen ?? AlmacenCasinoEnMemoria();
+  late final SonidosMesa _sonidos =
+      widget.sonidos ?? SonidosMesa.delSistema(solo: _sonidosDeLaMesa);
+
+  /// Lo que suena en el blackjack: lo demas del casino ni se carga.
+  static const _sonidosDeLaMesa = {
+    SonidoMesa.ficha,
+    SonidoMesa.fichas,
+    SonidoMesa.cartaSale,
+    SonidoMesa.cartaCae,
+    SonidoMesa.voltear,
+    SonidoMesa.barajar,
+    SonidoMesa.ganar,
+    SonidoMesa.blackjack,
+    SonidoMesa.perder,
+    SonidoMesa.empate,
+    SonidoMesa.pasarse,
+    SonidoMesa.cobrar,
+    SonidoMesa.boton,
+    SonidoMesa.pista,
+    SonidoMesa.vozCorta,
+    SonidoMesa.vozMedia,
+    SonidoMesa.vozLarga,
+  };
   bool _conSonido = true;
 
   MesaBlackjack? _mesaCargada;
@@ -341,18 +365,25 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
   }
 
   Future<void> _cargar() async {
-    final guardado = await _almacen.cargar();
+    final fichas = await _almacen.fichas();
+    final datos = await _almacen.juego('blackjack');
     final conSonido = await _almacen.conSonido();
+    EstadisticasBlackjack? estadisticas;
+    try {
+      if (datos != null) estadisticas = EstadisticasBlackjack.desdeJson(datos);
+    } catch (_) {
+      // De otra version, que ya no se entiende: estadisticas nuevas.
+    }
     if (!mounted) return;
     setState(() {
       _conSonido = conSonido;
       _mesaCargada = MesaBlackjack(
-        fichas: guardado?.fichas ?? MesaBlackjack.fichasIniciales,
+        fichas: fichas ?? MesaBlackjack.fichasIniciales,
         sabot: widget.sabot,
-        estadisticas: guardado?.estadisticas,
+        estadisticas: estadisticas,
       );
     });
-    final volvio = (guardado?.estadisticas.manos ?? 0) > 0;
+    final volvio = (estadisticas?.manos ?? 0) > 0;
     _momento(
       volvio ? MomentoCrupier.bienvenidaDeVuelta : MomentoCrupier.bienvenida,
     );
@@ -361,6 +392,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
   @override
   void dispose() {
     _callar?.cancel();
+    _voz.terminar();
     unawaited(_sonidos.liberar());
     unawaited(FrecuenciaPantalla.pedirAlta(activar: false));
     final mesa = _mesaCargada;
@@ -368,12 +400,17 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
     // hubiera jugado.
     if (mesa != null &&
         (mesa.fase == FaseMesa.apostando || mesa.fase == FaseMesa.resultado)) {
-      unawaited(_almacen.guardar(mesa.fichas, mesa.estadisticas));
+      unawaited(_guardarMesa(mesa));
     }
     super.dispose();
   }
 
-  Future<void> _guardar() => _almacen.guardar(_mesa.fichas, _mesa.estadisticas);
+  Future<void> _guardar() => _guardarMesa(_mesa);
+
+  Future<void> _guardarMesa(MesaBlackjack mesa) => Future.wait([
+    _almacen.guardarFichas(mesa.fichas),
+    _almacen.guardarJuego('blackjack', mesa.estadisticas.aJson()),
+  ]);
 
   // ================================================================ ayudas
   /// Cuanto tarda cada letra en aparecer en la caja de dialogo.
@@ -385,6 +422,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
   }) {
     if (!mounted) return;
     _callar?.cancel();
+    _voz.terminar();
     setState(() {
       _dicho = texto;
       _latido++;
@@ -442,6 +480,14 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
   void _sonar(SonidoMesa sonido, {double volumen = 1}) {
     if (_conSonido) _sonidos.tocar(sonido, volumen: volumen * .9);
   }
+
+  /// La voz: un murmullo por frase (ver VozCrupier).
+  late final VozCrupier _voz = VozCrupier(
+    tocar: _sonar,
+    detener: (sonido) {
+      if (_conSonido) _sonidos.detener(sonido);
+    },
+  );
 
   /// El centro de algo de la pantalla, en las medidas de la mesa.
   Offset? _centroDe(GlobalKey llave) {
@@ -1115,7 +1161,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
                   _sonar(SonidoMesa.ficha);
                 },
               ),
-              _OpcionMenu(
+              OpcionMenuMesa(
                 icono: Icons.menu_book_rounded,
                 titulo: 'Cómo se juega',
                 alTocar: () {
@@ -1123,7 +1169,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
                   _reglas();
                 },
               ),
-              _OpcionMenu(
+              OpcionMenuMesa(
                 icono: Icons.insights_rounded,
                 titulo: 'Tus estadísticas',
                 alTocar: () {
@@ -1149,10 +1195,10 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
                   actualizar(() {});
                 },
               ),
-              _OpcionMenu(
+              OpcionMenuMesa(
                 icono: Icons.restart_alt_rounded,
                 titulo: 'Empezar de cero',
-                detalle: 'Fichas a 1.000 y estadísticas nuevas',
+                detalle: 'Fichas del casino a 1.000 y estadísticas nuevas',
                 alTocar: () {
                   Navigator.of(hoja).pop();
                   _empezarDeCero();
@@ -1172,8 +1218,8 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
       builder: (dialogo) => AlertDialog(
         title: const Text('¿Empezar de cero?'),
         content: const Text(
-          'Vuelves a tener 1.000 fichas y se borran tus estadísticas de la '
-          'mesa.',
+          'Tus fichas del casino vuelven a 1.000 y se borran tus '
+          'estadísticas del blackjack.',
         ),
         actions: [
           OutlinedButton(
@@ -1215,48 +1261,53 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _TituloHoja('Cómo se juega'),
-            _Regla(
+            TituloHojaMesa('Cómo se juega'),
+            ReglaMesa(
               'El objetivo',
               'Sumar más que MacIAs sin pasarte de 21. Las figuras valen 10 y '
                   'el As, 1 u 11.',
             ),
-            _Regla(
+            ReglaMesa(
               'Blackjack',
               'Un As y un 10 o una figura en tus dos primeras cartas. Paga 3 a '
                   '2.',
             ),
-            _Regla(
+            ReglaMesa(
               'El crupier',
               'MacIAs pide hasta 16 y se planta en todos los 17. Si muestra un '
                   'As o un 10, espía su carta tapada por si tiene blackjack.',
             ),
-            _Regla(
+            ReglaMesa(
               'Doblar',
               'Duplicas tu apuesta y recibes una sola carta más. También '
                   'después de dividir.',
             ),
-            _Regla(
+            ReglaMesa(
               'Dividir',
               'Si tus dos cartas valen lo mismo, las separas en dos manos, '
                   'hasta cuatro. Los ases divididos reciben una sola carta.',
             ),
-            _Regla(
+            ReglaMesa(
               'Rendirse',
               'Con tus dos primeras cartas, abandonas la mano y recuperas la '
                   'mitad de la apuesta.',
             ),
-            _Regla(
+            ReglaMesa(
               'Seguro',
               'Si MacIAs muestra un As, puedes asegurarte por la mitad de tu '
                   'apuesta. Paga 2 a 1 si tiene blackjack.',
             ),
-            _Regla(
+            ReglaMesa(
               'El sabot',
               'Seis mazos, mezclados con el azar del teléfono. Se vuelve a '
                   'barajar al salir la carta de corte.',
             ),
-            _Regla(
+            ReglaMesa(
+              'Todo',
+              'El botón Todo apuesta todas tus fichas, hasta la última. No hay '
+                  'tope de apuesta.',
+            ),
+            ReglaMesa(
               'Las fichas',
               'Son de juego: no valen dinero ni se compran. Si te quedas sin '
                   'ninguna, MacIAs te presta.',
@@ -1293,7 +1344,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _TituloHoja('Tus estadísticas'),
+              const TituloHojaMesa('Tus estadísticas'),
               for (final (titulo, valor) in datos)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 7),
@@ -1442,11 +1493,15 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
                       texto: _dicho!,
                       msPorLetra: _msPorLetra,
                       alHablar: (hablando) {
+                        if (hablando) {
+                          _voz.empezar((_dicho?.length ?? 0) * _msPorLetra);
+                        } else {
+                          _voz.terminar();
+                        }
                         if (mounted && _hablando != hablando) {
                           setState(() => _hablando = hablando);
                         }
                       },
-                      alSonar: () => _sonar(SonidoMesa.voz, volumen: .3),
                     ),
             ),
           ),
@@ -1457,9 +1512,11 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
           right: 0,
           top: 0,
           height: _altoBarra,
-          child: _BarraMesa(
+          child: BarraMesa(
             llaveFichas: _llaveFichas,
             fichas: _fichasEnPantalla,
+            titulo: 'Mesa de MacIAs',
+            subtitulo: 'Blackjack · 6 mazos',
             alMenu: _menu,
           ),
         ),
@@ -1763,7 +1820,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             for (final valor in MesaBlackjack.valoresFichas)
-              _FichaRack(
+              FichaRack(
                 llave: _llavesRack[valor]!,
                 valor: valor,
                 habilitada: libre && mesa.puedeSumar(valor),
@@ -1777,7 +1834,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
             // Sin apuesta no hay nada que borrar ni que doblar: va
             // "Repetir" solo, y "Repartir" no se queda sin lugar.
             if (mesa.apuesta == 0)
-              _BotonMesa(
+              BotonMesa(
                 texto: 'Repetir',
                 icono: Icons.replay_rounded,
                 chico: true,
@@ -1786,7 +1843,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
                     : null,
               )
             else ...[
-              _BotonMesa(
+              BotonMesa(
                 texto: 'Borrar',
                 icono: Icons.delete_outline_rounded,
                 chico: true,
@@ -1795,7 +1852,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
                     : null,
               ),
               const SizedBox(width: 8),
-              _BotonMesa(
+              BotonMesa(
                 texto: 'x2',
                 chico: true,
                 alPresionar: libre && mesa.puedeDoblarApuesta
@@ -1804,7 +1861,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
               ),
             ],
             const SizedBox(width: 8),
-            _BotonMesa(
+            BotonMesa(
               texto: 'Todo',
               icono: Icons.all_inclusive_rounded,
               chico: true,
@@ -1814,10 +1871,10 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: _BotonMesa(
+              child: BotonMesa(
                 texto: 'Repartir',
                 icono: Icons.style_rounded,
-                estilo: _Estilo.principal,
+                estilo: EstiloBoton.principal,
                 alPresionar: libre && mesa.puedeRepartir ? _repartir : null,
               ),
             ),
@@ -1848,10 +1905,10 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
         ),
       ),
       const SizedBox(height: 12),
-      _BotonMesa(
+      BotonMesa(
         texto: 'Aceptar 1.000 fichas',
         icono: Icons.volunteer_activism_rounded,
-        estilo: _Estilo.principal,
+        estilo: EstiloBoton.principal,
         alPresionar: _rescatar,
       ),
     ],
@@ -1887,19 +1944,19 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
         Row(
           children: [
             Expanded(
-              child: _BotonMesa(
+              child: BotonMesa(
                 texto: 'No, gracias',
-                estilo: _Estilo.secundario,
+                estilo: EstiloBoton.secundario,
                 resaltado: _consejoSeguro,
                 alPresionar: libre ? () => _seguro(tomar: false) : null,
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: _BotonMesa(
+              child: BotonMesa(
                 texto: 'Seguro',
                 icono: Icons.shield_rounded,
-                estilo: _Estilo.principal,
+                estilo: EstiloBoton.principal,
                 alPresionar: libre && mesa.puedeAsegurar
                     ? () => _seguro(tomar: true)
                     : null,
@@ -1925,10 +1982,10 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
         Row(
           children: [
             Expanded(
-              child: _BotonMesa(
+              child: BotonMesa(
                 texto: 'Pedir',
                 icono: Icons.add_rounded,
-                estilo: _Estilo.principal,
+                estilo: EstiloBoton.principal,
                 alto: 50,
                 resaltado: sugerida == Jugada.pedir,
                 alPresionar: si(Jugada.pedir),
@@ -1936,10 +1993,10 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: _BotonMesa(
+              child: BotonMesa(
                 texto: 'Plantarse',
                 icono: Icons.front_hand_rounded,
-                estilo: _Estilo.secundario,
+                estilo: EstiloBoton.secundario,
                 alto: 50,
                 resaltado: sugerida == Jugada.plantarse,
                 alPresionar: si(Jugada.plantarse),
@@ -1951,7 +2008,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
         Row(
           children: [
             Expanded(
-              child: _BotonMesa(
+              child: BotonMesa(
                 texto: 'Doblar',
                 icono: Icons.keyboard_double_arrow_up_rounded,
                 chico: true,
@@ -1961,7 +2018,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
             ),
             const SizedBox(width: 7),
             Expanded(
-              child: _BotonMesa(
+              child: BotonMesa(
                 texto: 'Dividir',
                 icono: Icons.call_split_rounded,
                 chico: true,
@@ -1971,7 +2028,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
             ),
             const SizedBox(width: 7),
             Expanded(
-              child: _BotonMesa(
+              child: BotonMesa(
                 texto: 'Rendirse',
                 icono: Icons.flag_rounded,
                 chico: true,
@@ -2022,8 +2079,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
     final libre = !_ocupado && _vuelos.isEmpty;
     final puedeRepetir =
         mesa.ultimaApuesta >= MesaBlackjack.apuestaMinima &&
-        mesa.ultimaApuesta <=
-            math.min(mesa.fichas, MesaBlackjack.apuestaMaxima);
+        mesa.ultimaApuesta <= mesa.fichas;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -2039,20 +2095,20 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
         Row(
           children: [
             Expanded(
-              child: _BotonMesa(
+              child: BotonMesa(
                 texto: 'Nueva mano',
                 icono: Icons.refresh_rounded,
-                estilo: _Estilo.secundario,
+                estilo: EstiloBoton.secundario,
                 alPresionar: libre ? _nuevaMano : null,
               ),
             ),
             if (puedeRepetir) ...[
               const SizedBox(width: 10),
               Expanded(
-                child: _BotonMesa(
+                child: BotonMesa(
                   texto: 'Repetir ${conMiles(mesa.ultimaApuesta)}',
                   icono: Icons.replay_rounded,
-                  estilo: _Estilo.principal,
+                  estilo: EstiloBoton.principal,
                   alPresionar: libre ? () => _nuevaMano(repetir: true) : null,
                 ),
               ),
@@ -2067,110 +2123,6 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
 // ---------------------------------------------------------------------------
 // Piezas de la mesa
 // ---------------------------------------------------------------------------
-class _BarraMesa extends StatelessWidget {
-  const _BarraMesa({
-    required this.llaveFichas,
-    required this.fichas,
-    required this.alMenu,
-  });
-
-  final GlobalKey llaveFichas;
-  final int fichas;
-  final VoidCallback alMenu;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4),
-    child: Row(
-      children: [
-        IconButton(
-          tooltip: 'Salir de la mesa',
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.close_rounded, color: ConfiguracionTema.crema),
-        ),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Mesa de MacIAs',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: ConfiguracionTema.crema,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                'Blackjack · 6 mazos',
-                maxLines: 1,
-                style: TextStyle(
-                  color: Color(0x99E6E1D5),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-        _PildoraFichas(key: llaveFichas, fichas: fichas),
-        IconButton(
-          tooltip: 'Más opciones',
-          onPressed: alMenu,
-          icon: const Icon(
-            Icons.more_horiz_rounded,
-            color: ConfiguracionTema.crema,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-/// Tus fichas: el numero corre hasta el nuevo valor.
-class _PildoraFichas extends StatelessWidget {
-  const _PildoraFichas({required this.fichas, super.key});
-
-  final int fichas;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    label: 'Tus fichas: $fichas',
-    excludeSemantics: true,
-    child: Container(
-      padding: const EdgeInsets.fromLTRB(6, 5, 12, 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C1714),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ColoresCarta.oro.withValues(alpha: .75)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const FichaDibujada(valor: 1000, diametro: 22),
-          const SizedBox(width: 7),
-          TweenAnimationBuilder<double>(
-            tween: Tween(end: fichas.toDouble()),
-            duration: const Duration(milliseconds: 700),
-            curve: Curves.easeOutCubic,
-            builder: (context, valor, _) => Text(
-              conMiles(valor.round()),
-              style: const TextStyle(
-                color: ColoresCarta.oroClaro,
-                fontWeight: FontWeight.w900,
-                fontSize: 15,
-                fontFeatures: [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
 /// El sabot, con lo que queda.
 class _SabotEnMesa extends StatelessWidget {
   const _SabotEnMesa({required this.quedan, required this.barajando});
@@ -2472,173 +2424,6 @@ class _CartelResultado extends StatelessWidget {
   }
 }
 
-/// Una ficha del estante: se toca y vuela a la apuesta.
-class _FichaRack extends StatelessWidget {
-  const _FichaRack({
-    required this.llave,
-    required this.valor,
-    required this.habilitada,
-    required this.alTocar,
-  });
-
-  final GlobalKey llave;
-  final int valor;
-  final bool habilitada;
-  final VoidCallback alTocar;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    enabled: habilitada,
-    label: 'Apostar ${conMiles(valor)}',
-    child: AnimatedOpacity(
-      duration: const Duration(milliseconds: 200),
-      opacity: habilitada ? 1 : .3,
-      child: EscalaAlPresionar(
-        escala: .88,
-        builder: (context, alResaltar) => Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: habilitada ? alTocar : null,
-            onHighlightChanged: alResaltar,
-            child: Padding(
-              padding: const EdgeInsets.all(3),
-              child: SizedBox.square(
-                key: llave,
-                dimension: 50,
-                child: FichaDibujada(valor: valor, diametro: 50),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-enum _Estilo { principal, secundario, terciario }
-
-class _BotonMesa extends StatelessWidget {
-  const _BotonMesa({
-    required this.texto,
-    required this.alPresionar,
-    this.icono,
-    this.estilo = _Estilo.terciario,
-    this.resaltado = false,
-    this.chico = false,
-    this.alto,
-    this.etiqueta,
-  });
-
-  final String texto;
-  final IconData? icono;
-  final VoidCallback? alPresionar;
-  final _Estilo estilo;
-
-  /// MacIAs lo recomienda: brilla.
-  final bool resaltado;
-  final bool chico;
-  final double? alto;
-
-  /// Lo que lee el lector de pantalla, si el boton es solo un icono.
-  final String? etiqueta;
-
-  @override
-  Widget build(BuildContext context) {
-    final habilitado = alPresionar != null;
-    final altura = alto ?? (chico ? 40.0 : 46.0);
-    final color = switch (estilo) {
-      _Estilo.principal => const Color(0xFF2B1E05),
-      _Estilo.secundario => const Color(0xFF2E2A26),
-      _Estilo.terciario => ConfiguracionTema.crema,
-    };
-    final radio = BorderRadius.circular(altura / 2);
-    Widget boton = AnimatedOpacity(
-      duration: const Duration(milliseconds: 200),
-      opacity: habilitado ? 1 : .35,
-      child: EscalaAlPresionar(
-        escala: .95,
-        builder: (context, alResaltar) => DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: estilo == _Estilo.principal
-                ? const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [ColoresCarta.oroClaro, ColoresCarta.oro],
-                  )
-                : null,
-            color: switch (estilo) {
-              _Estilo.principal => null,
-              _Estilo.secundario => const Color(0xFFF3EBDD),
-              _Estilo.terciario => const Color(0x14FFFFFF),
-            },
-            borderRadius: radio,
-            border: estilo == _Estilo.terciario
-                ? Border.all(
-                    color: ConfiguracionTema.crema.withValues(alpha: .4),
-                  )
-                : null,
-          ),
-          child: Material(
-            type: MaterialType.transparency,
-            child: InkWell(
-              borderRadius: radio,
-              onTap: habilitado
-                  ? () {
-                      RetroalimentacionHaptica.accion();
-                      alPresionar!();
-                    }
-                  : null,
-              onHighlightChanged: alResaltar,
-              child: SizedBox(
-                height: altura,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: chico ? 11 : 16),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (icono != null)
-                        Icon(icono, size: chico ? 16 : 19, color: color),
-                      if (icono != null && texto.isNotEmpty)
-                        SizedBox(width: chico ? 4 : 7),
-                      if (texto.isNotEmpty)
-                        Flexible(
-                          child: Text(
-                            texto,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: color,
-                              fontWeight: FontWeight.w900,
-                              fontSize: chico ? 13 : 15,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    if (resaltado && habilitado) {
-      boton = _Brillo(radio: radio, child: boton);
-    }
-    final nombre = etiqueta ?? texto;
-    return Semantics(
-      button: true,
-      enabled: habilitado,
-      label: resaltado ? '$nombre (lo que haría MacIAs)' : nombre,
-      excludeSemantics: true,
-      child: boton,
-    );
-  }
-}
-
 /// El boton de la pista: "¿qué haría MacIAs?".
 class _BotonPista extends StatelessWidget {
   const _BotonPista({required this.alPresionar});
@@ -2648,145 +2433,12 @@ class _BotonPista extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Tooltip(
     message: '¿Qué haría MacIAs?',
-    child: _BotonMesa(
+    child: BotonMesa(
       texto: '',
       etiqueta: '¿Qué haría MacIAs?',
       icono: Icons.lightbulb_rounded,
       chico: true,
       alPresionar: alPresionar,
-    ),
-  );
-}
-
-/// Un brillo dorado que late alrededor de lo que MacIAs recomienda.
-class _Brillo extends StatefulWidget {
-  const _Brillo({required this.radio, required this.child});
-
-  final BorderRadius radio;
-  final Widget child;
-
-  @override
-  State<_Brillo> createState() => _BrilloState();
-}
-
-class _BrilloState extends State<_Brillo> with SingleTickerProviderStateMixin {
-  late final AnimationController _latido = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 900),
-  )..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _latido.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _latido,
-    child: widget.child,
-    builder: (context, hijo) => DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: widget.radio,
-        boxShadow: [
-          BoxShadow(
-            color: ColoresCarta.oroClaro.withValues(
-              alpha: .35 + .45 * _latido.value,
-            ),
-            blurRadius: 8 + 10 * _latido.value,
-            spreadRadius: 1 + 2 * _latido.value,
-          ),
-        ],
-      ),
-      child: hijo,
-    ),
-  );
-}
-
-class _OpcionMenu extends StatelessWidget {
-  const _OpcionMenu({
-    required this.icono,
-    required this.titulo,
-    required this.alTocar,
-    this.detalle,
-  });
-
-  final IconData icono;
-  final String titulo;
-  final String? detalle;
-  final VoidCallback alTocar;
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-    leading: Icon(icono, color: ColoresCarta.oroClaro),
-    title: Text(
-      titulo,
-      style: const TextStyle(
-        color: ConfiguracionTema.crema,
-        fontWeight: FontWeight.w800,
-      ),
-    ),
-    subtitle: detalle == null
-        ? null
-        : Text(
-            detalle!,
-            style: TextStyle(
-              color: ConfiguracionTema.crema.withValues(alpha: .6),
-            ),
-          ),
-    onTap: alTocar,
-  );
-}
-
-class _TituloHoja extends StatelessWidget {
-  const _TituloHoja(this.texto);
-
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Text(
-      texto,
-      style: const TextStyle(
-        color: ColoresCarta.oroClaro,
-        fontWeight: FontWeight.w900,
-        fontSize: 20,
-      ),
-    ),
-  );
-}
-
-class _Regla extends StatelessWidget {
-  const _Regla(this.titulo, this.detalle);
-
-  final String titulo;
-  final String detalle;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 7),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          titulo,
-          style: const TextStyle(
-            color: ConfiguracionTema.crema,
-            fontWeight: FontWeight.w900,
-            fontSize: 15,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          detalle,
-          style: TextStyle(
-            color: ConfiguracionTema.crema.withValues(alpha: .72),
-            fontWeight: FontWeight.w600,
-            height: 1.35,
-          ),
-        ),
-      ],
     ),
   );
 }

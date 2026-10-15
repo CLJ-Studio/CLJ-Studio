@@ -1037,21 +1037,20 @@ class PlacaCrupier extends StatelessWidget {
 /// arriba, y el texto que aparece letra por letra.
 ///
 /// Tocarla completa el texto de una. Avisa con [alHablar] cuando empieza y
-/// cuando termina de "decirlo" (para mover la boca), y con [alSonar] cada
-/// tantas letras (para la vocecita).
+/// cuando termina de "decirlo": para mover la boca y para la voz (un solo
+/// murmullo por frase, ver `VozCrupier`: un sonido por letra atrasaba el
+/// audio del telefono).
 class DialogoCrupier extends StatefulWidget {
   const DialogoCrupier({
     required this.texto,
     this.msPorLetra = 28,
     this.alHablar,
-    this.alSonar,
     super.key,
   });
 
   final String texto;
   final int msPorLetra;
   final ValueChanged<bool>? alHablar;
-  final VoidCallback? alSonar;
 
   @override
   State<DialogoCrupier> createState() => _DialogoCrupierState();
@@ -1092,11 +1091,6 @@ class _DialogoCrupierState extends State<DialogoCrupier>
     final total = widget.texto.length;
     final letras = (_escritura.value * total).round().clamp(0, total);
     if (letras == _letras) return;
-    var suena = false;
-    for (var i = _letras; i < letras; i++) {
-      if (i % 3 == 0 && widget.texto[i].trim().isNotEmpty) suena = true;
-    }
-    if (suena) widget.alSonar?.call();
     setState(() => _letras = letras);
   }
 

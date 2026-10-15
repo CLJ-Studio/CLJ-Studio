@@ -3,16 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:upsa_eat/funcionalidades/asistente_macias/logica/almacen_blackjack.dart';
-import 'package:upsa_eat/funcionalidades/asistente_macias/logica/cerebro_macias.dart';
-import 'package:upsa_eat/funcionalidades/asistente_macias/logica/conocimiento_macias.dart';
-import 'package:upsa_eat/funcionalidades/asistente_macias/logica/controlador_chat_macias.dart';
-import 'package:upsa_eat/funcionalidades/asistente_macias/logica/memoria_macias.dart';
+import 'package:upsa_eat/funcionalidades/asistente_macias/logica/almacen_casino.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/mesa_blackjack.dart';
-import 'package:upsa_eat/funcionalidades/asistente_macias/logica/sonidos_blackjack.dart';
-import 'package:upsa_eat/funcionalidades/asistente_macias/modelos/mensaje_macias.dart';
+import 'package:upsa_eat/funcionalidades/asistente_macias/logica/sonidos_casino.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/pantalla/pantalla_blackjack.dart';
-import 'package:upsa_eat/funcionalidades/asistente_macias/pantalla/pantalla_chat_macias.dart';
 
 List<Carta> _cartas(List<int> rangos) => [
   for (final (i, rango) in rangos.indexed)
@@ -30,7 +24,7 @@ void _comoTelefono(WidgetTester tester) {
 Future<void> _abrirMesa(
   WidgetTester tester,
   List<int> orden, {
-  AlmacenBlackjack? almacen,
+  AlmacenCasino? almacen,
 }) async {
   _comoTelefono(tester);
   await tester.pumpWidget(
@@ -39,7 +33,7 @@ Future<void> _abrirMesa(
         nombre: 'Ana',
         sabot: Sabot.ordenado(_cartas(orden)),
         azar: Random(1),
-        almacen: almacen ?? AlmacenBlackjackEnMemoria(),
+        almacen: almacen ?? AlmacenCasinoEnMemoria(),
         sonidos: const SonidosMesa.mudos(),
       ),
     ),
@@ -54,85 +48,14 @@ Future<void> _esperar(WidgetTester tester, int milisegundos) async {
   }
 }
 
-CerebroMacias _cerebro() => CerebroMacias(
-  contexto: () => ContextoMacias(
-    nombre: 'Juan',
-    ahora: DateTime(2026, 10, 7, 15, 30),
-    version: '1.0',
-  ),
-  azar: Random(2),
-);
-
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-
-  group('la palabra secreta', () {
-    test('"blackjack" invita a jugar con un sí y un no', () {
-      final respuesta = _cerebro().escribir('blackjack');
-      expect(respuesta.intencion, 'juego:blackjack');
-      expect(respuesta.burbujas.last.opciones.map((o) => o.id), [
-        'o:blackjack_si',
-        'o:blackjack_no',
-      ]);
-    });
-
-    test('decir que sí abre la mesa y deja el botón para volver', () {
-      final cerebro = _cerebro()..escribir('Blackjack!');
-      final respuesta = cerebro.escribir('si');
-      final burbuja = respuesta.burbujas.single;
-      expect(burbuja.abrir, DestinoMacias.blackjack);
-      expect(burbuja.acciones.single.destino, DestinoMacias.blackjack);
-    });
-
-    test('tocar el sí también la abre', () {
-      final cerebro = _cerebro();
-      final invitacion = cerebro.escribir('blackjack');
-      final respuesta = cerebro.elegir(invitacion.burbujas.last.opciones.first);
-      expect(respuesta.burbujas.single.abrir, DestinoMacias.blackjack);
-    });
-
-    test('"no" la deja para otro día', () {
-      final cerebro = _cerebro()..escribir('blackjack');
-      expect(cerebro.escribir('no').intencion, 'juego:fin');
-    });
-
-    test('es secreta: no está en el menú de juegos', () {
-      final juegos = _cerebro().escribir('juguemos');
-      expect(
-        juegos.burbujas.last.opciones.map((o) => o.texto.toLowerCase()),
-        isNot(contains(contains('blackjack'))),
-      );
-    });
-
-    testWidgets('desde el chat, el sí abre la mesa sola', (tester) async {
-      _comoTelefono(tester);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: PantallaChatMacias(
-            ritmo: const RitmoMacias(inmediato: true),
-            almacen: AlmacenMaciasEnMemoria(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'blackjack');
-      await tester.testTextInput.receiveAction(TextInputAction.send);
-      await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('Opción 1: Sí, ¡a jugar!'));
-      await _esperar(tester, 1600);
-      expect(find.byType(PantallaBlackjack), findsOneWidget);
-      // Se cierra la mesa: el chat sigue ahí.
-      await tester.tap(find.byTooltip('Salir de la mesa'));
-      await _esperar(tester, 6000);
-      expect(find.byType(PantallaBlackjack), findsNothing);
-    });
-  });
 
   group('la mesa', () {
     testWidgets('una mano entera: apostar, repartir, plantarse y cobrar', (
       tester,
     ) async {
-      final almacen = AlmacenBlackjackEnMemoria();
+      final almacen = AlmacenCasinoEnMemoria();
       await _abrirMesa(tester, [10, 10, 9, 7], almacen: almacen);
       expect(find.bySemanticsLabel('Tus fichas: 1000'), findsOneWidget);
 
@@ -148,9 +71,30 @@ void main() {
       expect(find.text('Ganaste 100 fichas'), findsOneWidget);
       expect(find.bySemanticsLabel('Tus fichas: 1100'), findsOneWidget);
       // Las fichas quedan guardadas para la próxima.
-      final guardado = await almacen.cargar();
-      expect(guardado!.fichas, 1100);
-      expect(guardado.estadisticas.ganadas, 1);
+      expect(await almacen.fichas(), 1100);
+      final estadisticas = EstadisticasBlackjack.desdeJson(
+        (await almacen.juego('blackjack'))!,
+      );
+      expect(estadisticas.ganadas, 1);
+    });
+
+    testWidgets('el botón Todo apuesta todas las fichas, sin tope', (
+      tester,
+    ) async {
+      final almacen = AlmacenCasinoEnMemoria();
+      await almacen.guardarFichas(20000);
+      await _abrirMesa(tester, [10, 10, 9, 7], almacen: almacen);
+      expect(find.bySemanticsLabel('Tus fichas: 20000'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Todo'));
+      await _esperar(tester, 700);
+      // Las 20.000, no las 5.000 de antes.
+      expect(find.bySemanticsLabel('Tus fichas: 0'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Repartir'));
+      await _esperar(tester, 3000);
+      await tester.tap(find.bySemanticsLabel(RegExp('^Plantarse')));
+      await _esperar(tester, 6000);
+      expect(find.text('Ganaste 20.000 fichas'), findsOneWidget);
+      expect(find.bySemanticsLabel('Tus fichas: 40000'), findsOneWidget);
     });
 
     testWidgets('el blackjack se anuncia y paga 3 a 2', (tester) async {
@@ -184,8 +128,8 @@ void main() {
     });
 
     testWidgets('sin fichas, MacIAs presta', (tester) async {
-      final almacen = AlmacenBlackjackEnMemoria();
-      await almacen.guardar(0, EstadisticasBlackjack());
+      final almacen = AlmacenCasinoEnMemoria();
+      await almacen.guardarFichas(0);
       await _abrirMesa(tester, [10, 10, 9, 7], almacen: almacen);
       await _esperar(tester, 300);
       await tester.tap(find.bySemanticsLabel('Aceptar 1.000 fichas'));

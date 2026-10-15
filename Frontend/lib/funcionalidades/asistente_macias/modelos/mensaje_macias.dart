@@ -21,8 +21,11 @@ enum DestinoMacias {
   whatsappSoporte,
   correoSoporte,
 
-  /// La mesa secreta: se llega escribiendo "blackjack".
+  /// La mesa de blackjack (de las conversaciones de antes del casino).
   blackjack,
+
+  /// El casino escondido: se llega escribiendo "casino".
+  casino,
 }
 
 /// Un boton dentro de una respuesta, como "Abrir mis pedidos".

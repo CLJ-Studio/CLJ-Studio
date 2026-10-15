@@ -303,6 +303,35 @@ void main() {
       expect(mesa.puedeRepartir, isFalse);
     });
 
+    test('el todo no tiene tope: hasta la ultima ficha', () {
+      final mesa = MesaBlackjack(fichas: 123456)..irConTodo();
+      expect(mesa.apuesta, 123456);
+      expect(mesa.puedeRepartir, isTrue);
+      // Tampoco hay tope armando la apuesta con fichas.
+      final otra = MesaBlackjack(fichas: 20000);
+      for (var i = 0; i < 7; i++) {
+        otra.sumar(1000);
+      }
+      expect(otra.apuesta, 7000);
+      otra.doblarApuesta();
+      expect(otra.apuesta, 14000);
+      // Y se puede apostar una cantidad que no es multiplo de 10.
+      final impar = MesaBlackjack(fichas: 35)..irConTodo();
+      expect(impar.apuesta, 35);
+    });
+
+    test('un todo se paga entero, redondeando el 3 a 2 hacia abajo', () {
+      final mesa = MesaBlackjack(
+        fichas: 25,
+        sabot: Sabot.ordenado(_cartas([1, 9, 13, 7])),
+      )..irConTodo();
+      _repartir(mesa);
+      expect(mesa.fase, FaseMesa.resultado);
+      // Blackjack del jugador: la apuesta de 25 mas el 3 a 2 (37, redondeado
+      // hacia abajo) vuelve entera.
+      expect(mesa.fichas, 62);
+    });
+
     test('sin fichas, la casa presta', () {
       final mesa = MesaBlackjack(fichas: 0);
       expect(mesa.enQuiebra, isTrue);

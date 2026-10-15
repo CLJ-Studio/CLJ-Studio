@@ -17,14 +17,15 @@ import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../../publicar_producto/pantalla/pantalla_mis_publicaciones.dart';
 import '../diseno/burbujas_macias.dart';
 import '../diseno/identidad_macias.dart';
-import '../logica/almacen_blackjack.dart';
+import '../logica/almacen_casino.dart';
 import '../logica/cerebro_macias.dart';
 import '../logica/conocimiento_macias.dart';
 import '../logica/controlador_chat_macias.dart';
 import '../logica/memoria_macias.dart';
-import '../logica/sonidos_blackjack.dart';
+import '../logica/sonidos_casino.dart';
 import '../modelos/mensaje_macias.dart';
 import 'pantalla_blackjack.dart';
+import 'pantalla_casino.dart';
 
 /// El chat con MacIAs, el asistente virtual de U market.
 ///
@@ -209,25 +210,44 @@ class _PantallaChatMaciasState extends State<PantallaChatMacias> {
         );
       case DestinoMacias.correoSoporte:
         ContactoSoporte.abrirCorreo(context);
+      case DestinoMacias.casino:
+        navegador.push(
+          PantallaCasino.ruta(
+            nombre: _nombreEnLaMesa,
+            almacen: _almacenCasino(),
+            sonidos: _sonidosCasino,
+            sonidosDeMesas: _sonidosCasino,
+          ),
+        );
       case DestinoMacias.blackjack:
+        // Un boton de una conversacion de antes del casino.
         navegador.push(
           PantallaBlackjack.ruta(
-            // Como lo llama MacIAs en el chat: el nombre que le pidio, o el
-            // primero de su perfil.
-            nombre:
-                controlador.cerebro.memoria.nombre ??
-                SesionUsuario.instancia.primerNombre,
-            almacen: widget.almacen == null
-                ? AlmacenBlackjackLocal(_cuenta())
-                : AlmacenBlackjackEnMemoria(),
-            // Un chat de prueba (con su propio almacen) no suena.
-            sonidos: widget.almacen == null ? null : const SonidosMesa.mudos(),
+            nombre: _nombreEnLaMesa,
+            almacen: _almacenCasino(),
+            sonidos: _sonidosCasino,
           ),
         );
       default:
         break;
     }
   }
+
+  /// Como lo llama MacIAs en el casino: el nombre que le pidio en el chat,
+  /// o el primero de su perfil.
+  String get _nombreEnLaMesa =>
+      controlador.cerebro.memoria.nombre ??
+      SesionUsuario.instancia.primerNombre;
+
+  /// Las fichas del casino son de la cuenta; un chat de prueba (con su
+  /// propio almacen) juega en memoria.
+  AlmacenCasino _almacenCasino() => widget.almacen == null
+      ? AlmacenCasinoLocal(_cuenta())
+      : AlmacenCasinoEnMemoria();
+
+  /// Un chat de prueba no suena.
+  SonidosMesa? get _sonidosCasino =>
+      widget.almacen == null ? null : const SonidosMesa.mudos();
 
   Future<void> _borrarConversacion() async {
     final borrar = await showDialog<bool>(

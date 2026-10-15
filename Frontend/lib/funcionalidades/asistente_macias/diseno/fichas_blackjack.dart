@@ -5,9 +5,19 @@ import 'package:flutter/material.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../logica/mesa_blackjack.dart';
 
+/// La ficha del "all in": no vale una cantidad, es la que pone todas tus
+/// fichas de una en el lugar que toques.
+const valorTodo = -1;
+
 /// Los colores de cada ficha: el fondo, las franjas del borde y el numero.
 ({Color base, Color franja, Color numero}) coloresFicha(int valor) =>
     switch (valor) {
+      valorTodo => (
+        // Marfil con franjas rojas: no se confunde con ninguna otra.
+        base: const Color(0xFFF1ECE0),
+        franja: const Color(0xFFB3202A),
+        numero: const Color(0xFFB3202A),
+      ),
       10 => (
         base: const Color(0xFF1F57B0),
         franja: Colors.white,
@@ -119,18 +129,20 @@ void pintarFicha(
     Paint()..color = Color.lerp(colores.base, Colors.black, .12)!,
   );
   if (!numero) return;
-  final texto = textoFicha(valor);
+  final todo = valor == valorTodo;
+  final texto = todo ? 'ALL\nIN' : textoFicha(valor);
   final pintor = TextPainter(
     text: TextSpan(
       text: texto,
       style: TextStyle(
         fontFamily: 'Nunito',
         fontWeight: FontWeight.w900,
-        fontSize: radio * (texto.length <= 2 ? .56 : .44),
-        height: 1,
+        fontSize: todo ? radio * .36 : radio * (texto.length <= 2 ? .56 : .44),
+        height: todo ? .95 : 1,
         color: colores.numero,
       ),
     ),
+    textAlign: TextAlign.center,
     textDirection: TextDirection.ltr,
   )..layout();
   pintor.paint(canvas, centro - Offset(pintor.width / 2, pintor.height / 2));

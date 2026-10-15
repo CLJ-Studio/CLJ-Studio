@@ -83,9 +83,9 @@ flutter:
 
   assets:
     - assets/animations/
-    # Los sonidos de la mesa de blackjack de MacIAs: grabaciones CC0 de
-    # Kenney (ver tool/preparar_sonidos_blackjack.dart).
-    - assets/audio/blackjack/
+    # Los sonidos del casino de MacIAs (blackjack y ruleta): grabaciones CC0
+    # de Kenney y Freesound (ver tool/preparar_sonidos_casino.dart).
+    - assets/audio/casino/
     - assets/images/banners/
     - assets/images/categorias/
     - assets/images/locales/

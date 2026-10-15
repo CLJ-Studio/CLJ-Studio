@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'casino.dart';
+
 /// Los cuatro palos de la baraja francesa.
 enum Palo { picas, corazones, diamantes, treboles }
 
@@ -289,13 +291,13 @@ class MesaBlackjack {
   }) : sabot = sabot ?? Sabot(),
        estadisticas = estadisticas ?? EstadisticasBlackjack();
 
-  static const fichasIniciales = 1000;
+  static const fichasIniciales = Casino.fichasIniciales;
 
-  /// Las fichas de la mesa. Todas son multiplos de 10, asi el 3 a 2 del
-  /// blackjack y la mitad del seguro siempre dan fichas enteras.
-  static const valoresFichas = [10, 50, 100, 500, 1000];
+  /// Las fichas de la mesa (las del casino). Armando la apuesta con ellas
+  /// siempre salen multiplos de 10; el "todo" puede ser cualquier cantidad, y
+  /// el 3 a 2 del blackjack y la mitad del seguro se redondean hacia abajo.
+  static const valoresFichas = Casino.valoresFichas;
   static const apuestaMinima = 10;
-  static const apuestaMaxima = 5000;
   static const maximoManos = 4;
 
   final Sabot sabot;
@@ -336,10 +338,9 @@ class MesaBlackjack {
       crupier.cartas.isEmpty ? null : crupier.cartas.first;
 
   // ---------------------------------------------------------------- apuesta
-  int get _tope => min(fichas, apuestaMaxima);
-
+  /// Sin tope: se puede apostar hasta la ultima ficha que quede.
   bool puedeSumar(int ficha) =>
-      fase == FaseMesa.apostando && apuesta + ficha <= _tope;
+      fase == FaseMesa.apostando && apuesta + ficha <= fichas;
 
   void sumar(int ficha) {
     if (puedeSumar(ficha)) apuesta += ficha;
@@ -352,7 +353,7 @@ class MesaBlackjack {
   bool get puedeRepetir =>
       fase == FaseMesa.apostando &&
       ultimaApuesta >= apuestaMinima &&
-      ultimaApuesta <= _tope &&
+      ultimaApuesta <= fichas &&
       apuesta != ultimaApuesta;
 
   void repetir() {
@@ -360,18 +361,18 @@ class MesaBlackjack {
   }
 
   bool get puedeDoblarApuesta =>
-      fase == FaseMesa.apostando && apuesta > 0 && apuesta * 2 <= _tope;
+      fase == FaseMesa.apostando && apuesta > 0 && apuesta * 2 <= fichas;
 
   void doblarApuesta() {
     if (puedeDoblarApuesta) apuesta *= 2;
   }
 
-  /// Todo lo que hay (redondeado a la ficha de 10), sin pasar el maximo.
+  /// El "all in": todas las fichas que hay, hasta la ultima, sin tope.
   bool get puedeIrConTodo =>
-      fase == FaseMesa.apostando && _tope ~/ 10 * 10 > apuesta;
+      fase == FaseMesa.apostando && fichas >= apuestaMinima && fichas > apuesta;
 
   void irConTodo() {
-    if (puedeIrConTodo) apuesta = _tope ~/ 10 * 10;
+    if (puedeIrConTodo) apuesta = fichas;
   }
 
   bool get puedeRepartir =>

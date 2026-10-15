@@ -510,6 +510,7 @@ class BotonAccionMacias extends StatelessWidget {
     DestinoMacias.whatsappSoporte => Icons.chat_rounded,
     DestinoMacias.correoSoporte => Icons.mail_outline_rounded,
     DestinoMacias.blackjack => Icons.style_rounded,
+    DestinoMacias.casino => Icons.casino_rounded,
   };
 
   @override
