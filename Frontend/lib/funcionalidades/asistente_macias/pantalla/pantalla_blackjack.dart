@@ -1774,15 +1774,8 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
         const SizedBox(height: 12),
         Row(
           children: [
-            _BotonMesa(
-              texto: 'Borrar',
-              icono: Icons.delete_outline_rounded,
-              chico: true,
-              alPresionar: libre && mesa.apuesta > 0
-                  ? () => _ajustarApuesta(mesa.borrarApuesta)
-                  : null,
-            ),
-            const SizedBox(width: 8),
+            // Sin apuesta no hay nada que borrar ni que doblar: va
+            // "Repetir" solo, y "Repartir" no se queda sin lugar.
             if (mesa.apuesta == 0)
               _BotonMesa(
                 texto: 'Repetir',
@@ -1792,7 +1785,16 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
                     ? () => _ajustarApuesta(mesa.repetir)
                     : null,
               )
-            else
+            else ...[
+              _BotonMesa(
+                texto: 'Borrar',
+                icono: Icons.delete_outline_rounded,
+                chico: true,
+                alPresionar: libre
+                    ? () => _ajustarApuesta(mesa.borrarApuesta)
+                    : null,
+              ),
+              const SizedBox(width: 8),
               _BotonMesa(
                 texto: 'x2',
                 chico: true,
@@ -1800,6 +1802,7 @@ class _PantallaBlackjackState extends State<PantallaBlackjack> {
                     ? () => _ajustarApuesta(mesa.doblarApuesta)
                     : null,
               ),
+            ],
             const SizedBox(width: 8),
             _BotonMesa(
               texto: 'Todo',

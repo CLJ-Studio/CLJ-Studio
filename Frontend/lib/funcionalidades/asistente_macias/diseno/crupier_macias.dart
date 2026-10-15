@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
 import 'cartas_blackjack.dart';
+import 'piel_crupier.dart';
 
 /// MacIAs de crupier: chaleco, camisa y moño, en su pixel art de siempre.
 const rutaFotoCrupier = 'assets/images/marca/macias_crupier.jpg';
@@ -22,634 +24,673 @@ enum ExpresionCrupier {
   enojado,
 }
 
-enum _Ojos { foto, felices, entrecerrados, guino, sorprendidos, tristes }
+/// Los cuadros de un parpadeo.
+enum ParpadeoCrupier { abiertos, medio, cerrados }
 
-enum _Cejas { foto, relajadas, arriba, tristes, enojadas, una }
+enum _Ojos { foto, feliz, medio, cerrado, sorprendido, triste, enojado }
 
-enum _Boca { foto, sonrisa, risa, o, triste, ondulada, canchera, abierta }
+enum _Cejas { foto, relajadas, arriba, tristes, enojadas, baja }
+
+enum _Boca {
+  foto,
+  media,
+  abierta,
+  sonrisa,
+  risaMedia,
+  risa,
+  o,
+  triste,
+  ondulada,
+  canchera,
+  apretada,
+}
 
 enum _Efecto { rubor, gota, brillos, vena, exclamacion, lagrima }
 
-/// Una cara: como van los ojos, las cejas y la boca (quieta y hablando), y
-/// los efectos de anime que la acompañan.
+/// Una cara: los ojos y las cejas (el de la izquierda de la foto primero),
+/// la boca quieta, a medio abrir y abierta (mientras habla va y viene entre
+/// las tres), y los efectos de anime que la acompañan.
 typedef _Cara = ({
-  _Ojos ojos,
-  _Cejas cejas,
-  _Boca boca,
-  _Boca hablando,
+  (_Ojos, _Ojos) ojos,
+  (_Cejas, _Cejas) cejas,
+  (_Boca, _Boca, _Boca) boca,
   Set<_Efecto> efectos,
 });
 
 const _caras = <ExpresionCrupier, _Cara>{
   ExpresionCrupier.normal: (
-    ojos: _Ojos.foto,
-    cejas: _Cejas.foto,
-    boca: _Boca.foto,
-    hablando: _Boca.abierta,
+    ojos: (_Ojos.foto, _Ojos.foto),
+    cejas: (_Cejas.foto, _Cejas.foto),
+    boca: (_Boca.foto, _Boca.media, _Boca.abierta),
     efectos: <_Efecto>{},
   ),
   ExpresionCrupier.feliz: (
-    ojos: _Ojos.felices,
-    cejas: _Cejas.relajadas,
-    boca: _Boca.sonrisa,
-    hablando: _Boca.risa,
+    ojos: (_Ojos.feliz, _Ojos.feliz),
+    cejas: (_Cejas.relajadas, _Cejas.relajadas),
+    boca: (_Boca.sonrisa, _Boca.risaMedia, _Boca.risa),
     efectos: {_Efecto.rubor},
   ),
   ExpresionCrupier.risa: (
-    ojos: _Ojos.felices,
-    cejas: _Cejas.relajadas,
-    boca: _Boca.risa,
-    hablando: _Boca.sonrisa,
+    ojos: (_Ojos.feliz, _Ojos.feliz),
+    cejas: (_Cejas.relajadas, _Cejas.relajadas),
+    boca: (_Boca.risa, _Boca.risaMedia, _Boca.risa),
     efectos: {_Efecto.rubor, _Efecto.brillos},
   ),
   ExpresionCrupier.canchero: (
-    ojos: _Ojos.entrecerrados,
-    cejas: _Cejas.una,
-    boca: _Boca.canchera,
-    hablando: _Boca.abierta,
+    ojos: (_Ojos.medio, _Ojos.medio),
+    cejas: (_Cejas.arriba, _Cejas.baja),
+    boca: (_Boca.canchera, _Boca.media, _Boca.abierta),
     efectos: <_Efecto>{},
   ),
   ExpresionCrupier.guino: (
-    ojos: _Ojos.guino,
-    cejas: _Cejas.relajadas,
-    boca: _Boca.sonrisa,
-    hablando: _Boca.risa,
+    ojos: (_Ojos.feliz, _Ojos.foto),
+    cejas: (_Cejas.relajadas, _Cejas.relajadas),
+    boca: (_Boca.sonrisa, _Boca.risaMedia, _Boca.risa),
     efectos: {_Efecto.brillos},
   ),
   ExpresionCrupier.sorprendido: (
-    ojos: _Ojos.sorprendidos,
-    cejas: _Cejas.arriba,
-    boca: _Boca.o,
-    hablando: _Boca.abierta,
+    ojos: (_Ojos.sorprendido, _Ojos.sorprendido),
+    cejas: (_Cejas.arriba, _Cejas.arriba),
+    boca: (_Boca.o, _Boca.media, _Boca.abierta),
     efectos: {_Efecto.exclamacion},
   ),
   ExpresionCrupier.triste: (
-    ojos: _Ojos.tristes,
-    cejas: _Cejas.tristes,
-    boca: _Boca.triste,
-    hablando: _Boca.abierta,
+    ojos: (_Ojos.triste, _Ojos.triste),
+    cejas: (_Cejas.tristes, _Cejas.tristes),
+    boca: (_Boca.triste, _Boca.media, _Boca.abierta),
     efectos: {_Efecto.lagrima},
   ),
   ExpresionCrupier.nervioso: (
-    ojos: _Ojos.foto,
-    cejas: _Cejas.tristes,
-    boca: _Boca.ondulada,
-    hablando: _Boca.abierta,
+    ojos: (_Ojos.foto, _Ojos.foto),
+    cejas: (_Cejas.tristes, _Cejas.tristes),
+    boca: (_Boca.ondulada, _Boca.media, _Boca.abierta),
     efectos: {_Efecto.gota, _Efecto.rubor},
   ),
   ExpresionCrupier.enojado: (
-    ojos: _Ojos.entrecerrados,
-    cejas: _Cejas.enojadas,
-    boca: _Boca.triste,
-    hablando: _Boca.abierta,
+    ojos: (_Ojos.enojado, _Ojos.enojado),
+    cejas: (_Cejas.enojadas, _Cejas.enojadas),
+    boca: (_Boca.apretada, _Boca.media, _Boca.abierta),
     efectos: {_Efecto.vena},
   ),
 };
 
-/// Dibuja la cara de MacIAs sobre su foto.
+// ======================================================= el pixel art nuevo
+// Cada gesto se dibuja celda por celda sobre la grilla de la foto, con los
+// colores de la misma foto. "." deja la piel (o la foto, fuera de lo que se
+// borra), "+" conserva la foto aunque este en lo que se borra (la mitad de
+// abajo del ojo bajo un parpado, por ejemplo) y cada letra es un color.
+
+const _paleta = <String, int>{
+  'K': 0xFF1C0B05, // el contorno del ojo
+  'k': 0xFF3B1C10, // las pestañas, mas suaves
+  'N': 0xFF2C140B, // la pupila
+  'W': 0xFFEDE8E2, // lo blanco del ojo
+  'G': 0xFFB2A99F, // su sombra
+  'E': 0xFF55301F, // la ceja
+  'e': 0xFF84503A, // su borde
+  'L': 0xFFA34E37, // el labio, oscuro
+  'l': 0xFFC25C45, // el labio
+  'p': 0xFFD66F55, // el labio de abajo
+  'M': 0xFF4A1A12, // la boca por dentro
+  'T': 0xFFF3ECE5, // los dientes
+  'U': 0xFFC9605A, // la lengua
+  'q': 0x2EFF5A70, // el rubor, por fuera
+  'Q': 0x52FF5A70, // el rubor
+};
+
+/// El ojo de la izquierda de la foto (8 x 6 celdas, desde la columna 2 y
+/// la fila 4). El otro es su reflejo.
+const _mapasOjo = <_Ojos, List<String>>{
+  _Ojos.feliz: [
+    '........',
+    '..KKK...',
+    '.K...K..',
+    'K.....K.',
+    '........',
+    '........',
+  ],
+  _Ojos.medio: [
+    '........',
+    '........',
+    'KKKKKKKk',
+    '++++++++',
+    '++++++++',
+    '++++++++',
+  ],
+  _Ojos.cerrado: [
+    '........',
+    '........',
+    '........',
+    'K......k',
+    '.KKKKKK.',
+    '........',
+  ],
+  _Ojos.sorprendido: [
+    '..KKKK..',
+    '.KGGGGK.',
+    'KWWNNWWK',
+    'KWWNNWWK',
+    '.KWWWWK.',
+    '..KKKK..',
+  ],
+  _Ojos.triste: [
+    '......Kk',
+    '....KK++',
+    '..KK++++',
+    'KK++++++',
+    '++++++++',
+    '++++++++',
+  ],
+  _Ojos.enojado: [
+    'Kk......',
+    '++KK....',
+    '++++KK..',
+    '++++++KK',
+    '++++++++',
+    '++++++++',
+  ],
+};
+
+/// La ceja de la izquierda de la foto (10 x 4 celdas, desde la columna 1 y
+/// la fila 0): su punta de afuera a la izquierda.
+const _mapasCeja = <_Cejas, List<String>>{
+  _Cejas.relajadas: ['..........', '...eEEEe..', '.eE.....Ee', '..........'],
+  _Cejas.arriba: ['...eEEEe..', '.eE.....Ee', '..........', '..........'],
+  _Cejas.tristes: ['........eE', '.....eEE..', '.eEEe.....', '..........'],
+  _Cejas.enojadas: ['..........', 'eEe.......', '..eEEe....', '.....eEEE.'],
+  _Cejas.baja: ['..........', '..........', '.eEEEEEEe.', '..........'],
+};
+
+/// La boca (11 x 5 celdas, desde la columna 7 y la fila 17).
+const _mapasBoca = <_Boca, List<String>>{
+  _Boca.media: [
+    '...........',
+    '..LlllllL..',
+    '...LMMML...',
+    '...........',
+    '...........',
+  ],
+  _Boca.abierta: [
+    '...........',
+    '..LLLLLLL..',
+    '..LTTTTTL..',
+    '..LMMMMML..',
+    '...LLLLL...',
+  ],
+  _Boca.sonrisa: [
+    '.L.......L.',
+    '..LlllllL..',
+    '....ppp....',
+    '...........',
+    '...........',
+  ],
+  _Boca.risaMedia: [
+    '..L.....L..',
+    '..LTTTTTL..',
+    '...LMMML...',
+    '....LLL....',
+    '...........',
+  ],
+  _Boca.risa: [
+    '.LLLLLLLLL.',
+    '.LTTTTTTTL.',
+    '..LMMMMML..',
+    '...LUUUL...',
+    '....LLL....',
+  ],
+  _Boca.o: [
+    '....LLL....',
+    '...LMMML...',
+    '...LMMML...',
+    '....LLL....',
+    '...........',
+  ],
+  _Boca.triste: [
+    '...........',
+    '...lLLLl...',
+    '..L.....L..',
+    '.L.......L.',
+    '...........',
+  ],
+  _Boca.ondulada: [
+    '...........',
+    '..LL..LL...',
+    '.L..LL..LL.',
+    '...........',
+    '...........',
+  ],
+  _Boca.canchera: [
+    '...........',
+    '........LL.',
+    '..LLLLLL...',
+    '....ppp....',
+    '...........',
+  ],
+  _Boca.apretada: [
+    '...........',
+    '..LLLLLLL..',
+    '...........',
+    '...........',
+    '...........',
+  ],
+};
+
+/// El rubor, en la mejilla de la izquierda (desde la columna 2 y la fila 12).
+const _mapaRubor = ['.qQQq.', 'qQQQQq'];
+
+// Los efectos de anime, tambien en pixel art.
+const _paletaEfectos = <String, int>{
+  'b': 0xFF2F6FB0, // el borde de la gota
+  'c': 0xFF9ED8FF, // el agua
+  'H': 0xFFFFFFFF, // un brillo
+  'y': 0xFFFFC94A, // los brillitos
+  'v': 0xFFE53935, // la venita
+  'K': 0xFF3A2A00, // el borde del "!"
+  'Y': 0xFFFFD54F, // el "!"
+};
+
+const _gota = ['..b..', '.bcb.', 'bcccb', 'bHccb', '.bbb.'];
+
+const _lagrima = ['.b.', 'bcb', '.b.'];
+
+const _brilloGrande = [
+  '...y...',
+  '...y...',
+  '..yHy..',
+  'yyHHHyy',
+  '..yHy..',
+  '...y...',
+  '...y...',
+];
+
+const _brilloChico = ['.y.', 'yHy', '.y.'];
+
+const _vena = ['.v.v.', 'vv.vv', '.....', 'vv.vv', '.v.v.'];
+
+const _exclamacion = [
+  'KKK',
+  'KYK',
+  'KYK',
+  'KYK',
+  'KKK',
+  '...',
+  'KKK',
+  'KYK',
+  'KKK',
+];
+
+/// Una celda de la grilla de la foto, en sus 512 px.
+Rect _celda(int columna, int fila) => Rect.fromLTWH(
+  origenCeldaX + columna * ladoCelda,
+  origenCeldaY + fila * ladoCelda,
+  ladoCelda,
+  ladoCelda,
+);
+
+/// Un dibujo de pixel art armado una vez: un camino por color.
+class _Dibujo {
+  _Dibujo(
+    List<String> filas, {
+    required Map<String, int> paleta,
+    int columna = 0,
+    int fila = 0,
+    Offset? origen,
+    double lado = ladoCelda,
+    bool espejo = false,
+  }) {
+    final caminos = <int, Path>{};
+    for (final (j, texto) in filas.indexed) {
+      final letras = espejo ? texto.split('').reversed : texto.split('');
+      for (final (i, letra) in letras.indexed) {
+        if (letra == '+') {
+          conservar.add((columna + i, fila + j));
+          continue;
+        }
+        final color = paleta[letra];
+        if (color == null) continue;
+        final celda = origen == null
+            ? _celda(columna + i, fila + j)
+            : Rect.fromLTWH(
+                origen.dx + i * lado,
+                origen.dy + j * lado,
+                lado,
+                lado,
+              );
+        // Las opacas se pisan apenas con las vecinas, para que entre dos
+        // colores no se vea una rendija; las transparentes no, o se
+        // oscurecerian en el borde.
+        final opaca = (color >>> 24) == 0xFF;
+        (caminos[color] ??= Path()).addRect(opaca ? celda.inflate(.35) : celda);
+      }
+    }
+    _trazos = [
+      for (final MapEntry(key: color, value: camino) in caminos.entries)
+        (Color(color), camino),
+    ];
+  }
+
+  /// Las celdas en las que se ve la foto aunque se borre lo de abajo.
+  final conservar = <(int, int)>{};
+  late final List<(Color, Path)> _trazos;
+
+  void pintar(Canvas canvas, [double opacidad = 1]) {
+    final pintura = Paint();
+    for (final (color, camino) in _trazos) {
+      pintura.color = opacidad >= 1
+          ? color
+          : color.withValues(alpha: color.a * opacidad);
+      canvas.drawPath(camino, pintura);
+    }
+  }
+}
+
+/// Cada dibujo se arma la primera vez que hace falta y queda guardado.
+final _dibujos = <Object, _Dibujo>{};
+
+_Dibujo _ojo(_Ojos ojo, {required bool derecho}) => _dibujos.putIfAbsent(
+  (ojo, derecho),
+  () => _Dibujo(
+    _mapasOjo[ojo]!,
+    paleta: _paleta,
+    columna: derecho ? 17 : 2,
+    fila: 4,
+    espejo: derecho,
+  ),
+);
+
+_Dibujo _ceja(_Cejas ceja, {required bool derecha}) => _dibujos.putIfAbsent(
+  (ceja, derecha),
+  () => _Dibujo(
+    _mapasCeja[ceja]!,
+    paleta: _paleta,
+    columna: derecha ? 15 : 1,
+    espejo: derecha,
+  ),
+);
+
+_Dibujo _boca(_Boca boca) => _dibujos.putIfAbsent(
+  boca,
+  () => _Dibujo(_mapasBoca[boca]!, paleta: _paleta, columna: 7, fila: 17),
+);
+
+_Dibujo _rubor({required bool derecho}) => _dibujos.putIfAbsent(
+  ('rubor', derecho),
+  () => _Dibujo(
+    _mapaRubor,
+    paleta: _paleta,
+    columna: derecho ? 19 : 2,
+    fila: 12,
+    espejo: derecho,
+  ),
+);
+
+/// Un efecto, centrado en el origen.
+_Dibujo _efecto(List<String> mapa, double lado) => _dibujos.putIfAbsent(
+  (mapa, lado),
+  () => _Dibujo(
+    mapa,
+    paleta: _paletaEfectos,
+    lado: lado,
+    origen: Offset(-mapa.first.length * lado / 2, -mapa.length * lado / 2),
+  ),
+);
+
+/// Dibuja a MacIAs: su foto y, encima, la cara que corresponde.
 ///
-/// Las medidas son las de la foto (512 x 512): los ojos en x = 186 y 322
-/// (y = 210), las cejas en y = 158 a 176, la boca en (250, 317). Para cambiar
-/// un gesto se tapa la parte de la foto con el color de la piel, con el
-/// borde difuminado para que no se note el parche, y se dibuja encima el
-/// gesto nuevo, en el mismo trazo oscuro del pixel art.
+/// La foto es pixel art en celdas de 9 x 9 (en sus 512 px). Para cambiar un
+/// gesto se borra esa parte con la piel que habria debajo, medida en la
+/// misma foto (ver `piel_crupier.dart`), y se dibuja el gesto nuevo celda
+/// por celda con los colores de la foto: asi parece hecho por la misma mano
+/// y con el mismo tono de piel.
+///
+/// Mientras [mezcla] va de 0 a 1, la cara [anterior] se funde con la nueva.
 class PintorCaraCrupier extends CustomPainter {
   PintorCaraCrupier({
+    required this.foto,
     required this.expresion,
-    required this.parpadeo,
-    required this.bocaAbierta,
-    required this.efectos,
-  }) : super(repaint: efectos);
+    this.anterior,
+    this.mezcla = kAlwaysCompleteAnimation,
+    this.parpadeo = ParpadeoCrupier.abiertos,
+    this.boca = 0,
+  }) : super(repaint: mezcla);
 
+  final ui.Image foto;
   final ExpresionCrupier expresion;
+  final ExpresionCrupier? anterior;
+  final Animation<double> mezcla;
+  final ParpadeoCrupier parpadeo;
 
-  /// Los ojos cerrados un instante.
-  final bool parpadeo;
+  /// 0 con la boca quieta, 1 a medio abrir y 2 abierta.
+  final int boca;
 
-  /// Mientras habla, la boca se abre y se cierra.
-  final bool bocaAbierta;
-
-  /// Va de 0 a 1 una y otra vez: para la gota, los brillos y la lagrima.
-  final Animation<double> efectos;
-
-  static const _piel = Color(0xFFE8966A);
-  static const _pielBoca = Color(0xFFE38962);
-  static const _pielCejas = Color(0xFFE48B64);
-  static const _tinta = Color(0xFF1A0F0A);
-  static const _labio = Color(0xFFB95640);
-  static const _labioOscuro = Color(0xFF8C3324);
-  static const _adentro = Color(0xFF4A1712);
-  static const _ojos = [Offset(186, 210), Offset(322, 210)];
-
-  static Paint _trazo(double ancho, [Color color = _tinta]) => Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = ancho
-    ..strokeCap = StrokeCap.round
-    ..strokeJoin = StrokeJoin.round
-    ..color = color;
+  /// Todo lo que puede cambiar de la cara, en los 512 px de la foto.
+  static const _zona = Rect.fromLTRB(140, 140, 372, 352);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cara = _caras[expresion]!;
-    final t = efectos.value;
+    final enFoto = foto.width / 512;
+    final pinturaFoto = Paint()..filterQuality = FilterQuality.medium;
     canvas
+      ..drawImageRect(
+        foto,
+        Rect.fromLTWH(0, 0, foto.width.toDouble(), foto.height.toDouble()),
+        Offset.zero & size,
+        pinturaFoto,
+      )
       ..save()
       ..scale(size.width / 512, size.height / 512);
-    if (cara.efectos.contains(_Efecto.rubor)) _rubor(canvas);
-    _pintarCejas(canvas, cara.cejas);
-    final ojos = parpadeo && cara.ojos != _Ojos.felices ? null : cara.ojos;
-    _pintarOjos(canvas, ojos);
-    _pintarBoca(canvas, bocaAbierta ? cara.hablando : cara.boca);
-    if (cara.efectos.contains(_Efecto.lagrima)) _lagrima(canvas, t);
-    if (cara.efectos.contains(_Efecto.gota)) _gota(canvas, t);
-    if (cara.efectos.contains(_Efecto.vena)) _vena(canvas, t);
-    if (cara.efectos.contains(_Efecto.exclamacion)) _exclamacion(canvas, t);
-    if (cara.efectos.contains(_Efecto.brillos)) _brillos(canvas, t);
+    final t = mezcla.value;
+    final antes = anterior;
+    if (antes == null || antes == expresion || t >= 1) {
+      _pintarCara(canvas, _caras[expresion]!);
+    } else {
+      _pintarCara(canvas, _caras[antes]!);
+      // La cara nueva se pinta en una capa que va apareciendo encima, con
+      // la foto debajo: se funden las dos sin que se asome la original.
+      canvas
+        ..saveLayer(_zona, Paint()..color = Color.fromRGBO(0, 0, 0, t))
+        ..drawImageRect(
+          foto,
+          Rect.fromLTRB(
+            _zona.left * enFoto,
+            _zona.top * enFoto,
+            _zona.right * enFoto,
+            _zona.bottom * enFoto,
+          ),
+          _zona,
+          pinturaFoto,
+        );
+      _pintarCara(canvas, _caras[expresion]!);
+      canvas.restore();
+    }
     canvas.restore();
   }
 
-  /// Tapa una parte de la foto con piel: firme al centro, difuminada al
-  /// borde.
-  static void _tapar(Canvas canvas, Rect zona, Color piel) {
-    final forma = RRect.fromRectAndRadius(
-      zona,
-      Radius.circular(zona.shortestSide * .45),
-    );
-    canvas
-      ..drawRRect(
-        forma.inflate(3),
-        Paint()
-          ..color = piel
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-      )
-      ..drawRRect(forma, Paint()..color = piel);
-  }
+  _Ojos _parpadear(_Ojos ojo) => switch (parpadeo) {
+    ParpadeoCrupier.abiertos => ojo,
+    // A medias solo se nota en los ojos de la foto; los otros pasan
+    // directo a cerrados.
+    ParpadeoCrupier.medio => ojo == _Ojos.foto ? _Ojos.medio : ojo,
+    ParpadeoCrupier.cerrados => ojo == _Ojos.feliz ? ojo : _Ojos.cerrado,
+  };
 
-  // ------------------------------------------------------------------ ojos
-  void _pintarOjos(Canvas canvas, _Ojos? ojos) {
-    switch (ojos) {
-      case null:
-        for (final ojo in _ojos) {
-          _cerrado(canvas, ojo);
-        }
-      case _Ojos.foto:
-        break;
-      case _Ojos.felices:
-        for (final ojo in _ojos) {
-          _feliz(canvas, ojo);
-        }
-      case _Ojos.guino:
-        _feliz(canvas, _ojos[0]);
-      case _Ojos.entrecerrados:
-        for (final ojo in _ojos) {
-          _entrecerrado(canvas, ojo);
-        }
-      case _Ojos.sorprendidos:
-        for (final ojo in _ojos) {
-          _sorprendido(canvas, ojo);
-        }
-      case _Ojos.tristes:
-        _triste(canvas, _ojos[0], -1);
-        _triste(canvas, _ojos[1], 1);
-    }
-  }
+  /// Las celdas nuevas con los bordes apenas suaves, como los de la foto.
+  static final _suave = Paint()
+    ..imageFilter = ui.ImageFilter.blur(sigmaX: .9, sigmaY: .9);
 
-  static Rect _cajaOjo(Offset ojo) =>
-      Rect.fromCenter(center: ojo, width: 76, height: 70);
-
-  /// El parpadeo: el ojo cerrado, una linea apenas curvada.
-  static void _cerrado(Canvas canvas, Offset o) {
-    _tapar(canvas, _cajaOjo(o), _piel);
-    canvas.drawPath(
-      Path()
-        ..moveTo(o.dx - 30, o.dy + 3)
-        ..quadraticBezierTo(o.dx, o.dy + 13, o.dx + 30, o.dy + 3),
-      _trazo(6),
-    );
-  }
-
-  /// "^ ^": los ojos que se cierran de contento.
-  static void _feliz(Canvas canvas, Offset o) {
-    _tapar(canvas, _cajaOjo(o), _piel);
-    canvas.drawPath(
-      Path()
-        ..moveTo(o.dx - 28, o.dy + 12)
-        ..quadraticBezierTo(o.dx, o.dy - 20, o.dx + 28, o.dy + 12),
-      _trazo(7.5),
-    );
-  }
-
-  /// El parpado a media asta: mirada de "ya sé lo que va a pasar".
-  static void _entrecerrado(Canvas canvas, Offset o) {
-    final parpado = Rect.fromLTRB(o.dx - 39, o.dy - 40, o.dx + 39, o.dy - 1);
-    canvas
-      ..drawRect(
-        parpado.inflate(2),
-        Paint()
-          ..color = _piel
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-      )
-      ..drawRect(parpado, Paint()..color = _piel)
-      ..drawPath(
-        Path()
-          ..moveTo(o.dx - 32, o.dy + 1)
-          ..quadraticBezierTo(o.dx, o.dy - 7, o.dx + 32, o.dy + 1),
-        _trazo(6.5),
-      );
-  }
-
-  /// "O_O": ojos bien abiertos con la pupila chiquita.
-  static void _sorprendido(Canvas canvas, Offset o) {
-    _tapar(canvas, _cajaOjo(o), _piel);
-    final blanco = Rect.fromCenter(
-      center: o.translate(0, 2),
-      width: 58,
-      height: 64,
-    );
-    canvas
-      ..drawOval(blanco, Paint()..color = const Color(0xFFF8F2EA))
-      ..drawOval(blanco, _trazo(5))
-      ..drawCircle(
-        o.translate(0, 5),
-        8.5,
-        Paint()..color = const Color(0xFF2A160C),
-      )
-      ..drawCircle(o.translate(-3, 2), 2.8, Paint()..color = Colors.white);
-  }
-
-  /// El parpado caido hacia afuera. [lado] es -1 para el ojo de la
-  /// izquierda (su lado de afuera queda a la izquierda) y 1 para el otro.
-  static void _triste(Canvas canvas, Offset o, double lado) {
-    final cuna = Path()
-      ..moveTo(o.dx + lado * 42, o.dy - 42)
-      ..lineTo(o.dx - lado * 14, o.dy - 42)
-      ..lineTo(o.dx + lado * 42, o.dy + 6)
-      ..close();
-    canvas
-      ..drawPath(
-        cuna,
-        Paint()
-          ..color = _piel
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5),
-      )
-      ..drawPath(cuna, Paint()..color = _piel)
-      ..drawLine(
-        Offset(o.dx - lado * 12, o.dy - 34),
-        Offset(o.dx + lado * 34, o.dy + 2),
-        _trazo(6),
-      );
-  }
-
-  // ---------------------------------------------------------------- cejas
-  void _pintarCejas(Canvas canvas, _Cejas cejas) {
-    if (cejas == _Cejas.foto) return;
-    _tapar(canvas, const Rect.fromLTRB(154, 144, 240, 178), _pielCejas);
-    _tapar(canvas, const Rect.fromLTRB(272, 144, 358, 178), _pielCejas);
-    // Cada ceja: desde afuera, el punto de control y hasta adentro.
-    final (izquierda, derecha) = switch (cejas) {
-      _Cejas.relajadas => (
-        (
-          const Offset(166, 166),
-          const Offset(196, 154),
-          const Offset(228, 164),
-        ),
-        (
-          const Offset(346, 166),
-          const Offset(316, 154),
-          const Offset(284, 164),
-        ),
-      ),
-      _Cejas.arriba => (
-        (
-          const Offset(166, 154),
-          const Offset(196, 138),
-          const Offset(228, 152),
-        ),
-        (
-          const Offset(346, 154),
-          const Offset(316, 138),
-          const Offset(284, 152),
-        ),
-      ),
-      _Cejas.tristes => (
-        (
-          const Offset(166, 172),
-          const Offset(198, 168),
-          const Offset(228, 152),
-        ),
-        (
-          const Offset(346, 172),
-          const Offset(314, 168),
-          const Offset(284, 152),
-        ),
-      ),
-      _Cejas.enojadas => (
-        (
-          const Offset(166, 152),
-          const Offset(200, 158),
-          const Offset(231, 176),
-        ),
-        (
-          const Offset(346, 152),
-          const Offset(312, 158),
-          const Offset(281, 176),
-        ),
-      ),
-      _Cejas.una || _Cejas.foto => (
-        (
-          const Offset(166, 154),
-          const Offset(196, 136),
-          const Offset(228, 152),
-        ),
-        (
-          const Offset(346, 168),
-          const Offset(316, 164),
-          const Offset(284, 171),
-        ),
-      ),
+  void _pintarCara(Canvas canvas, _Cara cara) {
+    final (cejaIzquierda, cejaDerecha) = cara.cejas;
+    final (ojoIzquierdo, ojoDerecho) = cara.ojos;
+    final izquierdo = _parpadear(ojoIzquierdo);
+    final derecho = _parpadear(ojoDerecho);
+    final (quieta, media, abierta) = cara.boca;
+    final laBoca = switch (boca) {
+      1 => media,
+      2 => abierta,
+      _ => quieta,
     };
-    for (final (desde, control, hasta) in [izquierda, derecha]) {
-      canvas.drawPath(
-        Path()
-          ..moveTo(desde.dx, desde.dy)
-          ..quadraticBezierTo(control.dx, control.dy, hasta.dx, hasta.dy),
-        _trazo(10),
+    final rubor = cara.efectos.contains(_Efecto.rubor);
+    // La cara de la foto tal cual: no hay nada que pintar encima.
+    if (cejaIzquierda == _Cejas.foto &&
+        cejaDerecha == _Cejas.foto &&
+        izquierdo == _Ojos.foto &&
+        derecho == _Ojos.foto &&
+        laBoca == _Boca.foto &&
+        !rubor) {
+      return;
+    }
+    canvas.saveLayer(_zona, _suave);
+    if (cejaIzquierda != _Cejas.foto) {
+      _parte(
+        canvas,
+        _ceja(cejaIzquierda, derecha: false),
+        pielBajoCejaIzquierda,
       );
     }
-  }
-
-  // ----------------------------------------------------------------- boca
-  void _pintarBoca(Canvas canvas, _Boca boca) {
-    if (boca == _Boca.foto) return;
-    _tapar(canvas, const Rect.fromLTRB(198, 300, 302, 338), _pielBoca);
-    switch (boca) {
-      case _Boca.foto:
-        break;
-      case _Boca.sonrisa:
-        canvas
-          ..drawPath(
-            Path()
-              ..moveTo(212, 312)
-              ..quadraticBezierTo(250, 338, 288, 312)
-              ..quadraticBezierTo(250, 327, 212, 312)
-              ..close(),
-            Paint()..color = _labio,
-          )
-          ..drawPath(
-            Path()
-              ..moveTo(212, 312)
-              ..quadraticBezierTo(250, 336, 288, 312),
-            _trazo(5, _labioOscuro),
-          );
-      case _Boca.risa:
-        final forma = Path()
-          ..moveTo(210, 308)
-          ..lineTo(290, 308)
-          ..quadraticBezierTo(288, 344, 250, 348)
-          ..quadraticBezierTo(212, 344, 210, 308)
-          ..close();
-        _bocaAbierta(
-          canvas,
-          forma,
-          dientes: const Rect.fromLTRB(208, 306, 292, 317),
-          lengua: const Rect.fromLTRB(230, 334, 270, 350),
-        );
-      case _Boca.abierta:
-        _bocaAbierta(
-          canvas,
-          Path()..addOval(
-            Rect.fromCenter(
-              center: const Offset(250, 318),
-              width: 46,
-              height: 20,
-            ),
-          ),
-          dientes: const Rect.fromLTRB(226, 307, 274, 313),
-          lengua: const Rect.fromLTRB(238, 322, 262, 330),
-        );
-      case _Boca.o:
-        _bocaAbierta(
-          canvas,
-          Path()..addOval(
-            Rect.fromCenter(
-              center: const Offset(250, 321),
-              width: 28,
-              height: 32,
-            ),
-          ),
-          lengua: const Rect.fromLTRB(240, 328, 260, 338),
-        );
-      case _Boca.triste:
-        canvas.drawPath(
-          Path()
-            ..moveTo(216, 328)
-            ..quadraticBezierTo(250, 306, 284, 328),
-          _trazo(6, _labioOscuro),
-        );
-      case _Boca.ondulada:
-        canvas.drawPath(
-          Path()
-            ..moveTo(212, 318)
-            ..quadraticBezierTo(221, 309, 230, 318)
-            ..quadraticBezierTo(239, 327, 248, 318)
-            ..quadraticBezierTo(257, 309, 266, 318)
-            ..quadraticBezierTo(275, 327, 286, 316),
-          _trazo(5.5, _labioOscuro),
-        );
-      case _Boca.canchera:
-        canvas.drawPath(
-          Path()
-            ..moveTo(214, 320)
-            ..quadraticBezierTo(244, 328, 268, 318)
-            ..quadraticBezierTo(282, 312, 290, 302),
-          _trazo(6, _labioOscuro),
-        );
+    if (cejaDerecha != _Cejas.foto) {
+      _parte(canvas, _ceja(cejaDerecha, derecha: true), pielBajoCejaDerecha);
     }
-  }
-
-  static void _bocaAbierta(
-    Canvas canvas,
-    Path forma, {
-    Rect? dientes,
-    Rect? lengua,
-  }) {
-    canvas
-      ..drawPath(forma, Paint()..color = _adentro)
-      ..save()
-      ..clipPath(forma);
-    if (dientes != null) {
-      canvas.drawRect(dientes, Paint()..color = const Color(0xFFFFF8EE));
+    if (izquierdo != _Ojos.foto) {
+      _parte(canvas, _ojo(izquierdo, derecho: false), pielBajoOjoIzquierdo);
     }
-    if (lengua != null) {
-      canvas.drawOval(lengua, Paint()..color = const Color(0xFFE5737A));
+    if (derecho != _Ojos.foto) {
+      _parte(canvas, _ojo(derecho, derecho: true), pielBajoOjoDerecho);
     }
-    canvas
-      ..restore()
-      ..drawPath(forma, _trazo(4, _labioOscuro));
-  }
-
-  // --------------------------------------------------------------- efectos
-  /// "///": el sonrojo de anime en las mejillas.
-  static void _rubor(Canvas canvas) {
-    for (final mejilla in const [Offset(172, 266), Offset(334, 266)]) {
-      canvas.drawOval(
-        Rect.fromCenter(center: mejilla, width: 56, height: 22),
-        Paint()
-          ..color = const Color(0x66FF5C7A)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
-      );
-      for (var i = 0; i < 3; i++) {
-        canvas.drawLine(
-          mejilla.translate(-15 + i * 12, 7),
-          mejilla.translate(-9 + i * 12, -7),
-          _trazo(3, const Color(0xCCFF8FA3)),
-        );
-      }
-    }
-  }
-
-  /// Una gota con la punta para arriba, centrada en el origen.
-  static Path _forma(double ancho, double alto) => Path()
-    ..moveTo(0, -alto / 2)
-    ..quadraticBezierTo(ancho * .55, alto * .05, ancho * .45, alto * .25)
-    ..arcToPoint(
-      Offset(-ancho * .45, alto * .25),
-      radius: Radius.circular(ancho * .46),
-    )
-    ..quadraticBezierTo(-ancho * .55, alto * .05, 0, -alto / 2)
-    ..close();
-
-  static void _gotaEn(
-    Canvas canvas,
-    Offset centro,
-    double ancho,
-    double alto,
-    double opacidad,
-  ) {
-    final forma = _forma(ancho, alto);
-    canvas
-      ..save()
-      ..translate(centro.dx, centro.dy)
-      ..drawPath(
-        forma,
-        Paint()
-          ..shader =
-              LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFFD6F1FF).withValues(alpha: opacidad),
-                  const Color(0xFF6EC1FF).withValues(alpha: opacidad),
-                ],
-              ).createShader(
-                Rect.fromCenter(
-                  center: Offset.zero,
-                  width: ancho,
-                  height: alto,
-                ),
-              ),
-      )
-      ..drawPath(
-        forma,
-        _trazo(3, const Color(0xFF2E6FA8).withValues(alpha: opacidad)),
-      )
-      ..drawOval(
-        Rect.fromCenter(
-          center: Offset(-ancho * .14, alto * .08),
-          width: ancho * .18,
-          height: alto * .2,
-        ),
-        Paint()..color = Colors.white.withValues(alpha: .85 * opacidad),
-      )
-      ..restore();
-  }
-
-  /// La gota de sudor de los nervios, que se resbala un poquito.
-  static void _gota(Canvas canvas, double t) =>
-      _gotaEn(canvas, Offset(396, 152 + 7 * math.sin(t * math.pi)), 32, 46, 1);
-
-  /// Una lagrimita que cae por la mejilla.
-  static void _lagrima(Canvas canvas, double t) => _gotaEn(
-    canvas,
-    Offset(204 + 3 * t, 246 + 26 * t),
-    15,
-    22,
-    t < .75 ? 1 : (1 - t) / .25,
-  );
-
-  /// La venita de enojo de los animes, latiendo.
-  static void _vena(Canvas canvas, double t) {
-    final latido = 1 + .1 * math.sin(t * math.pi * 4);
-    canvas
-      ..save()
-      ..translate(362, 104)
-      ..scale(latido);
-    for (var cuarto = 0; cuarto < 4; cuarto++) {
-      canvas
-        ..save()
-        ..rotate(cuarto * math.pi / 2)
-        ..drawPath(
-          Path()
-            ..moveTo(6, -20)
-            ..quadraticBezierTo(6, -6, 20, -6),
-          _trazo(7, const Color(0xFFE53935)),
-        )
-        ..restore();
+    if (laBoca != _Boca.foto) _parte(canvas, _boca(laBoca), pielBajoBoca);
+    if (rubor) {
+      _rubor(derecho: false).pintar(canvas);
+      _rubor(derecho: true).pintar(canvas);
     }
     canvas.restore();
   }
 
-  /// "!": de golpe, con un saltito.
-  static void _exclamacion(Canvas canvas, double t) {
-    final salto = -5 * math.sin(t * math.pi * 2).abs();
-    final relleno = Paint()..color = const Color(0xFFFFD54F);
-    final borde = _trazo(4, const Color(0xFF3A2A00));
-    final barra = RRect.fromRectAndRadius(
-      Rect.fromLTRB(432, 38 + salto, 450, 98 + salto),
-      const Radius.circular(9),
-    );
-    final punto = Offset(441, 117 + salto);
-    canvas
-      ..drawRRect(barra, relleno)
-      ..drawRRect(barra, borde)
-      ..drawCircle(punto, 9.5, relleno)
-      ..drawCircle(punto, 9.5, borde);
-  }
-
-  /// Brillitos que titilan alrededor de la cara.
-  static void _brillos(Canvas canvas, double t) {
-    for (final (centro, radio, desfase) in const [
-      (Offset(74, 118), 30.0, 0.0),
-      (Offset(446, 96), 24.0, .33),
-      (Offset(454, 236), 19.0, .66),
-    ]) {
-      final escala = .5 + .5 * math.sin((t + desfase) * math.pi * 2).abs();
-      final r = radio * escala;
-      final estrella = Path()
-        ..moveTo(0, -r)
-        ..lineTo(r * .26, -r * .26)
-        ..lineTo(r, 0)
-        ..lineTo(r * .26, r * .26)
-        ..lineTo(0, r)
-        ..lineTo(-r * .26, r * .26)
-        ..lineTo(-r, 0)
-        ..lineTo(-r * .26, -r * .26)
-        ..close();
-      canvas
-        ..save()
-        ..translate(centro.dx, centro.dy)
-        ..drawPath(estrella, Paint()..color = const Color(0xFFFFC94A))
-        ..scale(.5)
-        ..drawPath(estrella, Paint()..color = Colors.white)
-        ..restore();
+  /// Borra esa parte de la foto (salvo lo que el dibujo conserva) y dibuja
+  /// el gesto encima.
+  static void _parte(Canvas canvas, _Dibujo dibujo, List<CeldaPiel> piel) {
+    final pintura = Paint();
+    for (final (columna, fila, color) in piel) {
+      if (dibujo.conservar.contains((columna, fila))) continue;
+      pintura.color = Color(color);
+      canvas.drawRect(_celda(columna, fila).inflate(.35), pintura);
     }
+    dibujo.pintar(canvas);
   }
 
   @override
   bool shouldRepaint(PintorCaraCrupier viejo) =>
+      viejo.foto != foto ||
       viejo.expresion != expresion ||
+      viejo.anterior != anterior ||
       viejo.parpadeo != parpadeo ||
-      viejo.bocaAbierta != bocaAbierta;
+      viejo.boca != boca;
+}
+
+/// Los efectos de anime de cada cara (la gota de los nervios, la lagrima,
+/// los brillitos, la venita, el "!"), en pixel art y en movimiento.
+///
+/// Va aparte de la cara: se mueve todo el tiempo, y asi la foto no se
+/// vuelve a pintar en cada cuadro.
+class PintorEfectosCrupier extends CustomPainter {
+  PintorEfectosCrupier({
+    required this.expresion,
+    required this.efectos,
+    this.anterior,
+    this.mezcla = kAlwaysCompleteAnimation,
+  }) : super(repaint: Listenable.merge([efectos, mezcla]));
+
+  final ExpresionCrupier expresion;
+  final ExpresionCrupier? anterior;
+
+  /// Va de 0 a 1 una y otra vez.
+  final Animation<double> efectos;
+  final Animation<double> mezcla;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas
+      ..save()
+      ..scale(size.width / 512, size.height / 512);
+    final t = efectos.value;
+    final m = mezcla.value;
+    final antes = anterior;
+    if (antes != null && antes != expresion && m < 1) {
+      _pintar(canvas, _caras[antes]!.efectos, t, 1 - m);
+      _pintar(canvas, _caras[expresion]!.efectos, t, m);
+    } else {
+      _pintar(canvas, _caras[expresion]!.efectos, t, 1);
+    }
+    canvas.restore();
+  }
+
+  static void _pintar(
+    Canvas canvas,
+    Set<_Efecto> efectos,
+    double t,
+    double opacidad,
+  ) {
+    void dibujo(
+      List<String> mapa,
+      Offset centro, {
+      double lado = 8,
+      double escala = 1,
+      double alfa = 1,
+    }) {
+      canvas
+        ..save()
+        ..translate(centro.dx, centro.dy)
+        ..scale(escala);
+      _efecto(mapa, lado).pintar(canvas, alfa * opacidad);
+      canvas.restore();
+    }
+
+    for (final efecto in efectos) {
+      switch (efecto) {
+        case _Efecto.rubor:
+          break;
+        case _Efecto.gota:
+          // Se resbala un poquito por la sien.
+          dibujo(_gota, Offset(404, 154 + 9 * math.sin(t * math.pi)));
+        case _Efecto.lagrima:
+          dibujo(
+            _lagrima,
+            Offset(206 + 2 * t, 252 + 30 * t),
+            lado: 7,
+            alfa: t < .75 ? 1 : (1 - t) / .25,
+          );
+        case _Efecto.brillos:
+          for (final (centro, desfase) in const [
+            (Offset(76, 118), 0.0),
+            (Offset(444, 96), .33),
+            (Offset(452, 236), .66),
+          ]) {
+            final fase = (t + desfase) % 1;
+            final grande = fase < .5;
+            dibujo(
+              grande ? _brilloGrande : _brilloChico,
+              centro,
+              lado: 6,
+              escala: grande ? .8 + .4 * math.sin(fase * 2 * math.pi) : 1,
+            );
+          }
+        case _Efecto.vena:
+          dibujo(
+            _vena,
+            const Offset(366, 106),
+            lado: 9,
+            escala: 1 + .14 * math.sin(t * math.pi * 4).abs(),
+          );
+        case _Efecto.exclamacion:
+          dibujo(
+            _exclamacion,
+            Offset(442, 84 - 6 * math.sin(t * math.pi * 2).abs()),
+          );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(PintorEfectosCrupier viejo) =>
+      viejo.expresion != expresion || viejo.anterior != anterior;
 }
 
 /// Como se mueve MacIAs con cada cara.
@@ -688,43 +729,90 @@ class _CrupierMaciasState extends State<CrupierMacias>
     vsync: this,
     duration: const Duration(milliseconds: 1400),
   );
+
+  /// El fundido entre una cara y la siguiente.
+  late final AnimationController _mezcla = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 180),
+    value: 1,
+  );
   final _azar = math.Random();
   Timer? _proximoParpadeo;
-  Timer? _abrirOjos;
-  Timer? _boca;
-  bool _parpadeo = false;
-  bool _bocaAbierta = false;
+  Timer? _pasoParpadeo;
+  Timer? _movimientoBoca;
+  var _parpadeo = ParpadeoCrupier.abiertos;
+  var _boca = 0;
+  ExpresionCrupier? _anterior;
+  var _sinMovimiento = false;
+
+  ImageStream? _flujoFoto;
+  ImageInfo? _foto;
+  late final _alCargar = ImageStreamListener((info, _) {
+    if (!mounted) {
+      info.dispose();
+      return;
+    }
+    setState(() {
+      _foto?.dispose();
+      _foto = info;
+    });
+  });
 
   @override
   void initState() {
     super.initState();
     _programarParpadeo();
-    _animarEfectos();
     if (widget.hablando) _hablar();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sinMovimiento = MediaQuery.disableAnimationsOf(context);
+    _animarEfectos();
+    // La foto se pinta a mano (debajo de la cara): hace falta la imagen.
+    final flujo = const AssetImage(
+      rutaFotoCrupier,
+    ).resolve(createLocalImageConfiguration(context));
+    if (flujo.key != _flujoFoto?.key) {
+      _flujoFoto?.removeListener(_alCargar);
+      _flujoFoto = flujo..addListener(_alCargar);
+    }
   }
 
   @override
   void didUpdateWidget(CrupierMacias viejo) {
     super.didUpdateWidget(viejo);
     if (viejo.latido != widget.latido) _salto.forward(from: 0);
-    if (viejo.expresion != widget.expresion) _animarEfectos();
+    if (viejo.expresion != widget.expresion) {
+      _anterior = viejo.expresion;
+      if (_sinMovimiento) {
+        _mezcla.value = 1;
+      } else {
+        _mezcla.forward(from: 0);
+      }
+      _animarEfectos();
+    }
     if (viejo.hablando != widget.hablando) {
       if (widget.hablando) {
         _hablar();
       } else {
-        _boca?.cancel();
-        _bocaAbierta = false;
+        _movimientoBoca?.cancel();
+        _boca = 0;
       }
     }
   }
 
   @override
   void dispose() {
+    _flujoFoto?.removeListener(_alCargar);
+    _foto?.dispose();
     _proximoParpadeo?.cancel();
-    _abrirOjos?.cancel();
-    _boca?.cancel();
+    _pasoParpadeo?.cancel();
+    _movimientoBoca?.cancel();
     _salto.dispose();
     _efectos.dispose();
+    _mezcla.dispose();
     super.dispose();
   }
 
@@ -735,35 +823,49 @@ class _CrupierMaciasState extends State<CrupierMacias>
       Duration(milliseconds: 2200 + _azar.nextInt(2800)),
       () {
         if (!mounted) return;
-        _parpadear(doble: _azar.nextDouble() < .2);
+        _parpadear(veces: _azar.nextDouble() < .2 ? 2 : 1);
         _programarParpadeo();
       },
     );
   }
 
-  void _parpadear({bool doble = false}) {
-    setState(() => _parpadeo = true);
-    _abrirOjos = Timer(const Duration(milliseconds: 110), () {
+  /// Un parpadeo en cuadros, como en las novelas visuales: los ojos se
+  /// cierran a medias, del todo, a medias otra vez y se abren.
+  void _parpadear({int veces = 1}) {
+    const cuadros = [
+      (ParpadeoCrupier.medio, 40),
+      (ParpadeoCrupier.cerrados, 70),
+      (ParpadeoCrupier.medio, 40),
+      (ParpadeoCrupier.abiertos, 150),
+    ];
+    var paso = 0;
+    void siguiente() {
       if (!mounted) return;
-      setState(() => _parpadeo = false);
-      if (doble) {
-        _abrirOjos = Timer(const Duration(milliseconds: 160), () {
-          if (mounted) _parpadear();
-        });
+      final (estado, espera) = cuadros[paso % cuadros.length];
+      setState(() => _parpadeo = estado);
+      paso++;
+      if (paso < cuadros.length * veces) {
+        _pasoParpadeo = Timer(Duration(milliseconds: espera), siguiente);
       }
-    });
+    }
+
+    _pasoParpadeo?.cancel();
+    siguiente();
   }
 
-  /// La boca se abre y se cierra a ritmo de habla, con alguna pausa.
+  /// Mientras habla, la boca va y viene entre quieta, a medio abrir y
+  /// abierta: nunca salta de cerrada a abierta de golpe.
   void _hablar() {
-    _boca?.cancel();
-    _boca = Timer.periodic(const Duration(milliseconds: 95), (_) {
+    _movimientoBoca?.cancel();
+    _movimientoBoca = Timer.periodic(const Duration(milliseconds: 75), (_) {
       if (!mounted) return;
-      setState(
-        () => _bocaAbierta = _bocaAbierta
-            ? _azar.nextDouble() < .2
-            : _azar.nextDouble() < .8,
-      );
+      final r = _azar.nextDouble();
+      final siguiente = switch (_boca) {
+        0 => r < .75 ? 1 : 0,
+        1 => r < .6 ? 2 : 0,
+        _ => r < .75 ? 1 : 2,
+      };
+      if (siguiente != _boca) setState(() => _boca = siguiente);
     });
   }
 
@@ -772,12 +874,12 @@ class _CrupierMaciasState extends State<CrupierMacias>
   void _animarEfectos() {
     final efectos = _caras[widget.expresion]!.efectos;
     final seMueven = efectos.any((e) => e != _Efecto.rubor);
-    if (seMueven) {
+    if (seMueven && !_sinMovimiento) {
       if (!_efectos.isAnimating) _efectos.repeat();
     } else {
       _efectos
         ..stop()
-        ..value = 0;
+        ..value = .3;
     }
   }
 
@@ -796,6 +898,7 @@ class _CrupierMaciasState extends State<CrupierMacias>
   Widget build(BuildContext context) {
     final tamano = widget.tamano;
     final radio = BorderRadius.circular(tamano * .2);
+    final foto = _foto?.image;
     final retrato = Container(
       width: tamano,
       height: tamano,
@@ -821,49 +924,44 @@ class _CrupierMaciasState extends State<CrupierMacias>
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(tamano * .17),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            const ColoredBox(color: Colors.white),
-            // La misma imagen que precarga la mesa, para que este lista
-            // desde el primer cuadro.
-            Image(
-              image: const AssetImage(rutaFotoCrupier),
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.medium,
-              gaplessPlayback: true,
-              // La cara se dibuja encima de la foto: sin la foto todavia
-              // (en la web puede tardar un instante), los ojos quedarian
-              // flotando sobre el blanco. Llegan juntas.
-              frameBuilder: (context, foto, cuadro, alInstante) {
-                final lista = alInstante || cuadro != null;
-                final cara = Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    RepaintBoundary(child: foto),
-                    if (lista)
+        child: ColoredBox(
+          color: Colors.white,
+          // Si la foto tarda (en la web, la primera vez), aparece con un
+          // fundido; si ya estaba, desde el primer cuadro.
+          child: AnimatedOpacity(
+            opacity: foto == null ? 0 : 1,
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOut,
+            child: foto == null
+                ? const SizedBox.expand()
+                : Stack(
+                    fit: StackFit.expand,
+                    children: [
                       RepaintBoundary(
                         child: CustomPaint(
                           painter: PintorCaraCrupier(
+                            foto: foto,
                             expresion: widget.expresion,
+                            anterior: _anterior,
+                            mezcla: _mezcla,
                             parpadeo: _parpadeo,
-                            bocaAbierta: widget.hablando && _bocaAbierta,
-                            efectos: _efectos,
+                            boca: widget.hablando ? _boca : 0,
                           ),
                         ),
                       ),
-                  ],
-                );
-                if (alInstante) return cara;
-                return AnimatedOpacity(
-                  opacity: lista ? 1 : 0,
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOut,
-                  child: cara,
-                );
-              },
-            ),
-          ],
+                      RepaintBoundary(
+                        child: CustomPaint(
+                          painter: PintorEfectosCrupier(
+                            expresion: widget.expresion,
+                            anterior: _anterior,
+                            efectos: _efectos,
+                            mezcla: _mezcla,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );

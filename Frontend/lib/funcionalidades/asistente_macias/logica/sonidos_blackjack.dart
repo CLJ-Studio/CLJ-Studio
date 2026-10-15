@@ -2,24 +2,25 @@ import 'sonidos_blackjack_movil.dart'
     if (dart.library.js_interop) 'sonidos_blackjack_web.dart'
     as plataforma;
 
-/// Los sonidos de la mesa de blackjack. Salen de
-/// `tool/generar_sonidos_blackjack.dart`.
+/// Los sonidos de la mesa de blackjack: fichas y cartas grabadas de verdad,
+/// de los paquetes de Kenney (CC0). Se preparan con
+/// `tool/preparar_sonidos_blackjack.dart`.
 enum SonidoMesa {
-  ficha(['ficha_1', 'ficha_2'], copias: 3),
-  fichas(['fichas'], copias: 2),
+  ficha(['ficha_1', 'ficha_2', 'ficha_3'], copias: 3),
+  fichas(['fichas_1', 'fichas_2', 'fichas_3', 'fichas_4'], copias: 2),
   cartaSale(['carta_sale_1', 'carta_sale_2'], copias: 3),
-  cartaCae(['carta_cae'], copias: 4),
-  voltear(['voltear']),
+  cartaCae(['carta_cae_1', 'carta_cae_2', 'carta_cae_3'], copias: 4),
+  voltear(['voltear_1', 'voltear_2']),
   barajar(['barajar']),
   ganar(['ganar']),
   blackjack(['blackjack']),
   perder(['perder']),
   empate(['empate']),
   pasarse(['pasarse']),
-  cobrar(['cobrar'], copias: 2),
+  cobrar(['cobrar_1', 'cobrar_2'], copias: 2),
   boton(['boton'], copias: 2),
   pista(['pista']),
-  voz(['voz_1', 'voz_2', 'voz_3'], copias: 2);
+  voz(['voz_1', 'voz_2'], copias: 2);
 
   const SonidoMesa(this.archivos, {this.copias = 1});
 

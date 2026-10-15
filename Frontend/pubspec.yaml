@@ -83,8 +83,8 @@ flutter:
 
   assets:
     - assets/animations/
-    # Los sonidos de la mesa de blackjack de MacIAs (ver
-    # tool/generar_sonidos_blackjack.dart).
+    # Los sonidos de la mesa de blackjack de MacIAs: grabaciones CC0 de
+    # Kenney (ver tool/preparar_sonidos_blackjack.dart).
     - assets/audio/blackjack/
     - assets/images/banners/
     - assets/images/categorias/
