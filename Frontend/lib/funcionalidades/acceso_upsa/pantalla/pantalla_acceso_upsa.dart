@@ -158,14 +158,10 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
     if (mounted) setState(() => _cuentas = guardadas);
   }
 
-  /// Formato real del codigo: año de ingreso (4), periodo (11 para el primer
-  /// semestre, 12 para el segundo) y correlativo (4). Aceptar diez digitos
-  /// cualesquiera dejaba pasar codigos inventados como "8382848283".
-  bool get _registroCompleto {
-    if (!RegExp(r'^\d{4}(11|12)\d{4}$').hasMatch(_digitos)) return false;
-    final anio = int.parse(_digitos.substring(0, 4));
-    return anio >= 2000 && anio <= DateTime.now().year;
-  }
+  /// Diez digitos que empiezan con un año posible: corta inventos como
+  /// "8382848283" sin dejar afuera a los egresados de antes.
+  bool get _registroCompleto =>
+      ServicioAutenticacionCorreo.registroValido(_digitos);
 
   bool get _codigoCompleto => _codigo.length == CampoCodigoVerificacion.largo;
 

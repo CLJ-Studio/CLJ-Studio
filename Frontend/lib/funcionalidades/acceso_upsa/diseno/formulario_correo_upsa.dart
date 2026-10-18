@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../datos/servicio_autenticacion_correo.dart';
 import 'campo_codigo_estudiante.dart';
 
 /// Codigo institucional del estudiante.
@@ -26,14 +27,9 @@ class FormularioCorreoUpsa extends StatelessWidget {
 
     if (digitos.length >= 4) {
       final anio = int.tryParse(digitos.substring(0, 4)) ?? 0;
-      if (anio < 2000 || anio > DateTime.now().year) {
+      if (anio < ServicioAutenticacionCorreo.primerAnioDeRegistro ||
+          anio > DateTime.now().year) {
         return 'El código empieza con tu año de ingreso.';
-      }
-    }
-    if (digitos.length >= 6) {
-      final periodo = digitos.substring(4, 6);
-      if (periodo != '11' && periodo != '12') {
-        return 'Después del año va 11 (primer semestre) o 12 (segundo).';
       }
     }
     if (digitos.length == 10 && !esValido) {

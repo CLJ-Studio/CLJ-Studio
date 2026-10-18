@@ -75,6 +75,21 @@ class ServicioAutenticacionCorreo {
 
   SupabaseClient get _cliente => cliente ?? Supabase.instance.client;
 
+  /// La UPSA abrio en 1984: ningun registro es de antes.
+  static const primerAnioDeRegistro = 1984;
+
+  /// Diez digitos que empiezan con el año de ingreso.
+  ///
+  /// Lo que viene despues del año no se revisa. Hoy suele ser 11 o 12, pero
+  /// en 2004 tambien habia 21, y los egresados conservan su correo de
+  /// siempre (hay de los 90): exigir 11 o 12 desde el 2000 los dejaba
+  /// afuera, con el boton apagado y sin explicacion que sirviera.
+  static bool registroValido(String digitos) {
+    if (!RegExp(r'^\d{10}$').hasMatch(digitos)) return false;
+    final anio = int.parse(digitos.substring(0, 4));
+    return anio >= primerAnioDeRegistro && anio <= DateTime.now().year;
+  }
+
   /// Arma el correo a partir del número de registro, o acepta uno completo.
   static String? normalizarCorreo(String entrada) {
     final texto = entrada.trim().toLowerCase();
@@ -86,10 +101,7 @@ class ServicioAutenticacionCorreo {
 
     // Solo el registro: 'a' opcional seguida de diez dígitos.
     final digitos = texto.replaceAll(RegExp(r'\D'), '');
-    if (!RegExp(r'^\d{4}(11|12)\d{4}$').hasMatch(digitos)) return null;
-
-    final anio = int.parse(digitos.substring(0, 4));
-    if (anio < 2000 || anio > DateTime.now().year) return null;
+    if (!registroValido(digitos)) return null;
 
     return 'a$digitos@$dominio';
   }

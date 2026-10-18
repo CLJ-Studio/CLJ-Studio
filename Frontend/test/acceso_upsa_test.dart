@@ -149,6 +149,47 @@ VoidCallback? _reenviar(WidgetTester tester) => tester
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  group('el numero de registro', () {
+    test('acepta los formatos de verdad, tambien los de antes', () {
+      // Hoy suele ir 11 o 12 despues del año; en 2004 tambien habia 21, y
+      // los egresados de los 90 conservan su correo.
+      for (final registro in [
+        '2024110000',
+        '2024120000',
+        '2004219999',
+        '1992110000',
+        '1984120001',
+      ]) {
+        expect(
+          ServicioAutenticacionCorreo.registroValido(registro),
+          isTrue,
+          reason: registro,
+        );
+      }
+      expect(
+        ServicioAutenticacionCorreo.normalizarCorreo('2004219999'),
+        'a2004219999@estudiantes.upsa.edu.bo',
+      );
+    });
+
+    test('corta lo que no puede ser un registro', () {
+      for (final registro in [
+        '8382848283',
+        '1983110000',
+        '${DateTime.now().year + 1}110000',
+        '202411000',
+        '20241100001',
+        '',
+      ]) {
+        expect(
+          ServicioAutenticacionCorreo.registroValido(registro),
+          isFalse,
+          reason: registro,
+        );
+      }
+    });
+  });
+
   group('lo que significa cada respuesta del servidor', () {
     test('un corte de red no se sabe si mando el correo', () {
       expect(
@@ -397,6 +438,23 @@ void main() {
       expect(find.textContaining('Ya te mandamos un código'), findsOneWidget);
       expect(find.text('Reenviar en 42s'), findsOneWidget);
       expect(repo.pedidos, hasLength(1), reason: 'sin reintento');
+    });
+
+    testWidgets('un egresado con un registro de antes puede pedir el codigo', (
+      tester,
+    ) async {
+      final repo = _RepositorioFalso();
+      await _abrir(tester, repo);
+      await tester.enterText(find.byType(TextField), '2004219999');
+      await tester.pump();
+
+      expect(find.textContaining('Después del año'), findsNothing);
+      expect(find.textContaining('formato'), findsNothing);
+      await _tocar(tester, 'Enviarme el código');
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+      expect(repo.pedidos, ['a2004219999@estudiantes.upsa.edu.bo']);
     });
 
     testWidgets('en un telefono el registro entero se ve, sin desplazarse', (
