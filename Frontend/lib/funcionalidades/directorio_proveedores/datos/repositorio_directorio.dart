@@ -42,6 +42,15 @@ class RepositorioDirectorio {
         .toList(growable: false);
   }
 
+  /// Los egresados ya verificados, para poder quitarle la marca a alguien.
+  Future<List<SolicitudEgresado>> egresadosVerificados() async {
+    final filas = await _cliente.rpc('egresados_verificados') as List<dynamic>;
+    return filas
+        .cast<Map<String, dynamic>>()
+        .map(SolicitudEgresado.desdeMapa)
+        .toList(growable: false);
+  }
+
   Future<void> resolverEgresado(
     String usuarioId, {
     required bool aprobar,

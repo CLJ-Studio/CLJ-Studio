@@ -90,6 +90,10 @@ class _RepositorioFalso extends RepositorioDirectorio {
   OfertaUpsa? oferta;
   final guardadas = <OfertaUpsa>[];
   List<SolicitudEgresado> solicitudes = const [];
+  List<SolicitudEgresado> verificados = const [];
+
+  @override
+  Future<List<SolicitudEgresado>> egresadosVerificados() async => verificados;
   final resueltas = <String>[];
 
   @override
@@ -454,7 +458,9 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(repo.resueltas, ['u1:si']);
-      expect(find.text('Ana Viva'), findsNothing);
+      // Sale de las pendientes y pasa a los verificados.
+      expect(find.text('Egresados verificados'), findsOneWidget);
+      expect(find.text('Ana Viva'), findsOneWidget);
       expect(find.textContaining('ya figura como egresado'), findsOneWidget);
 
       await tester.tap(find.text('Rechazar'));
@@ -462,6 +468,25 @@ void main() {
       await tester.pump();
       expect(repo.resueltas, ['u1:si', 'u2:no']);
       expect(find.text('No hay solicitudes pendientes.'), findsOneWidget);
+    });
+
+    testWidgets('lista a los verificados y les quita la marca', (tester) async {
+      final repo = _RepositorioFalso()..verificados = [solicitudes.first];
+      await abrir(tester, repo);
+
+      expect(find.text('Egresados verificados'), findsOneWidget);
+      expect(find.text('Ana Viva'), findsOneWidget);
+
+      await tester.tap(find.text('Quitar marca'));
+      await tester.pump();
+      // Pide confirmacion antes.
+      expect(find.textContaining('¿Quitarle la marca a Ana Viva?'), findsOne);
+      await tester.tap(find.widgetWithText(FilledButton, 'Quitar marca'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(repo.resueltas, ['u1:no']);
+      expect(find.text('Egresados verificados'), findsNothing);
     });
 
     testWidgets('si falla, deja reintentar', (tester) async {

@@ -24,6 +24,10 @@ class PantallaSolicitudesEgresado extends StatefulWidget {
 class _PantallaSolicitudesEgresadoState
     extends State<PantallaSolicitudesEgresado> {
   List<SolicitudEgresado>? _solicitudes;
+
+  /// Los ya verificados, para poder quitarle la marca a alguien. Si la
+  /// migracion 58 no esta aplicada, queda vacia y la seccion no aparece.
+  List<SolicitudEgresado> _verificados = const [];
   bool _fallo = false;
 
   /// Las que se estan resolviendo: sus botones se apagan mientras tanto.
@@ -39,7 +43,18 @@ class _PantallaSolicitudesEgresadoState
     setState(() => _fallo = false);
     try {
       final solicitudes = await widget.repositorio.solicitudesEgresado();
-      if (mounted) setState(() => _solicitudes = solicitudes);
+      List<SolicitudEgresado> verificados;
+      try {
+        verificados = await widget.repositorio.egresadosVerificados();
+      } catch (_) {
+        verificados = const [];
+      }
+      if (mounted) {
+        setState(() {
+          _solicitudes = solicitudes;
+          _verificados = verificados;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _fallo = true);
     }
@@ -53,12 +68,17 @@ class _PantallaSolicitudesEgresadoState
         aprobar: aprobar,
       );
       if (!mounted) return;
-      setState(
-        () => _solicitudes = [
+      setState(() {
+        _solicitudes = [
           for (final otra in _solicitudes ?? const <SolicitudEgresado>[])
             if (otra.usuarioId != solicitud.usuarioId) otra,
-        ],
-      );
+        ];
+        _verificados = [
+          for (final otro in _verificados)
+            if (otro.usuarioId != solicitud.usuarioId) otro,
+          if (aprobar) solicitud,
+        ];
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -79,6 +99,32 @@ class _PantallaSolicitudesEgresadoState
     } finally {
       if (mounted) setState(() => _resolviendo.remove(solicitud.usuarioId));
     }
+  }
+
+  /// Quitar una marca ya aprobada: el estudiante recibe el aviso de que no
+  /// se pudo verificar y puede volver a pedirla.
+  Future<void> _quitarMarca(SolicitudEgresado egresado) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogo) => AlertDialog(
+        title: Text('¿Quitarle la marca a ${egresado.nombre}?'),
+        content: const Text(
+          'Dejará de figurar como egresado en el directorio. Le avisaremos, '
+          'y podrá volver a pedirla.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogo).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogo).pop(true),
+            child: const Text('Quitar marca'),
+          ),
+        ],
+      ),
+    );
+    if (confirmado == true) await _resolver(egresado, false);
   }
 
   @override
@@ -143,6 +189,24 @@ class _PantallaSolicitudesEgresadoState
                   ),
                   const SizedBox(height: 12),
                 ],
+              if (_verificados.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Egresados verificados',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                for (final egresado in _verificados) ...[
+                  _TarjetaVerificado(
+                    egresado: egresado,
+                    ocupada: _resolviendo.contains(egresado.usuarioId),
+                    alQuitar: () => _quitarMarca(egresado),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ],
             ],
           ),
         ),
@@ -230,6 +294,57 @@ class _TarjetaSolicitud extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Un egresado ya verificado, con la opcion de quitarle la marca.
+class _TarjetaVerificado extends StatelessWidget {
+  const _TarjetaVerificado({
+    required this.egresado,
+    required this.ocupada,
+    required this.alQuitar,
+  });
+
+  final SolicitudEgresado egresado;
+  final bool ocupada;
+  final VoidCallback alQuitar;
+
+  @override
+  Widget build(BuildContext context) {
+    final detalle = [
+      ?egresado.carrera,
+      if (egresado.anioIngreso case final int anio) 'Ingresó en $anio',
+    ].join(' · ');
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 10, 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE6E1D5), width: 1.4),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  egresado.nombre,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                if (detalle.isNotEmpty)
+                  Text(detalle, style: const TextStyle(fontSize: 12)),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: ocupada ? null : alQuitar,
+            child: const Text('Quitar marca'),
           ),
         ],
       ),
