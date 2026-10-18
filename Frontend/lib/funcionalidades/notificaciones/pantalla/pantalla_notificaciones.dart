@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
+import '../../directorio_proveedores/pantalla/pantalla_solicitudes_egresado.dart';
 import '../logica/controlador_notificaciones.dart';
 import '../logica/navegador_notificaciones.dart';
 import '../modelos/notificacion.dart';
@@ -27,6 +28,15 @@ class _PantallaNotificacionesState extends State<PantallaNotificaciones> {
 
   Future<void> _abrir(Notificacion notificacion) async {
     controlador.marcarLeida(notificacion);
+    // A los admins: alguien pide que verifiquen que egreso.
+    if (notificacion.tipo == 'egresado_por_verificar') {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const PantallaSolicitudesEgresado(),
+        ),
+      );
+      return;
+    }
     await NavegadorNotificaciones.abrir(
       context,
       pedidoId: notificacion.pedidoId,
@@ -271,6 +281,7 @@ class _TarjetaNotificacion extends StatelessWidget {
     'mensaje_pedido' || 'nuevo_local' => const Color(0xFF8B5CD6),
     'entrega_por_confirmar' => const Color(0xFF3449A5),
     'ubicacion_pendiente' => const Color(0xFFE57B35),
+    'egresado_por_verificar' || 'egresado_resuelto' => const Color(0xFF098B67),
     _ => const Color(0xFF4A08A1),
   };
 

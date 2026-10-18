@@ -4,20 +4,32 @@ class BorradorOnboarding {
     this.nombreCompleto = '',
     this.carreraId,
     this.whatsapp = '',
+    this.area = '',
+    this.esCuentaUpsa = false,
   });
 
   final String nombreCompleto;
   final String? carreraId;
   final String whatsapp;
 
+  /// Area o unidad del personal de la UPSA ("Incubadora de Empresas").
+  final String area;
+
+  /// El personal de la UPSA no tiene carrera: pone su area o unidad.
+  final bool esCuentaUpsa;
+
   BorradorOnboarding copiarCon({
     String? nombreCompleto,
     String? carreraId,
     String? whatsapp,
+    String? area,
+    bool? esCuentaUpsa,
   }) => BorradorOnboarding(
     nombreCompleto: nombreCompleto ?? this.nombreCompleto,
     carreraId: carreraId ?? this.carreraId,
     whatsapp: whatsapp ?? this.whatsapp,
+    area: area ?? this.area,
+    esCuentaUpsa: esCuentaUpsa ?? this.esCuentaUpsa,
   );
 
   /// Solo digitos, como los espera el backend.
@@ -51,7 +63,11 @@ class BorradorOnboarding {
     if (nombre.length > 60) {
       return 'Ese nombre es demasiado largo.';
     }
-    if (carreraId == null) {
+    if (esCuentaUpsa) {
+      final area = this.area.trim();
+      if (area.length < 2) return 'Escribe tu área o unidad.';
+      if (area.length > 60) return 'El nombre del área es demasiado largo.';
+    } else if (carreraId == null) {
       return 'Selecciona tu carrera.';
     }
     // Los celulares bolivianos son 8 digitos; el backend antepone el 591.

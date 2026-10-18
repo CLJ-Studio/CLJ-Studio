@@ -20,6 +20,9 @@ class ControladorOnboarding extends ChangeNotifier {
   String? nombreInstitucional;
   bool get nombreEsEditable => nombreInstitucional == null;
 
+  /// Personal de la UPSA: pone su area o unidad en vez de carrera.
+  bool esCuentaUpsa = false;
+
   /// Agrupa por facultad conservando el orden que llega del backend.
   Map<String, List<CarreraUpsa>> get carrerasPorFacultad {
     final agrupadas = <String, List<CarreraUpsa>>{};
@@ -31,10 +34,19 @@ class ControladorOnboarding extends ChangeNotifier {
 
   Future<void> cargarDatosIniciales() async {
     try {
-      carreras = await _repositorio.cargarCarreras();
-      nombreInstitucional = await _repositorio.cargarNombreInstitucional();
-      if (nombreInstitucional != null && nombreVieneDeLaCuenta) {
-        borrador = borrador.copiarCon(nombreCompleto: nombreInstitucional);
+      final perfil = await _repositorio.cargarPerfilInicial();
+      esCuentaUpsa = perfil.esCuentaUpsa;
+      if (esCuentaUpsa) {
+        // Al personal siempre se le pide el nombre: en el perfil solo esta
+        // la parte del correo ("josebenavente"), que pasaria por un nombre
+        // de verdad y quedaria bloqueado.
+        borrador = borrador.copiarCon(esCuentaUpsa: true);
+      } else {
+        carreras = await _repositorio.cargarCarreras();
+        nombreInstitucional = perfil.nombre;
+        if (nombreInstitucional != null && nombreVieneDeLaCuenta) {
+          borrador = borrador.copiarCon(nombreCompleto: nombreInstitucional);
+        }
       }
     } catch (_) {
       errorServidor = 'No se pudieron cargar tus datos. Revisa tu conexión.';
@@ -67,6 +79,11 @@ class ControladorOnboarding extends ChangeNotifier {
     notifyListeners();
   }
 
+  void actualizarArea(String valor) {
+    borrador = borrador.copiarCon(area: valor);
+    notifyListeners();
+  }
+
   void actualizarWhatsapp(String valor) {
     borrador = borrador.copiarCon(whatsapp: valor);
     notifyListeners();
@@ -82,6 +99,9 @@ class ControladorOnboarding extends ChangeNotifier {
     }
     if (texto.contains('NOMBRE_INVALIDO')) {
       return 'Escribe tu nombre y tu apellido, sin apodos.';
+    }
+    if (texto.contains('AREA_INVALIDA')) {
+      return 'Escribe tu área o unidad.';
     }
     if (texto.contains('CARRERA_INVALIDA')) {
       return 'Selecciona una carrera de la lista.';
@@ -100,7 +120,11 @@ class ControladorOnboarding extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _repositorio.completar(borrador);
+      if (esCuentaUpsa) {
+        await _repositorio.completarUpsa(borrador);
+      } else {
+        await _repositorio.completar(borrador);
+      }
       return true;
     } catch (error) {
       errorServidor = _mensajeDeError(error);

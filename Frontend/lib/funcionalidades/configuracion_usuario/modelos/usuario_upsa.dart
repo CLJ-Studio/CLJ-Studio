@@ -1,5 +1,9 @@
 import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 
+/// En que punto esta la marca de egresado. La pide el estudiante y la
+/// verifica un admin: marcarse solo dejaba a cualquiera decir que se graduo.
+enum EstadoEgresado { sinPedir, enRevision, rechazado, verificado }
+
 /// Perfil del estudiante autenticado, tal como lo devuelve `profiles`.
 class UsuarioUpsa {
   const UsuarioUpsa({
@@ -14,6 +18,9 @@ class UsuarioUpsa {
     this.muestraVistas = true,
     this.muestraFavoritos = false,
     this.biografia = '',
+    this.tipoCuenta = 'estudiante',
+    this.estadoEgresado,
+    this.areaUpsa,
   });
 
   factory UsuarioUpsa.desdeMapa(Map<String, dynamic> fila) {
@@ -31,6 +38,9 @@ class UsuarioUpsa {
       muestraVistas: (fila['show_view_count'] as bool?) ?? true,
       muestraFavoritos: (fila['show_favorites'] as bool?) ?? false,
       biografia: (fila['bio'] as String?) ?? '',
+      tipoCuenta: (fila['tipo_cuenta'] as String?) ?? 'estudiante',
+      estadoEgresado: _estadoEgresado(fila),
+      areaUpsa: fila['area_upsa'] as String?,
     );
   }
 
@@ -54,6 +64,29 @@ class UsuarioUpsa {
   /// Linea breve que escribe la propia persona. El nombre y la carrera los
   /// pone la universidad; esto es lo unico suyo.
   final String biografia;
+
+  /// 'estudiante' (los egresados tambien) o 'upsa', el personal que entra
+  /// con su correo @upsa.edu.bo.
+  final String tipoCuenta;
+
+  /// Null si el servidor todavia no sabe verificar egresados (sin la
+  /// migracion 56): entonces la opcion no se ofrece.
+  final EstadoEgresado? estadoEgresado;
+
+  static EstadoEgresado? _estadoEgresado(Map<String, dynamic> fila) {
+    if (!fila.containsKey('egresado_pedido_en')) return null;
+    if (fila['es_egresado'] == true) return EstadoEgresado.verificado;
+    if (fila['egresado_pedido_en'] != null) return EstadoEgresado.enRevision;
+    if (fila['egresado_rechazado_en'] != null) {
+      return EstadoEgresado.rechazado;
+    }
+    return EstadoEgresado.sinPedir;
+  }
+
+  /// Area o unidad del personal de la UPSA ("Incubadora de Empresas").
+  final String? areaUpsa;
+
+  bool get esCuentaUpsa => tipoCuenta == 'upsa';
 
   String? get avatarUrl => ServicioImagenes.urlPublica(avatarPath);
 

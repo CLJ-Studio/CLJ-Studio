@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../configuracion_usuario/diseno/editor_negocio.dart';
+import '../../directorio_proveedores/diseno/editor_oferta_upsa.dart';
 import '../logica/controlador_mi_local.dart';
 import 'pantalla_mi_local.dart';
 
@@ -86,11 +87,18 @@ class PantallaAdministrarLocal extends StatelessWidget {
           ),
           child: ContenidoCentrado(
             anchoMaximo: 620,
-            child: EditorNegocio(
-              alEliminar: () {
-                Navigator.of(hoja).pop();
-                _confirmarCierre(context);
-              },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                EditorNegocio(
+                  alEliminar: () {
+                    Navigator.of(hoja).pop();
+                    _confirmarCierre(context);
+                  },
+                ),
+                // Si el negocio aparece en el directorio de la UPSA.
+                const EditorOfertaUpsa(),
+              ],
             ),
           ),
         ),

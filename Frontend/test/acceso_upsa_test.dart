@@ -190,6 +190,42 @@ void main() {
     });
   });
 
+  group('el correo del personal', () {
+    test('docentes y unidades entran con su correo de la UPSA', () {
+      expect(
+        ServicioAutenticacionCorreo.normalizarCorreoPersonal('josebenavente'),
+        'josebenavente@upsa.edu.bo',
+      );
+      expect(
+        ServicioAutenticacionCorreo.normalizarCorreoPersonal('DABE'),
+        'dabe@upsa.edu.bo',
+      );
+      expect(
+        ServicioAutenticacionCorreo.normalizarCorreoPersonal(
+          ' jmguerra@upsa.edu.bo ',
+        ),
+        'jmguerra@upsa.edu.bo',
+      );
+    });
+
+    test('no deja colar otro dominio ni algo que no es un correo', () {
+      for (final entrada in [
+        'a2024110000@estudiantes.upsa.edu.bo',
+        'alguien@gmail.com',
+        'jose benavente',
+        'x',
+        '.jose',
+        '',
+      ]) {
+        expect(
+          ServicioAutenticacionCorreo.normalizarCorreoPersonal(entrada),
+          isNull,
+          reason: entrada,
+        );
+      }
+    });
+  });
+
   group('lo que significa cada respuesta del servidor', () {
     test('un corte de red no se sabe si mando el correo', () {
       expect(
@@ -438,6 +474,30 @@ void main() {
       expect(find.textContaining('Ya te mandamos un código'), findsOneWidget);
       expect(find.text('Reenviar en 42s'), findsOneWidget);
       expect(repo.pedidos, hasLength(1), reason: 'sin reintento');
+    });
+
+    testWidgets('el personal de la UPSA entra con su correo', (tester) async {
+      final repo = _RepositorioFalso();
+      await _abrir(tester, repo);
+      await _tocar(
+        tester,
+        '¿Eres docente o personal de la UPSA? Entra con tu correo',
+      );
+      await tester.pump();
+
+      expect(find.text('Tu correo de la UPSA'), findsOneWidget);
+      // Si pega el correo entero, el dominio no se repite.
+      await tester.enterText(
+        find.byType(TextField),
+        'josebenavente@upsa.edu.bo',
+      );
+      await tester.pump();
+      await _tocar(tester, 'Enviarme el código');
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+      expect(repo.pedidos, ['josebenavente@upsa.edu.bo']);
+      expect(find.text('josebenavente@upsa.edu.bo'), findsOneWidget);
     });
 
     testWidgets('un egresado con un registro de antes puede pedir el codigo', (

@@ -44,7 +44,10 @@ class Notificacion {
 
   /// Si hay algo que abrir al tocarla.
   bool get llevaAAlgunSitio =>
-      pedidoId != null || localId != null || productoId != null;
+      pedidoId != null ||
+      localId != null ||
+      productoId != null ||
+      tipo == 'egresado_por_verificar';
 
   bool get leida => leidaEn != null;
 
@@ -59,6 +62,8 @@ class Notificacion {
     'entrega_por_confirmar' => Icons.pending_actions_rounded,
     'nuevo_local' => Icons.storefront_rounded,
     'ubicacion_pendiente' => Icons.location_on_outlined,
+    'egresado_por_verificar' ||
+    'egresado_resuelto' => Icons.workspace_premium_outlined,
     _ => Icons.notifications_none_rounded,
   };
 }

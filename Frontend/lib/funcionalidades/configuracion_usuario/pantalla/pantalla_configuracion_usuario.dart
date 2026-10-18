@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
+import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
+import '../../directorio_proveedores/datos/repositorio_directorio.dart';
+import '../../directorio_proveedores/diseno/opcion_directorio_proveedores.dart';
+import '../../directorio_proveedores/diseno/opcion_solicitudes_egresado.dart';
 import '../../instalacion_app/diseno/opcion_instalar_app.dart';
 import '../../instalacion_app/logica/controlador_instalacion.dart';
 import '../diseno/opcion_chats.dart';
@@ -11,8 +15,10 @@ import '../diseno/boton_cerrar_sesion.dart';
 import '../diseno/opcion_acerca_de.dart';
 import '../diseno/opcion_ayuda.dart';
 import '../diseno/opcion_cuenta_institucional.dart';
+import '../diseno/opcion_egresado.dart';
 import '../diseno/opcion_notificaciones.dart';
 import '../diseno/opcion_privacidad.dart';
+import '../datos/repositorio_publicidad_admin.dart';
 
 /// Perfil y preferencias organizados en tarjetas agrupadas.
 class PantallaConfiguracionUsuario extends StatefulWidget {
@@ -27,6 +33,18 @@ class PantallaConfiguracionUsuario extends StatefulWidget {
 
 class _PantallaConfiguracionUsuarioState
     extends State<PantallaConfiguracionUsuario> {
+  /// Personal de la UPSA o admin. Lo decide el servidor.
+  late final Future<({bool directorio, bool admin})> _permisos =
+      _cargarPermisos();
+
+  static Future<({bool directorio, bool admin})> _cargarPermisos() async {
+    final respuestas = await Future.wait([
+      const RepositorioDirectorio().puedoVerDirectorio(),
+      const RepositorioPublicidadAdmin().esAdministrador(),
+    ]);
+    return (directorio: respuestas[0], admin: respuestas[1]);
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: ControladorInstalacion.instancia,
@@ -40,11 +58,49 @@ class _PantallaConfiguracionUsuarioState
               constraints: const BoxConstraints(maxWidth: 560),
               child: Column(
                 children: [
-                  const _GrupoAjustes(
-                    titulo: 'Cuenta',
-                    opciones: [OpcionCuentaInstitucional(), OpcionPrivacidad()],
+                  // Las opciones que no son para todos se ponen o no aqui,
+                  // en vez de esconderse solas: el grupo traza una linea
+                  // entre cada una, y una escondida dejaba dos seguidas.
+                  ListenableBuilder(
+                    listenable: SesionUsuario.instancia,
+                    builder: (context, _) {
+                      final perfil = SesionUsuario.instancia.perfil;
+                      return _GrupoAjustes(
+                        titulo: 'Cuenta',
+                        opciones: [
+                          const OpcionCuentaInstitucional(),
+                          if (perfil != null &&
+                              perfil.estadoEgresado != null &&
+                              !perfil.esCuentaUpsa)
+                            const OpcionEgresado(),
+                          const OpcionPrivacidad(),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 22),
+                  // Lo de la UPSA: el directorio para su personal y los
+                  // admins, y las solicitudes de egresados para los admins.
+                  FutureBuilder(
+                    future: _permisos,
+                    builder: (context, resultado) {
+                      final permisos = resultado.data;
+                      final opciones = [
+                        if (permisos?.directorio ?? false)
+                          const OpcionDirectorioProveedores(),
+                        if (permisos?.admin ?? false)
+                          const OpcionSolicitudesEgresado(),
+                      ];
+                      if (opciones.isEmpty) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 22),
+                        child: _GrupoAjustes(
+                          titulo: 'UPSA',
+                          opciones: opciones,
+                        ),
+                      );
+                    },
+                  ),
                   _GrupoAjustes(
                     titulo: 'Preferencias',
                     opciones: [

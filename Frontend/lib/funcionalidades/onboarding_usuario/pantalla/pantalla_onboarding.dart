@@ -36,20 +36,38 @@ class PantallaOnboarding extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Completa tu perfil para poder publicar y pedir dentro '
-                    'del campus.',
-                    style: TextStyle(color: Color(0xFF848381), height: 1.4),
+                  Text(
+                    controlador.esCuentaUpsa
+                        ? 'Completa tu perfil del personal de la UPSA.'
+                        : 'Completa tu perfil para poder publicar y pedir '
+                              'dentro del campus.',
+                    style: const TextStyle(
+                      color: Color(0xFF848381),
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 28),
                   _CampoNombre(controlador: controlador),
                   const SizedBox(height: 16),
-                  SelectorCarrera(
-                    carrerasPorFacultad: controlador.carrerasPorFacultad,
-                    carreraId: controlador.borrador.carreraId,
-                    alSeleccionar: controlador.actualizarCarrera,
-                    cargando: controlador.cargandoCarreras,
-                  ),
+                  // El personal no tiene carrera: pone donde trabaja.
+                  if (controlador.esCuentaUpsa)
+                    TextField(
+                      onChanged: controlador.actualizarArea,
+                      textCapitalization: TextCapitalization.sentences,
+                      inputFormatters: [LengthLimitingTextInputFormatter(60)],
+                      decoration: const InputDecoration(
+                        labelText: 'Área o unidad',
+                        hintText: 'Ej.: Incubadora de Empresas',
+                        prefixIcon: Icon(Icons.account_balance_outlined),
+                      ),
+                    )
+                  else
+                    SelectorCarrera(
+                      carrerasPorFacultad: controlador.carrerasPorFacultad,
+                      carreraId: controlador.borrador.carreraId,
+                      alSeleccionar: controlador.actualizarCarrera,
+                      cargando: controlador.cargandoCarreras,
+                    ),
                   const SizedBox(height: 16),
                   TextField(
                     onChanged: controlador.actualizarWhatsapp,
@@ -114,6 +132,7 @@ class PantallaOnboarding extends StatelessWidget {
                   // empezo a completar, para no regañar al abrir la pantalla
                   // (el nombre llega prellenado desde la cuenta institucional).
                   if ((controlador.borrador.carreraId != null ||
+                          controlador.borrador.area.isNotEmpty ||
                           controlador.borrador.whatsapp.isNotEmpty) &&
                       controlador.borrador.error != null) ...[
                     const SizedBox(height: 10),
@@ -150,10 +169,13 @@ class _CampoNombre extends StatelessWidget {
       return TextField(
         onChanged: controlador.actualizarNombre,
         textCapitalization: TextCapitalization.words,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           labelText: 'Nombre completo',
-          hintText: 'Nombre y apellido',
-          prefixIcon: Icon(Icons.badge_outlined),
+          // Una unidad como DABE tambien entra con su correo.
+          hintText: controlador.esCuentaUpsa
+              ? 'Nombre y apellido, o el de tu unidad'
+              : 'Nombre y apellido',
+          prefixIcon: const Icon(Icons.badge_outlined),
         ),
       );
     }

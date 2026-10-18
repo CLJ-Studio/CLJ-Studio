@@ -22,19 +22,24 @@ class RepositorioConfiguracion {
 
   const RepositorioConfiguracion();
 
+  /// Pide la marca de egresado. Queda en revision hasta que un admin la
+  /// apruebe: la app no puede escribir `es_egresado`.
+  Future<void> solicitarEgresado() =>
+      Supabase.instance.client.rpc('solicitar_egresado');
+
   Future<UsuarioUpsa> cargarPerfil() async {
     final cliente = Supabase.instance.client;
     final id = cliente.auth.currentUser!.id;
 
     // La RLS ya limita la consulta a la fila propia; el filtro por id
     // solo evita traer nada de mas si eso cambiara.
+    // Todas las columnas y no una lista: asi el tipo de cuenta y el de
+    // egresado llegan cuando existen, y si la migracion de las cuentas UPSA
+    // no esta aplicada el perfil carga igual. Pedir una columna que no
+    // existe tumba la consulta entera.
     final fila = await cliente
         .from('profiles')
-        .select(
-          'full_name, student_code, email, avatar_emoji, whatsapp, '
-          'is_on_campus, avatar_path, show_view_count, show_favorites, '
-          'bio, careers(name)',
-        )
+        .select('*, careers(name)')
         .eq('id', id)
         .single();
 

@@ -6,6 +6,7 @@ import '../../../elementos_compartidos/tiempo_real/escucha_tabla.dart';
 import '../datos/servicio_push.dart';
 import '../modelos/notificacion.dart';
 import '../../../elementos_compartidos/estados_aplicacion/aviso_seguro.dart';
+import '../../../elementos_compartidos/sesion/sesion_usuario.dart';
 
 /// Notificaciones del usuario y su contador de no leidas.
 ///
@@ -85,6 +86,13 @@ class ControladorNotificaciones extends ChangeNotifier with AvisoSeguro {
       notificaciones = actualizadas;
       _idsConocidos.addAll(actualizadas.map((n) => n.id));
       notifyListeners();
+
+      // Un admin aprobo o rechazo la marca de egresado: el perfil cambio en
+      // el servidor, y sin esto la app seguia diciendo "en revision" hasta
+      // reiniciarla.
+      if (nuevas.any((n) => n.tipo == 'egresado_resuelto')) {
+        await SesionUsuario.instancia.cargar(forzar: true);
+      }
 
       // Android convierte aquí la fila nueva en un aviso local. En iPhone el
       // servidor ya envió esa misma fila directamente mediante APNs.

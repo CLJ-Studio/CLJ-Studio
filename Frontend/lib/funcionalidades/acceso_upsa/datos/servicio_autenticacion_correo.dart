@@ -69,6 +69,9 @@ class ServicioAutenticacionCorreo {
 
   static const dominio = 'estudiantes.upsa.edu.bo';
 
+  /// El del personal: docentes y unidades (josebenavente, DABE).
+  static const dominioPersonal = 'upsa.edu.bo';
+
   /// Mas que esto sin respuesta es una conexion colgada: mejor decirlo que
   /// dejar la rueda girando para siempre.
   static const _esperaMaxima = Duration(seconds: 25);
@@ -104,6 +107,18 @@ class ServicioAutenticacionCorreo {
     if (!registroValido(digitos)) return null;
 
     return 'a$digitos@$dominio';
+  }
+
+  /// Arma el correo del personal con lo que va antes de la arroba, o acepta
+  /// el correo entero.
+  static String? normalizarCorreoPersonal(String entrada) {
+    var texto = entrada.trim().toLowerCase();
+    if (texto.contains('@')) {
+      if (!texto.endsWith('@$dominioPersonal')) return null;
+      texto = texto.substring(0, texto.length - dominioPersonal.length - 1);
+    }
+    if (!RegExp(r'^[a-z0-9][a-z0-9._-]{1,63}$').hasMatch(texto)) return null;
+    return '$texto@$dominioPersonal';
   }
 
   /// Pide que el codigo llegue al buzon.
@@ -154,7 +169,7 @@ class ServicioAutenticacionCorreo {
     // user", con un 500: tambien es un no definitivo, no un corte.
     if (texto.contains('DOMINIO_NO_INSTITUCIONAL')) {
       return const EnvioRechazado(
-        'Solo se permite el acceso con tu correo @$dominio.',
+        'Solo se permite el acceso con tu correo de la UPSA.',
       );
     }
     if (texto.contains('CORREO_INVALIDO') ||
@@ -163,8 +178,8 @@ class ServicioAutenticacionCorreo {
     }
     if (bajo.contains('database error saving new user')) {
       return const EnvioRechazado(
-        'No se pudo crear tu cuenta con ese correo. Revisa tu número de '
-        'registro.',
+        'No se pudo crear tu cuenta con ese correo. Revisa que esté bien '
+        'escrito.',
       );
     }
 

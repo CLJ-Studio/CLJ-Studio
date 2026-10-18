@@ -12,6 +12,7 @@ import '../diseno/campo_codigo_verificacion.dart';
 import '../diseno/cuentas_guardadas.dart';
 import '../datos/repositorio_acceso_upsa.dart';
 import '../diseno/encabezado_acceso_upsa.dart';
+import '../diseno/campo_correo_personal.dart';
 import '../diseno/formulario_correo_upsa.dart';
 import '../diseno/mensaje_acceso_exclusivo.dart';
 
@@ -39,6 +40,11 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   String _digitos = '';
   String _codigo = '';
   final _registro = TextEditingController();
+
+  /// Docentes y unidades de la UPSA entran con su correo, no con un numero.
+  bool _modoPersonal = false;
+  final _correoPersonal = TextEditingController();
+  String _localPersonal = '';
 
   /// Lo que salio mal, en rojo.
   String? _error;
@@ -135,6 +141,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
     WidgetsBinding.instance.removeObserver(this);
     _cronometro?.cancel();
     _registro.dispose();
+    _correoPersonal.dispose();
     super.dispose();
   }
 
@@ -162,6 +169,10 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   /// "8382848283" sin dejar afuera a los egresados de antes.
   bool get _registroCompleto =>
       ServicioAutenticacionCorreo.registroValido(_digitos);
+
+  bool get _correoPersonalValido =>
+      ServicioAutenticacionCorreo.normalizarCorreoPersonal(_localPersonal) !=
+      null;
 
   bool get _codigoCompleto => _codigo.length == CampoCodigoVerificacion.largo;
 
@@ -202,7 +213,12 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
     if (_cargando) return;
 
     final correo =
-        correoDirecto ?? ServicioAutenticacionCorreo.normalizarCorreo(_digitos);
+        correoDirecto ??
+        (_modoPersonal
+            ? ServicioAutenticacionCorreo.normalizarCorreoPersonal(
+                _localPersonal,
+              )
+            : ServicioAutenticacionCorreo.normalizarCorreo(_digitos));
     if (correo == null) return;
 
     if (widget.alAccederLocal != null) {
@@ -433,7 +449,13 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
             alElegir: _pedirCodigo,
             alOlvidar: _olvidarCuenta,
           ),
-          if (_cuentas.isEmpty)
+          if (_cuentas.isEmpty && _modoPersonal)
+            CampoCorreoPersonal(
+              controlador: _correoPersonal,
+              esValido: _correoPersonalValido,
+              alCambiar: (valor) => setState(() => _localPersonal = valor),
+            )
+          else if (_cuentas.isEmpty)
             FormularioCorreoUpsa(
               controlador: _registro,
               esValido: _registroCompleto,
@@ -465,7 +487,11 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
         const SizedBox(height: 14),
         if (_esperandoCodigo || _cuentas.isEmpty)
           BotonAccesoCorreo(
-            habilitado: _esperandoCodigo ? _codigoCompleto : _registroCompleto,
+            habilitado: _esperandoCodigo
+                ? _codigoCompleto
+                : _modoPersonal
+                ? _correoPersonalValido
+                : _registroCompleto,
             cargando: _cargando,
             texto: _esperandoCodigo
                 ? 'Verificar e ingresar'
@@ -499,6 +525,27 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
                 ),
               ),
             ],
+          ),
+        ],
+        if (!_esperandoCodigo && _cuentas.isEmpty) ...[
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton(
+              onPressed: _cargando
+                  ? null
+                  : () => setState(() {
+                      _modoPersonal = !_modoPersonal;
+                      _error = null;
+                    }),
+              child: Text(
+                _modoPersonal
+                    ? '¿Eres estudiante o egresado? Entra con tu número de '
+                          'registro'
+                    : '¿Eres docente o personal de la UPSA? Entra con tu '
+                          'correo',
+                textAlign: TextAlign.center,
+              ),
+            ),
           ),
         ],
         const SizedBox(height: 18),
