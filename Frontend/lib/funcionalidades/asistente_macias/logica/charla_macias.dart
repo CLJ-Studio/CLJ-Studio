@@ -3308,9 +3308,11 @@ abstract final class CharlaMacias {
       'quien es tu creador',
       'tu creador',
       'quien te diseno',
+      'cdlj',
+      'clj',
     ])) {
       return dicho(
-        'Me hizo **CLJ Studio**, el equipo de estudiantes de la UPSA que hizo '
+        'Me hizo **CDLJ Studio**, el equipo de estudiantes de la UPSA que hizo '
         'U market. Sus nombres son secreto de estado.',
       );
     }
@@ -3546,7 +3548,7 @@ abstract final class CharlaMacias {
       'tu historia',
     ])) {
       return dicho(
-        'Nací en 2026, en el campus de la UPSA: me hizo el equipo de CLJ '
+        'Nací en 2026, en el campus de la UPSA: me hizo el equipo de CDLJ '
         'Studio. Vivo en tu teléfono y trabajo a cualquier hora resolviendo '
         'dudas de la app, de álgebra, de cálculo y de C++; en mis ratos libres '
         'cuento chistes malos. ¿Y tú? Cuéntame algo de ti.',

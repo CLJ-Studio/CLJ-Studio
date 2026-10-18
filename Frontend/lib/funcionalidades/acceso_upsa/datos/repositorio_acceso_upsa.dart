@@ -13,11 +13,12 @@ class RepositorioAccesoUpsa {
 
   final ServicioAutenticacionCorreo servicio;
 
-  /// Devuelve el motivo del fallo, o null si el codigo salio.
-  Future<String?> enviarCodigo(String correo) => servicio.enviarCodigo(correo);
+  /// Dice si el codigo salio, si ya habia uno en camino o si no se sabe.
+  Future<EnvioCodigo> enviarCodigo(String correo) =>
+      servicio.enviarCodigo(correo);
 
   /// Devuelve el motivo del fallo, o null si la sesion quedo abierta.
-  Future<String?> verificarCodigo({
+  Future<FalloVerificacion?> verificarCodigo({
     required String correo,
     required String codigo,
   }) => servicio.verificarCodigo(correo: correo, codigo: codigo);

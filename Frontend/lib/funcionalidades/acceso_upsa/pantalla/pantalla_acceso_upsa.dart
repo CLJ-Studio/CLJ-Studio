@@ -33,13 +33,35 @@ class PantallaAccesoUpsa extends StatefulWidget {
 class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
     with WidgetsBindingObserver {
   bool _cargando = false;
+
+  /// Hay un pedido de codigo en camino (no una verificacion).
+  bool _enviando = false;
   String _digitos = '';
   String _codigo = '';
+  final _registro = TextEditingController();
+
+  /// Lo que salio mal, en rojo.
   String? _error;
+
+  /// Como seguir cuando no es un error: no se sabe si el correo salio, o
+  /// ya habia un codigo en camino.
+  String? _aviso;
+
+  /// El servidor rechazo el codigo escrito: las casillas se ponen en rojo.
+  /// Un corte de red no las pinta, porque el codigo puede estar bien.
+  bool _codigoRechazado = false;
+
+  /// Cambia cuando sale un codigo nuevo, para vaciar las casillas: el
+  /// anterior ya no sirve.
+  int _tandaCodigo = 0;
 
   /// Correo al que se mandó el código. Mientras sea null se está en el
   /// primer paso; en cuanto tiene valor, la pantalla pide el código.
   String? _correoPendiente;
+
+  /// El servidor confirmo que el codigo salio. Mientras no, la pantalla no
+  /// dice "te enviamos" y deja pedir otro sin esperar.
+  bool _envioConfirmado = false;
 
   List<String> _cuentas = const [];
 
@@ -53,6 +75,19 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   bool _verificacionAutomaticaProgramada = false;
 
   static const _segundosEntreCodigos = 60;
+
+  /// Un corte de red mas rapido que esto se reintenta solo, una vez. Solo
+  /// si fue rapido: pasado el minuto, un segundo pedido si mandaria otro
+  /// codigo y dejaria sin valor el que ya estaba en el correo.
+  static const _reintentarSiFallaAntesDe = Duration(seconds: 15);
+  static const _pausaAntesDeReintentar = Duration(milliseconds: 1200);
+
+  static const _avisoSinConfirmar =
+      'Se cortó la conexión y no sabemos si el correo salió. Si te llegó el '
+      'código, escríbelo; si no, toca Reenviar código.';
+  static const _avisoServidor =
+      'El servidor no confirmó el envío. Si en un minuto no te llega el '
+      'correo, toca Reenviar código.';
 
   @override
   void initState() {
@@ -81,11 +116,17 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   /// la pantalla.
   Future<void> _recuperarPendiente() async {
     final pendiente = await CodigoPendiente.leer();
-    if (pendiente == null || !mounted) return;
+    // Con un pedido en curso manda lo que conteste el servidor, no lo
+    // guardado.
+    if (pendiente == null || !mounted || _cargando) return;
 
-    if (_correoPendiente != pendiente.correo) {
-      setState(() => _correoPendiente = pendiente.correo);
-    }
+    setState(() {
+      _correoPendiente = pendiente.correo;
+      _envioConfirmado = pendiente.confirmado;
+      if (!pendiente.confirmado && _error == null) {
+        _aviso ??= _avisoSinConfirmar;
+      }
+    });
     _iniciarEspera(pendiente.esperaRestante(_segundosEntreCodigos));
   }
 
@@ -93,6 +134,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _cronometro?.cancel();
+    _registro.dispose();
     super.dispose();
   }
 
@@ -137,7 +179,10 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
   void _alCambiarCodigo(String valor) {
     setState(() {
       _codigo = valor;
-      if (!_codigoCompleto) _error = null;
+      if (!_codigoCompleto) {
+        _error = null;
+        _codigoRechazado = false;
+      }
     });
 
     if (!_codigoCompleto) {
@@ -170,32 +215,126 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
       return;
     }
 
+    // Pedir otro desde el paso del codigo: el que ya estaba en camino sigue
+    // valiendo hasta que el servidor confirme uno nuevo.
+    final reenvio = _correoPendiente == correo;
     setState(() {
       _cargando = true;
+      _enviando = true;
       _error = null;
+      _aviso = null;
       // La pantalla de ingreso del codigo aparece en el primer toque; no
       // espera a que termine la llamada de red para dar respuesta visual.
       _correoPendiente = correo;
-      _codigo = '';
+      if (!reenvio) {
+        _codigo = '';
+        _codigoRechazado = false;
+        _envioConfirmado = false;
+      }
     });
 
-    final fallo = await widget.repositorio.enviarCodigo(correo);
-    if (!mounted) return;
+    // Se guarda ANTES de esperar al servidor: quien sale a mirar el correo
+    // apenas toca el boton puede volver a una aplicacion que el telefono
+    // descarto mientras tanto, y tiene que encontrarla en el paso del codigo.
+    if (!reenvio) await CodigoPendiente.guardar(correo, confirmado: false);
 
-    setState(() {
-      _cargando = false;
-      _error = fallo;
-      // Si no pudo enviarse, se vuelve al selector para poder intentarlo de
-      // nuevo. Durante la espera, los toques repetidos ya fueron ignorados.
-      if (fallo != null) _correoPendiente = null;
-    });
-
-    if (fallo == null) {
-      // Se recuerda el paso para poder volver a el si la aplicacion se
-      // descarta mientras se lee el correo.
-      await CodigoPendiente.guardar(correo);
-      _iniciarEspera();
+    final inicio = DateTime.now();
+    var resultado = await widget.repositorio.enviarCodigo(correo);
+    // Un corte rapido suele ser un parpadeo de la señal: se prueba otra vez
+    // sin molestar a nadie.
+    if (resultado case EnvioSinConfirmar(
+      porRed: true,
+    ) when DateTime.now().difference(inicio) < _reintentarSiFallaAntesDe) {
+      await Future<void>.delayed(_pausaAntesDeReintentar);
+      if (!mounted) return;
+      resultado = await widget.repositorio.enviarCodigo(correo);
     }
+    if (!mounted) return;
+    await _alResponderEnvio(correo, resultado, reenvio: reenvio);
+  }
+
+  /// Antes, cualquier fallo devolvia al primer paso. Pero si se corto la red
+  /// el correo pudo salir igual, y si el servidor frena es porque ya salio
+  /// uno: en los dos casos la persona tiene que poder escribir el codigo.
+  Future<void> _alResponderEnvio(
+    String correo,
+    EnvioCodigo resultado, {
+    required bool reenvio,
+  }) async {
+    switch (resultado) {
+      case CodigoEnviado():
+        // Se recuerda el paso para poder volver a el si la aplicacion se
+        // descarta mientras se lee el correo.
+        await CodigoPendiente.guardar(correo);
+        if (!mounted) return;
+        setState(() {
+          _terminarEnvio();
+          _envioConfirmado = true;
+          if (reenvio) {
+            // El nuevo deja sin valor al anterior: casillas vacias.
+            _codigo = '';
+            _codigoRechazado = false;
+            _tandaCodigo++;
+            _aviso = 'Te mandamos uno nuevo: usa el del último correo.';
+          }
+        });
+        _iniciarEspera();
+
+      case CodigoReciente(:final segundos):
+        // No manda otro porque ya salio uno hace menos de un minuto: ese es
+        // el bueno, y la espera es la que dice el servidor.
+        final espera = (segundos ?? _segundosEntreCodigos).clamp(
+          0,
+          _segundosEntreCodigos,
+        );
+        await CodigoPendiente.guardar(
+          correo,
+          enviadoEn: DateTime.now().subtract(
+            Duration(seconds: _segundosEntreCodigos - espera),
+          ),
+        );
+        if (!mounted) return;
+        setState(() {
+          _terminarEnvio();
+          _envioConfirmado = true;
+          _aviso =
+              'Ya te mandamos un código hace un momento y sigue sirviendo. '
+              'Búscalo en tu correo (mira también en Spam).';
+        });
+        _iniciarEspera(espera);
+
+      case EnvioSinConfirmar(:final porRed):
+        setState(() {
+          _terminarEnvio();
+          _aviso = porRed ? _avisoSinConfirmar : _avisoServidor;
+        });
+        // Pedir otro queda libre enseguida: si el correo si salio, el
+        // servidor lo dira y no se gasta el codigo que ya llego.
+        _iniciarEspera(0);
+
+      case EnvioRechazado(:final motivo):
+        // Un reenvio rechazado no borra el codigo que ya habia salido.
+        if (reenvio && _envioConfirmado) {
+          setState(() {
+            _terminarEnvio();
+            _error = motivo;
+          });
+          return;
+        }
+        await CodigoPendiente.olvidar();
+        if (!mounted) return;
+        setState(() {
+          _terminarEnvio();
+          _error = motivo;
+          _correoPendiente = null;
+          _envioConfirmado = false;
+        });
+    }
+  }
+
+  void _terminarEnvio() {
+    _cargando = false;
+    _enviando = false;
   }
 
   /// Canjea el código por una sesión.
@@ -206,6 +345,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
     setState(() {
       _cargando = true;
       _error = null;
+      _aviso = null;
     });
 
     final fallo = await widget.repositorio.verificarCodigo(
@@ -227,17 +367,23 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
 
     setState(() {
       _cargando = false;
-      _error = fallo;
+      _error = fallo.mensaje;
+      _codigoRechazado = fallo.codigoMalo;
     });
   }
 
   Future<void> _volverAlCorreo() async {
     await CodigoPendiente.olvidar();
     if (!mounted) return;
+    _cronometro?.cancel();
     setState(() {
       _correoPendiente = null;
+      _envioConfirmado = false;
       _codigo = '';
+      _codigoRechazado = false;
       _error = null;
+      _aviso = null;
+      _esperaReenvio = 0;
     });
   }
 
@@ -269,11 +415,19 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
         const EncabezadoAccesoUpsa(),
         SizedBox(height: escritorio ? 22 : 28),
         if (_esperandoCodigo) ...[
-          _AvisoCodigoEnviado(correo: _correoPendiente!),
+          _AvisoCodigoEnviado(
+            correo: _correoPendiente!,
+            titulo: _envioConfirmado
+                ? 'Te enviamos un código a'
+                : _enviando
+                ? 'Enviando un código a'
+                : 'Pedimos un código para',
+          ),
           const SizedBox(height: 16),
           CampoCodigoVerificacion(
+            key: ValueKey(_tandaCodigo),
             esValido: _codigoCompleto,
-            hayError: _error != null,
+            hayError: _codigoRechazado,
             alCambiar: _alCambiarCodigo,
             alEnviar: _verificar,
           ),
@@ -285,6 +439,7 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
           ),
           if (_cuentas.isEmpty)
             FormularioCorreoUpsa(
+              controlador: _registro,
               esValido: _registroCompleto,
               digitos: _digitos,
               alCambiar: (valor) => setState(
@@ -298,6 +453,17 @@ class _PantallaAccesoUpsaState extends State<PantallaAccesoUpsa>
             mensaje,
             textAlign: TextAlign.center,
             style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ],
+        if (_aviso case final String mensaje) ...[
+          const SizedBox(height: 12),
+          Text(
+            mensaje,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              height: 1.35,
+            ),
           ),
         ],
         const SizedBox(height: 14),
@@ -548,10 +714,14 @@ class _FormasDecorativas extends StatelessWidget {
 }
 
 /// Confirma de forma breve a qué correo se envió el código.
+///
+/// Solo dice "te enviamos" cuando el servidor lo confirmo: decirlo antes
+/// invitaba a salir a mirar el correo con el pedido todavia en camino.
 class _AvisoCodigoEnviado extends StatelessWidget {
-  const _AvisoCodigoEnviado({required this.correo});
+  const _AvisoCodigoEnviado({required this.correo, required this.titulo});
 
   final String correo;
+  final String titulo;
 
   @override
   Widget build(BuildContext context) {
@@ -568,23 +738,33 @@ class _AvisoCodigoEnviado extends StatelessWidget {
               color: tema.colorScheme.primary,
             ),
             const SizedBox(width: 8),
-            Text(
-              'Te enviamos un código a',
-              style: TextStyle(
-                color: tema.textTheme.bodyMedium?.color,
-                fontSize: 16,
+            // En un telefono angosto parte la linea en vez de desbordarse.
+            Flexible(
+              child: Text(
+                titulo,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: tema.textTheme.bodyMedium?.color,
+                  fontSize: 16,
+                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 3),
-        Text(
-          correo,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: tema.textTheme.bodyMedium?.color,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
+        // En una sola linea, achicandose si hace falta: partido quedaba
+        // "...upsa.edu.b" arriba y una "o" sola abajo.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            correo,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: tema.textTheme.bodyMedium?.color,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],

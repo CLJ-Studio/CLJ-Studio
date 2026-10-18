@@ -6,7 +6,7 @@ Marketplace para la Universidad Privada de Santa Cruz de la Sierra. Los
 estudiantes publican lo que venden, quien compra encarga desde la aplicación y
 la entrega se coordina entre los dos, dentro del campus.
 
-Hecho por **CLJ Studio**.
+Hecho por **CDLJ Studio**.
 
 ---
 
@@ -368,4 +368,4 @@ escrito se olvida justo cuando hay apuro.
 ---
 
 **UPSA Eat** · Universidad Privada de Santa Cruz de la Sierra
-Un proyecto de **CLJ Studio**.
+Un proyecto de **CDLJ Studio**.

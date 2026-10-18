@@ -41,7 +41,7 @@ class PantallaAcercaDe extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'CLJ Studio',
+                      'CDLJ Studio',
                       style: tema.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -121,7 +121,7 @@ class PantallaAcercaDe extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                '© $_anio CLJ Studio. Todos los derechos reservados.',
+                '© $_anio CDLJ Studio. Todos los derechos reservados.',
                 style: TextStyle(
                   color: tema.textTheme.bodyMedium?.color,
                   fontWeight: FontWeight.w700,
@@ -130,7 +130,7 @@ class PantallaAcercaDe extends StatelessWidget {
               const SizedBox(height: 8),
               TextoConMarcaUMarket(
                 'El código, el diseño, el nombre y el logotipo de U market '
-                'pertenecen a CLJ Studio. Queda prohibida su reproducción o '
+                'pertenecen a CDLJ Studio. Queda prohibida su reproducción o '
                 'distribución sin autorización escrita.\n\n'
                 'U market no es un producto oficial de la Universidad Privada '
                 'de Santa Cruz de la Sierra. El contenido de cada publicación '

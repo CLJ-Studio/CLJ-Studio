@@ -195,6 +195,19 @@ void main() {
       }
     });
 
+    test('el estudio ahora es CDLJ Studio', () {
+      for (final pregunta in [
+        'quien te hizo',
+        'qué es CDLJ Studio?',
+        'y cdlj que es',
+        'que es clj studio',
+      ]) {
+        final respuesta = _todo(_cerebro().escribir(pregunta));
+        expect(respuesta, contains('CDLJ Studio'), reason: pregunta);
+        expect(respuesta, isNot(contains('CLJ Studio')), reason: pregunta);
+      }
+    });
+
     test('lo que no sabe, lo dice nombrando de que se pregunto', () {
       final respuesta = _cerebro().escribir('¿Qué es la hermenéutica?');
       expect(respuesta.intencion, 'desconocido');

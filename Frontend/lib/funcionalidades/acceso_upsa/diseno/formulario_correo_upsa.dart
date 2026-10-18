@@ -4,20 +4,20 @@ import 'campo_codigo_estudiante.dart';
 
 /// Codigo institucional del estudiante.
 ///
-/// Es OPCIONAL: no autentica por si solo (de eso se encarga Google), solo
-/// preselecciona la cuenta en el selector para que nadie entre por error
-/// con su correo personal.
+/// Con el se arma el correo institucional al que llega el codigo.
 class FormularioCorreoUpsa extends StatelessWidget {
   const FormularioCorreoUpsa({
     required this.alCambiar,
     required this.esValido,
     required this.digitos,
+    this.controlador,
     super.key,
   });
 
   final ValueChanged<String> alCambiar;
   final bool esValido;
   final String digitos;
+  final TextEditingController? controlador;
 
   /// Explica el formato solo cuando lo escrito ya no puede cumplirlo, para
   /// no regañar mientras el estudiante todavia esta tecleando.
@@ -50,6 +50,7 @@ class FormularioCorreoUpsa extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CampoCodigoEstudiante(
+          controlador: controlador,
           alCambiar: alCambiar,
           esValido: esValido,
           hayError: pista != null,
