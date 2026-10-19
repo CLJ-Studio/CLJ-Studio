@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../elementos_compartidos/interaccion/retroalimentacion_haptica.dart';
@@ -24,6 +25,7 @@ class PantallaMesaPoker extends StatefulWidget {
     this.repositorio = const RepositorioPokerSupabase(),
     this.sonidos,
     this.conSonido = true,
+    this.abrirEnlace,
     super.key,
   });
 
@@ -31,6 +33,9 @@ class PantallaMesaPoker extends StatefulWidget {
   final RepositorioPoker repositorio;
   final SonidosMesa? sonidos;
   final bool conSonido;
+
+  /// Para las pruebas. En la app, abre WhatsApp para invitar.
+  final Future<bool> Function(Uri enlace)? abrirEnlace;
 
   static Route<void> ruta({
     required String salaId,
@@ -242,6 +247,22 @@ class _PantallaMesaPokerState extends State<PantallaMesaPoker> {
     }
   }
 
+  /// Un mensaje listo para mandar por WhatsApp: se juega desde 2, y el
+  /// segundo suele ser un amigo al que hay que avisar.
+  Future<void> _invitar() async {
+    final nombre = _estado?.nombre ?? 'mi mesa';
+    final mensaje =
+        '¿Jugamos póker? Estoy en la mesa "$nombre" de U market. Entra a '
+        'MacIAs, escribe "casino" y en Póker toca Sentarme.';
+    final enlace = Uri.parse(
+      'https://wa.me/?text=${Uri.encodeComponent(mensaje)}',
+    );
+    final abrir =
+        widget.abrirEnlace ??
+        (Uri url) => launchUrl(url, mode: LaunchMode.externalApplication);
+    if (!await abrir(enlace) && mounted) _avisar('No se pudo abrir WhatsApp.');
+  }
+
   Future<void> _salir() async {
     final estado = _estado;
     final enLaMano =
@@ -346,6 +367,7 @@ class _PantallaMesaPokerState extends State<PantallaMesaPoker> {
               _hacer(() => widget.repositorio.volver(widget.salaId)),
           alRecargar: () =>
               _hacer(() => widget.repositorio.recargar(widget.salaId)),
+          alInvitar: _invitar,
         ),
       ],
     );
@@ -607,6 +629,7 @@ class _BarraAcciones extends StatelessWidget {
     required this.alSentarse,
     required this.alVolver,
     required this.alRecargar,
+    required this.alInvitar,
   });
 
   final EstadoMesaPoker estado;
@@ -616,6 +639,7 @@ class _BarraAcciones extends StatelessWidget {
   final VoidCallback alSentarse;
   final VoidCallback alVolver;
   final VoidCallback alRecargar;
+  final VoidCallback alInvitar;
 
   @override
   Widget build(BuildContext context) {
@@ -659,6 +683,13 @@ class _BarraAcciones extends StatelessWidget {
       );
     } else {
       texto = _queEstaPasando();
+      if (!estado.manoEnJuego && estado.listos < 2) {
+        boton = BotonMesa(
+          texto: 'Invitar por WhatsApp',
+          icono: Icons.send_rounded,
+          alPresionar: alInvitar,
+        );
+      }
     }
 
     return Padding(
@@ -687,7 +718,8 @@ class _BarraAcciones extends StatelessWidget {
     if (mano == null || !mano.enJuego) {
       if (mano != null && mano.resultado.isNotEmpty) return _resultado(mano);
       if (estado.listos < 2) {
-        return 'Esperando que se siente alguien más…';
+        return 'Esperando un rival: con 2 ya se juega, no hace falta llenar '
+            'la mesa.';
       }
       return 'Repartiendo…';
     }
@@ -865,26 +897,35 @@ class _HojaSubidaState extends State<_HojaSubida> {
             ),
           ),
           if (_maximo > _minimo)
-            Slider(
-              value: _total.toDouble(),
-              min: _minimo.toDouble(),
-              max: _maximo.toDouble(),
-              activeColor: ColoresPoker.oro,
-              onChanged: (valor) => setState(() {
-                final redondeado = (valor / _paso).round() * _paso;
-                _total = redondeado.clamp(_minimo, _maximo);
-              }),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: ColoresPoker.oro,
+                inactiveTrackColor: const Color(0x33E6E1D5),
+                thumbColor: ColoresPoker.oro,
+                overlayColor: const Color(0x29F2CC5C),
+              ),
+              child: Slider(
+                value: _total.toDouble(),
+                min: _minimo.toDouble(),
+                max: _maximo.toDouble(),
+                onChanged: (valor) => setState(() {
+                  final redondeado = (valor / _paso).round() * _paso;
+                  _total = redondeado.clamp(_minimo, _maximo);
+                }),
+              ),
             ),
+          const SizedBox(height: 6),
           Wrap(
             alignment: WrapAlignment.center,
             spacing: 8,
             runSpacing: 8,
             children: [
               for (final (texto, monto) in _rapidas)
-                ChoiceChip(
-                  label: Text(texto),
-                  selected: _total == monto,
-                  onSelected: (_) => setState(() => _total = monto),
+                OpcionPoker(
+                  texto: texto,
+                  detalle: fichasPoker(monto),
+                  elegida: _total == monto,
+                  alTocar: () => setState(() => _total = monto),
                 ),
             ],
           ),

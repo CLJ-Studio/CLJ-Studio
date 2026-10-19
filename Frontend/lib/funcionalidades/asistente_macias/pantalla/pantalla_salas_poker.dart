@@ -160,7 +160,7 @@ class _PantallaSalasPokerState extends State<PantallaSalasPoker> {
                         ),
                       ),
                       Text(
-                        "Texas Hold'em · mesas de hasta 6",
+                        "Texas Hold'em · de 2 a 6 por mesa",
                         style: TextStyle(
                           color: ColoresPoker.cremaApagada,
                           fontWeight: FontWeight.w700,
@@ -216,8 +216,8 @@ class _PantallaSalasPokerState extends State<PantallaSalasPoker> {
         child: Padding(
           padding: EdgeInsets.all(32),
           child: Text(
-            'No hay mesas abiertas. Crea una y avísales a tus amigos: '
-            'cuando se sienten dos, MacIAs reparte.',
+            'No hay mesas abiertas. Crea una y avísales a tus amigos: con '
+            'que se siente uno más, MacIAs reparte.',
             textAlign: TextAlign.center,
             style: TextStyle(color: ColoresPoker.cremaApagada, height: 1.45),
           ),
@@ -311,7 +311,9 @@ class _TarjetaSala extends StatelessWidget {
                     child: Text(
                       sala.enJuego
                           ? '${sala.jugadores}/6 · jugando'
-                          : '${sala.jugadores}/6 · esperando',
+                          : sala.jugadores < 2
+                          ? '${sala.jugadores}/6 · falta 1 para empezar'
+                          : '${sala.jugadores}/6 · por empezar',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -387,43 +389,45 @@ class _HojaCrearMesaState extends State<_HojaCrearMesa> {
       children: [
         const TituloHojaMesa('Crear una mesa'),
         const SizedBox(height: 14),
-        TextField(
-          controller: _nombre,
-          maxLength: 30,
-          onChanged: (_) => setState(() {}),
-          style: const TextStyle(color: ColoresPoker.crema),
-          decoration: const InputDecoration(
-            labelText: 'Nombre de la mesa',
-            labelStyle: TextStyle(color: ColoresPoker.cremaApagada),
-            counterStyle: TextStyle(color: ColoresPoker.cremaApagada),
-          ),
+        CampoPoker(
+          controlador: _nombre,
+          etiqueta: 'Nombre de la mesa',
+          largoMaximo: 30,
+          alCambiar: (_) => setState(() {}),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         const Text(
           'Ciegas',
           style: TextStyle(
             color: ColoresPoker.cremaApagada,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final grande in _ciegas)
-              ChoiceChip(
-                label: Text('${grande ~/ 2}/$grande'),
-                selected: _ciegaGrande == grande,
-                onSelected: (_) => setState(() => _ciegaGrande = grande),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Cada uno se sienta con ${fichasPoker(_ciegaGrande * 50)} fichas de '
-          'la mesa. No son las del casino ni dinero.',
-          style: const TextStyle(
+        // Dos por fila: en un telefono de 360 las cuatro juntas no entran
+        // con las fichas debajo.
+        for (final fila in [_ciegas.sublist(0, 2), _ciegas.sublist(2)]) ...[
+          Row(
+            children: [
+              for (final grande in fila) ...[
+                if (grande != fila.first) const SizedBox(width: 8),
+                Expanded(
+                  child: OpcionPoker(
+                    texto: '${grande ~/ 2}/$grande',
+                    detalle: '${fichasPoker(grande * 50)} fichas',
+                    elegida: _ciegaGrande == grande,
+                    alTocar: () => setState(() => _ciegaGrande = grande),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        const Text(
+          'Son fichas de la mesa: no las del casino ni dinero. Se juega '
+          'desde 2: no hace falta llenar la mesa.',
+          style: TextStyle(
             color: ColoresPoker.cremaApagada,
             fontSize: 12,
             height: 1.35,

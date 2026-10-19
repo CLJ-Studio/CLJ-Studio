@@ -545,3 +545,141 @@ class ApuestaEnMesa extends StatelessWidget {
     ],
   );
 }
+
+/// Un campo de texto para las hojas oscuras del poker. El del tema de la app
+/// es claro, y sobre estas hojas el texto crema no se leia: "Mesa de Juan"
+/// quedaba crema sobre crema.
+class CampoPoker extends StatelessWidget {
+  const CampoPoker({
+    required this.controlador,
+    required this.etiqueta,
+    this.largoMaximo,
+    this.alCambiar,
+    super.key,
+  });
+
+  final TextEditingController controlador;
+  final String etiqueta;
+  final int? largoMaximo;
+  final ValueChanged<String>? alCambiar;
+
+  @override
+  Widget build(BuildContext context) {
+    OutlineInputBorder borde(Color color, [double ancho = 1]) =>
+        OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: color, width: ancho),
+        );
+    return TextField(
+      controller: controlador,
+      maxLength: largoMaximo,
+      onChanged: alCambiar,
+      cursorColor: ColoresPoker.oro,
+      textCapitalization: TextCapitalization.sentences,
+      style: const TextStyle(
+        color: ColoresPoker.crema,
+        fontWeight: FontWeight.w800,
+        fontSize: 16,
+      ),
+      decoration: InputDecoration(
+        labelText: etiqueta,
+        labelStyle: const TextStyle(
+          color: ColoresPoker.cremaApagada,
+          fontWeight: FontWeight.w700,
+        ),
+        floatingLabelStyle: const TextStyle(
+          color: ColoresPoker.oro,
+          fontWeight: FontWeight.w800,
+        ),
+        counterStyle: const TextStyle(color: ColoresPoker.cremaApagada),
+        filled: true,
+        fillColor: const Color(0x14FFFFFF),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
+        ),
+        border: borde(const Color(0x40F2CC5C)),
+        enabledBorder: borde(const Color(0x40F2CC5C)),
+        focusedBorder: borde(ColoresPoker.oro, 1.6),
+      ),
+    );
+  }
+}
+
+/// Algo para elegir en las hojas del poker (las ciegas, cuanto subir):
+/// oscuro, y dorado lo elegido. Los chips del tema salian claros y no
+/// pegaban con la mesa.
+class OpcionPoker extends StatelessWidget {
+  const OpcionPoker({
+    required this.texto,
+    required this.elegida,
+    required this.alTocar,
+    this.detalle,
+    super.key,
+  });
+
+  final String texto;
+
+  /// Debajo, mas chico: "1.000 fichas", "40".
+  final String? detalle;
+  final bool elegida;
+  final VoidCallback alTocar;
+
+  @override
+  Widget build(BuildContext context) {
+    const oscuro = Color(0xFF2B1E05);
+    return Semantics(
+      button: true,
+      selected: elegida,
+      label: detalle == null ? texto : '$texto, $detalle',
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: alTocar,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
+            gradient: elegida
+                ? const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFF2CC5C), Color(0xFFD9A21B)],
+                  )
+                : null,
+            color: elegida ? null : const Color(0x14FFFFFF),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: elegida
+                  ? const Color(0x00000000)
+                  : const Color(0x40F2CC5C),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                texto,
+                style: TextStyle(
+                  color: elegida ? oscuro : ColoresPoker.crema,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
+                ),
+              ),
+              if (detalle != null)
+                Text(
+                  detalle!,
+                  style: TextStyle(
+                    color: elegida
+                        ? const Color(0xB32B1E05)
+                        : ColoresPoker.cremaApagada,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

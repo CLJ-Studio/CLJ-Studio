@@ -672,6 +672,44 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets('sola en la mesa: se juega desde 2, e invito', (tester) async {
+      final enlaces = <Uri>[];
+      final repo = _RepositorioFalso(
+        _estado(asientos: [_asiento(0, 'Ana Perez', 1000)]),
+      );
+      tester.view.physicalSize = const Size(1080, 2340);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PantallaMesaPoker(
+            salaId: 's1',
+            repositorio: repo,
+            sonidos: const SonidosMesa.mudos(),
+            abrirEnlace: (enlace) async {
+              enlaces.add(enlace);
+              return true;
+            },
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.textContaining('con 2 ya se juega'), findsOneWidget);
+      await _esperar(tester, 1200);
+      expect(repo.repartos, 0, reason: 'sola no se reparte');
+
+      await tester.tap(find.text('Invitar por WhatsApp'));
+      await tester.pump();
+      expect(enlaces.single.host, 'wa.me');
+      expect(
+        enlaces.single.queryParameters['text'],
+        contains('Mesa de prueba'),
+      );
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('mirando, me puedo sentar', (tester) async {
       final repo = _RepositorioFalso(_estado(yo: null));
       await _abrirMesa(tester, repo);
