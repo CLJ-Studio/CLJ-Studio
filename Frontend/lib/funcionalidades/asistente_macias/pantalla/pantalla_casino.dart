@@ -16,22 +16,25 @@ import '../logica/almacen_casino.dart';
 import '../logica/casino.dart';
 import '../logica/frases_casino.dart';
 import '../logica/mesa_blackjack.dart';
+import '../logica/repositorio_poker.dart';
 import '../logica/sonidos_casino.dart';
 import '../logica/trayectoria_bola.dart';
 import 'pantalla_blackjack.dart';
 import 'pantalla_ruleta.dart';
+import 'pantalla_salas_poker.dart';
 
 /// La entrada del casino escondido de MacIAs: se llega escribiendole
 /// "casino" en el chat.
 ///
 /// MacIAs recibe en la puerta, se ven tus fichas (las mismas para todas las
-/// mesas) y se elige a que jugar: ruleta, blackjack o, pronto, poker.
+/// mesas) y se elige a que jugar: ruleta, blackjack o poker.
 class PantallaCasino extends StatefulWidget {
   const PantallaCasino({
     this.nombre = '',
     this.almacen,
     this.sonidos,
     this.sonidosDeMesas,
+    this.poker,
     super.key,
   });
 
@@ -46,12 +49,16 @@ class PantallaCasino extends StatefulWidget {
   /// Lo que suena en las mesas: para las pruebas, que no suene nada.
   final SonidosMesa? sonidosDeMesas;
 
+  /// Las mesas de poker. Sin indicarlo, las del servidor.
+  final RepositorioPoker? poker;
+
   /// Se entra como a la mesa: las luces se prenden desde el centro.
   static Route<void> ruta({
     String nombre = '',
     AlmacenCasino? almacen,
     SonidosMesa? sonidos,
     SonidosMesa? sonidosDeMesas,
+    RepositorioPoker? poker,
   }) => PageRouteBuilder<void>(
     transitionDuration: const Duration(milliseconds: 560),
     reverseTransitionDuration: const Duration(milliseconds: 320),
@@ -60,6 +67,7 @@ class PantallaCasino extends StatefulWidget {
       almacen: almacen,
       sonidos: sonidos,
       sonidosDeMesas: sonidosDeMesas,
+      poker: poker,
     ),
     transitionsBuilder: (context, animacion, _, hijo) {
       final curva = CurvedAnimation(
@@ -125,7 +133,6 @@ class _PantallaCasinoState extends State<PantallaCasino>
   ).animate(_vida);
   final _sinBola = ValueNotifier<PosicionBola?>(null);
   final _llaveFichas = GlobalKey();
-  int _sacudirPoker = 0;
 
   @override
   void initState() {
@@ -228,11 +235,17 @@ class _PantallaCasinoState extends State<PantallaCasino>
     await _cargar(antes: antes);
   }
 
+  /// El poker no usa las fichas del casino: cada mesa da las suyas.
   void _poker() {
-    _sonar(SonidoMesa.boton, volumen: .7);
-    RetroalimentacionHaptica.seleccion();
-    setState(() => _sacudirPoker++);
     _momento(MomentoLobby.poker, ExpresionCrupier.guino);
+    _jugar(
+      PantallaSalasPoker.ruta(
+        nombre: widget.nombre,
+        repositorio: widget.poker ?? const RepositorioPokerSupabase(),
+        sonidos: widget.sonidosDeMesas,
+        conSonido: _conSonido,
+      ),
+    );
   }
 
   /// Cada tarjeta entra un poco despues que la anterior.
@@ -358,38 +371,19 @@ class _PantallaCasinoState extends State<PantallaCasino>
                                 const SizedBox(height: 14),
                                 _entra(
                                   4,
-                                  TweenAnimationBuilder<double>(
-                                    key: ValueKey(_sacudirPoker),
-                                    tween: Tween(
-                                      begin: _sacudirPoker == 0 ? 1 : 0,
-                                      end: 1,
-                                    ),
-                                    duration: const Duration(milliseconds: 520),
-                                    builder: (context, t, hijo) =>
-                                        Transform.translate(
-                                          offset: Offset(
-                                            10 *
-                                                math.sin(t * math.pi * 5) *
-                                                (1 - t),
-                                            0,
-                                          ),
-                                          child: hijo,
-                                        ),
-                                    child: _TarjetaJuego(
-                                      titulo: 'Póker',
-                                      detalle:
-                                          // Sin cortar "la U." en dos lineas.
-                                          'Mesas de hasta 6, con otros de la\u00A0U.',
-                                      paga: "Texas Hold'em",
-                                      colores: const [
-                                        Color(0xFF2C2350),
-                                        Color(0xFF15102C),
-                                      ],
-                                      ilustracion: const _AbanicoDeAses(),
-                                      pronto: true,
-                                      etiqueta: 'Póker, próximamente',
-                                      alTocar: _poker,
-                                    ),
+                                  _TarjetaJuego(
+                                    titulo: 'Póker',
+                                    detalle:
+                                        // Sin cortar "la U." en dos lineas.
+                                        'Mesas de hasta 6, con otros de la\u00A0U.',
+                                    paga: "Texas Hold'em",
+                                    colores: const [
+                                      Color(0xFF2C2350),
+                                      Color(0xFF15102C),
+                                    ],
+                                    ilustracion: const _AbanicoDeAses(),
+                                    etiqueta: 'Jugar al póker',
+                                    alTocar: _poker,
                                   ),
                                 ),
                                 const SizedBox(height: 18),
@@ -611,7 +605,6 @@ class _TarjetaJuego extends StatelessWidget {
     required this.ilustracion,
     required this.etiqueta,
     required this.alTocar,
-    this.pronto = false,
   });
 
   final String titulo;
@@ -621,9 +614,6 @@ class _TarjetaJuego extends StatelessWidget {
   final Widget ilustracion;
   final String etiqueta;
   final VoidCallback alTocar;
-
-  /// Todavia no se puede jugar.
-  final bool pronto;
 
   @override
   Widget build(BuildContext context) {
@@ -643,7 +633,7 @@ class _TarjetaJuego extends StatelessWidget {
               colors: colores,
             ),
             border: Border.all(
-              color: ColoresCarta.oro.withValues(alpha: pronto ? .35 : .8),
+              color: ColoresCarta.oro.withValues(alpha: .8),
               width: 1.4,
             ),
             boxShadow: const [
@@ -666,13 +656,10 @@ class _TarjetaJuego extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
                     child: Row(
                       children: [
-                        Opacity(
-                          opacity: pronto ? .55 : 1,
-                          child: SizedBox(
-                            width: 116,
-                            height: 116,
-                            child: Center(child: ilustracion),
-                          ),
+                        SizedBox(
+                          width: 116,
+                          height: 116,
+                          child: Center(child: ilustracion),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -683,11 +670,7 @@ class _TarjetaJuego extends StatelessWidget {
                                 titulo.toUpperCase(),
                                 style: TextStyle(
                                   fontFamily: 'Nunito',
-                                  color: pronto
-                                      ? ConfiguracionTema.crema.withValues(
-                                          alpha: .7,
-                                        )
-                                      : ColoresCarta.oroClaro,
+                                  color: ColoresCarta.oroClaro,
                                   fontWeight: FontWeight.w900,
                                   fontSize: 22,
                                   letterSpacing: 1.5,
@@ -717,22 +700,13 @@ class _TarjetaJuego extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              _Pildora(
-                                texto: pronto ? 'Muy pronto' : 'Jugar',
-                                activa: !pronto,
-                              ),
+                              const _Pildora(texto: 'Jugar', activa: true),
                             ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (pronto)
-                    const Positioned(
-                      top: 16,
-                      right: -30,
-                      child: _Cinta(texto: 'PRONTO'),
-                    ),
                 ],
               ),
             ),
@@ -785,33 +759,6 @@ class _Pildora extends StatelessWidget {
           ),
         ],
       ],
-    ),
-  );
-}
-
-/// La cinta cruzada de "PRONTO" en la esquina.
-class _Cinta extends StatelessWidget {
-  const _Cinta({required this.texto});
-
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) => Transform.rotate(
-    angle: math.pi / 4,
-    child: Container(
-      width: 130,
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      color: ColoresCarta.oro,
-      alignment: Alignment.center,
-      child: Text(
-        texto,
-        style: const TextStyle(
-          color: Color(0xFF2B1E05),
-          fontWeight: FontWeight.w900,
-          fontSize: 11,
-          letterSpacing: 2,
-        ),
-      ),
     ),
   );
 }

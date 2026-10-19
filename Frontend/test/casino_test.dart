@@ -10,13 +10,16 @@ import 'package:upsa_eat/funcionalidades/asistente_macias/logica/cerebro_macias.
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/conocimiento_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/controlador_chat_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/memoria_macias.dart';
+import 'package:upsa_eat/funcionalidades/asistente_macias/logica/mesa_poker.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/mesa_ruleta.dart';
+import 'package:upsa_eat/funcionalidades/asistente_macias/logica/repositorio_poker.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/sonidos_casino.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/modelos/mensaje_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/pantalla/pantalla_blackjack.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/pantalla/pantalla_casino.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/pantalla/pantalla_chat_macias.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/pantalla/pantalla_ruleta.dart';
+import 'package:upsa_eat/funcionalidades/asistente_macias/pantalla/pantalla_salas_poker.dart';
 
 void _comoTelefono(WidgetTester tester) {
   tester.view.physicalSize = const Size(1080, 2340);
@@ -149,6 +152,7 @@ void main() {
             almacen: almacen,
             sonidos: const SonidosMesa.mudos(),
             sonidosDeMesas: const SonidosMesa.mudos(),
+            poker: _PokerSinMesas(),
           ),
         ),
       );
@@ -161,16 +165,16 @@ void main() {
       expect(find.bySemanticsLabel('Tus fichas: 2500'), findsOneWidget);
       expect(find.bySemanticsLabel('Jugar a la ruleta'), findsOneWidget);
       expect(find.bySemanticsLabel('Jugar al blackjack'), findsOneWidget);
-      expect(find.bySemanticsLabel('Póker, próximamente'), findsOneWidget);
+      expect(find.bySemanticsLabel('Jugar al póker'), findsOneWidget);
       await _esperar(tester, 8000);
     });
 
-    testWidgets('el póker todavía no abre: MacIAs avisa', (tester) async {
+    testWidgets('el póker abre la lista de mesas', (tester) async {
       await abrir(tester);
-      await tester.tap(find.bySemanticsLabel('Póker, próximamente'));
-      await _esperar(tester, 600);
-      expect(find.byType(PantallaRuleta), findsNothing);
-      expect(find.byType(PantallaBlackjack), findsNothing);
+      await tester.tap(find.bySemanticsLabel('Jugar al póker'));
+      await _esperar(tester, 1200);
+      expect(find.byType(PantallaSalasPoker), findsOneWidget);
+      expect(find.textContaining('No hay mesas abiertas'), findsOneWidget);
       await _esperar(tester, 8000);
     });
 
@@ -373,4 +377,17 @@ void main() {
       expect(await beto.juego('ruleta'), isNull);
     });
   });
+}
+
+/// El poker sin servidor: ninguna mesa abierta.
+class _PokerSinMesas implements RepositorioPoker {
+  @override
+  Future<List<SalaPoker>> salas() async => const [];
+
+  @override
+  VoidCallback escucharSalas(VoidCallback alCambiar) => () {};
+
+  @override
+  dynamic noSuchMethod(Invocation invocacion) =>
+      throw UnimplementedError('${invocacion.memberName}');
 }

@@ -180,9 +180,8 @@ class FrasesLobby extends _Frases<MomentoLobby> {
       'Así es el juego. ¿Probamos en otra mesa?',
     ],
     MomentoLobby.poker: [
-      'El póker lo estoy armando: mesas de hasta 6, con otros de la U. '
-          'Muy pronto.',
-      'Todavía estoy barajando el póker. Mientras, ¿ruleta o blackjack?',
+      'Póker con otros de la U: siéntate en una mesa o arma la tuya.',
+      'En el póker reparto yo y nadie ve las cartas de nadie. Suerte.',
     ],
   };
 }
