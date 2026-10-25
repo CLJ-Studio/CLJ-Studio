@@ -27,6 +27,7 @@ class EscuchaTabla {
     required this.tabla,
     required this.alCambiar,
     this.filtro,
+    this.canal,
     this.respaldo = const Duration(seconds: 12),
     this.respaldoConCanalVivo = const Duration(minutes: 2),
     this.minimoEntreAvisos = Duration.zero,
@@ -40,6 +41,11 @@ class EscuchaTabla {
 
   /// Restringe los eventos a una fila o conjunto (p. ej. user_id = X).
   final PostgresChangeFilter? filtro;
+
+  /// El nombre del canal, si dos escuchas de la misma tabla con filtros
+  /// distintos pueden estar vivas a la vez: con el mismo nombre, sacar una
+  /// cerraba la otra.
+  final String? canal;
 
   /// Cada cuanto refrescar si el websocket no esta entregando.
   final Duration respaldo;
@@ -66,7 +72,7 @@ class EscuchaTabla {
     detener();
 
     _canal = Supabase.instance.client
-        .channel('vivo_$tabla${filtro == null ? '' : '_filtrado'}')
+        .channel(canal ?? 'vivo_$tabla${filtro == null ? '' : '_filtrado'}')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:upsa_eat/funcionalidades/asistente_macias/logica/almacen_casino.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/evaluador_poker.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/mesa_blackjack.dart';
 import 'package:upsa_eat/funcionalidades/asistente_macias/logica/mesa_poker.dart';
@@ -356,6 +357,8 @@ Map<String, dynamic> _estado({
   List<Map<String, dynamic>>? asientos,
   List<Map<String, dynamic>> jugadores = const [],
   List<String>? misCartas,
+  int version = 0,
+  int? billetera,
 }) => {
   'ahora': _hora.toIso8601String(),
   'sala': {
@@ -365,8 +368,10 @@ Map<String, dynamic> _estado({
     'ciega_grande': 20,
     'fichas_iniciales': 1000,
     'segundos_turno': 30,
+    'version': version,
   },
   'yo': yo,
+  'billetera': billetera,
   'asientos':
       asientos ??
       [_asiento(0, 'Ana Perez', 980), _asiento(1, 'Beto Rojas', 960)],
@@ -411,22 +416,37 @@ class _RepositorioFalso implements RepositorioPoker {
   int vueltas = 0;
   int recargas = 0;
   int levantadas = 0;
+  int estados = 0;
+  final recargadas = <int?>[];
+
+  /// Lo que devuelve una jugada: la mesa como quedo.
+  Map<String, dynamic>? respuesta;
+
+  /// El aviso en vivo de la mesa, para dispararlo desde la prueba.
+  VoidCallback? avisar;
 
   @override
-  Future<EstadoMesaPoker> estado(String sala) async =>
-      EstadoMesaPoker.desdeMapa(datos);
+  Future<EstadoMesaPoker> estado(String sala) async {
+    estados++;
+    return EstadoMesaPoker.desdeMapa(datos);
+  }
 
   @override
   Future<List<SalaPoker>> salas() async => mesas;
 
   @override
-  Future<String> crearSala(String nombre, int ciegaGrande) async {
-    creadas.add('$nombre:$ciegaGrande');
+  Future<String> crearSala(
+    String nombre,
+    int ciegaGrande, {
+    int? fichas,
+  }) async {
+    creadas.add('$nombre:$ciegaGrande:$fichas');
     return 'nueva';
   }
 
   @override
-  Future<void> sentarse(String sala) async => sentadas.add(sala);
+  Future<void> sentarse(String sala, {int? fichas}) async =>
+      sentadas.add(fichas == null ? sala : '$sala:$fichas');
 
   @override
   Future<void> levantarse(String sala) async => levantadas++;
@@ -438,8 +458,15 @@ class _RepositorioFalso implements RepositorioPoker {
   }
 
   @override
-  Future<void> jugar(String sala, String accion, {int monto = 0}) async =>
-      jugadas.add('$accion:$monto');
+  Future<EstadoMesaPoker?> jugar(
+    String sala,
+    String accion, {
+    int monto = 0,
+  }) async {
+    jugadas.add('$accion:$monto');
+    final respuesta = this.respuesta;
+    return respuesta == null ? null : EstadoMesaPoker.desdeMapa(respuesta);
+  }
 
   @override
   Future<bool> vencerTurno(String sala) async {
@@ -451,10 +478,16 @@ class _RepositorioFalso implements RepositorioPoker {
   Future<void> volver(String sala) async => vueltas++;
 
   @override
-  Future<void> recargar(String sala) async => recargas++;
+  Future<void> recargar(String sala, {int? fichas}) async {
+    recargas++;
+    recargadas.add(fichas);
+  }
 
   @override
-  VoidCallback escucharMesa(String sala, VoidCallback alCambiar) => () {};
+  VoidCallback escucharMesa(String sala, VoidCallback alCambiar) {
+    avisar = alCambiar;
+    return () {};
+  }
 
   @override
   VoidCallback escucharSalas(VoidCallback alCambiar) => () {};
@@ -736,19 +769,94 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('sin fichas, recargo las de la mesa', (tester) async {
+    testWidgets('sin fichas, recargo con las del casino', (tester) async {
       final repo = _RepositorioFalso(
         _estado(
           asientos: [
             _asiento(0, 'Ana Perez', 0),
             _asiento(1, 'Beto Rojas', 2000),
           ],
+          billetera: 5000,
         ),
       );
       await _abrirMesa(tester, repo);
-      await tester.tap(find.text('Recargar 1.000'));
+      await tester.tap(find.text('Recargar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Tienes 5.000 en el casino'), findsOneWidget);
+      await tester.tap(find.text('Máximo'));
       await tester.pump();
-      expect(repo.recargas, 1);
+      await tester.tap(find.text('Recargar con 2.000'));
+      await tester.pumpAndSettle();
+      expect(repo.recargadas, [2000]);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('un estado viejo que llega tarde no pisa al nuevo', (
+      tester,
+    ) async {
+      final repo = _RepositorioFalso(
+        _estado(
+          version: 5,
+          mano: _mano(),
+          jugadores: [_jugador(0, ronda: 20), _jugador(1, ronda: 40)],
+          misCartas: ['As', 'Kd'],
+        ),
+      );
+      await _abrirMesa(tester, repo);
+      expect(find.textContaining('Tu turno'), findsOneWidget);
+
+      // Un pedido de antes de mi turno contesta tarde: no se muestra.
+      repo.datos = _estado(
+        version: 4,
+        mano: _mano(turno: 1),
+        jugadores: [_jugador(0, ronda: 20), _jugador(1, ronda: 40)],
+        misCartas: ['As', 'Kd'],
+      );
+      repo.avisar!();
+      await tester.pump();
+      await tester.pump();
+      expect(find.textContaining('Tu turno'), findsOneWidget);
+
+      repo.datos = _estado(
+        version: 6,
+        mano: _mano(turno: 1),
+        jugadores: [_jugador(0, ronda: 40), _jugador(1, ronda: 40)],
+        misCartas: ['As', 'Kd'],
+      );
+      repo.avisar!();
+      await tester.pump();
+      await tester.pump();
+      expect(find.textContaining('Turno de Beto'), findsOneWidget);
+      await _esperar(tester, 1500);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('mi jugada vuelve con la mesa: no se pide de nuevo', (
+      tester,
+    ) async {
+      final repo = _RepositorioFalso(
+        _estado(
+          version: 5,
+          mano: _mano(),
+          jugadores: [_jugador(0, ronda: 20), _jugador(1, ronda: 40)],
+          misCartas: ['As', 'Kd'],
+        ),
+      );
+      repo.respuesta = _estado(
+        version: 6,
+        mano: _mano(turno: 1),
+        jugadores: [_jugador(0, ronda: 40), _jugador(1, ronda: 40)],
+        misCartas: ['As', 'Kd'],
+      );
+      await _abrirMesa(tester, repo);
+      final antes = repo.estados;
+
+      await tester.tap(find.text('Igualar 20'));
+      await tester.pump();
+      await tester.pump();
+      expect(repo.estados, antes, reason: 'la jugada ya trajo la mesa');
+      expect(find.textContaining('Turno de Beto'), findsOneWidget);
+      await _esperar(tester, 1500);
       await tester.pumpWidget(const SizedBox());
     });
   });
@@ -766,7 +874,13 @@ void main() {
       'mia': false,
     });
 
-    Future<void> abrir(WidgetTester tester, _RepositorioFalso repo) async {
+    Future<AlmacenCasinoEnMemoria> abrir(
+      WidgetTester tester,
+      _RepositorioFalso repo, {
+      int? fichas,
+    }) async {
+      final almacen = AlmacenCasinoEnMemoria();
+      if (fichas != null) await almacen.guardarFichas(fichas);
       tester.view.physicalSize = const Size(1080, 2340);
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
@@ -774,24 +888,54 @@ void main() {
         MaterialApp(
           home: PantallaSalasPoker(
             nombre: 'Ana Perez',
+            almacen: almacen,
             repositorio: repo,
             sonidos: const SonidosMesa.mudos(),
           ),
         ),
       );
       await tester.pump();
+      return almacen;
     }
 
-    testWidgets('lista las mesas y me siento en una', (tester) async {
+    testWidgets('lista las mesas y me siento con fichas del casino', (
+      tester,
+    ) async {
       final repo = _RepositorioFalso(_estado(), mesas: [mesa]);
       await abrir(tester, repo);
 
       expect(find.text('Mesa de Beto'), findsOneWidget);
       expect(find.text('3/6 · jugando'), findsOneWidget);
+      expect(find.bySemanticsLabel('Tus fichas: 1000'), findsOneWidget);
       await tester.tap(find.text('Sentarme'));
+      await tester.pumpAndSettle();
+      expect(find.text('¿Con cuántas te sientas?'), findsOneWidget);
+      await tester.tap(find.text('Sentarme con 1.000'));
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
-      expect(repo.sentadas, ['s1']);
+      expect(repo.sentadas, ['s1:1000']);
       expect(find.byType(PantallaMesaPoker), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('sin fichas para la mesa, MacIAs presta y vuelvo a elegir', (
+      tester,
+    ) async {
+      final repo = _RepositorioFalso(_estado(), mesas: [mesa]);
+      final almacen = await abrir(tester, repo, fichas: 100);
+
+      await tester.tap(find.text('Sentarme'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Esta mesa pide al menos 400 fichas y tienes 100.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('MacIAs te presta 1.000'));
+      await tester.pumpAndSettle();
+      expect(await almacen.fichas(), 1100);
+      expect(find.text('Tienes 1.100 en el casino'), findsOneWidget);
+      await tester.tap(find.text('Sentarme con 1.000'));
+      await tester.pumpAndSettle(const Duration(milliseconds: 100));
+      expect(repo.sentadas, ['s1:1000']);
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -805,9 +949,12 @@ void main() {
       await tester.tap(find.text('25/50'));
       await tester.pump();
       await tester.tap(find.text('Crear y sentarme'));
+      await tester.pumpAndSettle();
+      // 25/50 pide al menos 1.000: justo las de regalo.
+      await tester.tap(find.text('Sentarme con 1.000'));
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
 
-      expect(repo.creadas, ['Mesa de Ana:50']);
+      expect(repo.creadas, ['Mesa de Ana:50:1000']);
       expect(find.byType(PantallaMesaPoker), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
     });

@@ -10,6 +10,11 @@ abstract class AlmacenCasino {
 
   Future<void> guardarFichas(int fichas);
 
+  /// Lo que hay sentado en una mesa de poker: no se puede usar en otra mesa
+  /// hasta levantarse. Lo sabe la billetera del servidor, despues de pedir
+  /// [fichas]; las demas dicen que nada.
+  ({int fichas, String? mesa}) get enPoker;
+
   /// Lo que guarda un juego ("blackjack", "ruleta"), o null si nunca jugo.
   Future<Map<String, dynamic>?> juego(String nombre);
 
@@ -66,6 +71,9 @@ class AlmacenCasinoLocal implements AlmacenCasino {
     }
     await prefs.remove(_claveBlackjackVieja);
   }
+
+  @override
+  ({int fichas, String? mesa}) get enPoker => (fichas: 0, mesa: null);
 
   @override
   Future<int?> fichas() async {
@@ -129,7 +137,12 @@ class AlmacenCasinoLocal implements AlmacenCasino {
 
 /// Sin guardar nada en el telefono: para las pruebas.
 class AlmacenCasinoEnMemoria implements AlmacenCasino {
+  AlmacenCasinoEnMemoria({this.enPoker = (fichas: 0, mesa: null)});
+
   int? _fichas;
+
+  @override
+  ({int fichas, String? mesa}) enPoker;
   final _juegos = <String, String>{};
   bool _sonido = true;
 

@@ -104,6 +104,32 @@ abstract final class EvaluadorPoker {
     return mejor;
   }
 
+  /// Las cinco que forman la mejor mano (para resaltarlas en la mesa).
+  static List<String> mejoresCinco(List<String> cartas) {
+    if (cartas.length <= 5) return List.of(cartas);
+    var mejor = -1;
+    var cinco = const <String>[];
+    void probar(List<String> prueba) {
+      final valor = valorCinco(prueba);
+      if (valor > mejor) {
+        mejor = valor;
+        cinco = prueba;
+      }
+    }
+
+    final n = cartas.length;
+    for (var a = 0; a < n; a++) {
+      for (var b = a; b < n; b++) {
+        final prueba = [
+          for (var i = 0; i < n; i++)
+            if (i != a && i != b) cartas[i],
+        ];
+        if (prueba.length == 5) probar(prueba);
+      }
+    }
+    return cinco;
+  }
+
   static int categoria(int valor) => valor >> 20;
 
   /// "Full de reyes y treses", "Par de ases", "Escalera de color".

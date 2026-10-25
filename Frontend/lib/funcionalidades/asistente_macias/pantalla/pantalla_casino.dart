@@ -235,12 +235,14 @@ class _PantallaCasinoState extends State<PantallaCasino>
     await _cargar(antes: antes);
   }
 
-  /// El poker no usa las fichas del casino: cada mesa da las suyas.
+  /// El poker juega con las mismas fichas: te sientas con unas y al
+  /// levantarte vuelven las que tengas en la mesa.
   void _poker() {
     _momento(MomentoLobby.poker, ExpresionCrupier.guino);
     _jugar(
       PantallaSalasPoker.ruta(
         nombre: widget.nombre,
+        almacen: _almacen,
         repositorio: widget.poker ?? const RepositorioPokerSupabase(),
         sonidos: widget.sonidosDeMesas,
         conSonido: _conSonido,

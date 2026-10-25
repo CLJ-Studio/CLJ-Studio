@@ -18,6 +18,7 @@ import '../../publicar_producto/pantalla/pantalla_mis_publicaciones.dart';
 import '../diseno/burbujas_macias.dart';
 import '../diseno/identidad_macias.dart';
 import '../logica/almacen_casino.dart';
+import '../logica/billetera_casino.dart';
 import '../logica/cerebro_macias.dart';
 import '../logica/conocimiento_macias.dart';
 import '../logica/controlador_chat_macias.dart';
@@ -241,9 +242,16 @@ class _PantallaChatMaciasState extends State<PantallaChatMacias> {
 
   /// Las fichas del casino son de la cuenta; un chat de prueba (con su
   /// propio almacen) juega en memoria.
-  AlmacenCasino _almacenCasino() => widget.almacen == null
-      ? AlmacenCasinoLocal(_cuenta())
-      : AlmacenCasinoEnMemoria();
+  /// Con sesion, las fichas viven en la cuenta (las mismas en la ruleta, el
+  /// blackjack y el poker, y en cualquier telefono). Sin sesion, en el
+  /// telefono.
+  AlmacenCasino _almacenCasino() {
+    if (widget.almacen != null) return AlmacenCasinoEnMemoria();
+    final cuenta = _cuenta();
+    return cuenta == 'sin_sesion'
+        ? AlmacenCasinoLocal(cuenta)
+        : AlmacenCasinoServidor(cuenta);
+  }
 
   /// Un chat de prueba no suena.
   SonidosMesa? get _sonidosCasino =>

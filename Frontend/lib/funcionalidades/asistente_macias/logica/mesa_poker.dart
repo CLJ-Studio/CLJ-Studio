@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../../elementos_compartidos/imagenes/servicio_imagenes.dart';
 import 'evaluador_poker.dart';
 
@@ -41,6 +43,11 @@ class SalaPoker {
 
   static const asientos = 6;
   bool get llena => jugadores >= asientos;
+
+  /// Con cuantas fichas de la billetera se sienta uno: de 20 a 100 ciegas
+  /// grandes, como pide el servidor (poker_cobrar_entrada).
+  int get compraMinima => ciegaGrande * 20;
+  int get compraMaxima => ciegaGrande * 100;
 }
 
 class AsientoPoker {
@@ -199,19 +206,32 @@ class EstadoMesaPoker {
     required this.jugadores,
     required this.horaServidor,
     DateTime? recibidoEn,
+    this.version = 0,
+    this.existe = true,
+    this.billetera,
+    int? compraMinima,
+    int? compraMaxima,
     this.yo,
     this.mano,
     this.misCartas = const [],
-  }) : recibidoEn = recibidoEn ?? DateTime.now();
+  }) : recibidoEn = recibidoEn ?? DateTime.now(),
+       compraMinima = compraMinima ?? ciegaGrande * 20,
+       compraMaxima = compraMaxima ?? ciegaGrande * 100;
 
   factory EstadoMesaPoker.desdeMapa(
     Map<String, dynamic> datos, {
     DateTime? recibidoEn,
   }) {
-    final sala = (datos['sala'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final salaLeida = (datos['sala'] as Map?)?.cast<String, dynamic>();
+    final sala = salaLeida ?? const <String, dynamic>{};
     final mano = (datos['mano'] as Map?)?.cast<String, dynamic>();
     return EstadoMesaPoker(
       salaId: (sala['id'] as String?) ?? '',
+      version: (sala['version'] as num?)?.toInt() ?? 0,
+      existe: salaLeida != null,
+      billetera: (datos['billetera'] as num?)?.toInt(),
+      compraMinima: (sala['compra_minima'] as num?)?.toInt(),
+      compraMaxima: (sala['compra_maxima'] as num?)?.toInt(),
       nombre: (sala['nombre'] as String?) ?? 'Mesa',
       ciegaChica: (sala['ciega_chica'] as num?)?.toInt() ?? 10,
       ciegaGrande: (sala['ciega_grande'] as num?)?.toInt() ?? 20,
@@ -237,8 +257,24 @@ class EstadoMesaPoker {
   final String nombre;
   final int ciegaChica;
   final int ciegaGrande;
+
+  /// Con cuantas se sienta uno si no elige: 50 ciegas grandes.
   final int fichasIniciales;
   final int segundosTurno;
+
+  /// Sube con cada cambio de la mesa: un estado con una version mas vieja
+  /// llego tarde y no se muestra.
+  final int version;
+
+  /// La mesa sigue abierta. Se cierra cuando se levanta el ultimo.
+  final bool existe;
+
+  /// Mis fichas del casino (las que no estan en la mesa).
+  final int? billetera;
+
+  /// Entre cuantas fichas de la billetera me puedo sentar o recargar.
+  final int compraMinima;
+  final int compraMaxima;
   final List<AsientoPoker> asientos;
   final List<JugadorPoker> jugadores;
 
@@ -323,6 +359,47 @@ class EstadoMesaPoker {
 
   /// Sentados con fichas y jugando: con dos o mas se reparte.
   int get listos => asientos.where((a) => !a.afuera && a.fichas > 0).length;
+
+  /// Lo que tiene alguien delante en esta ronda. Al terminar la mano ya
+  /// esta todo en el bote.
+  int apuestaVisible(int posicion) =>
+      manoEnJuego ? (jugador(posicion)?.apuestaRonda ?? 0) : 0;
+
+  /// Lo que hay en el centro: el bote sin las apuestas que todavia estan
+  /// delante de cada uno. Terminada la mano, ya se pago.
+  int get boteVisible {
+    final mano = this.mano;
+    if (mano == null || !mano.enJuego) return 0;
+    final delante = jugadores.fold<int>(0, (s, j) => s + j.apuestaRonda);
+    return math.max(0, mano.bote - delante);
+  }
+
+  /// Los de la mano en el orden en que se reparte: desde el de la
+  /// izquierda del boton, en el sentido de las agujas del reloj.
+  List<int> get ordenReparto {
+    final mano = this.mano;
+    if (mano == null) return const [];
+    return [for (final j in jugadores) j.posicion]..sort(
+      (a, b) => ((a - mano.boton - 1 + 12) % 6).compareTo(
+        (b - mano.boton - 1 + 12) % 6,
+      ),
+    );
+  }
+
+  /// Quien se llevo mas en la mano que termino.
+  int? get ganadorPrincipal {
+    final resultado = mano?.resultado ?? const {};
+    if (resultado.isEmpty) return null;
+    return resultado.entries.reduce((a, b) => b.value > a.value ? b : a).key;
+  }
+
+  /// Las cinco con que gano el que mas se llevo, si se mostraron cartas.
+  List<String> get cincoGanadoras {
+    final ganador = ganadorPrincipal;
+    final vistas = ganador == null ? null : jugador(ganador)?.cartasVistas;
+    if (vistas == null || mano == null) return const [];
+    return EvaluadorPoker.mejoresCinco([...vistas, ...mano!.comunitarias]);
+  }
 
   /// Mi mejor mano con lo que hay en la mesa ("Par de reyes").
   String? get miMano {

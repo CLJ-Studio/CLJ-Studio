@@ -8,21 +8,29 @@ import 'mesa_poker.dart';
 /// baraja, reparte, valida cada jugada y paga; aqui solo se pide y se mira.
 abstract class RepositorioPoker {
   Future<List<SalaPoker>> salas();
-  Future<String> crearSala(String nombre, int ciegaGrande);
-  Future<void> sentarse(String sala);
+
+  /// Crea la mesa y se sienta con [fichas] de la billetera (sin indicarlo,
+  /// las que sugiere la mesa).
+  Future<String> crearSala(String nombre, int ciegaGrande, {int? fichas});
+  Future<void> sentarse(String sala, {int? fichas});
+
+  /// Al levantarse, las fichas de la mesa vuelven a la billetera.
   Future<void> levantarse(String sala);
   Future<EstadoMesaPoker> estado(String sala);
 
   /// Reparte si se puede (lo piden todos; reparte uno solo).
   Future<bool> empezarMano(String sala);
 
-  /// retirarse, pasar, igualar, subir (a [monto]) o todo.
-  Future<void> jugar(String sala, String accion, {int monto = 0});
+  /// retirarse, pasar, igualar, subir (a [monto]) o todo. Devuelve como
+  /// quedo la mesa, o null si el servidor no lo dijo.
+  Future<EstadoMesaPoker?> jugar(String sala, String accion, {int monto = 0});
 
   /// Pasa o retira a quien dejo vencer su turno.
   Future<bool> vencerTurno(String sala);
   Future<void> volver(String sala);
-  Future<void> recargar(String sala);
+
+  /// Sin fichas en la mesa: compra de nuevo, de la billetera.
+  Future<void> recargar(String sala, {int? fichas});
 
   /// Avisa cuando cambia algo en la mesa. Devuelve con que dejar de escuchar.
   VoidCallback escucharMesa(String sala, VoidCallback alCambiar);
@@ -44,16 +52,26 @@ class RepositorioPokerSupabase implements RepositorioPoker {
   }
 
   @override
-  Future<String> crearSala(String nombre, int ciegaGrande) async =>
+  Future<String> crearSala(
+    String nombre,
+    int ciegaGrande, {
+    int? fichas,
+  }) async =>
       await _cliente.rpc(
             'poker_crear_sala',
-            params: {'p_nombre': nombre, 'p_ciega_grande': ciegaGrande},
+            params: {
+              'p_nombre': nombre,
+              'p_ciega_grande': ciegaGrande,
+              'p_fichas': fichas,
+            },
           )
           as String;
 
   @override
-  Future<void> sentarse(String sala) =>
-      _cliente.rpc('poker_sentarse', params: {'p_sala': sala});
+  Future<void> sentarse(String sala, {int? fichas}) => _cliente.rpc(
+    'poker_sentarse',
+    params: {'p_sala': sala, 'p_fichas': fichas},
+  );
 
   @override
   Future<void> levantarse(String sala) =>
@@ -71,11 +89,19 @@ class RepositorioPokerSupabase implements RepositorioPoker {
       true;
 
   @override
-  Future<void> jugar(String sala, String accion, {int monto = 0}) =>
-      _cliente.rpc(
-        'poker_jugar',
-        params: {'p_sala': sala, 'p_accion': accion, 'p_monto': monto},
-      );
+  Future<EstadoMesaPoker?> jugar(
+    String sala,
+    String accion, {
+    int monto = 0,
+  }) async {
+    final datos = await _cliente.rpc(
+      'poker_jugar',
+      params: {'p_sala': sala, 'p_accion': accion, 'p_monto': monto},
+    );
+    return datos is Map
+        ? EstadoMesaPoker.desdeMapa(datos.cast<String, dynamic>())
+        : null;
+  }
 
   @override
   Future<bool> vencerTurno(String sala) async =>
@@ -87,52 +113,49 @@ class RepositorioPokerSupabase implements RepositorioPoker {
       _cliente.rpc('poker_volver', params: {'p_sala': sala});
 
   @override
-  Future<void> recargar(String sala) =>
-      _cliente.rpc('poker_recargar', params: {'p_sala': sala});
+  Future<void> recargar(String sala, {int? fichas}) => _cliente.rpc(
+    'poker_recargar',
+    params: {'p_sala': sala, 'p_fichas': fichas},
+  );
 
   @override
   VoidCallback escucharMesa(String sala, VoidCallback alCambiar) {
-    PostgresChangeFilter filtro() => PostgresChangeFilter(
-      type: PostgresChangeFilterType.eq,
-      column: 'sala_id',
-      value: sala,
-    );
-    // Cada jugada cambia la mano (el turno, el bote); sentarse y cobrar
-    // cambian los asientos. El respaldo corto cubre un canal caido: sin el,
-    // la mesa se quedaba esperando un aviso que no llegaba.
-    final escuchas = [
-      EscuchaTabla(
-        tabla: 'poker_manos',
-        filtro: filtro(),
-        alCambiar: alCambiar,
-        respaldo: const Duration(seconds: 4),
-        respaldoConCanalVivo: const Duration(seconds: 20),
-        minimoEntreAvisos: const Duration(milliseconds: 120),
+    // Cada cambio de la mesa sube la version de su fila en poker_salas: un
+    // solo aviso por jugada, en un canal propio de esta mesa. Antes eran dos
+    // tablas con varios avisos por jugada cada una. El respaldo corto cubre
+    // un canal caido: sin el, la mesa se quedaba esperando un aviso que no
+    // llegaba.
+    final escucha = EscuchaTabla(
+      tabla: 'poker_salas',
+      canal: 'poker_mesa_$sala',
+      filtro: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'id',
+        value: sala,
       ),
-      EscuchaTabla(
-        tabla: 'poker_asientos',
-        filtro: filtro(),
-        alCambiar: alCambiar,
-        respaldo: const Duration(seconds: 4),
-        respaldoConCanalVivo: const Duration(seconds: 20),
-        minimoEntreAvisos: const Duration(milliseconds: 120),
-      ),
-    ];
-    for (final escucha in escuchas) {
-      escucha.iniciar();
-    }
-    return () {
-      for (final escucha in escuchas) {
-        escucha.detener();
-      }
-    };
+      alCambiar: alCambiar,
+      respaldo: const Duration(seconds: 2),
+      respaldoConCanalVivo: const Duration(seconds: 15),
+      minimoEntreAvisos: const Duration(milliseconds: 60),
+    )..iniciar();
+    return escucha.detener;
   }
 
   @override
   VoidCallback escucharSalas(VoidCallback alCambiar) {
+    // Cada jugada en cualquier mesa toca poker_salas: la lista se pone al
+    // dia como mucho una vez por segundo.
     final escuchas = [
-      EscuchaTabla(tabla: 'poker_salas', alCambiar: alCambiar),
-      EscuchaTabla(tabla: 'poker_asientos', alCambiar: alCambiar),
+      EscuchaTabla(
+        tabla: 'poker_salas',
+        alCambiar: alCambiar,
+        minimoEntreAvisos: const Duration(seconds: 1),
+      ),
+      EscuchaTabla(
+        tabla: 'poker_asientos',
+        alCambiar: alCambiar,
+        minimoEntreAvisos: const Duration(seconds: 1),
+      ),
     ];
     for (final escucha in escuchas) {
       escucha.iniciar();
@@ -156,6 +179,11 @@ String mensajePoker(Object error) {
             texto.contains('poker_') && texto.contains('does not exist') =>
       'El póker todavía no está listo en el servidor.',
     _ when texto.contains('MESA_LLENA') => 'La mesa está llena.',
+    _ when texto.contains('FICHAS_INSUFICIENTES') =>
+      'No te alcanzan las fichas del casino para esta mesa.',
+    _ when texto.contains('COMPRA_INVALIDA') =>
+      'En esta mesa te sientas con entre 20 y 100 ciegas grandes.',
+    _ when texto.contains('NO_ESTAS_SENTADO') => 'Ya no estás en esa mesa.',
     _ when texto.contains('PERFIL_INCOMPLETO') =>
       'Completa tu perfil antes de sentarte.',
     _ when texto.contains('SALA_INEXISTENTE') => 'Esa mesa ya no existe.',
