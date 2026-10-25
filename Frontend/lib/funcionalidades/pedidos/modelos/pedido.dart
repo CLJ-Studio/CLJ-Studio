@@ -131,6 +131,8 @@ class Pedido {
     required this.emojiLocal,
     required this.nombreComprador,
     required this.nombreVendedor,
+    this.compradorEgresado = false,
+    this.vendedorEgresado = false,
     required this.subtotal,
     required this.costoEntrega,
     required this.total,
@@ -155,6 +157,8 @@ class Pedido {
     emojiLocal: (fila['store_emoji'] as String?) ?? '🍽️',
     nombreComprador: (fila['buyer_name'] as String?) ?? '',
     nombreVendedor: (fila['seller_name'] as String?) ?? '',
+    compradorEgresado: (fila['buyer_egresado'] as bool?) ?? false,
+    vendedorEgresado: (fila['seller_egresado'] as bool?) ?? false,
     subtotal: (fila['subtotal'] as num?)?.toDouble() ?? 0,
     costoEntrega: (fila['delivery_cost'] as num?)?.toDouble() ?? 0,
     total: (fila['total'] as num?)?.toDouble() ?? 0,
@@ -185,6 +189,10 @@ class Pedido {
   final String emojiLocal;
   final String nombreComprador;
   final String nombreVendedor;
+
+  /// Egresados verificados: llevan la insignia dorada junto al nombre.
+  final bool compradorEgresado;
+  final bool vendedorEgresado;
   final double subtotal;
   final double costoEntrega;
   final double total;

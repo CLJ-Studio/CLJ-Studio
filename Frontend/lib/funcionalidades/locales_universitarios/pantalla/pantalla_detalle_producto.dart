@@ -6,6 +6,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/titulo_seccion.dart';
 import '../../../elementos_compartidos/imagenes/foto_producto.dart';
@@ -1246,9 +1247,10 @@ class _Vendedor extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  NombreConInsignia(
                     local.vendedorNombre,
-                    style: TextStyle(
+                    egresado: local.vendedorEgresado,
+                    estilo: TextStyle(
                       color: colorContenido,
                       fontWeight: FontWeight.w900,
                     ),

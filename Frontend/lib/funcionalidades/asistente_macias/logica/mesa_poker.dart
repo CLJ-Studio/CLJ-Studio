@@ -51,6 +51,7 @@ class AsientoPoker {
     required this.fichas,
     this.avatarPath,
     this.afuera = false,
+    this.egresado = false,
   });
 
   factory AsientoPoker.desdeMapa(Map<String, dynamic> fila) => AsientoPoker(
@@ -60,6 +61,7 @@ class AsientoPoker {
     avatarPath: fila['avatar_path'] as String?,
     fichas: (fila['fichas'] as num?)?.toInt() ?? 0,
     afuera: (fila['afuera'] as bool?) ?? false,
+    egresado: (fila['egresado'] as bool?) ?? false,
   );
 
   final int posicion;
@@ -70,6 +72,9 @@ class AsientoPoker {
 
   /// Sentado afuera: no entra en las manos hasta que vuelva.
   final bool afuera;
+
+  /// Egresado verificado: la insignia dorada junto al nombre.
+  final bool egresado;
 
   String get primerNombre {
     final partes = nombre.split(' ');

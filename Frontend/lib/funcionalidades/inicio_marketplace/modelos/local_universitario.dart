@@ -19,6 +19,7 @@ class LocalUniversitario {
     this.portadaPath,
     this.vendedorNombre = '',
     this.vendedorAvatarPath,
+    this.vendedorEgresado = false,
     this.vistas = 0,
     this.muestraVistas = true,
     this.ubicacionCampus,
@@ -50,6 +51,8 @@ class LocalUniversitario {
       portadaPath: fila['portada_path'] as String?,
       vendedorNombre: (fila['vendedor_nombre'] as String?) ?? '',
       vendedorAvatarPath: fila['vendedor_avatar'] as String?,
+      // Sin la migracion 60 la columna no viene: sin insignia, nada mas.
+      vendedorEgresado: (fila['vendedor_egresado'] as bool?) ?? false,
       vistas: (fila['view_count'] as num?)?.toInt() ?? 0,
       muestraVistas: (fila['vendedor_muestra_vistas'] as bool?) ?? true,
       ubicacionCampus: fila['campus_location'] as String?,
@@ -78,6 +81,9 @@ class LocalUniversitario {
 
   final String vendedorNombre;
   final String? vendedorAvatarPath;
+
+  /// Egresado verificado: lleva la insignia dorada junto al nombre.
+  final bool vendedorEgresado;
   final int vistas;
 
   /// Si quien vende deja que el resto vea su contador. Se decide en
@@ -128,6 +134,7 @@ class LocalUniversitario {
     portadaPath: portadaPath,
     vendedorNombre: vendedorNombre,
     vendedorAvatarPath: vendedorAvatarPath,
+    vendedorEgresado: vendedorEgresado,
     vistas: vistas ?? this.vistas,
     muestraVistas: muestraVistas,
     ubicacionCampus: ubicacionCampus,

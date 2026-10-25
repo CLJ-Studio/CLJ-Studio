@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../modelos/usuario_upsa.dart';
 import '../pantalla/pantalla_editar_perfil.dart';
 
@@ -70,10 +71,11 @@ class TarjetaPerfilUsuario extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        Text(
+        NombreConInsignia(
           usuario.nombre,
+          egresado: usuario.esEgresadoVerificado,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          estilo: TextStyle(
             color: colorTexto,
             fontSize: 30,
             fontWeight: FontWeight.w900,

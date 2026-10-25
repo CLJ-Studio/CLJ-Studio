@@ -88,6 +88,9 @@ class UsuarioUpsa {
 
   bool get esCuentaUpsa => tipoCuenta == 'upsa';
 
+  /// Lleva la insignia dorada: un admin verifico que egreso.
+  bool get esEgresadoVerificado => estadoEgresado == EstadoEgresado.verificado;
+
   String? get avatarUrl => ServicioImagenes.urlPublica(avatarPath);
 
   /// Inicial para el avatar; evita reventar si el nombre llega vacio.

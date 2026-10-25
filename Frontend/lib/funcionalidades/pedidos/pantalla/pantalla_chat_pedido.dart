@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../../elementos_compartidos/imagenes/foto_red.dart';
 
@@ -17,6 +18,7 @@ class PantallaChatPedido extends StatefulWidget {
   const PantallaChatPedido({
     required this.pedidoId,
     required this.contraparte,
+    this.contraparteEgresado = false,
     this.fotoUrl,
     super.key,
   });
@@ -25,6 +27,9 @@ class PantallaChatPedido extends StatefulWidget {
 
   /// Nombre de la otra persona, para el encabezado.
   final String contraparte;
+
+  /// La otra persona es egresada verificada: insignia junto a su nombre.
+  final bool contraparteEgresado;
 
   /// Su foto de perfil, si la bandeja la trae. Sin ella van las iniciales.
   final String? fotoUrl;
@@ -205,11 +210,11 @@ class _PantallaChatPedidoState extends State<PantallaChatPedido> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                NombreConInsignia(
                   widget.contraparte,
+                  egresado: widget.contraparteEgresado,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  estilo: const TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 17,
                   ),

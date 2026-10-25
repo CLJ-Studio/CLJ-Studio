@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../mi_local/diseno/acciones_publicacion.dart';
 import '../../mi_local/pantalla/pantalla_crear_local.dart';
@@ -342,11 +343,12 @@ class _EncabezadoPerfilMarketplace extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        NombreConInsignia(
                           nombre == null || nombre.isEmpty
                               ? 'Vendedor UPSA'
                               : nombre,
-                          style: const TextStyle(
+                          egresado: perfil?.esEgresadoVerificado ?? false,
+                          estilo: const TextStyle(
                             color: Color(0xFFE6E1D5),
                             fontSize: 22,
                             height: 1.05,
@@ -616,11 +618,12 @@ class _EncabezadoPerfil extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
+                    child: NombreConInsignia(
                       nombre == null || nombre.isEmpty
                           ? 'Vendedor UPSA'
                           : nombre,
-                      style: TextStyle(
+                      egresado: perfil?.esEgresadoVerificado ?? false,
+                      estilo: TextStyle(
                         color: colorContenido,
                         fontSize: 16,
                         fontWeight: FontWeight.w900,

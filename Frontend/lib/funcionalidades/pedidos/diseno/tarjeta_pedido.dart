@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../../elementos_compartidos/imagenes/foto_red.dart';
 import '../../../elementos_compartidos/imagenes/foto_producto.dart';
 
@@ -136,15 +137,13 @@ class TarjetaPedido extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 5),
-                        Text(
+                        NombreConInsignia(
                           soyVendedor
                               ? pedido.nombreComprador
                               : pedido.nombreLocal,
+                          egresado: soyVendedor && pedido.compradorEgresado,
                           maxLines: soyVendedor ? null : 2,
-                          overflow: soyVendedor
-                              ? TextOverflow.visible
-                              : TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          estilo: const TextStyle(
                             color: Color(0xFF10091D),
                             fontSize: 18,
                             height: 1.14,

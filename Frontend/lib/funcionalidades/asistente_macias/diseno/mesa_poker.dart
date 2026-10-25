@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../logica/evaluador_poker.dart';
 import '../logica/mesa_poker.dart';
@@ -292,11 +293,11 @@ class AsientoPokerVista extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
+          NombreConInsignia(
             esYo ? 'Tú' : asiento.primerNombre,
+            egresado: asiento.egresado,
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            estilo: const TextStyle(
               color: ColoresPoker.crema,
               fontWeight: FontWeight.w800,
               fontSize: 12.5,

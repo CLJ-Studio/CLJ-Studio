@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
@@ -125,9 +126,10 @@ class _PantallaPerfilPublicoVendedorState
     return Scaffold(
       appBar: AppBar(
         foregroundColor: colorContenido,
-        title: Text(
+        title: NombreConInsignia(
           nombre,
-          style: TextStyle(color: colorContenido, fontWeight: FontWeight.w900),
+          egresado: local.vendedorEgresado,
+          estilo: TextStyle(color: colorContenido, fontWeight: FontWeight.w900),
         ),
       ),
       body: FutureBuilder<_ContenidoPerfil>(
@@ -163,9 +165,10 @@ class _PantallaPerfilPublicoVendedorState
                               children: [
                                 _AvatarVendedor(local: local),
                                 const SizedBox(height: 10),
-                                Text(
+                                NombreConInsignia(
                                   nombre,
-                                  style: TextStyle(
+                                  egresado: local.vendedorEgresado,
+                                  estilo: TextStyle(
                                     color: colorContenido,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w900,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -122,6 +123,9 @@ class _PantallaDetallePedidoState extends State<PantallaDetallePedido> {
           contraparte: soyVendedor
               ? pedido.nombreComprador
               : pedido.nombreVendedor,
+          contraparteEgresado: soyVendedor
+              ? pedido.compradorEgresado
+              : pedido.vendedorEgresado,
         ),
       ),
     );
@@ -401,6 +405,8 @@ class _AvisoConfirmacion extends StatelessWidget {
   }
 }
 
+const _estiloContraparte = TextStyle(color: Color(0xFF848381), fontSize: 13);
+
 class _Encabezado extends StatelessWidget {
   const _Encabezado({required this.pedido, required this.soyVendedor});
 
@@ -429,14 +435,22 @@ class _Encabezado extends StatelessWidget {
                     color: Color(0xFF474646),
                   ),
                 ),
-                Text(
-                  soyVendedor
-                      ? 'Pedido de ${pedido.nombreComprador}'
-                      : 'Vendedor: ${pedido.nombreVendedor}',
-                  style: const TextStyle(
-                    color: Color(0xFF848381),
-                    fontSize: 13,
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: soyVendedor ? 'Pedido de ' : 'Vendedor: '),
+                      ...nombreConInsigniaEnTexto(
+                        soyVendedor
+                            ? pedido.nombreComprador
+                            : pedido.nombreVendedor,
+                        egresado: soyVendedor
+                            ? pedido.compradorEgresado
+                            : pedido.vendedorEgresado,
+                        estilo: _estiloContraparte,
+                      ),
+                    ],
                   ),
+                  style: _estiloContraparte,
                 ),
               ],
             ),

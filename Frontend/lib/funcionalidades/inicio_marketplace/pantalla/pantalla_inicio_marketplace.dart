@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/hueco_barra_navegacion.dart';
 import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
@@ -427,7 +428,10 @@ class _ResultadosBusqueda extends StatelessWidget {
         _ResultadoBusqueda(
           icono: Icons.person_rounded,
           titulo: persona.$1.vendedorNombre,
-          subtitulo: 'Persona',
+          egresado: persona.$1.vendedorEgresado,
+          subtitulo: persona.$1.vendedorEgresado
+              ? 'Egresado verificado'
+              : 'Persona',
           imagenUrl: persona.$1.vendedorAvatarUrl,
           alPresionar: () {
             FocusManager.instance.primaryFocus?.unfocus();
@@ -446,6 +450,8 @@ class _ResultadosBusqueda extends StatelessWidget {
         _ResultadoBusqueda(
           icono: Icons.storefront_rounded,
           titulo: local.nombreVisible,
+          // El espacio personal se llama como su dueño.
+          egresado: local.esPersonal && local.vendedorEgresado,
           subtitulo: local.categoria,
           imagenUrl: local.logoUrl,
           alPresionar: () {
@@ -480,10 +486,14 @@ class _ResultadoBusqueda extends StatelessWidget {
     required this.subtitulo,
     required this.alPresionar,
     this.imagenUrl,
+    this.egresado = false,
   });
 
   final IconData icono;
   final String titulo;
+
+  /// Lleva la insignia dorada junto al titulo.
+  final bool egresado;
   final String subtitulo;
   final String? imagenUrl;
   final VoidCallback alPresionar;
@@ -492,7 +502,11 @@ class _ResultadoBusqueda extends StatelessWidget {
   Widget build(BuildContext context) => ListTile(
     onTap: alPresionar,
     leading: _ImagenResultado(icono: icono, imagenUrl: imagenUrl),
-    title: Text(titulo, style: const TextStyle(fontWeight: FontWeight.w800)),
+    title: NombreConInsignia(
+      titulo,
+      egresado: egresado,
+      estilo: const TextStyle(fontWeight: FontWeight.w800),
+    ),
     subtitle: Text(subtitulo),
     trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF474646)),
   );

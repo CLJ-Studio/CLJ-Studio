@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../inicio_marketplace/logica/ubicacion_comprador.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 
@@ -37,9 +38,10 @@ class EncabezadoDetalleLocal extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              NombreConInsignia(
                 local.esPersonal ? local.vendedorNombre : local.nombre,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                egresado: local.esPersonal && local.vendedorEgresado,
+                estilo: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -106,9 +108,10 @@ class _AccesoVendedor extends StatelessWidget {
             ),
             const SizedBox(width: 11),
             Expanded(
-              child: Text(
+              child: NombreConInsignia(
                 local.vendedorNombre,
-                style: const TextStyle(fontWeight: FontWeight.w800),
+                egresado: local.vendedorEgresado,
+                estilo: const TextStyle(fontWeight: FontWeight.w800),
               ),
             ),
             const Icon(Icons.chevron_right_rounded),

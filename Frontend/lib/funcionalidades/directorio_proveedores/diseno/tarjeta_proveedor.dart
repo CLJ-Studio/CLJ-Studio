@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../modelos/proveedor_upsa.dart';
 
 /// Un emprendimiento del directorio: que es, que le ofrece a la UPSA, de
@@ -42,11 +43,11 @@ class TarjetaProveedor extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final apagado = tema.textTheme.bodyMedium?.color;
-    final quien = [
-      'De ${proveedor.dueno}',
+    final despues = [
       ?proveedor.carrera,
       if (proveedor.anioIngreso case final int anio) 'Ingresó en $anio',
     ].join(' · ');
+    final estiloQuien = TextStyle(color: apagado, fontSize: 12);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -98,7 +99,20 @@ class TarjetaProveedor extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 10),
-          Text(quien, style: TextStyle(color: apagado, fontSize: 12)),
+          Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(text: 'De '),
+                ...nombreConInsigniaEnTexto(
+                  proveedor.dueno,
+                  egresado: proveedor.esEgresado,
+                  estilo: estiloQuien,
+                ),
+                if (despues.isNotEmpty) TextSpan(text: ' · $despues'),
+              ],
+            ),
+            style: estiloQuien,
+          ),
           const SizedBox(height: 14),
           Row(
             children: [
