@@ -2,26 +2,43 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-/// Prepara los sonidos del casino de MacIAs (el blackjack y la ruleta), todos
-/// grabaciones CC0 (dominio publico):
+/// Prepara los sonidos del casino de MacIAs (el blackjack, la ruleta y la
+/// pesca en el hielo), todos grabaciones CC0 (dominio publico):
 ///
 /// - Casino Audio, de Kenney: fichas y cartas.
 ///   https://kenney.nl/assets/casino-audio
-/// - Interface Sounds, de Kenney: el boton, la pista y la "voz" del dialogo.
-///   https://kenney.nl/assets/interface-sounds
+/// - Interface Sounds, de Kenney: el boton, la pista, la "voz" del dialogo y
+///   la aguja de la rueda de la pesca. https://kenney.nl/assets/interface-sounds
 /// - Music Jingles (los de saxo), de Kenney: ganar, perder, empatar,
 ///   pasarse. https://kenney.nl/assets/music-jingles
-/// - La bola de la ruleta, de Freesound (la vista previa "hq" de cada uno):
-///   una canica girando en un bowl de ceramica, de Anthousai
-///   (freesound.org/s/448345, guardada como canica_gira.mp3), y canicas
-///   cayendo sobre madera, de KaleidacousticsAudio (freesound.org/s/628994,
-///   guardada como canicas_madera.mp3).
+/// - Impact Sounds, de Kenney: la bola de nieve que cae (pisadas en nieve).
+///   https://kenney.nl/assets/impact-sounds
+/// - De Freesound (la vista previa "hq" de cada uno, con el nombre que va
+///   entre parentesis):
+///   - La bola de la ruleta: una canica girando en un bowl de ceramica, de
+///     Anthousai (freesound.org/s/448345, canica_gira.mp3), y canicas
+///     cayendo sobre madera, de KaleidacousticsAudio (freesound.org/s/628994,
+///     canicas_madera.mp3).
+///   - La pesca: hielo que se quiebra, de thatonecode (freesound.org/s/755506,
+///     hielo_quiebra.mp3); una moneda que gira hasta caer, de jon.k.clancy
+///     (freesound.org/s/402934, moneda_gira.mp3); la matraca de un carrete
+///     de mosca, de paulprit (freesound.org/s/507078, carrete.mp3); un pez
+///     que se suelta salpicando, de paulprit (freesound.org/s/507094,
+///     pez_salta.mp3), y burbujas en el agua, de ristooooo1
+///     (freesound.org/s/539823, burbujas.mp3).
+///   - Los equipos del bono de la pesca: un camion que acelera, de
+///     jodybruchon (freesound.org/s/433866, camion.mp3); un helicoptero, de
+///     Wonko_7 (freesound.org/s/723158, helicoptero.mp3); los pasos de un
+///     robot gigante, de Breviceps (freesound.org/s/557594,
+///     robot_pasos.mp3), y un trago fuerte, de magnuswaker
+///     (freesound.org/s/531755, trago.mp3).
 ///
 /// Uso (con ffmpeg en el PATH), desde Frontend:
 ///
 ///     dart run tool/preparar_sonidos_casino.dart \
 ///       <casino-audio>/Audio <interface-sounds>/Audio \
-///       "<music-jingles>/Audio/Sax jingles" <carpeta de Freesound>
+///       "<music-jingles>/Audio/Sax jingles" <impact-sounds>/Audio \
+///       <carpeta de Freesound>
 ///
 /// Cada sonido se recorta para que el golpe (la ficha que cae, la carta que
 /// toca la mesa) quede al principio del archivo: asi suena justo cuando la
@@ -35,19 +52,20 @@ import 'dart:typed_data';
 /// Android cada sonido corto es una pista de audio nueva, y el mezclador del
 /// telefono no daba abasto y cortaba todo lo demas.
 Future<void> main(List<String> args) async {
-  if (args.length != 4) {
+  if (args.length != 5) {
     stderr.writeln(
       'Uso: dart run tool/preparar_sonidos_casino.dart '
       '<casino>/Audio <interface>/Audio "<jingles>/Audio/Sax jingles" '
-      '<freesound>',
+      '<impact>/Audio <freesound>',
     );
     exit(64);
   }
-  final (casino, interfaz, saxo, freesound) = (
+  final (casino, interfaz, saxo, impacto, freesound) = (
     args[0],
     args[1],
     args[2],
     args[3],
+    args[4],
   );
   final salida = Directory('assets/audio/casino');
   if (salida.existsSync()) {
@@ -183,6 +201,104 @@ Future<void> main(List<String> args) async {
         desde: desde,
         hasta: hasta,
       ),
+    // La aguja de la rueda de la pesca contra cada clavija, cuando ya va
+    // despacio: los dos chasquidos de una tecla (al bajar y al subir).
+    for (final (i, (desde, hasta)) in const [(0.0, .075), (.1, .175)].indexed)
+      _Sonido(
+        'aguja_${i + 1}',
+        '$interfaz/switch_004.ogg',
+        _Corte.tramo,
+        -20,
+        desde: desde,
+        hasta: hasta,
+      ),
+    // La bola de nieve que cae sobre la rueda.
+    for (final (i, n) in [0, 1, 4].indexed)
+      _Sonido(
+        'nieve_${i + 1}',
+        '$impacto/footstep_snow_00$n.ogg',
+        _Corte.golpe,
+        -19,
+      ),
+    // El hielo que se congela en un cubo: la seguidilla de crujidos.
+    _Sonido(
+      'hielo',
+      '$freesound/hielo_quiebra.mp3',
+      _Corte.tramo,
+      -21,
+      desde: .28,
+      hasta: 1.02,
+    ),
+    // La moneda de oro: el final del giro, hasta que cae de cara.
+    _Sonido(
+      'moneda',
+      '$freesound/moneda_gira.mp3',
+      _Corte.tramo,
+      -22,
+      desde: 4.92,
+      hasta: 6.8,
+    ),
+    // El carrete recoge un tramo por cada paso del medidor del bono: unos
+    // seis golpes de la matraca.
+    for (final (i, (desde, hasta)) in const [(1.0, 1.38), (2.4, 2.78)].indexed)
+      _Sonido(
+        'carrete_${i + 1}',
+        '$freesound/carrete.mp3',
+        _Corte.tramo,
+        -22,
+        desde: desde,
+        hasta: hasta,
+      ),
+    // El pez que sale del agua (y la casilla que se hunde en el hoyo).
+    _Sonido(
+      'chapuzon',
+      '$freesound/pez_salta.mp3',
+      _Corte.tramo,
+      -18,
+      desde: 1.12,
+      hasta: 1.86,
+    ),
+    // La grua que llega: el camion que acelera.
+    _Sonido(
+      'grua',
+      '$freesound/camion.mp3',
+      _Corte.tramo,
+      -22,
+      desde: 2.08,
+      hasta: 3.7,
+      salidaMs: 400,
+    ),
+    // El helicoptero (y el de carga) que llega volando.
+    _Sonido(
+      'helicoptero',
+      '$freesound/helicoptero.mp3',
+      _Corte.tramo,
+      -22,
+      desde: .15,
+      hasta: 1.85,
+      salidaMs: 500,
+    ),
+    // El robot que sale del hielo: un paso pesado y sus motores.
+    _Sonido(
+      'robot',
+      '$freesound/robot_pasos.mp3',
+      _Corte.tramo,
+      -19,
+      desde: .05,
+      hasta: 1.33,
+      salidaMs: 150,
+    ),
+    // El gigante que se traga al chico.
+    _Sonido('trago', '$freesound/trago.mp3', _Corte.golpe, -17),
+    // Bajo el hielo, cuando aparece el cardumen.
+    _Sonido(
+      'burbujas',
+      '$freesound/burbujas.mp3',
+      _Corte.tramo,
+      -24,
+      desde: 1.22,
+      hasta: 2.92,
+    ),
   ];
 
   var total = 0;
@@ -250,7 +366,90 @@ Future<void> main(List<String> args) async {
     }
     anotar(nombre, murmullo.length, File(destino).lengthSync());
   }
+  // La rueda de la pesca arrancando: los mismos chasquidos de la aguja,
+  // tan seguidos que suenan como una tanda.
+  final clics = [
+    for (final (desde, hasta) in const [(0.0, .075), (.1, .175)])
+      _Sonido(
+        'clic',
+        '$interfaz/switch_004.ogg',
+        _Corte.tramo,
+        -20,
+        desde: desde,
+        hasta: hasta,
+      ).preparar(await _decodificar('$interfaz/switch_004.ogg')),
+  ];
+  final tanda = _repiqueteo(clics);
+  final temporal = File('${salida.path}/rueda_gira.32k.wav')
+    ..writeAsBytesSync(_wav(tanda));
+  final destino = '${salida.path}/rueda_gira.wav';
+  final conversion = await Process.run('ffmpeg', [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-y',
+    '-i',
+    temporal.path,
+    '-ar',
+    '16000',
+    '-ac',
+    '1',
+    '-c:a',
+    'pcm_s16le',
+    destino,
+  ]);
+  temporal.deleteSync();
+  if (conversion.exitCode != 0) {
+    throw Exception(
+      'ffmpeg no pudo convertir rueda_gira: ${conversion.stderr}',
+    );
+  }
+  anotar('rueda_gira', tanda.length, File(destino).lengthSync());
   stdout.writeln('Total: ${(total / 1024).toStringAsFixed(0)} KB');
+}
+
+/// La aguja de la pesca golpeando cada clavija mientras la rueda frena,
+/// con el mismo frenado de la pantalla (ver _Giro en pantalla_pesca.dart):
+/// unas tres vueltas (159 casillas) en 7,4 segundos, hasta los 5,3
+/// segundos, cuando ya pasan menos de 7 casillas por segundo y cada golpe
+/// suena aparte. Al principio la aguja casi no llega a volver y golpea mas
+/// suave; cada golpe con su tono y su fuerza, como el murmullo.
+Float64List _repiqueteo(List<Float64List> clics) {
+  const dura = 7.4;
+  const casillas = 159;
+  const hasta = 5.3;
+  final azar = math.Random(53);
+  final salida = Float64List(((hasta + .15) * _tasa).round());
+  for (var k = 1; k < casillas; k++) {
+    final t = (1 - math.pow(1 - k / casillas, 1 / 3).toDouble()) * dura;
+    if (t > hasta) break;
+    final clic = clics[k % clics.length];
+    final tono = .94 + .12 * azar.nextDouble();
+    final fuerza = (.4 + .6 * t / hasta) * (.85 + .15 * azar.nextDouble());
+    final desde = (t * _tasa).round();
+    for (var j = 0; desde + j < salida.length; j++) {
+      final pos = j * tono;
+      final i0 = pos.floor();
+      if (i0 + 1 >= clic.length) break;
+      final f = pos - i0;
+      salida[desde + j] += fuerza * (clic[i0] * (1 - f) + clic[i0 + 1] * f);
+    }
+  }
+  var pico = 0.0;
+  for (final v in salida) {
+    pico = math.max(pico, v.abs());
+  }
+  final ganancia = math.pow(10, -10 / 20) / pico;
+  final entrada = _tasa * 3 ~/ 1000;
+  final fin = _tasa * 120 ~/ 1000;
+  for (var i = 0; i < salida.length; i++) {
+    var g = ganancia.toDouble();
+    if (i < entrada) g *= i / entrada;
+    final restante = salida.length - 1 - i;
+    if (restante < fin) g *= restante / fin;
+    salida[i] *= g;
+  }
+  return salida;
 }
 
 /// Un murmullo de [segundos]: tics de [tics] cada ~84 ms (como una letra de

@@ -160,10 +160,14 @@ void main() {
       return almacen;
     }
 
-    testWidgets('muestra las tres mesas y tus fichas', (tester) async {
+    testWidgets('muestra las mesas y tus fichas', (tester) async {
       await abrir(tester, fichas: 2500);
       expect(find.bySemanticsLabel('Tus fichas: 2500'), findsOneWidget);
       expect(find.bySemanticsLabel('Jugar a la ruleta'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Jugar a la pesca en el hielo'),
+        findsOneWidget,
+      );
       expect(find.bySemanticsLabel('Jugar al blackjack'), findsOneWidget);
       expect(find.bySemanticsLabel('Jugar al póker'), findsOneWidget);
       await _esperar(tester, 8000);
@@ -171,6 +175,9 @@ void main() {
 
     testWidgets('el póker abre la lista de mesas', (tester) async {
       await abrir(tester);
+      // Esta mas abajo: primero se baja hasta la tarjeta.
+      await tester.ensureVisible(find.bySemanticsLabel('Jugar al póker'));
+      await _esperar(tester, 300);
       await tester.tap(find.bySemanticsLabel('Jugar al póker'));
       await _esperar(tester, 1200);
       expect(find.byType(PantallaSalasPoker), findsOneWidget);

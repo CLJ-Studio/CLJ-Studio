@@ -21,6 +21,30 @@ enum MomentoRuleta {
   rescate,
 }
 
+/// Cuando habla MacIAs en la pesca.
+enum MomentoPesca {
+  bienvenida,
+  bienvenidaDeVuelta,
+  noVaMas,
+  apuestaFuerte,
+  todo,
+  nieve,
+  sinNada,
+  moneda,
+  bono,
+  pescaChica,
+  pescaGrande,
+  noLeApostaste,
+  ganaste,
+  recuperaste,
+  conBola,
+  granPremio,
+  perdiste,
+  racha,
+  quiebra,
+  rescate,
+}
+
 /// Cuando habla MacIAs en la entrada del casino.
 enum MomentoLobby {
   bienvenida,
@@ -153,6 +177,111 @@ class FrasesRuleta extends _Frases<MomentoRuleta> {
   };
 }
 
+/// Lo que dice MacIAs en la pesca. "{p}" es el pez y "{x}" lo que
+/// multiplica: los pone la pantalla.
+class FrasesPesca extends _Frases<MomentoPesca> {
+  FrasesPesca({super.azar, super.nombre}) : super(frases);
+
+  static const frases = <MomentoPesca, List<String>>{
+    MomentoPesca.bienvenida: [
+      'Bienvenido al lago, {n}. El hielo paga 1 a 1 y los peces, mucho más.',
+      'Abrígate, {n}: acá se pesca sobre el hielo. Apuesta y giramos.',
+      'Si la rueda para en un pez, salgo a pescarlo yo. Apuesta, {n}.',
+    ],
+    MomentoPesca.bienvenidaDeVuelta: [
+      'Volviste al lago, {n}. Los peces siguen picando.',
+      '¿Otra tarde de pesca, {n}? Apuesta y giramos.',
+      'Te guardé la caña, {n}. ¿Hielo o peces?',
+    ],
+    MomentoPesca.noVaMas: [
+      '¡No va más!',
+      'No va más. A ver qué trae el lago.',
+      '¡No va más! Ojo con la nieve.',
+    ],
+    MomentoPesca.apuestaFuerte: [
+      'Uy, apuesta fuerte. Me gusta.',
+      'Eso sí es apostar, {n}.',
+      'Fichas grandes. Hasta el hielo cruje.',
+    ],
+    MomentoPesca.todo: [
+      '¿Todo al lago? Valiente.',
+      'Todas tus fichas en juego. Nadie respira.',
+    ],
+    MomentoPesca.nieve: [
+      '¡Bolas de nieve! El hielo donde caen paga más.',
+      'Caen bolas de nieve: si para ahí, paga lo que dice.',
+      '¡Nieve! Ese hielo ya no paga 1 a 1.',
+    ],
+    MomentoPesca.sinNada: [
+      'Esta vez sin nieve ni moneda. Gira igual.',
+      'Ronda limpia: sin multiplicadores.',
+      'Hoy no nieva. A girar.',
+    ],
+    MomentoPesca.moneda: [
+      '¡Moneda de oro! Los {p} pagan {x}.',
+      'La moneda cae en los {p}: lo que pesque, {x}.',
+      '¡Oro para los {p}! Todo {x}.',
+    ],
+    MomentoPesca.bono: [
+      '¡{p}! Salgo a pescar.',
+      '¡Cayó en {p}! Agarro la caña.',
+      '¡{p}! A ver qué tan grande es.',
+    ],
+    MomentoPesca.pescaChica: [
+      'Un pescadito. Algo es algo.',
+      'Chiquito, pero se cobra.',
+      'Era una sardina. La próxima, más grande.',
+    ],
+    MomentoPesca.pescaGrande: [
+      '¡Qué pez! Casi me lleva al agua.',
+      '¡Monstruo! Esto no sale todos los días.',
+      '¡Ni en mis mejores pescas, {n}!',
+    ],
+    MomentoPesca.noLeApostaste: [
+      'Buen pez, pero no le apostaste. La próxima.',
+      'Ese pez era tuyo... si le ponías una ficha.',
+    ],
+    MomentoPesca.ganaste: [
+      'Ganaste, {n}. Te pago.',
+      'Bien jugado. Ahí van tus fichas.',
+      'El lago te quiere hoy.',
+      'Premio para ti. Yo pago, sin llorar.',
+    ],
+    MomentoPesca.recuperaste: [
+      'Algo se salva: te devuelvo una parte.',
+      'No fue redondo, pero algo cobras.',
+    ],
+    MomentoPesca.conBola: [
+      '¡Con bola de nieve! {x}, {n}.',
+      '¡Y tenía nieve! Paga {x}.',
+    ],
+    MomentoPesca.granPremio: [
+      '¡Premio grande! Tráiganme más fichas.',
+      '¡Uf! Casi me quiebras la banca, {n}.',
+      'Eso fue un golpazo. Felicidades.',
+    ],
+    MomentoPesca.perdiste: [
+      'Esta vez gana la casa.',
+      'Casi, {n}. La próxima.',
+      'El hielo tenía otros planes.',
+      'Se fue para el otro lado. Otra vuelta.',
+    ],
+    MomentoPesca.racha: [
+      'Racha, {n}. ¿Le hablas a los peces?',
+      'Otra más. Voy a revisar esta rueda.',
+      '{n} está imparable.',
+    ],
+    MomentoPesca.quiebra: [
+      'Sin fichas... Tranquilo, te presto.',
+      'Se acabaron las fichas. Acá estoy yo.',
+    ],
+    MomentoPesca.rescate: [
+      'Ahí van 1.000 fichas. Esta va por mi cuenta.',
+      'Te presto 1.000. Sin intereses, palabra.',
+    ],
+  };
+}
+
 /// Lo que dice MacIAs en la entrada del casino.
 class FrasesLobby extends _Frases<MomentoLobby> {
   FrasesLobby({super.azar, super.nombre}) : super(frases);
@@ -161,12 +290,12 @@ class FrasesLobby extends _Frases<MomentoLobby> {
     MomentoLobby.bienvenida: [
       'Bienvenido a mi casino, {n}. Las fichas van por mi cuenta. '
           '¿Qué jugamos?',
-      'Pasa, {n}. Ruleta, blackjack, y pronto póker. Tú eliges.',
+      'Pasa, {n}. Ruleta, blackjack, póker o pesca en el hielo. Tú eliges.',
       'Encontraste el casino escondido. Elige una mesa, {n}.',
     ],
     MomentoLobby.bienvenidaDeVuelta: [
       'Volviste, {n}. Tus fichas siguen acá. ¿Qué jugamos?',
-      'De vuelta en el casino. ¿Ruleta o blackjack?',
+      'De vuelta en el casino. ¿Ruleta, blackjack o una pesca?',
       'Te guardé las fichas, {n}. Elige mesa.',
     ],
     MomentoLobby.ganoAlgo: [

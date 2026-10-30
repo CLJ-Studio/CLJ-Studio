@@ -9,17 +9,21 @@ import '../../../elementos_compartidos/animaciones/escala_al_presionar.dart';
 import '../../../elementos_compartidos/interaccion/retroalimentacion_haptica.dart';
 import '../diseno/cartas_blackjack.dart';
 import '../diseno/crupier_macias.dart';
+import '../diseno/dibujos_pesca.dart';
 import '../diseno/fichas_blackjack.dart';
 import '../diseno/mesa_casino.dart';
+import '../diseno/rueda_pesca.dart';
 import '../diseno/rueda_ruleta.dart';
 import '../logica/almacen_casino.dart';
 import '../logica/casino.dart';
 import '../logica/frases_casino.dart';
 import '../logica/mesa_blackjack.dart';
+import '../logica/mesa_pesca.dart';
 import '../logica/repositorio_poker.dart';
 import '../logica/sonidos_casino.dart';
 import '../logica/trayectoria_bola.dart';
 import 'pantalla_blackjack.dart';
+import 'pantalla_pesca.dart';
 import 'pantalla_ruleta.dart';
 import 'pantalla_salas_poker.dart';
 
@@ -27,7 +31,8 @@ import 'pantalla_salas_poker.dart';
 /// "casino" en el chat.
 ///
 /// MacIAs recibe en la puerta, se ven tus fichas (las mismas para todas las
-/// mesas) y se elige a que jugar: ruleta, blackjack o poker.
+/// mesas) y se elige a que jugar: ruleta, pesca en el hielo, blackjack o
+/// poker.
 class PantallaCasino extends StatefulWidget {
   const PantallaCasino({
     this.nombre = '',
@@ -132,6 +137,7 @@ class _PantallaCasinoState extends State<PantallaCasino>
     end: 2 * math.pi,
   ).animate(_vida);
   final _sinBola = ValueNotifier<PosicionBola?>(null);
+  final _quietaPesca = EfectosRueda();
   final _llaveFichas = GlobalKey();
 
   @override
@@ -163,6 +169,7 @@ class _PantallaCasinoState extends State<PantallaCasino>
     _entrada.dispose();
     _vida.dispose();
     _sinBola.dispose();
+    _quietaPesca.dispose();
     unawaited(_sonidos.liberar());
     super.dispose();
   }
@@ -172,6 +179,7 @@ class _PantallaCasinoState extends State<PantallaCasino>
     final conSonido = await _almacen.conSonido();
     final yaJugo =
         await _almacen.juego('ruleta') != null ||
+        await _almacen.juego('pesca') != null ||
         await _almacen.juego('blackjack') != null;
     if (!mounted) return;
     final ahora = fichas ?? Casino.fichasIniciales;
@@ -352,6 +360,34 @@ class _PantallaCasinoState extends State<PantallaCasino>
                                 _entra(
                                   3,
                                   _TarjetaJuego(
+                                    titulo: 'Pesca en el hielo',
+                                    detalle:
+                                        'Hielo 1 a 1, y si cae un pez, MacIAs '
+                                        'sale a pescarlo.',
+                                    paga: 'Peces hasta x150',
+                                    colores: const [
+                                      Color(0xFF1D5C80),
+                                      Color(0xFF0B2A40),
+                                    ],
+                                    ilustracion: _RuedaConPez(
+                                      giro: _giroRueda,
+                                      efectos: _quietaPesca,
+                                      vida: _vida,
+                                    ),
+                                    etiqueta: 'Jugar a la pesca en el hielo',
+                                    alTocar: () => _jugar(
+                                      PantallaPesca.ruta(
+                                        nombre: widget.nombre,
+                                        almacen: _almacen,
+                                        sonidos: widget.sonidosDeMesas,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                _entra(
+                                  4,
+                                  _TarjetaJuego(
                                     titulo: 'Blackjack',
                                     detalle: 'Llega a 21 sin pasarte.',
                                     paga: 'El blackjack paga 3 a 2',
@@ -372,7 +408,7 @@ class _PantallaCasinoState extends State<PantallaCasino>
                                 ),
                                 const SizedBox(height: 14),
                                 _entra(
-                                  4,
+                                  5,
                                   _TarjetaJuego(
                                     titulo: 'Póker',
                                     detalle:
@@ -390,7 +426,7 @@ class _PantallaCasinoState extends State<PantallaCasino>
                                 ),
                                 const SizedBox(height: 18),
                                 _entra(
-                                  5,
+                                  6,
                                   Text(
                                     fichas < MesaBlackjack.apuestaMinima
                                         ? 'Sin fichas: MacIAs te presta 1.000 en '
@@ -800,6 +836,50 @@ class _CartasQueFlotan extends StatelessWidget {
         ],
       );
     },
+  );
+}
+
+/// La rueda de la pesca, girando despacio, con un Rojazos que salta
+/// adelante.
+class _RuedaConPez extends StatelessWidget {
+  const _RuedaConPez({
+    required this.giro,
+    required this.efectos,
+    required this.vida,
+  });
+
+  final Animation<double> giro;
+  final EfectosRueda efectos;
+  final Animation<double> vida;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    clipBehavior: Clip.none,
+    alignment: Alignment.center,
+    children: [
+      SizedBox.square(
+        dimension: 108,
+        child: RuedaPescaVista(
+          giro: giro,
+          efectos: efectos,
+          multiplicadores: Multiplicadores.ninguno,
+        ),
+      ),
+      AnimatedBuilder(
+        animation: vida,
+        builder: (context, hijo) {
+          final t = vida.value * 2 * math.pi * 4;
+          return Transform.translate(
+            offset: Offset(26, 36 + 4 * math.sin(t)),
+            child: Transform.rotate(
+              angle: -.35 + .08 * math.sin(t),
+              child: hijo,
+            ),
+          );
+        },
+        child: const PezDibujado(pez: Pez.rojazos, ancho: 58),
+      ),
+    ],
   );
 }
 

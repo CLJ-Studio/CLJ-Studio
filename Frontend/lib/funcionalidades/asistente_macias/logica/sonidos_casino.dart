@@ -40,7 +40,27 @@ enum SonidoMesa {
     'bola_toc_2',
     'bola_toc_3',
     'bola_toc_4',
-  ], separacionMs: 70);
+  ], separacionMs: 70),
+
+  /// La rueda de la pesca: los primeros golpes de la aguja van tan rapido
+  /// que suenan como una tanda sola, un archivo que frena como la rueda.
+  /// Cuando ya va despacio, cada golpe suena aparte ([aguja]).
+  ruedaGira(['rueda_gira']),
+  aguja(['aguja_1', 'aguja_2'], copias: 2, separacionMs: 60),
+  nieve(['nieve_1', 'nieve_2', 'nieve_3'], copias: 2, separacionMs: 90),
+  hielo(['hielo']),
+  moneda(['moneda']),
+  carrete(['carrete_1', 'carrete_2'], separacionMs: 80),
+  chapuzon(['chapuzon']),
+  burbujas(['burbujas']),
+
+  /// Los equipos que sacan los peces grandes: la grua que llega, los
+  /// helicopteros, el robot que sale del hielo y el gigante que se traga al
+  /// chico.
+  grua(['grua']),
+  helicoptero(['helicoptero']),
+  robot(['robot']),
+  trago(['trago']);
 
   const SonidoMesa(this.archivos, {this.copias = 1, this.separacionMs = 0});
 
