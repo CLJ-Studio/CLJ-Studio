@@ -305,6 +305,10 @@ class _BonoPescaState extends State<BonoPesca>
   double _camara = 1;
   Size? _tamano;
 
+  /// El paisaje del lago grabado, para el tamaño que tiene.
+  ui.Picture? _paisaje;
+  Size? _tamanoPaisaje;
+
   double _s(double segundos) => segundos * widget.ritmo;
 
   @override
@@ -328,6 +332,7 @@ class _BonoPescaState extends State<BonoPesca>
 
   @override
   void dispose() {
+    _paisaje?.dispose();
     _reloj.dispose();
     _tiempo.dispose();
     super.dispose();
@@ -534,8 +539,8 @@ class _BonoPescaState extends State<BonoPesca>
       children: [
         Opacity(
           opacity: escarcha,
-          child: const RepaintBoundary(
-            child: CustomPaint(painter: _PintorEscarcha()),
+          child: RepaintBoundary(
+            child: CustomPaint(painter: _PintorEscarcha(avance: p)),
           ),
         ),
         LayoutBuilder(
@@ -561,7 +566,7 @@ class _BonoPescaState extends State<BonoPesca>
                   top: centro.dy - 150,
                   child: Opacity(
                     opacity: escarcha,
-                    child: const _TituloHielo(),
+                    child: _TituloHielo(brillo: (p - .2) / .45 * 1.6 - .3),
                   ),
                 ),
                 if (hoyo > 0)
@@ -627,7 +632,11 @@ class _BonoPescaState extends State<BonoPesca>
             children: [
               RepaintBoundary(
                 child: CustomPaint(
-                  painter: _PintorLago(escena: escena, tiempo: t),
+                  painter: _PintorLago(
+                    escena: escena,
+                    tiempo: t,
+                    paisaje: _paisajePara(tamano),
+                  ),
                 ),
               ),
               // MacIAs en su recuadro de hielo, como en la transmision.
@@ -649,7 +658,7 @@ class _BonoPescaState extends State<BonoPesca>
                   bottom: 26,
                   child: Center(
                     child: _Medidor(
-                      texto: textoMedidor(g.valor(enLago)),
+                      valor: g.valor(enLago),
                       tiembla: g.tironFinal(enLago),
                       tiempo: t,
                     ),
@@ -686,6 +695,14 @@ class _BonoPescaState extends State<BonoPesca>
         },
       ),
     );
+  }
+
+  ui.Picture _paisajePara(Size tamano) {
+    final grabado = _paisaje;
+    if (grabado != null && tamano == _tamanoPaisaje) return grabado;
+    grabado?.dispose();
+    _tamanoPaisaje = tamano;
+    return _paisaje = _grabarPaisaje(tamano.width, tamano.height);
   }
 
   /// Lo que dice MacIAs desde su recuadro mientras pesca.
@@ -747,91 +764,210 @@ class _BonoPescaState extends State<BonoPesca>
     );
     final total = widget.pesca * widget.moneda;
     final apostado = widget.apostado;
+    final desde = t - _inicio[EtapaBono.tarjeta]!;
+    // El premio se cuenta de cero para arriba.
+    final cuenta = Curves.easeOutCubic.transform(
+      ((desde - _s(.25)) / _s(1.2)).clamp(0.0, 1.0),
+    );
     final linea = apostado == 0
         ? 'No le apostaste a los ${widget.pez.nombre}'
-        : 'Ganaste ${conMiles(widget.premio)}';
+        : 'Ganaste ${conMiles((widget.premio * cuenta).round())}';
     final detalle = apostado == 0
         ? 'La próxima, una ficha en ${widget.pez.nombre}.'
         : 'Tu apuesta de ${conMiles(apostado)} vuelve, y ${textoPor(total)} '
               'encima.';
     return ColoredBox(
       color: Colors.black.withValues(alpha: .35 * p.clamp(0.0, 1.0)),
-      child: Center(
-        child: Transform.scale(
-          scale: .6 + .4 * p,
-          child: Opacity(
-            opacity: p.clamp(0.0, 1.0),
-            child: Container(
-              width: 280,
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(26),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xF2FFFFFF), Color(0xE6CFE3EE)],
-                ),
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x66000000), blurRadius: 24),
-                  BoxShadow(color: Color(0x80BFE3F5), blurRadius: 30),
-                ],
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (apostado > 0)
+            IgnorePointer(
+              child: CustomPaint(
+                painter: _PintorFestejo(tiempo: desde, entrada: p),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
+            ),
+          // Las monedas saltan desde atras de la tarjeta.
+          if (apostado > 0)
+            LluviaDeMonedas(
+              origen: const Offset(.5, .44),
+              cuantas: total >= 20 ? 40 : 18,
+            ),
+          Center(
+            child: Transform.scale(
+              scale: .6 + .4 * p,
+              child: Opacity(
+                opacity: p.clamp(0.0, 1.0),
+                child: Container(
+                  width: 280,
+                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(26),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xF2FFFFFF), Color(0xE6CFE3EE)],
+                    ),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x66000000), blurRadius: 24),
+                      BoxShadow(color: Color(0x80BFE3F5), blurRadius: 30),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      PezDibujado(pez: widget.pez, ancho: 150, boca: true),
-                      Positioned(
-                        right: -14,
-                        top: -10,
-                        child: _EtiquetaPescado(
-                          texto: textoPor(total),
-                          grande: true,
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          PezDibujado(pez: widget.pez, ancho: 150, boca: true),
+                          Positioned(
+                            right: -14,
+                            top: -10,
+                            child: _EtiquetaPescado(
+                              texto: textoPor(total),
+                              grande: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        linea,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: ColoresPesca.texto,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 22,
+                          height: 1.15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        detalle,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF4F6B7C),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          height: 1.3,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    linea,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: ColoresPesca.texto,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 22,
-                      height: 1.15,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    detalle,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF4F6B7C),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-/// "PESCA EN EL HIELO", tallado en el hielo.
+/// Detras de la tarjeta de un premio: rayos de luz dorada que giran
+/// despacio y destellos que titilan alrededor.
+class _PintorFestejo extends CustomPainter {
+  const _PintorFestejo({required this.tiempo, required this.entrada});
+
+  /// Segundos desde que aparecio la tarjeta.
+  final double tiempo;
+
+  /// Lo que entro la tarjeta (0 a 1).
+  final double entrada;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centro = size.center(Offset.zero) + Offset(0, -size.height * .03);
+    final largo = size.longestSide * .75;
+    final fuerza = entrada.clamp(0.0, 1.0);
+    final rayos = Path();
+    for (var i = 0; i < 14; i++) {
+      final a = tiempo * .25 + i * 2 * math.pi / 14;
+      final b = a + .09;
+      rayos
+        ..moveTo(centro.dx, centro.dy)
+        ..lineTo(
+          centro.dx + math.cos(a) * largo,
+          centro.dy + math.sin(a) * largo,
+        )
+        ..lineTo(
+          centro.dx + math.cos(b) * largo,
+          centro.dy + math.sin(b) * largo,
+        )
+        ..close();
+    }
+    canvas.drawPath(
+      rayos,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            ColoresPesca.oroClaro.withValues(alpha: .5 * fuerza),
+            ColoresPesca.oro.withValues(alpha: 0),
+          ],
+        ).createShader(Rect.fromCircle(center: centro, radius: largo)),
+    );
+    final azar = math.Random(31);
+    for (var i = 0; i < 16; i++) {
+      final angulo = azar.nextDouble() * 2 * math.pi;
+      final lejos = size.shortestSide * (.42 + azar.nextDouble() * .3);
+      final brilla = math.max(
+        0,
+        math.sin(tiempo * (3 + azar.nextDouble() * 3) + i),
+      );
+      pintarDestello(
+        canvas,
+        centro + Offset(math.cos(angulo), math.sin(angulo)) * lejos,
+        (5 + azar.nextDouble() * 9) * brilla * fuerza,
+        Colors.white.withValues(alpha: .95),
+        angulo: tiempo,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PintorFestejo viejo) =>
+      viejo.tiempo != tiempo || viejo.entrada != entrada;
+}
+
+/// "PESCA EN EL HIELO", tallado en el hielo, con un brillo que lo cruza.
 class _TituloHielo extends StatelessWidget {
-  const _TituloHielo();
+  const _TituloHielo({this.brillo = -1});
+
+  /// Donde va el brillo, de -0,3 (antes de entrar) a 1,3 (ya paso).
+  final double brillo;
 
   @override
   Widget build(BuildContext context) {
+    final titulo = _titulo();
+    if (brillo <= -.3 || brillo >= 1.3) return titulo;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        titulo,
+        ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (caja) => LinearGradient(
+            begin: const Alignment(-1, -.5),
+            end: const Alignment(1, .5),
+            colors: [
+              Colors.white.withValues(alpha: 0),
+              Colors.white.withValues(alpha: .95),
+              Colors.white.withValues(alpha: 0),
+            ],
+            stops: [
+              (brillo - .12).clamp(0.0, 1.0),
+              brillo.clamp(0.0, 1.0),
+              (brillo + .12).clamp(0.0, 1.0),
+            ],
+          ).createShader(caja),
+          child: _titulo(),
+        ),
+      ],
+    );
+  }
+
+  Widget _titulo() {
     TextStyle estilo(double tamano) => TextStyle(
       fontFamily: 'Nunito',
       fontWeight: FontWeight.w900,
@@ -969,16 +1105,16 @@ class _Bocadillo extends StatelessWidget {
   );
 }
 
-/// El medidor de oro: lo que va valiendo el pez mientras sale. En el ultimo
-/// tiron, tiembla.
+/// El medidor de oro: lo que va valiendo el pez mientras sale, con los
+/// numeros que ruedan como en un contador. En el ultimo tiron, tiembla.
 class _Medidor extends StatelessWidget {
   const _Medidor({
-    required this.texto,
+    required this.valor,
     required this.tiembla,
     required this.tiempo,
   });
 
-  final String texto;
+  final double valor;
   final bool tiembla;
   final double tiempo;
 
@@ -1000,19 +1136,91 @@ class _Medidor extends StatelessWidget {
         border: Border.all(color: ColoresPesca.oro, width: 3),
         boxShadow: const [BoxShadow(color: Color(0x99F5C542), blurRadius: 16)],
       ),
-      child: Text(
-        texto,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: ColoresPesca.oroClaro,
-          fontWeight: FontWeight.w900,
-          fontSize: 30,
-          height: 1,
-          shadows: [Shadow(color: Color(0xAAB8860B), blurRadius: 8)],
-        ),
+      child: CustomPaint(
+        size: Size(textoMedidor(valor).length * 18.0 + 4, 32),
+        painter: _PintorContador(valor),
       ),
     ),
   );
+}
+
+/// Los numeros del medidor: cada columna rueda hacia el siguiente, como en
+/// un contador de verdad.
+class _PintorContador extends CustomPainter {
+  const _PintorContador(this.valor);
+
+  final double valor;
+
+  static final _estilo = TextStyle(
+    fontFamily: 'Nunito',
+    fontWeight: FontWeight.w900,
+    fontSize: 30,
+    height: 1,
+    color: ColoresPesca.oroClaro,
+    shadows: [
+      Shadow(
+        color: const Color(0xFFB8860B).withValues(alpha: .7),
+        blurRadius: 8,
+      ),
+    ],
+  );
+
+  TextPainter _letra(String texto) => TextPainter(
+    text: TextSpan(text: texto, style: _estilo),
+    textDirection: TextDirection.ltr,
+  )..layout();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Cada columna: lo que muestra, lo que viene y cuanto rodo (0 a 1).
+    final columnas = <(String, String?, double)>[('x', null, 0)];
+    if (valor >= 1) {
+      final entero = valor.floor();
+      final resto = valor - entero;
+      final digitos = '$entero';
+      for (var i = 0; i < digitos.length; i++) {
+        final posicion = digitos.length - 1 - i;
+        final abajo = math.pow(10, posicion).toInt();
+        // Rueda la ultima, y las de la izquierda solo cuando las de la
+        // derecha estan en 9.
+        final rueda = posicion == 0 || entero % abajo == abajo - 1
+            ? resto
+            : 0.0;
+        final d = int.parse(digitos[i]);
+        columnas.add((digitos[i], '${(d + 1) % 10}', rueda));
+      }
+    } else {
+      final decimas = valor * 10;
+      final d = decimas.floor().clamp(0, 9);
+      columnas
+        ..add(('0', null, 0))
+        ..add((',', null, 0))
+        ..add(('$d', d < 9 ? '${d + 1}' : null, d < 9 ? decimas - d : 0));
+    }
+    var x = 2.0;
+    for (final (actual, siguiente, rueda) in columnas) {
+      final letra = _letra(actual);
+      final ancho = actual == ',' || actual == 'x' ? letra.width : 18.0;
+      final y = (size.height - letra.height) / 2;
+      canvas
+        ..save()
+        ..clipRect(Rect.fromLTWH(x, 0, ancho, size.height));
+      final corrido = Curves.easeInOut.transform(rueda) * size.height;
+      letra.paint(canvas, Offset(x + (ancho - letra.width) / 2, y - corrido));
+      if (siguiente != null && rueda > 0) {
+        final otra = _letra(siguiente);
+        otra.paint(
+          canvas,
+          Offset(x + (ancho - otra.width) / 2, y - corrido + size.height),
+        );
+      }
+      canvas.restore();
+      x += ancho;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PintorContador viejo) => viejo.valor != valor;
 }
 
 /// Lo que vale el pescado, al lado del pez.
@@ -1111,9 +1319,13 @@ class _MonedaQueLlega extends StatelessWidget {
   }
 }
 
-/// La escarcha que tapa todo: hielo esmerilado, con sus rayas y vetas.
+/// La escarcha que tapa todo: hielo esmerilado y cristales que crecen
+/// desde los bordes hacia el centro, con algun destello.
 class _PintorEscarcha extends CustomPainter {
-  const _PintorEscarcha();
+  const _PintorEscarcha({this.avance = 1});
+
+  /// Cuanto crecieron los cristales (0 a 1).
+  final double avance;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1127,31 +1339,74 @@ class _PintorEscarcha extends CustomPainter {
           colors: [Color(0xFFE9F3F8), Color(0xFFC9DEEA), Color(0xFFDDEBF3)],
         ).createShader(todo),
     );
-    // Rayas del hielo: muchas lineas cortas y finas, claras y oscuras.
+    // Vetas finas del hielo, apenas.
     final azar = math.Random(5);
-    final clara = Paint()
-      ..color = Colors.white.withValues(alpha: .55)
-      ..strokeWidth = .8;
-    final oscura = Paint()
-      ..color = const Color(0xFF8FB4C9).withValues(alpha: .35)
+    final w = size.width;
+    final h = size.height;
+    final veta = Paint()
+      ..color = Colors.white.withValues(alpha: .35)
       ..strokeWidth = .7;
-    for (var i = 0; i < 420; i++) {
-      final desde = Offset(
-        azar.nextDouble() * size.width,
-        azar.nextDouble() * size.height,
-      );
+    for (var i = 0; i < 140; i++) {
+      final desde = Offset(azar.nextDouble() * w, azar.nextDouble() * h);
       final angulo = azar.nextDouble() * math.pi;
-      final largo = 14 + azar.nextDouble() * 60;
+      final largo = 10 + azar.nextDouble() * 40;
       canvas.drawLine(
         desde,
         desde + Offset(math.cos(angulo), math.sin(angulo)) * largo,
-        i.isEven ? clara : oscura,
+        veta,
+      );
+    }
+    // Los cristales: ramas que nacen en los bordes y se abren hacia
+    // adentro, como la escarcha en un vidrio.
+    final crece = Curves.easeOutCubic.transform((avance / .7).clamp(0.0, 1.0));
+    final rama = Paint()..strokeCap = StrokeCap.round;
+    void crecer(Offset desde, double angulo, double largo, int nivel) {
+      if (nivel > 3 || largo < 3) return;
+      final hasta = desde + Offset(math.cos(angulo), math.sin(angulo)) * largo;
+      rama
+        ..strokeWidth = math.max(.6, 2.6 - nivel * .6)
+        ..color = Colors.white.withValues(alpha: .75 - nivel * .14);
+      canvas.drawLine(desde, hasta, rama);
+      for (final f in [.38, .7]) {
+        final punto = Offset.lerp(desde, hasta, f)!;
+        crecer(punto, angulo + .8, largo * .46, nivel + 1);
+        crecer(punto, angulo - .8, largo * .46, nivel + 1);
+      }
+    }
+
+    if (crece > 0) {
+      for (var i = 0; i < 14; i++) {
+        final lado = i % 4;
+        final u = azar.nextDouble();
+        final (desde, hacia) = switch (lado) {
+          0 => (Offset(u * w, 0), math.pi / 2),
+          1 => (Offset(w, u * h), math.pi),
+          2 => (Offset(u * w, h), -math.pi / 2),
+          _ => (Offset(0, u * h), 0.0),
+        };
+        crecer(
+          desde,
+          hacia + (azar.nextDouble() - .5) * .9,
+          math.min(w, h) * (.18 + azar.nextDouble() * .14) * crece,
+          0,
+        );
+      }
+    }
+    // Los destellos del hielo.
+    for (var i = 0; i < 9; i++) {
+      final donde = Offset(azar.nextDouble() * w, azar.nextDouble() * h);
+      final brilla = math.max(0.0, math.sin(avance * 12 + i * 2.1));
+      pintarDestello(
+        canvas,
+        donde,
+        8 * brilla,
+        Colors.white.withValues(alpha: .9 * brilla),
       );
     }
   }
 
   @override
-  bool shouldRepaint(_PintorEscarcha viejo) => false;
+  bool shouldRepaint(_PintorEscarcha viejo) => viejo.avance != avance;
 }
 
 /// El hoyo en el hielo de la escarcha, donde baja la casilla.
@@ -1196,6 +1451,30 @@ class _Nadador {
   final double fase;
   final double corrido;
   final bool haciaLaDerecha;
+
+  /// Lo que vale, escrito: se arma una sola vez (siempre del mismo tamaño
+  /// y color), no en cada cuadro.
+  TextPainter? _etiqueta;
+  TextPainter etiqueta(double ancho, double opacidad) =>
+      _etiqueta ??= TextPainter(
+        text: TextSpan(
+          text: textoPor(valor),
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontWeight: FontWeight.w900,
+            fontSize: ancho * .24,
+            height: 1,
+            color: Colors.white.withValues(alpha: opacidad),
+            shadows: [
+              Shadow(
+                color: const Color(0xFF06223A).withValues(alpha: .8 * opacidad),
+                blurRadius: 3,
+              ),
+            ],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
 }
 
 /// Bajo el hielo: el cardumen del pez que cayo, cada uno con lo que puede
@@ -1236,6 +1515,14 @@ class _CardumenState extends State<_Cardumen> {
     ]..sort((a, b) => a.profundidad.compareTo(b.profundidad));
     return peces;
   }();
+
+  @override
+  void dispose() {
+    for (final pescado in _peces) {
+      pescado._etiqueta?.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => Opacity(
@@ -1312,6 +1599,59 @@ class _PintorCardumen extends CustomPainter {
       Paint()..color = const Color(0xFFDDEFF8).withValues(alpha: .85),
     );
 
+    // La luz que baila en el agua: una red de ondas claras que se mueve.
+    final onda = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = Colors.white.withValues(alpha: .07);
+    for (var j = 0; j < 7; j++) {
+      final red = Path();
+      for (var x = -10.0; x <= w + 10; x += 12) {
+        final y =
+            h * (.1 + j * .075) +
+            math.sin(x * .035 + tiempo * 1.4 + j * 1.7) * 9 +
+            math.sin(x * .09 - tiempo * 2.1 + j) * 4;
+        if (x < 0) {
+          red.moveTo(x, y);
+        } else {
+          red.lineTo(x, y);
+        }
+      }
+      canvas.drawPath(red, onda);
+    }
+    // Las algas del fondo, que se mecen.
+    for (var i = 0; i < 9; i++) {
+      final x = w * (.04 + i * .12) + (i * 17 % 9);
+      final alto = h * (.14 + (i * 37 % 10) / 10 * .16);
+      final mece = math.sin(tiempo * 1.3 + i * 1.1) * w * .04;
+      final alga = Path()
+        ..moveTo(x - 5, h)
+        ..quadraticBezierTo(
+          x + mece * .3 - 6,
+          h - alto * .5,
+          x + mece,
+          h - alto,
+        )
+        ..quadraticBezierTo(x + mece * .3 + 6, h - alto * .5, x + 5, h)
+        ..close();
+      canvas.drawPath(
+        alga,
+        Paint()
+          ..color = Color.lerp(
+            const Color(0xFF0E4D47),
+            const Color(0xFF1C6E5E),
+            (i % 3) / 2,
+          )!.withValues(alpha: .85),
+      );
+    }
+    // Lo que flota en el agua.
+    final mota = Paint()..color = Colors.white.withValues(alpha: .22);
+    for (var i = 0; i < 30; i++) {
+      final x = (i * 71 % w + tiempo * (6 + i % 5)) % w;
+      final y = (i * 113 % h - tiempo * (4 + i % 3) * 2) % h;
+      canvas.drawCircle(Offset(x, y), .8 + (i % 3) * .5, mota);
+    }
+
     // Burbujas que suben.
     final burbuja = Paint()
       ..style = PaintingStyle.stroke
@@ -1347,28 +1687,17 @@ class _PintorCardumen extends CustomPainter {
           ..scale(-1, 1)
           ..translate(-caja.center.dx, 0);
       }
-      pintarPez(canvas, caja, pez, opacidad: opacidad);
+      pintarPez(
+        canvas,
+        caja,
+        pez,
+        opacidad: opacidad,
+        cola: math.sin(tiempo * (7 + z * 4) + pescado.fase) * .3,
+        conDetalle: z > .5,
+      );
       canvas.restore();
       // Lo que vale, sobre el lomo.
-      final letra = TextPainter(
-        text: TextSpan(
-          text: textoPor(pescado.valor),
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontWeight: FontWeight.w900,
-            fontSize: ancho * .24,
-            height: 1,
-            color: Colors.white.withValues(alpha: opacidad),
-            shadows: [
-              Shadow(
-                color: const Color(0xFF06223A).withValues(alpha: .8 * opacidad),
-                blurRadius: 3,
-              ),
-            ],
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
+      final letra = pescado.etiqueta(ancho, opacidad);
       letra.paint(
         canvas,
         caja.center - Offset(letra.width / 2 - ancho * .06, letra.height / 2),
@@ -1550,6 +1879,26 @@ class _Escena {
     return math.sin((t - afuera) * 2.8) * .08;
   }
 
+  /// La camara tiembla con los golpes: cuando el gigante rompe el hielo,
+  /// cuando sale el robot y cuando el pez termina de salir.
+  Offset get sacudon {
+    var sacudon = Offset.zero;
+    void golpe(double? cuando, double fuerza) {
+      if (cuando == null) return;
+      final d = (t - cuando) / _r;
+      if (d < 0 || d > .6) return;
+      final queda = 1 - d / .6;
+      sacudon +=
+          Offset(math.sin(d * 70), math.cos(d * 53)) * _h * fuerza * queda;
+    }
+
+    final trago = guion.trago;
+    golpe(trago == null ? null : trago + guion.duraTrago * .1, .012);
+    golpe(guion.llegadaDe(Equipo.robot)?.cuando, .016);
+    golpe(guion.afuera, guion.pesca >= 25 ? .008 : .003);
+    return sacudon;
+  }
+
   // ------------------------------------------------------------- la caña
   Offset get mango => Offset(_w * .13, _h * .835);
   Offset get horqueta => mango + Offset(_w * .1, -_h * .065);
@@ -1723,9 +2072,16 @@ class _Escena {
 /// caña de MacIAs, el hoyo y lo que sale de el, con el equipo que haga
 /// falta. La camara se aleja si no entra.
 class _PintorLago extends CustomPainter {
-  _PintorLago({required this.escena, required this.tiempo});
+  _PintorLago({
+    required this.escena,
+    required this.tiempo,
+    required this.paisaje,
+  });
 
   final _Escena escena;
+
+  /// El paisaje que no se mueve, ya dibujado.
+  final ui.Picture paisaje;
 
   /// Los segundos del bono (la bandera, la nieve).
   final double tiempo;
@@ -1739,24 +2095,55 @@ class _PintorLago extends CustomPainter {
     final r = e.guion.ritmo;
     final todo = Offset.zero & size;
 
-    // El cielo: no se aleja, es el fondo.
+    // El cielo de invierno: no se aleja, es el fondo. Azul arriba, claro y
+    // un poco dorado sobre el horizonte, con el sol bajo y nubes que pasan.
     canvas.drawRect(
       todo,
       Paint()
         ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF7FB3D8), Color(0xFFBFDCEF), Color(0xFFE6F1F8)],
-          stops: [0, .45, .8],
+          colors: [
+            Color(0xFF4A8CC0),
+            Color(0xFF94C4E6),
+            Color(0xFFE1EFF8),
+            Color(0xFFF9EED8),
+          ],
+          stops: [0, .36, .6, .78],
         ).createShader(todo),
     );
+    final sol = Offset(w * .18, h * .38);
+    canvas
+      ..drawCircle(
+        sol,
+        w * .6,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              const Color(0xFFFFE2A8).withValues(alpha: .55),
+              const Color(0xFFFFE2A8).withValues(alpha: 0),
+            ],
+          ).createShader(Rect.fromCircle(center: sol, radius: w * .6)),
+      )
+      ..drawCircle(sol, w * .045, Paint()..color = const Color(0xFFFFF6DE));
+    for (final (y, escala, velocidad, fase) in [
+      (h * .1, 1.0, 7.0, 0.0),
+      (h * .19, .7, 10.0, .45),
+      (h * .05, .55, 4.5, .8),
+    ]) {
+      final x = ((tiempo * velocidad / w + fase) % 1.5 - .25) * w;
+      _nube(canvas, Offset(x, y), w * .2 * escala);
+    }
 
+    final sacudon = e.sacudon;
     canvas
       ..save()
+      ..translate(sacudon.dx, sacudon.dy)
       ..translate(e.pivote.dx, e.pivote.dy)
       ..scale(e.camara)
       ..translate(-e.pivote.dx, -e.pivote.dy);
-    _paisaje(canvas, w, h);
+    canvas.drawPicture(paisaje);
+    _paisajeVivo(canvas, w, h);
 
     // Lo que asoma del hielo se corta en el hielo.
     final sobreElHielo = Rect.fromLTRB(-w * 4, -h * 6, w * 6, e.hoyo.dy);
@@ -1797,6 +2184,33 @@ class _PintorLago extends CustomPainter {
     );
 
     final anchoHoyo = e.anchoHoyo;
+    // La sombra de lo que sale del agua, sobre el hielo (el sol esta a la
+    // izquierda).
+    final afuera = math.max(
+      e.chicoVisible ? e.hoyo.dy - e.bocaChico.dy : 0.0,
+      e.salidaGrande > 0 ? e.hoyo.dy - e.bocaGrande.dy : 0.0,
+    );
+    if (afuera > 0) {
+      final sombra = Rect.fromCenter(
+        center: e.hoyo + Offset(anchoHoyo * .35 + afuera * .3, anchoHoyo * .1),
+        width: anchoHoyo * .4 + afuera * .7,
+        height: anchoHoyo * .1 + afuera * .05,
+      );
+      canvas.drawOval(
+        sombra,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              const Color(0xFF3A6A86).withValues(alpha: .28),
+              const Color(0xFF3A6A86).withValues(alpha: 0),
+            ],
+          ).createShader(sombra),
+      );
+    }
+    // El viento de las aspas del helicoptero levanta la nieve del hielo.
+    if (e.sostiene == Equipo.helicoptero || e.sostiene == Equipo.carga) {
+      _pintarVentarron(canvas, e.hoyo, anchoHoyo, tiempo);
+    }
     _pintarTrozos(canvas, e.hoyo, anchoHoyo, adelante: false);
     _pintarHoyo(
       canvas,
@@ -1816,6 +2230,7 @@ class _PintorLago extends CustomPainter {
         e.grosorChico,
         e.pez,
         giro: e.meneoChico,
+        cola: math.sin(tiempo * 15) * .3,
       );
     }
     final bocaza = e.altoBocaza;
@@ -1830,6 +2245,8 @@ class _PintorLago extends CustomPainter {
       );
     }
     if (e.salidaGrande > 0) {
+      // Mientras lo sacan patalea fuerte; colgado, mueve la cola despacio.
+      final pelea = e.guion.subiendo(t) && t < e.guion.afuera;
       _pintarPezParado(
         canvas,
         e.bocaGrande,
@@ -1837,6 +2254,18 @@ class _PintorLago extends CustomPainter {
         e.grosorGrande,
         e.pez,
         giro: e.balanceo + e.meneo,
+        cola: pelea
+            ? math.sin(tiempo * 16) * .32
+            : math.sin(tiempo * 4) * (e.sostiene == Equipo.robot ? .08 : .16),
+      );
+      // El agua que le chorrea al pez y cae al hoyo.
+      _pintarChorreo(
+        canvas,
+        e.bocaGrande,
+        e.hoyo.dy,
+        e.hoyo.dy - e.bocaGrande.dy,
+        e.anchoGrande,
+        tiempo,
       );
     }
     canvas.restore();
@@ -1910,13 +2339,29 @@ class _PintorLago extends CustomPainter {
     }
     canvas.restore();
 
-    // La nieve que cae, siempre cerca.
-    final copo = Paint()..color = Colors.white.withValues(alpha: .85);
+    // La nieve que cae, siempre cerca: chica y lejos, grande y borrosa
+    // adelante.
+    final copo = Paint();
     for (var i = 0; i < 70; i++) {
-      final velocidad = 22 + (i * 13 % 30);
-      final y = (tiempo * velocidad + i * 47) % (h + 20) - 10;
+      final cerca = i % 10 == 0;
+      final velocidad = (cerca ? 60 : 22) + (i * 13 % 30);
+      final y = (tiempo * velocidad + i * 47) % (h + 40) - 20;
       final x = (i * 61 % w) + math.sin(tiempo * .8 + i) * 14;
-      canvas.drawCircle(Offset(x, y), 1 + (i % 3) * .7, copo);
+      final p = Offset(x, y);
+      if (cerca) {
+        copo.shader = RadialGradient(
+          colors: [
+            Colors.white.withValues(alpha: .55),
+            Colors.white.withValues(alpha: 0),
+          ],
+        ).createShader(Rect.fromCircle(center: p, radius: 6));
+        canvas.drawCircle(p, 6, copo);
+      } else {
+        copo
+          ..shader = null
+          ..color = Colors.white.withValues(alpha: .85);
+        canvas.drawCircle(p, 1 + (i % 3) * .7, copo);
+      }
     }
     // La viñeta, para que la mirada vaya al hoyo.
     canvas.drawRect(
@@ -1930,100 +2375,97 @@ class _PintorLago extends CustomPainter {
     );
   }
 
-  void _paisaje(Canvas canvas, double w, double h) {
-    final horizonte = h * .46;
-    for (final (alto, color, paso) in [
-      (.12, const Color(0xFFC9DDEA), .17),
-      (.07, const Color(0xFFB3CFE0), .11),
+  /// Una nube de invierno: bolas blancas con la panza celeste.
+  void _nube(Canvas canvas, Offset centro, double ancho) {
+    final sombra = Paint()
+      ..color = const Color(0xFFC9DFEE).withValues(alpha: .9);
+    final blanca = Paint()..color = Colors.white.withValues(alpha: .92);
+    for (final (x, y, r) in const [
+      (-.3, .05, .2),
+      (-.1, -.08, .27),
+      (.14, -.04, .23),
+      (.33, .06, .17),
     ]) {
-      final montes = Path()..moveTo(-w * 3, horizonte);
-      var x = -w * 3;
-      var i = 0;
-      while (x <= w * 4) {
-        final pico = (i.isEven ? 1.0 : .45) * h * alto;
-        montes.lineTo(x, horizonte - pico);
-        x += w * paso;
-        i++;
-      }
-      montes
-        ..lineTo(w * 4, horizonte)
-        ..close();
-      canvas.drawPath(montes, Paint()..color = color);
+      canvas.drawCircle(centro + Offset(x, y + .05) * ancho, ancho * r, sombra);
     }
-    // El lago: nieve blanca con un poco de azul, hasta donde se vea.
-    canvas.drawRect(
-      Rect.fromLTRB(-w * 4, horizonte, w * 5, h * 6),
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFF4F9FC), Color(0xFFD7E6EF)],
-        ).createShader(Rect.fromLTRB(0, horizonte, w, h * 1.2)),
-    );
-    _cabana(canvas, Offset(w * .08, horizonte + h * .015), w * .2);
-    // El campamento de al lado: se ve cuando la camara se aleja.
-    _cabana(canvas, Offset(-w * .62, horizonte + h * .01), w * .15);
+    for (final (x, y, r) in const [
+      (-.3, .02, .19),
+      (-.1, -.11, .26),
+      (.14, -.07, .22),
+      (.33, .03, .16),
+    ]) {
+      canvas.drawCircle(centro + Offset(x, y) * ancho, ancho * r, blanca);
+    }
   }
 
-  void _cabana(Canvas canvas, Offset piso, double ancho) {
-    final alto = ancho * .55;
-    final pared = Rect.fromLTWH(piso.dx, piso.dy - alto, ancho, alto);
-    canvas
-      ..drawRect(
-        pared,
-        Paint()
-          ..shader = const LinearGradient(
-            colors: [Color(0xFF7A5232), Color(0xFF5C3B22)],
-          ).createShader(pared),
-      )
-      ..drawRect(
-        Rect.fromLTWH(
-          pared.left + ancho * .14,
-          pared.top + alto * .3,
-          ancho * .22,
-          alto * .28,
-        ),
-        Paint()..color = const Color(0xFFFFD27A),
-      )
-      ..drawRect(
-        Rect.fromLTWH(
-          pared.left + ancho * .6,
-          pared.top + alto * .32,
-          ancho * .2,
-          alto * .68,
-        ),
-        Paint()..color = const Color(0xFF3E2716),
+  /// Lo que se mueve del paisaje: los brillos de la nieve, el humo de las
+  /// chimeneas y las banderas.
+  void _paisajeVivo(Canvas canvas, double w, double h) {
+    final horizonte = h * .46;
+    final azar = math.Random(29);
+    for (var i = 0; i < 34; i++) {
+      final p = Offset(
+        -w * .5 + azar.nextDouble() * w * 2,
+        horizonte + 8 + azar.nextDouble() * h * .5,
       );
-    final techo = Path()
-      ..moveTo(pared.left - ancho * .08, pared.top + alto * .05)
-      ..lineTo(pared.left + ancho * .1, pared.top - alto * .32)
-      ..lineTo(pared.right - ancho * .1, pared.top - alto * .32)
-      ..lineTo(pared.right + ancho * .08, pared.top + alto * .05)
-      ..close();
-    canvas.drawPath(techo, Paint()..color = Colors.white);
-    // La bandera que flamea.
-    final mastil = Offset(pared.right + ancho * .3, piso.dy);
-    canvas.drawLine(
-      mastil,
-      mastil - Offset(0, alto * 1.6),
-      Paint()
-        ..strokeWidth = 2
-        ..color = const Color(0xFF7E8B93),
-    );
-    final arriba = mastil - Offset(0, alto * 1.6);
-    final bandera = Path()..moveTo(arriba.dx, arriba.dy);
-    for (var i = 0; i <= 6; i++) {
-      final x = arriba.dx + ancho * .32 * i / 6;
-      bandera.lineTo(x, arriba.dy + math.sin(tiempo * 5 + i) * 2.5);
-    }
-    for (var i = 6; i >= 0; i--) {
-      final x = arriba.dx + ancho * .32 * i / 6;
-      bandera.lineTo(
-        x,
-        arriba.dy + alto * .32 + math.sin(tiempo * 5 + i) * 2.5,
+      final brilla = math.max(
+        0.0,
+        math.sin(tiempo * (2 + azar.nextDouble() * 2) + i * 1.7),
       );
+      if (brilla > .2) {
+        pintarDestello(
+          canvas,
+          p,
+          2.2 + 3 * brilla,
+          Colors.white.withValues(alpha: .9 * brilla),
+        );
+      }
     }
-    canvas.drawPath(bandera, Paint()..color = const Color(0xFFF5C542));
+    for (final (x, ancho, baja) in _cabanas) {
+      final piso = Offset(w * x, horizonte + h * baja);
+      final anchoCabana = w * ancho;
+      final alto = anchoCabana * .55;
+      final pared = Rect.fromLTWH(piso.dx, piso.dy - alto, anchoCabana, alto);
+      // El humo de la chimenea, que sube y se deshace.
+      final chimenea = Offset(
+        pared.right - anchoCabana * .2,
+        pared.top - alto * .5,
+      );
+      final humo = Paint();
+      for (var k = 0; k < 6; k++) {
+        final edad = (tiempo * .3 + k / 6) % 1;
+        humo.color = const Color(
+          0xFFE9F0F4,
+        ).withValues(alpha: .7 * (1 - edad) * math.min(1, edad * 5));
+        canvas.drawCircle(
+          chimenea +
+              Offset(
+                edad * anchoCabana * .5 + math.sin(edad * 7 + k) * 3,
+                -edad * alto * 2.2,
+              ),
+          anchoCabana * (.04 + edad * .1),
+          humo,
+        );
+      }
+      // La bandera que flamea.
+      final arriba = Offset(
+        pared.right + anchoCabana * .3,
+        piso.dy - alto * 1.6,
+      );
+      final bandera = Path()..moveTo(arriba.dx, arriba.dy);
+      for (var i = 0; i <= 6; i++) {
+        final bx = arriba.dx + anchoCabana * .32 * i / 6;
+        bandera.lineTo(bx, arriba.dy + math.sin(tiempo * 5 + i) * 2.5);
+      }
+      for (var i = 6; i >= 0; i--) {
+        final bx = arriba.dx + anchoCabana * .32 * i / 6;
+        bandera.lineTo(
+          bx,
+          arriba.dy + alto * .32 + math.sin(tiempo * 5 + i) * 2.5,
+        );
+      }
+      canvas.drawPath(bandera, Paint()..color = const Color(0xFFF5C542));
+    }
   }
 
   /// El hilo (o el cable) de quien tiene el pez, y el del equipo que llega,
@@ -2100,6 +2542,7 @@ void _pintarPezParado(
   double grosor,
   Pez pez, {
   double giro = 0,
+  double cola = 0,
 }) {
   canvas
     ..save()
@@ -2112,8 +2555,79 @@ void _pintarPezParado(
     Rect.fromLTWH(-largo, -alto * .56, largo, alto),
     pez,
     boca: true,
+    cola: cola,
   );
   canvas.restore();
+}
+
+/// El agua que le chorrea al pez que salio: gotas que se sueltan del
+/// cuerpo y caen al hoyo.
+void _pintarChorreo(
+  Canvas canvas,
+  Offset boca,
+  double agua,
+  double largo,
+  double ancho,
+  double tiempo,
+) {
+  if (largo < 6) return;
+  final gota = Paint()..color = const Color(0xFFBFE3F5).withValues(alpha: .9);
+  final brillo = Paint()..color = Colors.white.withValues(alpha: .9);
+  for (var k = 0; k < 7; k++) {
+    final edad = (tiempo * 1.3 + k / 7) % 1;
+    final x = boca.dx + (((k * 37) % 9) / 9 - .5) * ancho * .7;
+    final desde = boca.dy + largo * (.25 + ((k * 53) % 7) / 7 * .6);
+    final y = desde + (agua - desde) * edad * edad;
+    if (y > agua) continue;
+    final tam = 1.4 + (k % 3) * .6;
+    canvas
+      ..drawOval(
+        Rect.fromCenter(
+          center: Offset(x, y),
+          width: tam * 1.4,
+          height: tam * 2.2,
+        ),
+        gota,
+      )
+      ..drawCircle(Offset(x - tam * .2, y - tam * .3), tam * .3, brillo);
+  }
+}
+
+/// El viento de las aspas: anillos de nieve que se abren sobre el hielo
+/// alrededor del hoyo, y polvo de nieve que vuela hacia afuera.
+void _pintarVentarron(
+  Canvas canvas,
+  Offset centro,
+  double ancho,
+  double tiempo,
+) {
+  for (var k = 0; k < 3; k++) {
+    final fase = (tiempo * 1.2 + k / 3) % 1;
+    final rx = ancho * (.6 + fase * 1.4);
+    canvas.drawOval(
+      Rect.fromCenter(center: centro, width: rx * 2, height: rx * .5),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3 * (1 - fase) + .5
+        ..color = Colors.white.withValues(alpha: .6 * (1 - fase)),
+    );
+  }
+  final polvo = Paint();
+  for (var k = 0; k < 18; k++) {
+    final angulo = k / 18 * 2 * math.pi;
+    final fase = (tiempo * 1.6 + k * .13) % 1;
+    final lejos = ancho * (.55 + fase * 1.3);
+    polvo.color = Colors.white.withValues(alpha: .75 * (1 - fase));
+    canvas.drawCircle(
+      centro +
+          Offset(
+            math.cos(angulo) * lejos,
+            math.sin(angulo) * lejos * .25 - fase * 8,
+          ),
+      1.5 + fase * 2.5,
+      polvo,
+    );
+  }
 }
 
 /// La bocaza del pez gigante que sale del hielo a tragarse al chico: la
@@ -3015,6 +3529,30 @@ void _pintarRobot(Canvas canvas, Offset pies, double alto, double tiempo) {
       RRect.fromRectAndRadius(cabeza, Radius.circular(ancho * .06)),
       Paint()..color = acero,
     )
+    // El visor, que brilla y late como si mirara.
+    ..drawOval(
+      Rect.fromCenter(
+        center: cabeza.center,
+        width: cabeza.width * 1.5,
+        height: cabeza.height * 1.1,
+      ),
+      Paint()
+        ..shader =
+            RadialGradient(
+              colors: [
+                const Color(
+                  0xFFFFD54F,
+                ).withValues(alpha: .45 + .25 * math.sin(tiempo * 3)),
+                const Color(0xFFFFD54F).withValues(alpha: 0),
+              ],
+            ).createShader(
+              Rect.fromCenter(
+                center: cabeza.center,
+                width: cabeza.width * 1.5,
+                height: cabeza.height * 1.1,
+              ),
+            ),
+    )
     ..drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
@@ -3024,8 +3562,33 @@ void _pintarRobot(Canvas canvas, Offset pies, double alto, double tiempo) {
         ),
         Radius.circular(ancho * .03),
       ),
-      Paint()..color = const Color(0xFFFFD54F),
+      Paint()..color = const Color(0xFFFFE57F),
+    )
+    // Los dos ojos, mas claros dentro del visor.
+    ..drawCircle(
+      cabeza.center - Offset(cabeza.width * .2, 0),
+      cabeza.height * .1,
+      Paint()..color = Colors.white,
+    )
+    ..drawCircle(
+      cabeza.center + Offset(cabeza.width * .2, 0),
+      cabeza.height * .1,
+      Paint()..color = Colors.white,
     );
+  // El vapor que larga por las ventilas de la espalda.
+  final vapor = Paint();
+  for (final lado in [-1.0, 1.0]) {
+    final ventila = Offset(pies.dx + lado * ancho * .38, hombros - alto * .02);
+    for (var k = 0; k < 4; k++) {
+      final edad = (tiempo * .9 + k / 4 + (lado > 0 ? .5 : 0)) % 1;
+      vapor.color = Colors.white.withValues(alpha: .55 * (1 - edad));
+      canvas.drawCircle(
+        ventila + Offset(lado * edad * ancho * .2, -edad * alto * .16),
+        ancho * (.04 + edad * .07),
+        vapor,
+      );
+    }
+  }
   final baliza = Offset(pies.dx, cabeza.top - ancho * .04);
   canvas
     ..drawCircle(
@@ -3169,4 +3732,262 @@ void _pintarEsquirlas(
       ..drawPath(trozo, borde)
       ..restore();
   }
+}
+
+/// Las cabañas del campamento: donde estan (en anchos de la escena), lo
+/// anchas que son y cuanto bajan del horizonte (en altos).
+const _cabanas = [(.02, .2, .015), (-.62, .15, .01), (1.15, .13, .008)];
+
+/// El paisaje del lago que no se mueve (las montañas, los pinos, el hielo,
+/// las cabañas y el muelle), dibujado una sola vez: en cada cuadro se
+/// repite la grabacion, que es mucho mas barato.
+ui.Picture _grabarPaisaje(double w, double h) {
+  final grabadora = ui.PictureRecorder();
+  final canvas = Canvas(grabadora);
+  final horizonte = h * .46;
+  // Las montañas, en tres capas (las de atras mas claras), con nieve en
+  // las puntas y el lado de la sombra (el sol esta a la izquierda).
+  for (final (alto, color, paso, semilla) in [
+    (.17, const Color(0xFFC3D9E8), .16, 2),
+    (.12, const Color(0xFFA7C6DA), .12, 4),
+    (.07, const Color(0xFF8DB2C9), .09, 6),
+  ]) {
+    final r = math.Random(semilla);
+    final picos = <Offset>[];
+    var x = -w * 3.0;
+    var arriba = true;
+    while (x <= w * 4) {
+      picos.add(
+        Offset(
+          x,
+          horizonte -
+              h *
+                  alto *
+                  (arriba
+                      ? .6 + r.nextDouble() * .4
+                      : .12 + r.nextDouble() * .25),
+        ),
+      );
+      x += w * paso * (.7 + r.nextDouble() * .6);
+      arriba = !arriba;
+    }
+    final cordillera = Path()..moveTo(-w * 3, horizonte + 1);
+    for (final p in picos) {
+      cordillera.lineTo(p.dx, p.dy);
+    }
+    cordillera
+      ..lineTo(w * 4, horizonte + 1)
+      ..close();
+    canvas.drawPath(
+      cordillera,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color.lerp(color, Colors.white, .3)!, color],
+        ).createShader(Rect.fromLTRB(0, horizonte - h * alto, w, horizonte)),
+    );
+    final sombra = Paint()
+      ..color = const Color(0xFF52789A).withValues(alpha: .16);
+    final nieve = Paint()..color = Colors.white.withValues(alpha: .9);
+    for (var i = 1; i < picos.length - 1; i++) {
+      final pico = picos[i];
+      final antes = picos[i - 1];
+      final despues = picos[i + 1];
+      if (pico.dy > antes.dy || pico.dy > despues.dy) continue;
+      canvas
+        ..drawPath(
+          Path()
+            ..moveTo(pico.dx, pico.dy)
+            ..lineTo(despues.dx, despues.dy)
+            ..lineTo(pico.dx + (despues.dx - pico.dx) * .35, horizonte)
+            ..close(),
+          sombra,
+        )
+        ..drawPath(
+          Path()
+            ..moveTo(pico.dx, pico.dy)
+            ..lineTo(
+              Offset.lerp(pico, despues, .3)!.dx,
+              Offset.lerp(pico, despues, .3)!.dy,
+            )
+            ..lineTo(
+              pico.dx + (despues.dx - pico.dx) * .1,
+              Offset.lerp(pico, despues, .22)!.dy,
+            )
+            ..lineTo(
+              pico.dx - (pico.dx - antes.dx) * .08,
+              Offset.lerp(pico, antes, .26)!.dy,
+            )
+            ..lineTo(
+              Offset.lerp(pico, antes, .3)!.dx,
+              Offset.lerp(pico, antes, .3)!.dy,
+            )
+            ..close(),
+          nieve,
+        );
+    }
+  }
+  // Los pinos nevados en la orilla de enfrente.
+  final azar = math.Random(13);
+  for (var i = 0; i < 46; i++) {
+    final x = -w * 2.4 + i * w * .11 + azar.nextDouble() * w * .05;
+    final alto = h * (.028 + azar.nextDouble() * .026);
+    _pintarPino(canvas, Offset(x, horizonte + 3), alto);
+  }
+  // El lago: nieve blanca con sombras celestes, hasta donde se vea.
+  canvas.drawRect(
+    Rect.fromLTRB(-w * 4, horizonte, w * 5, h * 6),
+    Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFF7FBFE), Color(0xFFE3EEF5), Color(0xFFD2E3ED)],
+        stops: [0, .4, 1],
+      ).createShader(Rect.fromLTRB(0, horizonte, w, h * 1.2)),
+  );
+  final banda = Paint()..color = const Color(0xFFBCD4E3).withValues(alpha: .45);
+  for (final (x, y, ancho) in const [
+    (.15, .56, .7),
+    (.75, .63, .9),
+    (.4, .72, 1.1),
+    (-.6, .6, .8),
+    (1.5, .68, 1.0),
+  ]) {
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(w * x, h * y),
+        width: w * ancho,
+        height: h * .025,
+      ),
+      banda,
+    );
+  }
+  // El campamento: la de adelante y las de al lado, que se ven cuando la
+  // camara se aleja.
+  for (final (x, ancho, baja) in _cabanas) {
+    _pintarCabana(canvas, Offset(w * x, horizonte + h * baja), w * ancho);
+  }
+  // El muelle de madera donde esta la caña.
+  final tabla = Paint();
+  for (var i = 0; i < 6; i++) {
+    final izquierda = -w * .06 + i * w * .065;
+    tabla.color = i.isEven ? const Color(0xFF8A6239) : const Color(0xFF7A5430);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(izquierda, h * .832, w * .062, h * .03),
+        const Radius.circular(2),
+      ),
+      tabla,
+    );
+    canvas.drawCircle(
+      Offset(izquierda + w * .012, h * .837),
+      1.2,
+      Paint()..color = const Color(0xFF3E2716),
+    );
+  }
+  canvas
+    ..drawRect(
+      Rect.fromLTWH(-w * .06, h * .858, w * .39, h * .006),
+      Paint()..color = const Color(0xFF4E321B),
+    )
+    // La nieve sobre el borde del muelle.
+    ..drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-w * .06, h * .828, w * .39, h * .007),
+        const Radius.circular(3),
+      ),
+      Paint()..color = Colors.white.withValues(alpha: .9),
+    );
+  return grabadora.endRecording();
+}
+
+void _pintarPino(Canvas canvas, Offset base, double alto) {
+  const verde = Color(0xFF2F5A4E);
+  final ancho = alto * .62;
+  for (var piso = 0; piso < 3; piso++) {
+    final abajo = base.dy - alto * (.08 + piso * .27);
+    final mitad = ancho / 2 * (1 - piso * .24);
+    final punta = abajo - alto * .42;
+    canvas
+      ..drawPath(
+        Path()
+          ..moveTo(base.dx - mitad, abajo)
+          ..lineTo(base.dx, punta)
+          ..lineTo(base.dx + mitad, abajo)
+          ..close(),
+        Paint()..color = verde,
+      )
+      ..drawPath(
+        Path()
+          ..moveTo(base.dx - mitad * .6, abajo - alto * .08)
+          ..lineTo(base.dx, punta)
+          ..lineTo(base.dx + mitad * .5, abajo - alto * .1)
+          ..quadraticBezierTo(
+            base.dx,
+            abajo - alto * .18,
+            base.dx - mitad * .6,
+            abajo - alto * .08,
+          )
+          ..close(),
+        Paint()..color = Colors.white.withValues(alpha: .85),
+      );
+  }
+}
+
+void _pintarCabana(Canvas canvas, Offset piso, double ancho) {
+  final alto = ancho * .55;
+  final pared = Rect.fromLTWH(piso.dx, piso.dy - alto, ancho, alto);
+  final chimenea = Offset(pared.right - ancho * .2, pared.top - alto * .5);
+  canvas
+    ..drawRect(
+      Rect.fromLTWH(
+        chimenea.dx - ancho * .04,
+        chimenea.dy,
+        ancho * .08,
+        alto * .5,
+      ),
+      Paint()..color = const Color(0xFF4B3424),
+    )
+    ..drawRect(
+      pared,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF7A5232), Color(0xFF5C3B22)],
+        ).createShader(pared),
+    )
+    ..drawRect(
+      Rect.fromLTWH(
+        pared.left + ancho * .14,
+        pared.top + alto * .3,
+        ancho * .22,
+        alto * .28,
+      ),
+      Paint()..color = const Color(0xFFFFD27A),
+    )
+    ..drawRect(
+      Rect.fromLTWH(
+        pared.left + ancho * .6,
+        pared.top + alto * .32,
+        ancho * .2,
+        alto * .68,
+      ),
+      Paint()..color = const Color(0xFF3E2716),
+    );
+  final techo = Path()
+    ..moveTo(pared.left - ancho * .08, pared.top + alto * .05)
+    ..lineTo(pared.left + ancho * .1, pared.top - alto * .32)
+    ..lineTo(pared.right - ancho * .1, pared.top - alto * .32)
+    ..lineTo(pared.right + ancho * .08, pared.top + alto * .05)
+    ..close();
+  canvas.drawPath(techo, Paint()..color = Colors.white);
+  // El mastil de la bandera (la bandera flamea: va aparte).
+  final mastil = Offset(pared.right + ancho * .3, piso.dy);
+  canvas.drawLine(
+    mastil,
+    mastil - Offset(0, alto * 1.6),
+    Paint()
+      ..strokeWidth = 2
+      ..color = const Color(0xFF7E8B93),
+  );
 }

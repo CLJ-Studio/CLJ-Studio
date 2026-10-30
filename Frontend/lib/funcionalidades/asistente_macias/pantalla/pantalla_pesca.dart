@@ -13,6 +13,7 @@ import '../diseno/bono_pesca.dart';
 import '../diseno/cartas_blackjack.dart';
 import '../diseno/crupier_macias.dart';
 import '../diseno/dibujos_pesca.dart';
+import '../diseno/escenario_pesca.dart';
 import '../diseno/fichas_blackjack.dart';
 import '../diseno/mesa_casino.dart';
 import '../diseno/rueda_pesca.dart';
@@ -334,6 +335,10 @@ class _PantallaPescaState extends State<PantallaPesca>
   // El bono.
   _Bono? _bono;
   int _bonos = 0;
+
+  /// Cuantas lluvias de monedas hubo: la ultima se ve hasta que termina.
+  int _lluvias = 0;
+  bool _lluviaTerminada = false;
   Completer<void>? _finDelBono;
   late final AnimationController _velo = AnimationController(
     vsync: this,
@@ -446,13 +451,18 @@ class _PantallaPescaState extends State<PantallaPesca>
     final ahora = transcurrido.inMicroseconds / 1e6;
     final dt = ahora - _segundos.value;
     _segundos.value = ahora;
+    // Las luces del marco y los brillos: quietos si el telefono pide menos
+    // movimiento.
+    if (!_sinMovimiento) _efectos.reloj.value = ahora;
     final giro = _giroEnCurso;
     if (giro != null) {
       final s = ((ahora - giro.inicio) / giro.dura).clamp(0.0, 1.0);
       _giro.value = giro.angulo(s);
+      _efectos.velocidad = giro.casillasPorSegundo(s) * MedidasRueda.casilla;
       _moverAguja(dt, giro.casillasPorSegundo(s));
       if (s >= 1) {
         _giroEnCurso = null;
+        _efectos.velocidad = 0;
         _callarRueda();
         giro.fin.complete();
       }
@@ -1033,6 +1043,7 @@ class _PantallaPescaState extends State<PantallaPesca>
     );
     _ultimoCruce = (desde / a + .5).floor();
     _giroEnCurso = giro;
+    _efectos.modoLuces = ModoLuces.giro;
     _ruedaSonando = true;
     _sonar(SonidoMesa.ruedaGira, volumen: .8);
     // Cuando frena, la camara se acerca a la aguja.
@@ -1064,6 +1075,17 @@ class _PantallaPescaState extends State<PantallaPesca>
     _marca.duration = _dur(560);
     unawaited(_marca.forward(from: 0));
     RetroalimentacionHaptica.accion();
+    // Las luces festejan: del color del pez si abre el bono, titilando si
+    // le apostaste a lo que salio.
+    if (tipo.pez != null) {
+      _efectos
+        ..modoLuces = ModoLuces.bono
+        ..colorBono = ColoresPesca.deCasilla(tipo).$1;
+    } else {
+      _efectos.modoLuces = _mesa.montoEn(tipo) > 0
+          ? ModoLuces.premio
+          : ModoLuces.reposo;
+    }
     if (tipo.esHielo) {
       _sonar(SonidoMesa.hielo);
       _decir(
@@ -1120,6 +1142,9 @@ class _PantallaPescaState extends State<PantallaPesca>
     final antes = Map.of(_mesa.apuestas);
     final lugares = {for (final c in antes.keys) c: _lugar(c)};
     final resultado = _mesa.liquidar(tirada);
+    _efectos.modoLuces = resultado.ganadoras.isNotEmpty
+        ? ModoLuces.premio
+        : ModoLuces.reposo;
     setState(() {
       _fase = _Fase.pagando;
       _pilasPago = antes;
@@ -1194,7 +1219,9 @@ class _PantallaPescaState extends State<PantallaPesca>
     }
     // Las bolas de nieve y la moneda eran de esta ronda: se van. El cubo o
     // el brillo de lo que salio queda hasta la proxima apuesta.
-    _efectos.ponerMoneda(visible: 0);
+    _efectos
+      ..ponerMoneda(visible: 0)
+      ..modoLuces = ModoLuces.reposo;
     _moneda.value = 0;
     setState(() {
       _visibles = Multiplicadores.ninguno;
@@ -1241,6 +1268,11 @@ class _PantallaPescaState extends State<PantallaPesca>
     }
     if (grande || (pez != null && acerto && paga >= 20)) {
       _sonar(SonidoMesa.blackjack, volumen: .9);
+      // Un premio grande: llueven monedas sobre la mesa.
+      setState(() {
+        _lluvias++;
+        _lluviaTerminada = false;
+      });
     } else if (resultado.neto > 0) {
       _sonar(SonidoMesa.ganar, volumen: .85);
     } else if (resultado.cobrado == 0) {
@@ -1528,21 +1560,11 @@ class _PantallaPescaState extends State<PantallaPesca>
       clipBehavior: Clip.none,
       children: [
         Positioned.fill(
-          child: RepaintBoundary(
-            child: CustomPaint(
-              painter: _PintorPaisaje(horizonte: d.rueda.center.dy),
-            ),
-          ),
-        ),
-        Positioned.fill(
           child: IgnorePointer(
-            child: RepaintBoundary(
-              child: CustomPaint(
-                painter: _PintorNevada(
-                  reloj: _segundos,
-                  quieta: _sinMovimiento,
-                ),
-              ),
+            child: EscenarioPesca(
+              reloj: _segundos,
+              horizonte: d.rueda.center.dy,
+              quieto: _sinMovimiento,
             ),
           ),
         ),
@@ -1721,6 +1743,16 @@ class _PantallaPescaState extends State<PantallaPesca>
           height: d.controles,
           child: _panelControles(),
         ),
+        if (_lluvias > 0 && !_lluviaTerminada)
+          Positioned.fill(
+            child: LluviaDeMonedas(
+              key: ValueKey('lluvia$_lluvias'),
+              origen: Offset(.5, d.tablero.top / cuerpo.height),
+              alTerminar: () {
+                if (mounted) setState(() => _lluviaTerminada = true);
+              },
+            ),
+          ),
         if (bono != null)
           Positioned(
             left: 0,
@@ -2166,183 +2198,6 @@ class _PintorCopito extends CustomPainter {
 
   @override
   bool shouldRepaint(_PintorCopito viejo) => viejo.color != color;
-}
-
-/// La noche sobre el lago congelado: el cielo con su aurora y sus estrellas,
-/// las montañas de hielo y el lago, que brilla un poco detras de la rueda.
-class _PintorPaisaje extends CustomPainter {
-  const _PintorPaisaje({required this.horizonte});
-
-  /// A que altura queda el horizonte (el centro de la rueda).
-  final double horizonte;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final todo = Offset.zero & size;
-    canvas.drawRect(
-      todo,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF040B12),
-            Color(0xFF0B2233),
-            Color(0xFF173F57),
-            Color(0xFF0B1F2C),
-            Color(0xFF06111A),
-          ],
-          stops: [0, .3, .5, .72, 1],
-        ).createShader(todo),
-    );
-    // La aurora: dos cintas que se mecen, borrosas.
-    for (final (y, color, alto) in [
-      (h * .11, const Color(0x4434E0B0), h * .045),
-      (h * .17, const Color(0x3338A6E8), h * .035),
-      (h * .07, const Color(0x2296E8A8), h * .03),
-    ]) {
-      final cinta = Path()..moveTo(-30, y);
-      for (var x = -30.0; x <= w + 30; x += w / 10) {
-        cinta.lineTo(x, y + math.sin(x / w * 5.2 + y * .01) * h * .025);
-      }
-      canvas.drawPath(
-        cinta,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = alto
-          ..color = color
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, alto * .7),
-      );
-    }
-    // Las estrellas.
-    final azar = math.Random(11);
-    for (var i = 0; i < 60; i++) {
-      final p = Offset(azar.nextDouble() * w, azar.nextDouble() * horizonte);
-      canvas.drawCircle(
-        p,
-        .5 + azar.nextDouble() * .9,
-        Paint()
-          ..color = Colors.white.withValues(
-            alpha: (.2 + azar.nextDouble() * .55) * (1 - p.dy / horizonte),
-          ),
-      );
-    }
-    // Las montañas de hielo, a los costados de la rueda.
-    for (final (alto, color, paso, corrido) in [
-      (.15, const Color(0xFF214A62), .16, 0.0),
-      (.09, const Color(0xFF2C5D78), .11, .4),
-    ]) {
-      final montes = Path()..moveTo(0, horizonte);
-      var x = -w * paso * corrido;
-      var i = 0;
-      while (x <= w + w * paso) {
-        final pico = (i.isEven ? 1.0 : .5 + (i % 3) * .1) * h * alto;
-        montes.lineTo(x, horizonte - pico);
-        x += w * paso;
-        i++;
-      }
-      montes
-        ..lineTo(w, horizonte)
-        ..close();
-      canvas.drawPath(montes, Paint()..color = color);
-      // La nieve de las puntas.
-      canvas.drawPath(
-        montes,
-        Paint()
-          ..shader =
-              LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withValues(alpha: .35),
-                  Colors.white.withValues(alpha: 0),
-                ],
-              ).createShader(
-                Rect.fromLTRB(
-                  0,
-                  horizonte - h * alto,
-                  w,
-                  horizonte - h * alto * .5,
-                ),
-              ),
-      );
-    }
-    // El lago: hielo azul que se pierde hacia abajo, con un brillo detras
-    // de la rueda.
-    final lago = Rect.fromLTRB(0, horizonte, w, h);
-    canvas
-      ..drawRect(
-        lago,
-        Paint()
-          ..shader = const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF3B7896), Color(0xFF173A4F), Color(0xFF06111A)],
-            stops: [0, .45, 1],
-          ).createShader(lago),
-      )
-      ..drawOval(
-        Rect.fromCenter(
-          center: Offset(w / 2, horizonte),
-          width: w * 1.3,
-          height: h * .22,
-        ),
-        Paint()
-          ..color = const Color(0x4487CDEB)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, h * .05),
-      );
-    // Las grietas del hielo.
-    final grieta = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = .8
-      ..color = Colors.white.withValues(alpha: .12);
-    for (var i = 0; i < 9; i++) {
-      final desde = Offset(
-        azar.nextDouble() * w,
-        horizonte + 8 + azar.nextDouble() * (h - horizonte) * .5,
-      );
-      final linea = Path()..moveTo(desde.dx, desde.dy);
-      var p = desde;
-      for (var j = 0; j < 4; j++) {
-        p += Offset((azar.nextDouble() - .5) * 46, azar.nextDouble() * 12);
-        linea.lineTo(p.dx, p.dy);
-      }
-      canvas.drawPath(linea, grieta);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_PintorPaisaje viejo) => viejo.horizonte != horizonte;
-}
-
-/// La nieve que cae despacio sobre todo.
-class _PintorNevada extends CustomPainter {
-  _PintorNevada({required this.reloj, required this.quieta})
-    : super(repaint: quieta ? null : reloj);
-
-  final ValueListenable<double> reloj;
-
-  /// Sin animaciones (lo pide el telefono): la nieve queda quieta.
-  final bool quieta;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final t = quieta ? 0.0 : reloj.value;
-    final copo = Paint();
-    for (var i = 0; i < 46; i++) {
-      final cerca = (i % 5) / 4;
-      final velocidad = 14 + cerca * 26;
-      final y = (t * velocidad + i * 83.0) % (size.height + 20) - 10;
-      final x = (i * 97.0 + 13) % size.width + math.sin(t * .7 + i * 1.7) * 12;
-      copo.color = Colors.white.withValues(alpha: .25 + .45 * cerca);
-      canvas.drawCircle(Offset(x, y), .9 + 1.5 * cerca, copo);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_PintorNevada viejo) => viejo.quieta != quieta;
 }
 
 /// Las bolas de nieve en el aire y la nieve que salta donde caen.

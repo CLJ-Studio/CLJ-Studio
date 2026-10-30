@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../elementos_compartidos/animaciones/escala_al_presionar.dart';
@@ -157,7 +159,34 @@ class _Casilla extends StatelessWidget {
                 borderRadius: radio,
                 onTap: alTocar,
                 onHighlightChanged: alResaltar,
-                child: ClipRRect(borderRadius: radio, child: child),
+                child: ClipRRect(
+                  borderRadius: radio,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      child,
+                      // El brillo de arriba: la casilla parece de vidrio.
+                      IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: radio,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: .28),
+                            ),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.center,
+                              colors: [
+                                Colors.white.withValues(alpha: .26),
+                                Colors.white.withValues(alpha: 0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -199,29 +228,38 @@ class _Hielo extends StatelessWidget {
       apagado: apagado,
       alTocar: alTocar,
       // El copo y lo que paga arriba; lo apostado, debajo.
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Row(
+          CustomPaint(painter: _PintorBloque(blanco: blanco)),
+          Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox.square(
-                dimension: 14,
-                child: CustomPaint(painter: _PintorCopo(tinta)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox.square(
+                    dimension: 14,
+                    child: CustomPaint(painter: _PintorCopo(tinta)),
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    '1:1',
+                    style: TextStyle(
+                      color: tinta,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 3),
-              Text(
-                '1:1',
-                style: TextStyle(
-                  color: tinta,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 11,
-                  height: 1.1,
-                ),
-              ),
+              if (monto > 0) ...[
+                const SizedBox(height: 2),
+                _Monto(monto: monto),
+              ],
             ],
           ),
-          if (monto > 0) ...[const SizedBox(height: 2), _Monto(monto: monto)],
         ],
       ),
     );
@@ -260,11 +298,12 @@ class _Pez extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
+          Positioned.fill(child: _Destellos(fase: pez.index * .31)),
           Positioned.fill(
             child: Column(
               children: [
                 const SizedBox(height: 6),
-                PezDibujado(pez: pez, ancho: 50),
+                PezVivo(pez: pez, ancho: 50, fase: pez.index * .27),
                 const Spacer(),
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -333,7 +372,7 @@ class _Todos extends StatelessWidget {
         for (final pez in Pez.values)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 1.5),
-            child: PezDibujado(pez: pez, ancho: 24),
+            child: PezVivo(pez: pez, ancho: 24, fase: pez.index * .33),
           ),
         const SizedBox(height: 3),
         const Text(
@@ -444,6 +483,154 @@ class _Insignia extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// El bloque de las casillas de hielo: facetas mas claras y oscuras y
+/// rayitas de escarcha.
+class _PintorBloque extends CustomPainter {
+  const _PintorBloque({required this.blanco});
+
+  final bool blanco;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    canvas
+      ..drawPath(
+        Path()
+          ..moveTo(0, h * .55)
+          ..lineTo(w * .55, 0)
+          ..lineTo(w, 0)
+          ..lineTo(w, h * .15)
+          ..lineTo(w * .2, h)
+          ..lineTo(0, h)
+          ..close(),
+        Paint()..color = Colors.white.withValues(alpha: blanco ? .35 : .12),
+      )
+      ..drawPath(
+        Path()
+          ..moveTo(w * .65, h)
+          ..lineTo(w, h * .45)
+          ..lineTo(w, h)
+          ..close(),
+        Paint()
+          ..color = (blanco ? const Color(0xFF7FA6BC) : Colors.black)
+              .withValues(alpha: .12),
+      );
+    final escarcha = Paint()
+      ..strokeWidth = .8
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.white.withValues(alpha: blanco ? .9 : .45);
+    for (final (x, y, l) in const [
+      (.12, .2, .1),
+      (.8, .3, .08),
+      (.25, .8, .12),
+      (.7, .78, .07),
+      (.5, .15, .06),
+    ]) {
+      canvas.drawLine(
+        Offset(w * x, h * y),
+        Offset(w * (x + l), h * (y - l * .6)),
+        escarcha,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PintorBloque viejo) => viejo.blanco != blanco;
+}
+
+/// Lo que se mueve en la casilla de un pez: cada tanto un brillo la cruza
+/// en diagonal, y del pez suben burbujas.
+class _Destellos extends StatefulWidget {
+  const _Destellos({required this.fase});
+
+  final double fase;
+
+  @override
+  State<_Destellos> createState() => _DestellosState();
+}
+
+class _DestellosState extends State<_Destellos>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _vida = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 3800),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _vida.stop();
+    } else if (!_vida.isAnimating) {
+      _vida.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _vida.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: RepaintBoundary(
+      child: CustomPaint(painter: _PintorDestellos(_vida, widget.fase)),
+    ),
+  );
+}
+
+class _PintorDestellos extends CustomPainter {
+  _PintorDestellos(this.vida, this.fase) : super(repaint: vida);
+
+  final Animation<double> vida;
+  final double fase;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = (vida.value + fase) % 1;
+    final w = size.width;
+    final h = size.height;
+    // El brillo: una franja que cruza en diagonal.
+    if (t < .22) {
+      final x = -w * .5 + (w * 2) * (t / .22);
+      canvas.drawPath(
+        Path()
+          ..moveTo(x, 0)
+          ..lineTo(x + w * .22, 0)
+          ..lineTo(x - w * .18, h)
+          ..lineTo(x - w * .4, h)
+          ..close(),
+        Paint()
+          ..shader = LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0),
+              Colors.white.withValues(alpha: .32),
+              Colors.white.withValues(alpha: 0),
+            ],
+          ).createShader(Rect.fromLTWH(x - w * .4, 0, w * .62, h)),
+      );
+    }
+    // Las burbujas, que salen de la boca del pez y suben.
+    final burbuja = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    for (var i = 0; i < 3; i++) {
+      final edad = (t * 2 + i / 3) % 1;
+      burbuja.color = Colors.white.withValues(alpha: .55 * (1 - edad));
+      canvas.drawCircle(
+        Offset(w * .74 + math.sin(edad * 9 + i) * 3, h * .32 - edad * h * .3),
+        1.5 + edad * 2,
+        burbuja,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PintorDestellos viejo) => viejo.fase != fase;
 }
 
 class _PintorCopo extends CustomPainter {
