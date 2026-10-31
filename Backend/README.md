@@ -1,4 +1,4 @@
-# Backend · CDLJ Studio (UPSA Eat)
+# Backend · CDLJ Studio (U market)
 
 Backend en **Supabase / PostgreSQL** para la PWA Flutter que vive en [`../Frontend`](../Frontend).
 

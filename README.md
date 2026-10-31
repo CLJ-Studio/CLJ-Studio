@@ -1,4 +1,4 @@
-# UPSA Eat
+# U market
 
 **El mercado que ya existe en el campus, con un lugar donde vivir.**
 
@@ -46,7 +46,7 @@ metros suyo.
 
 ---
 
-## Qué es UPSA Eat
+## Qué es U market
 
 Una aplicación **exclusiva de la comunidad UPSA** donde ese mercado tiene
 catálogo, buscador, stock, pedidos y un registro de lo que pasó.
@@ -171,10 +171,14 @@ privacidad: mostrar vistas y mostrar favoritos.
 
 **Beta abierta**, en uso real dentro del campus.
 
-Versión actual: **3.8.2 beta**. El número es la fecha — día.mes.entrega — así
-que `3.8.2` es la segunda entrega del 3 de agosto. Se ve dentro de la app, en
-Ajustes, para poder distinguir *"el arreglo no funciona"* de *"el arreglo
-todavía no llegó a este teléfono"*.
+La versión la pone Netlify al compilar, con la fecha y la hora de la
+publicación — día.mes.hora —, así que `2.10.1432 beta` es lo que se publicó el
+2 de octubre a las 14:32, hora de Bolivia. Se ve dentro de la app, en Ajustes,
+para poder distinguir *"el arreglo no funciona"* de *"el arreglo todavía no
+llegó a este teléfono"*.
+
+> Antes la app se llamaba UPSA Eat. El paquete de Flutter todavía se llama
+> `upsa_eat`: cambiarlo tocaría cada import, y no se ve en ningún lado.
 
 ```
 CLJ Studio/
@@ -367,5 +371,5 @@ escrito se olvida justo cuando hay apuro.
 
 ---
 
-**UPSA Eat** · Universidad Privada de Santa Cruz de la Sierra
+**U market** · Universidad Privada de Santa Cruz de la Sierra
 Un proyecto de **CDLJ Studio**.
