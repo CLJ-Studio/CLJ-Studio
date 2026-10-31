@@ -9,6 +9,7 @@ import '../logica/mesa_pesca.dart';
 import '../logica/sonidos_casino.dart';
 import 'crupier_macias.dart';
 import 'dibujos_pesca.dart';
+import 'equipo_pesca.dart';
 import 'fichas_blackjack.dart';
 
 /// Las etapas del bono, en orden.
@@ -1900,8 +1901,11 @@ class _Escena {
   }
 
   // ------------------------------------------------------------- la caña
-  Offset get mango => Offset(_w * .13, _h * .835);
-  Offset get horqueta => mango + Offset(_w * .1, -_h * .065);
+  /// La caña esta parada en un tubo clavado en la nieve: el mango va de
+  /// [mango] (abajo) a [baseCana], donde empieza la caña. Va empinada para
+  /// que, al doblarse hacia el hoyo, la punta quede arriba del pez.
+  Offset get baseCana => Offset(_w * .235, _h * .768);
+  Offset get mango => baseCana + Offset(-_w * .038, _h * .082);
 
   /// Cuanto se dobla la caña: mientras tiene el pez y el medidor sube.
   double get tensionCana {
@@ -1928,9 +1932,16 @@ class _Escena {
   }
 
   // ------------------------------------------------------------- la grua
-  /// La grua: llega por la izquierda, para detras de la caña y levanta el
-  /// brazo hasta arriba del pez.
-  ({Offset camion, Offset base, Offset punta, double ruedas, double llega})?
+  /// La grua: llega por la izquierda, para detras de la caña, baja los
+  /// gatos ([apoyo]) y levanta el brazo hasta arriba del pez.
+  ({
+    Offset camion,
+    Offset base,
+    Offset punta,
+    double ruedas,
+    double llega,
+    double apoyo,
+  })?
   get grua {
     final llegada = guion.llegadaDe(Equipo.grua);
     if (llegada == null || t < llegada.cuando) return null;
@@ -1938,7 +1949,8 @@ class _Escena {
     final llega = Curves.easeOutCubic.transform((a / .55).clamp(0.0, 1.0));
     final x = ui.lerpDouble(-_w * .9, _w * .32, llega)!;
     final camion = Offset(x, _h * .785);
-    final base = camion + Offset(-_w * .1, -_h * .075);
+    // El pie del brazo, arriba de la torreta.
+    final base = camion + Offset(-_w * .1, -_h * .105);
     final soltado = guion.soltado(Equipo.grua);
     final boca = _bocaSostenidaEn(soltado == null ? t : math.min(t, soltado));
     final arriba = Offset(
@@ -1955,6 +1967,7 @@ class _Escena {
       punta: Offset.lerp(acostado, arriba, levanta)!,
       ruedas: x / (_h * .018),
       llega: a,
+      apoyo: Curves.easeOut.transform(((a - .4) / .14).clamp(0.0, 1.0)),
     );
   }
 
@@ -1972,8 +1985,9 @@ class _Escena {
   }
 
   /// Un helicoptero: llega volando, se queda arriba del pez con el cable y,
-  /// cuando lo agarra el siguiente equipo, se va.
-  ({Offset centro, double inclinacion, double llega})? helicoptero(
+  /// cuando lo agarra el siguiente equipo, se da vuelta y se va. [mira] es
+  /// hacia donde apunta la nariz: 1 a la izquierda, -1 a la derecha.
+  ({Offset centro, double inclinacion, double llega, double mira})? helicoptero(
     Equipo equipo,
   ) {
     final llegada = guion.llegadaDe(equipo);
@@ -1990,6 +2004,9 @@ class _Escena {
     );
     var centro = Offset.lerp(desde, _arribaDe(equipo), entra)! + vaiven * entra;
     var inclinacion = (1 - entra) * (carga ? .2 : -.25);
+    // Llega de frente: el de carga viene de la izquierda y el chico de la
+    // derecha.
+    var mira = carga ? -1.0 : 1.0;
     final soltado = guion.soltado(equipo);
     if (soltado != null && t > soltado + .2 * _r) {
       final se = ((t - soltado - .2 * _r) / (1.6 * _r)).clamp(0.0, 1.0);
@@ -1999,8 +2016,10 @@ class _Escena {
           : Offset(_w * 1.8, -_h * .6);
       centro = Offset.lerp(centro, destino, Curves.easeInCubic.transform(se))!;
       inclinacion = carga ? -.25 * se : .3 * se;
+      // Se da vuelta para irse de frente.
+      mira *= 1 - 2 * Curves.easeInOut.transform((se / .3).clamp(0.0, 1.0));
     }
-    return (centro: centro, inclinacion: inclinacion, llega: a);
+    return (centro: centro, inclinacion: inclinacion, llega: a, mira: mira);
   }
 
   /// De donde cuelga el cable del helicoptero.
@@ -2012,8 +2031,16 @@ class _Escena {
   }
 
   // ------------------------------------------------------------- el robot
-  /// El robot: sale del hielo detras del pez y lo agarra con las dos garras.
-  ({Offset pies, double alto, double sube, Offset garra, Offset garraAtras})?
+  /// El robot: sale del hielo detras del pez y lo agarra con las dos garras
+  /// ([agarra] de 0, sueltas, a 1, cerradas sobre el pez).
+  ({
+    Offset pies,
+    double alto,
+    double sube,
+    Offset garra,
+    Offset garraAtras,
+    double agarra,
+  })?
   get robot {
     final llegada = guion.llegadaDe(Equipo.robot);
     if (llegada == null || t < llegada.cuando) return null;
@@ -2029,14 +2056,17 @@ class _Escena {
     final boca = _bocaSostenidaEn(t);
     final reposo = Offset(pies.dx - ancho * .62, hombros + alto * .3);
     final reposoAtras = Offset(pies.dx + ancho * .64, hombros + alto * .3);
-    final lomo = boca + Offset(-anchoGrande * .42, largoGrande * .16);
-    final panza = boca + Offset(anchoGrande * .42, largoGrande * .32);
+    // Lo agarra por el medio del cuerpo: la garra de adelante baja por el
+    // lomo y la de atras cruza hasta la panza.
+    final lomo = boca + Offset(-anchoGrande * .42, largoGrande * .55);
+    final panza = boca + Offset(anchoGrande * .42, largoGrande * .42);
     return (
       pies: pies,
       alto: alto,
       sube: sube,
       garra: Offset.lerp(reposo, lomo, agarra)!,
       garraAtras: Offset.lerp(reposoAtras, panza, agarra)!,
+      agarra: agarra,
     );
   }
 
@@ -2156,13 +2186,13 @@ class _PintorLago extends CustomPainter {
       canvas
         ..save()
         ..clipRect(Rect.fromLTRB(-w * 4, -h * 6, w * 6, robot.pies.dy + 2));
-      _pintarRobot(canvas, robot.pies + hundido, robot.alto, tiempo);
+      pintarRobot(canvas, robot.pies + hundido, robot.alto, tiempo);
       canvas.restore();
     }
 
     final grua = e.grua;
     if (grua != null) {
-      _pintarGrua(
+      pintarGrua(
         canvas,
         grua.camion,
         grua.base,
@@ -2170,17 +2200,20 @@ class _PintorLago extends CustomPainter {
         grua.ruedas,
         w,
         h,
+        apoyo: grua.apoyo,
+        tiempo: tiempo,
       );
     }
-    _pintarCana(
+    pintarCana(
       canvas,
       e.mango,
-      e.horqueta,
+      e.baseCana,
       e.puntaCana,
       e.tensionCana,
       e.vueltaCarrete,
       w,
       h,
+      hilo: 1.4 / e.camara,
     );
 
     final anchoHoyo = e.anchoHoyo;
@@ -2222,8 +2255,24 @@ class _PintorLago extends CustomPainter {
     canvas
       ..save()
       ..clipRect(sobreElHielo);
+    // La bocaza va en dos veces: el fondo de la boca detras del chico y la
+    // cara delante, asi el chico queda adentro.
+    final bocaza = e.altoBocaza;
+    final conCana = e.sostiene == Equipo.cana;
+    if (bocaza > 0) {
+      pintarBocaza(
+        canvas,
+        e.hoyo,
+        e.anchoGrande * 1.15,
+        bocaza,
+        e.abreBocaza,
+        e.pez,
+        adentro: true,
+        tiempo: tiempo,
+      );
+    }
     if (e.chicoVisible) {
-      _pintarPezParado(
+      pintarPezColgado(
         canvas,
         e.bocaChico,
         e.largoChico,
@@ -2231,23 +2280,26 @@ class _PintorLago extends CustomPainter {
         e.pez,
         giro: e.meneoChico,
         cola: math.sin(tiempo * 15) * .3,
+        tiempo: tiempo,
+        anzuelo: conCana,
       );
     }
-    final bocaza = e.altoBocaza;
     if (bocaza > 0) {
-      _pintarBocaza(
+      pintarBocaza(
         canvas,
         e.hoyo,
         e.anchoGrande * 1.15,
         bocaza,
         e.abreBocaza,
         e.pez,
+        adentro: false,
+        tiempo: tiempo,
       );
     }
     if (e.salidaGrande > 0) {
       // Mientras lo sacan patalea fuerte; colgado, mueve la cola despacio.
       final pelea = e.guion.subiendo(t) && t < e.guion.afuera;
-      _pintarPezParado(
+      pintarPezColgado(
         canvas,
         e.bocaGrande,
         e.largoGrande,
@@ -2257,6 +2309,8 @@ class _PintorLago extends CustomPainter {
         cola: pelea
             ? math.sin(tiempo * 16) * .32
             : math.sin(tiempo * 4) * (e.sostiene == Equipo.robot ? .08 : .16),
+        tiempo: tiempo,
+        anzuelo: conCana,
       );
       // El agua que le chorrea al pez y cae al hoyo.
       _pintarChorreo(
@@ -2277,12 +2331,13 @@ class _PintorLago extends CustomPainter {
       canvas
         ..save()
         ..clipRect(Rect.fromLTRB(-w * 4, -h * 6, w * 6, robot.pies.dy + 2));
-      _pintarBrazosRobot(
+      pintarBrazosRobot(
         canvas,
         robot.pies + hundido,
         robot.alto,
         robot.garra + hundido,
         robot.garraAtras + hundido,
+        agarra: robot.agarra,
       );
       canvas.restore();
     }
@@ -2292,20 +2347,22 @@ class _PintorLago extends CustomPainter {
       final heli = e.helicoptero(equipo);
       if (heli == null) continue;
       if (equipo == Equipo.carga) {
-        _pintarHelicopteroDeCarga(
+        pintarHelicopteroDeCarga(
           canvas,
           heli.centro,
           e.largoCarga,
           heli.inclinacion,
           tiempo,
+          mira: heli.mira,
         );
       } else {
-        _pintarHelicoptero(
+        pintarHelicoptero(
           canvas,
           heli.centro,
           e.largoHelicoptero,
           heli.inclinacion,
           tiempo,
+          mira: heli.mira,
         );
       }
     }
@@ -2486,7 +2543,7 @@ class _PintorLago extends CustomPainter {
       case Equipo.grua:
         if (grua != null) {
           canvas.drawLine(grua.punta, boca, cable);
-          _pintarGancho(canvas, boca, h * .012);
+          pintarGancho(canvas, boca, h * .015);
         }
       case Equipo.helicoptero || Equipo.carga:
         final heli = e.helicoptero(e.sostiene);
@@ -2497,7 +2554,7 @@ class _PintorLago extends CustomPainter {
             carga: e.sostiene == Equipo.carga,
           );
           canvas.drawLine(desde, boca, cable);
-          _pintarGancho(canvas, boca, h * .012);
+          pintarGancho(canvas, boca, h * .015);
         }
       case Equipo.robot:
         break;
@@ -2511,7 +2568,7 @@ class _PintorLago extends CustomPainter {
           : grua.punta + Offset(0, h * .06);
       if (grua.llega > .35) {
         canvas.drawLine(grua.punta, fin, cable);
-        _pintarGancho(canvas, fin, h * .012);
+        pintarGancho(canvas, fin, h * .015);
       }
     }
     for (final equipo in [Equipo.helicoptero, Equipo.carga]) {
@@ -2525,39 +2582,12 @@ class _PintorLago extends CustomPainter {
       );
       final fin = Offset.lerp(desde, boca, baja(heli.llega))!;
       canvas.drawLine(desde, fin, cable);
-      _pintarGancho(canvas, fin, h * .012);
+      pintarGancho(canvas, fin, h * .015);
     }
   }
 
   @override
   bool shouldRepaint(_PintorLago viejo) => true;
-}
-
-/// Un pez parado, con la boca arriba en [boca] (donde va el hilo) y el
-/// cuerpo colgando hacia abajo.
-void _pintarPezParado(
-  Canvas canvas,
-  Offset boca,
-  double largo,
-  double grosor,
-  Pez pez, {
-  double giro = 0,
-  double cola = 0,
-}) {
-  canvas
-    ..save()
-    ..translate(boca.dx, boca.dy)
-    ..rotate(-math.pi / 2 + giro);
-  // pintarPez dibuja la cabeza a la derecha: la boca queda en el origen.
-  final alto = largo * grosor;
-  pintarPez(
-    canvas,
-    Rect.fromLTWH(-largo, -alto * .56, largo, alto),
-    pez,
-    boca: true,
-    cola: cola,
-  );
-  canvas.restore();
 }
 
 /// El agua que le chorrea al pez que salio: gotas que se sueltan del
@@ -2627,178 +2657,6 @@ void _pintarVentarron(
       1.5 + fase * 2.5,
       polvo,
     );
-  }
-}
-
-/// La bocaza del pez gigante que sale del hielo a tragarse al chico: la
-/// cabeza vista de frente, con la boca abierta para arriba ([abre] 0
-/// cerrada, 1 abierta del todo), los dientes y los ojos que miran al chico.
-void _pintarBocaza(
-  Canvas canvas,
-  Offset base,
-  double ancho,
-  double alto,
-  double abre,
-  Pez pez,
-) {
-  final (lomo, flanco, panza) = ColoresPesca.dePez(pez);
-  final mitad = ancho / 2;
-  final arriba = base.dy - alto;
-  final labio = mitad * (.5 + .5 * abre);
-  final puntaLabio = arriba + alto * .08 * (1 - abre);
-  final garganta = arriba + alto * (.5 * abre - .06 * (1 - abre));
-  final izquierda = Offset(base.dx - labio, puntaLabio);
-  final derecha = Offset(base.dx + labio, puntaLabio);
-  final fondo = Offset(base.dx, garganta);
-
-  // Las aletas del costado.
-  final aleta = Paint()..color = lomo;
-  for (final lado in [-1.0, 1.0]) {
-    canvas.drawPath(
-      Path()
-        ..moveTo(base.dx + lado * mitad * .9, base.dy - alto * .25)
-        ..lineTo(base.dx + lado * mitad * 1.45, base.dy - alto * .48)
-        ..lineTo(base.dx + lado * mitad * 1.25, base.dy - alto * .1)
-        ..close(),
-      aleta,
-    );
-  }
-  final cuerpo = Path()
-    ..moveTo(base.dx - mitad, base.dy + 4)
-    ..cubicTo(
-      base.dx - mitad * 1.08,
-      base.dy - alto * .55,
-      base.dx - labio * 1.1,
-      puntaLabio + alto * .18,
-      izquierda.dx,
-      izquierda.dy,
-    )
-    ..quadraticBezierTo(base.dx - labio * .35, garganta, fondo.dx, fondo.dy)
-    ..quadraticBezierTo(base.dx + labio * .35, garganta, derecha.dx, derecha.dy)
-    ..cubicTo(
-      base.dx + labio * 1.1,
-      puntaLabio + alto * .18,
-      base.dx + mitad * 1.08,
-      base.dy - alto * .55,
-      base.dx + mitad,
-      base.dy + 4,
-    )
-    ..close();
-  final caja = Rect.fromLTRB(base.dx - mitad, arriba, base.dx + mitad, base.dy);
-  canvas.drawPath(
-    cuerpo,
-    Paint()
-      ..shader = LinearGradient(
-        colors: [lomo, flanco, panza, flanco, lomo],
-        stops: const [0, .25, .5, .75, 1],
-      ).createShader(caja),
-  );
-  // Las escamas, como en los demas peces.
-  final escama = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = math.max(.8, ancho * .008)
-    ..color = Colors.white.withValues(alpha: .2);
-  final paso = ancho * .11;
-  canvas
-    ..save()
-    ..clipPath(cuerpo);
-  for (var fila = 0; fila < 8; fila++) {
-    final y = arriba + alto * .55 + fila * paso * .8;
-    for (var col = -5; col <= 5; col++) {
-      final x = base.dx + col * paso + (fila.isOdd ? paso / 2 : 0);
-      canvas.drawArc(
-        Rect.fromCircle(center: Offset(x, y), radius: paso * .5),
-        0,
-        math.pi,
-        false,
-        escama,
-      );
-    }
-  }
-  canvas.restore();
-
-  // Adentro de la boca: oscura, con la lengua y los dientes.
-  if (abre > .04) {
-    final boca = Path()
-      ..moveTo(izquierda.dx, izquierda.dy)
-      ..quadraticBezierTo(
-        base.dx,
-        puntaLabio - alto * .1 * abre,
-        derecha.dx,
-        derecha.dy,
-      )
-      ..quadraticBezierTo(base.dx + labio * .35, garganta, fondo.dx, fondo.dy)
-      ..quadraticBezierTo(
-        base.dx - labio * .35,
-        garganta,
-        izquierda.dx,
-        izquierda.dy,
-      )
-      ..close();
-    canvas
-      ..drawPath(boca, Paint()..color = const Color(0xFF3B0710))
-      ..drawOval(
-        Rect.fromCenter(
-          center: Offset(base.dx, garganta - alto * .07 * abre),
-          width: labio * .7,
-          height: alto * .1 * abre,
-        ),
-        Paint()..color = const Color(0xFFC2414F),
-      );
-    final diente = Paint()..color = Colors.white;
-    for (final (lado, punta) in [(-1.0, izquierda), (1.0, derecha)]) {
-      final tangente = (fondo - punta) / math.max(1, (fondo - punta).distance);
-      final adentro = Offset(-lado, -.4) / Offset(-lado, -.4).distance;
-      for (var i = 0; i < 4; i++) {
-        final p = Offset.lerp(punta, fondo, .12 + i * .2)!;
-        final tam = ancho * .045 * abre;
-        final a = p - tangente * tam * .5;
-        final b = p + tangente * tam * .5;
-        final c = p + adentro * tam;
-        canvas.drawPath(
-          Path()
-            ..moveTo(a.dx, a.dy)
-            ..lineTo(b.dx, b.dy)
-            ..lineTo(c.dx, c.dy)
-            ..close(),
-          diente,
-        );
-      }
-    }
-  }
-  // Los labios.
-  canvas.drawPath(
-    Path()
-      ..moveTo(izquierda.dx, izquierda.dy)
-      ..quadraticBezierTo(base.dx - labio * .35, garganta, fondo.dx, fondo.dy)
-      ..quadraticBezierTo(
-        base.dx + labio * .35,
-        garganta,
-        derecha.dx,
-        derecha.dy,
-      ),
-    Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = ancho * .025
-      ..strokeCap = StrokeCap.round
-      ..color = panza,
-  );
-  // Los ojos, que miran al chico.
-  for (final lado in [-1.0, 1.0]) {
-    final ojo = Offset(base.dx + lado * mitad * .55, arriba + alto * .52);
-    final radio = ancho * .075;
-    canvas
-      ..drawCircle(ojo, radio, Paint()..color = Colors.white)
-      ..drawCircle(
-        ojo + Offset(-lado * radio * .15, -radio * .3),
-        radio * .55,
-        Paint()..color = const Color(0xFF0E1A22),
-      )
-      ..drawCircle(
-        ojo + Offset(-lado * radio * .3, -radio * .5),
-        radio * .18,
-        Paint()..color = Colors.white,
-      );
   }
 }
 
@@ -2902,758 +2760,6 @@ void _pintarTrozos(
         Offset(p.dx - tam * .3, p.dy - tam * .8),
         Offset(p.dx + tam * .8, p.dy - tam * .5),
         brillo,
-      );
-  }
-}
-
-/// La caña, apoyada en una horqueta clavada en la nieve: el mango de corcho
-/// abajo, el carrete colgando y la punta que se dobla hacia el hoyo.
-void _pintarCana(
-  Canvas canvas,
-  Offset mango,
-  Offset horqueta,
-  Offset punta,
-  double tension,
-  double vuelta,
-  double w,
-  double h,
-) {
-  final suelo = Offset(horqueta.dx - w * .012, h * .815);
-  canvas.drawOval(
-    Rect.fromCenter(
-      center: suelo + const Offset(0, 2),
-      width: w * .17,
-      height: h * .026,
-    ),
-    Paint()..color = const Color(0xFFFDFEFF),
-  );
-  final palo = Paint()
-    ..strokeWidth = 5
-    ..strokeCap = StrokeCap.round
-    ..color = const Color(0xFF5C3B22);
-  final cruce = horqueta + const Offset(0, 7);
-  canvas
-    ..drawLine(suelo, cruce, palo)
-    ..drawLine(cruce, horqueta + const Offset(-7, -6), palo..strokeWidth = 4)
-    ..drawLine(cruce, horqueta + const Offset(7, -5), palo);
-  final control =
-      Offset.lerp(horqueta, punta, .5)! +
-      Offset(-w * .08 * (1 - tension * .4), -h * .08 + tension * h * .05);
-  final cana = Path()
-    ..moveTo(horqueta.dx, horqueta.dy)
-    ..quadraticBezierTo(control.dx, control.dy, punta.dx, punta.dy);
-  canvas
-    ..drawPath(
-      cana,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 6.5
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF3A1A1A),
-    )
-    ..drawPath(
-      cana,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.4
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFFB0242F),
-    )
-    ..drawLine(
-      mango,
-      horqueta,
-      Paint()
-        ..strokeWidth = 10
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF3A2414),
-    )
-    ..drawLine(
-      mango,
-      horqueta,
-      Paint()
-        ..strokeWidth = 7
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFFC9A26B),
-    );
-  // El carrete, colgando del mango, con la manivela que gira mientras
-  // recoge.
-  final colgado = Offset.lerp(mango, horqueta, .5)!;
-  final carrete = colgado + const Offset(0, 12);
-  canvas
-    ..drawLine(
-      carrete,
-      colgado,
-      Paint()
-        ..strokeWidth = 3
-        ..color = const Color(0xFF2B2F33),
-    )
-    ..drawCircle(carrete, 10, Paint()..color = const Color(0xFF2B2F33))
-    ..drawCircle(carrete, 6.5, Paint()..color = const Color(0xFF9AA5AD))
-    ..drawLine(
-      carrete,
-      carrete + Offset(math.cos(vuelta), math.sin(vuelta)) * 12,
-      Paint()
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF2B2F33),
-    );
-}
-
-/// El gancho al final del cable.
-void _pintarGancho(Canvas canvas, Offset donde, double tam) {
-  final gancho = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = tam * .35
-    ..strokeCap = StrokeCap.round
-    ..color = const Color(0xFF455A64);
-  canvas
-    ..drawRect(
-      Rect.fromCenter(
-        center: donde - Offset(0, tam * 1.2),
-        width: tam * 1.1,
-        height: tam * 1.4,
-      ),
-      Paint()..color = const Color(0xFFF5C542),
-    )
-    ..drawArc(
-      Rect.fromCircle(center: donde + Offset(0, tam * .2), radius: tam * .6),
-      -math.pi * .1,
-      math.pi * 1.2,
-      false,
-      gancho,
-    );
-}
-
-/// La grua: un camion rojo con estabilizadores y un brazo telescopico que
-/// va de [base] a [punta].
-void _pintarGrua(
-  Canvas canvas,
-  Offset camion,
-  Offset base,
-  Offset punta,
-  double ruedas,
-  double w,
-  double h,
-) {
-  final largo = w * .52;
-  final alto = h * .055;
-  const rojo = Color(0xFFC62828);
-  const rojoOscuro = Color(0xFF8E1B1B);
-  const gris = Color(0xFF37474F);
-  final piso = camion.dy;
-  // Los estabilizadores, apoyados en el hielo.
-  final pata = Paint()
-    ..color = gris
-    ..strokeWidth = alto * .22
-    ..strokeCap = StrokeCap.round;
-  canvas
-    ..drawLine(
-      Offset(camion.dx - largo * .44, piso - alto * .9),
-      Offset(camion.dx - largo * .5, piso + alto * .05),
-      pata,
-    )
-    ..drawLine(
-      Offset(camion.dx + largo * .24, piso - alto * .9),
-      Offset(camion.dx + largo * .3, piso + alto * .05),
-      pata,
-    );
-  // El chasis, con su franja blanca.
-  final chasis = Rect.fromLTWH(
-    camion.dx - largo / 2,
-    piso - alto * 1.45,
-    largo * .78,
-    alto,
-  );
-  canvas
-    ..drawRRect(
-      RRect.fromRectAndRadius(chasis, Radius.circular(alto * .2)),
-      Paint()..color = rojo,
-    )
-    ..drawRect(
-      Rect.fromLTWH(
-        chasis.left,
-        chasis.top + alto * .58,
-        chasis.width,
-        alto * .14,
-      ),
-      Paint()..color = Colors.white.withValues(alpha: .85),
-    );
-  // La cabina, adelante.
-  final cabina = Rect.fromLTWH(
-    chasis.right - largo * .02,
-    piso - alto * 2.1,
-    largo * .22,
-    alto * 1.65,
-  );
-  canvas
-    ..drawRRect(
-      RRect.fromRectAndCorners(
-        cabina,
-        topLeft: Radius.circular(alto * .2),
-        topRight: Radius.circular(alto * .6),
-        bottomLeft: Radius.circular(alto * .1),
-        bottomRight: Radius.circular(alto * .2),
-      ),
-      Paint()..color = rojo,
-    )
-    ..drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          cabina.left + cabina.width * .45,
-          cabina.top + alto * .18,
-          cabina.width * .45,
-          alto * .55,
-        ),
-        Radius.circular(alto * .1),
-      ),
-      Paint()..color = const Color(0xFF90CAF9),
-    );
-  // Las ruedas, que giran mientras llega.
-  for (final f in [.1, .26, .62, .88]) {
-    final centro = Offset(camion.dx - largo / 2 + largo * f, piso - alto * .32);
-    canvas
-      ..drawCircle(centro, alto * .34, Paint()..color = const Color(0xFF1E2327))
-      ..drawCircle(
-        centro,
-        alto * .15,
-        Paint()..color = const Color(0xFF9AA5AD),
-      );
-    for (var k = 0; k < 3; k++) {
-      final angulo = ruedas + k * math.pi * 2 / 3;
-      canvas.drawLine(
-        centro,
-        centro + Offset(math.cos(angulo), math.sin(angulo)) * alto * .14,
-        Paint()
-          ..strokeWidth = alto * .05
-          ..color = const Color(0xFF1E2327),
-      );
-    }
-  }
-  // El piston, la torreta y el brazo.
-  canvas.drawLine(
-    Offset(base.dx + largo * .12, chasis.top),
-    Offset.lerp(base, punta, .3)!,
-    Paint()
-      ..strokeWidth = alto * .2
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFFB0BEC5),
-  );
-  canvas.drawRRect(
-    RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: base + Offset(0, alto * .25),
-        width: largo * .2,
-        height: alto * .9,
-      ),
-      Radius.circular(alto * .15),
-    ),
-    Paint()..color = gris,
-  );
-  final dir = punta - base;
-  final largoBrazo = dir.distance;
-  if (largoBrazo < 1) return;
-  final normal = Offset(-dir.dy, dir.dx) / largoBrazo;
-  final grueso = alto * .55;
-  final a = base + normal * grueso / 2;
-  final b = punta + normal * grueso * .22;
-  final c = punta - normal * grueso * .22;
-  final d = base - normal * grueso / 2;
-  final brazo = Path()
-    ..moveTo(a.dx, a.dy)
-    ..lineTo(b.dx, b.dy)
-    ..lineTo(c.dx, c.dy)
-    ..lineTo(d.dx, d.dy)
-    ..close();
-  canvas
-    ..drawPath(brazo, Paint()..color = rojo)
-    ..drawPath(
-      brazo,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = alto * .06
-        ..color = rojoOscuro,
-    );
-  // Las juntas del brazo telescopico.
-  for (final f in [.38, .62, .82]) {
-    final p = Offset.lerp(base, punta, f)!;
-    final mitad = ui.lerpDouble(grueso / 2, grueso * .22, f)!;
-    canvas.drawLine(
-      p + normal * mitad,
-      p - normal * mitad,
-      Paint()
-        ..strokeWidth = alto * .1
-        ..color = Colors.white,
-    );
-  }
-  canvas.drawCircle(punta, alto * .22, Paint()..color = gris);
-}
-
-/// Un helicoptero chico, rojo y blanco, con el rotor que gira borroso.
-/// [inclinacion] lo inclina hacia donde va.
-void _pintarHelicoptero(
-  Canvas canvas,
-  Offset centro,
-  double largo,
-  double inclinacion,
-  double tiempo,
-) {
-  final alto = largo * .3;
-  const rojo = Color(0xFFD32F2F);
-  const oscuro = Color(0xFF263238);
-  canvas
-    ..save()
-    ..translate(centro.dx, centro.dy)
-    ..rotate(inclinacion);
-  // La cola, con su aleta y su rotor chico.
-  canvas
-    ..drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(largo * .02, -alto * .2, largo * .5, alto * .17),
-        Radius.circular(alto * .08),
-      ),
-      Paint()..color = rojo,
-    )
-    ..drawPath(
-      Path()
-        ..moveTo(largo * .44, -alto * .12)
-        ..lineTo(largo * .5, -alto * .62)
-        ..lineTo(largo * .56, -alto * .62)
-        ..lineTo(largo * .54, -alto * .06)
-        ..close(),
-      Paint()..color = rojo,
-    );
-  final cola = Offset(largo * .53, -alto * .42);
-  final giroCola = Offset(math.cos(tiempo * 40), math.sin(tiempo * 40));
-  final paleta = Paint()
-    ..color = oscuro.withValues(alpha: .7)
-    ..strokeWidth = alto * .05
-    ..strokeCap = StrokeCap.round;
-  canvas.drawLine(
-    cola + giroCola * alto * .2,
-    cola - giroCola * alto * .2,
-    paleta,
-  );
-  // El cuerpo, blanco con la panza roja, y la ventana del frente.
-  final cuerpo = Rect.fromCenter(
-    center: Offset(-largo * .14, 0),
-    width: largo * .55,
-    height: alto,
-  );
-  canvas
-    ..drawOval(cuerpo, Paint()..color = Colors.white)
-    ..save()
-    ..clipPath(Path()..addOval(cuerpo))
-    ..drawRect(
-      Rect.fromLTRB(
-        cuerpo.left,
-        cuerpo.center.dy + alto * .05,
-        cuerpo.right,
-        cuerpo.bottom,
-      ),
-      Paint()..color = rojo,
-    )
-    ..restore()
-    ..drawOval(
-      Rect.fromCenter(
-        center: Offset(-largo * .32, -alto * .1),
-        width: largo * .17,
-        height: alto * .5,
-      ),
-      Paint()..color = const Color(0xFF90CAF9),
-    )
-    ..drawOval(
-      Rect.fromCenter(
-        center: Offset(-largo * .3, -alto * .18),
-        width: largo * .07,
-        height: alto * .16,
-      ),
-      Paint()..color = Colors.white.withValues(alpha: .7),
-    );
-  // Los patines.
-  final patin = Paint()
-    ..color = oscuro
-    ..strokeWidth = alto * .07
-    ..strokeCap = StrokeCap.round;
-  canvas
-    ..drawLine(
-      Offset(-largo * .42, alto * .78),
-      Offset(largo * .1, alto * .78),
-      patin,
-    )
-    ..drawLine(
-      Offset(-largo * .3, alto * .45),
-      Offset(-largo * .32, alto * .78),
-      patin,
-    )
-    ..drawLine(Offset(-largo * .02, alto * .45), Offset(0, alto * .78), patin);
-  // El rotor de arriba, girando: un disco borroso y una paleta.
-  final eje = Offset(-largo * .14, -alto * .62);
-  final vuelta = math.sin(tiempo * 47);
-  canvas
-    ..drawLine(Offset(-largo * .14, -alto * .48), eje, patin)
-    ..drawOval(
-      Rect.fromCenter(center: eje, width: largo * 1.15, height: alto * .16),
-      Paint()..color = oscuro.withValues(alpha: .14),
-    )
-    ..drawLine(
-      eje + Offset(largo * .57 * vuelta, 0),
-      eje - Offset(largo * .57 * vuelta, 0),
-      Paint()
-        ..color = oscuro.withValues(alpha: .75)
-        ..strokeWidth = alto * .06
-        ..strokeCap = StrokeCap.round,
-    )
-    ..restore();
-}
-
-/// El helicoptero de carga: largo, con un rotor en cada punta.
-void _pintarHelicopteroDeCarga(
-  Canvas canvas,
-  Offset centro,
-  double largo,
-  double inclinacion,
-  double tiempo,
-) {
-  final alto = largo * .2;
-  const rojo = Color(0xFFC62828);
-  const oscuro = Color(0xFF263238);
-  canvas
-    ..save()
-    ..translate(centro.dx, centro.dy)
-    ..rotate(inclinacion)
-    // La torre de atras, mas alta.
-    ..drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(largo * .3, -alto * 1.0, largo * .18, alto * .8),
-        Radius.circular(alto * .15),
-      ),
-      Paint()..color = rojo,
-    );
-  final cuerpo = RRect.fromRectAndRadius(
-    Rect.fromCenter(center: Offset.zero, width: largo, height: alto),
-    Radius.circular(alto * .45),
-  );
-  canvas
-    ..drawRRect(cuerpo, Paint()..color = Colors.white)
-    ..save()
-    ..clipRRect(cuerpo)
-    ..drawRect(
-      Rect.fromLTRB(-largo / 2, -alto / 2, largo / 2, -alto * .05),
-      Paint()..color = rojo,
-    )
-    ..restore();
-  // Las ventanas y la cabina.
-  for (var i = 0; i < 6; i++) {
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          -largo * .26 + i * largo * .085,
-          -alto * .02,
-          largo * .05,
-          alto * .2,
-        ),
-        Radius.circular(alto * .05),
-      ),
-      Paint()..color = const Color(0xFF90CAF9),
-    );
-  }
-  canvas.drawRRect(
-    RRect.fromRectAndRadius(
-      Rect.fromLTWH(-largo * .5, -alto * .42, largo * .13, alto * .38),
-      Radius.circular(alto * .15),
-    ),
-    Paint()..color = const Color(0xFF90CAF9),
-  );
-  for (final x in [-.32, .28]) {
-    canvas.drawCircle(
-      Offset(largo * x, alto * .6),
-      alto * .16,
-      Paint()..color = oscuro,
-    );
-  }
-  // Los dos rotores.
-  for (final (x, y) in [
-    (-largo * .38, -alto * .75),
-    (largo * .39, -alto * 1.15),
-  ]) {
-    final eje = Offset(x, y);
-    final vuelta = math.sin(tiempo * 43 + x);
-    canvas
-      ..drawLine(
-        eje + Offset(0, alto * .3),
-        eje,
-        Paint()
-          ..color = oscuro
-          ..strokeWidth = alto * .1,
-      )
-      ..drawOval(
-        Rect.fromCenter(center: eje, width: largo * .62, height: alto * .2),
-        Paint()..color = oscuro.withValues(alpha: .14),
-      )
-      ..drawLine(
-        eje + Offset(largo * .3 * vuelta, 0),
-        eje - Offset(largo * .3 * vuelta, 0),
-        Paint()
-          ..color = oscuro.withValues(alpha: .75)
-          ..strokeWidth = alto * .08
-          ..strokeCap = StrokeCap.round,
-      );
-  }
-  canvas.restore();
-}
-
-/// El robot que sale del hielo a sacar los peces enormes: acero, con un
-/// visor amarillo, el corazon que brilla y una baliza roja. Los brazos van
-/// aparte ([_pintarBrazosRobot]), por delante del pez.
-void _pintarRobot(Canvas canvas, Offset pies, double alto, double tiempo) {
-  const acero = Color(0xFF56636E);
-  const oscuro = Color(0xFF2B333A);
-  const claro = Color(0xFF8D9BA6);
-  const naranja = Color(0xFFF29F05);
-  final ancho = alto * .48;
-  final cadera = pies.dy - alto * .42;
-  final hombros = pies.dy - alto * .74;
-  // Las piernas.
-  for (final lado in [-1.0, 1.0]) {
-    final x = pies.dx + lado * ancho * .2;
-    canvas
-      ..drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTRB(
-            x - ancho * .1,
-            cadera,
-            x + ancho * .1,
-            pies.dy - alto * .2,
-          ),
-          Radius.circular(ancho * .04),
-        ),
-        Paint()..color = acero,
-      )
-      ..drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTRB(
-            x - ancho * .09,
-            pies.dy - alto * .2,
-            x + ancho * .09,
-            pies.dy - alto * .04,
-          ),
-          Radius.circular(ancho * .04),
-        ),
-        Paint()..color = acero,
-      )
-      ..drawCircle(
-        Offset(x, pies.dy - alto * .2),
-        ancho * .1,
-        Paint()..color = oscuro,
-      )
-      ..drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTRB(
-            x - ancho * .17,
-            pies.dy - alto * .05,
-            x + ancho * .17,
-            pies.dy,
-          ),
-          Radius.circular(ancho * .04),
-        ),
-        Paint()..color = oscuro,
-      );
-  }
-  // La cadera y el cuerpo.
-  canvas.drawRRect(
-    RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(pies.dx, cadera),
-        width: ancho * .62,
-        height: alto * .07,
-      ),
-      Radius.circular(ancho * .05),
-    ),
-    Paint()..color = oscuro,
-  );
-  final torso = Path()
-    ..moveTo(pies.dx - ancho * .5, hombros)
-    ..lineTo(pies.dx + ancho * .5, hombros)
-    ..lineTo(pies.dx + ancho * .34, cadera - alto * .02)
-    ..lineTo(pies.dx - ancho * .34, cadera - alto * .02)
-    ..close();
-  canvas
-    ..drawPath(
-      torso,
-      Paint()
-        ..shader = const LinearGradient(colors: [claro, acero, oscuro])
-            .createShader(
-              Rect.fromLTRB(
-                pies.dx - ancho * .5,
-                hombros,
-                pies.dx + ancho * .5,
-                cadera,
-              ),
-            ),
-    )
-    // Las franjas naranjas.
-    ..save()
-    ..clipPath(torso);
-  final franja = Paint()
-    ..strokeWidth = ancho * .06
-    ..color = naranja;
-  for (final f in [.15, .85]) {
-    canvas.drawLine(
-      Offset(pies.dx - ancho * .5 + ancho * f, hombros),
-      Offset(pies.dx - ancho * .5 + ancho * f + ancho * .1, cadera),
-      franja,
-    );
-  }
-  canvas.restore();
-  // El corazon que brilla.
-  final nucleo = Offset(pies.dx, hombros + alto * .14);
-  final late = .6 + .4 * math.sin(tiempo * 5);
-  canvas
-    ..drawCircle(nucleo, ancho * .13, Paint()..color = oscuro)
-    ..drawCircle(
-      nucleo,
-      ancho * .12,
-      Paint()
-        ..color = const Color(0xFFFFD54F).withValues(alpha: .5 * late)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, ancho * .05),
-    )
-    ..drawCircle(nucleo, ancho * .07, Paint()..color = const Color(0xFFFFE082));
-  // La cabeza, con el visor y la baliza.
-  final cabeza = Rect.fromCenter(
-    center: Offset(pies.dx, hombros - alto * .07),
-    width: ancho * .4,
-    height: alto * .12,
-  );
-  canvas
-    ..drawRRect(
-      RRect.fromRectAndRadius(cabeza, Radius.circular(ancho * .06)),
-      Paint()..color = acero,
-    )
-    // El visor, que brilla y late como si mirara.
-    ..drawOval(
-      Rect.fromCenter(
-        center: cabeza.center,
-        width: cabeza.width * 1.5,
-        height: cabeza.height * 1.1,
-      ),
-      Paint()
-        ..shader =
-            RadialGradient(
-              colors: [
-                const Color(
-                  0xFFFFD54F,
-                ).withValues(alpha: .45 + .25 * math.sin(tiempo * 3)),
-                const Color(0xFFFFD54F).withValues(alpha: 0),
-              ],
-            ).createShader(
-              Rect.fromCenter(
-                center: cabeza.center,
-                width: cabeza.width * 1.5,
-                height: cabeza.height * 1.1,
-              ),
-            ),
-    )
-    ..drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: cabeza.center,
-          width: cabeza.width * .8,
-          height: cabeza.height * .28,
-        ),
-        Radius.circular(ancho * .03),
-      ),
-      Paint()..color = const Color(0xFFFFE57F),
-    )
-    // Los dos ojos, mas claros dentro del visor.
-    ..drawCircle(
-      cabeza.center - Offset(cabeza.width * .2, 0),
-      cabeza.height * .1,
-      Paint()..color = Colors.white,
-    )
-    ..drawCircle(
-      cabeza.center + Offset(cabeza.width * .2, 0),
-      cabeza.height * .1,
-      Paint()..color = Colors.white,
-    );
-  // El vapor que larga por las ventilas de la espalda.
-  final vapor = Paint();
-  for (final lado in [-1.0, 1.0]) {
-    final ventila = Offset(pies.dx + lado * ancho * .38, hombros - alto * .02);
-    for (var k = 0; k < 4; k++) {
-      final edad = (tiempo * .9 + k / 4 + (lado > 0 ? .5 : 0)) % 1;
-      vapor.color = Colors.white.withValues(alpha: .55 * (1 - edad));
-      canvas.drawCircle(
-        ventila + Offset(lado * edad * ancho * .2, -edad * alto * .16),
-        ancho * (.04 + edad * .07),
-        vapor,
-      );
-    }
-  }
-  final baliza = Offset(pies.dx, cabeza.top - ancho * .04);
-  canvas
-    ..drawCircle(
-      baliza,
-      ancho * .2,
-      Paint()
-        ..color = const Color(
-          0xFFE53935,
-        ).withValues(alpha: .3 * (1 + math.sin(tiempo * 9)) / 2)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, ancho * .06),
-    )
-    ..drawCircle(baliza, ancho * .07, Paint()..color = const Color(0xFFE53935));
-}
-
-/// Los brazos del robot: de los hombros a las garras, que agarran al pez.
-void _pintarBrazosRobot(
-  Canvas canvas,
-  Offset pies,
-  double alto,
-  Offset garra,
-  Offset garraAtras,
-) {
-  const acero = Color(0xFF56636E);
-  const oscuro = Color(0xFF2B333A);
-  const naranja = Color(0xFFF29F05);
-  final ancho = alto * .48;
-  final hombros = pies.dy - alto * .74;
-  for (final (hombro, mano) in [
-    (Offset(pies.dx + ancho * .52, hombros + alto * .02), garraAtras),
-    (Offset(pies.dx - ancho * .52, hombros + alto * .02), garra),
-  ]) {
-    final codo = Offset.lerp(hombro, mano, .5)! + Offset(0, ancho * .18);
-    final brazo = Paint()
-      ..color = acero
-      ..strokeWidth = ancho * .16
-      ..strokeCap = StrokeCap.round;
-    canvas
-      ..drawLine(hombro, codo, brazo)
-      ..drawLine(codo, mano, brazo..strokeWidth = ancho * .14)
-      ..drawCircle(codo, ancho * .09, Paint()..color = oscuro);
-    // La garra: tres dedos.
-    final hacia = (mano - codo) / math.max(1, (mano - codo).distance);
-    final normal = Offset(-hacia.dy, hacia.dx);
-    final dedo = Paint()
-      ..color = oscuro
-      ..strokeWidth = ancho * .055
-      ..strokeCap = StrokeCap.round;
-    for (final abre in [-1.0, 0.0, 1.0]) {
-      canvas.drawLine(
-        mano,
-        mano + hacia * ancho * .13 + normal * ancho * .1 * abre,
-        dedo,
-      );
-    }
-    canvas
-      ..drawCircle(hombro, ancho * .15, Paint()..color = acero)
-      ..drawArc(
-        Rect.fromCircle(center: hombro, radius: ancho * .15),
-        math.pi * 1.1,
-        math.pi * .8,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = ancho * .05
-          ..color = naranja,
       );
   }
 }
