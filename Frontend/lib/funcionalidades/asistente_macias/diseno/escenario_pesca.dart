@@ -73,6 +73,9 @@ class _PintorNocheQuieta extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // En el primer cuadro (si la mesa es lo primero que se abre) todavia no
+    // hay tamaño: sin ancho, las montañas no avanzarian nunca.
+    if (size.isEmpty) return;
     final w = size.width;
     final h = size.height;
     final hz = horizonte;

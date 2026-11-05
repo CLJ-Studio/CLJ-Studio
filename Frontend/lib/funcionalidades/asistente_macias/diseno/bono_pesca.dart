@@ -11,6 +11,7 @@ import 'crupier_macias.dart';
 import 'dibujos_pesca.dart';
 import 'equipo_pesca.dart';
 import 'fichas_blackjack.dart';
+import 'pescador_macias.dart';
 
 /// Las etapas del bono, en orden.
 enum EtapaBono { hielo, cardumen, pesca, captura, tarjeta }
@@ -310,6 +311,23 @@ class _BonoPescaState extends State<BonoPesca>
   ui.Picture? _paisaje;
   Size? _tamanoPaisaje;
 
+  /// La cabeza de MacIAs recortada, para su cuerpo en el lago, y sus caras.
+  ImageStream? _flujoCabeza;
+  ImageInfo? _cabeza;
+  CabezasMacias? _cabezas;
+  late final _alCargarCabeza = ImageStreamListener((info, _) {
+    if (!mounted) {
+      info.dispose();
+      return;
+    }
+    setState(() {
+      _cabezas?.dispose();
+      _cabeza?.dispose();
+      _cabeza = info;
+      _cabezas = CabezasMacias(info.image);
+    });
+  });
+
   double _s(double segundos) => segundos * widget.ritmo;
 
   @override
@@ -332,7 +350,23 @@ class _BonoPescaState extends State<BonoPesca>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final flujo = const AssetImage(
+      rutaCabezaCrupier,
+    ).resolve(createLocalImageConfiguration(context));
+    if (flujo.key != _flujoCabeza?.key) {
+      _flujoCabeza?.removeListener(_alCargarCabeza);
+      _flujoCabeza = flujo..addListener(_alCargarCabeza);
+    }
+  }
+
+  @override
   void dispose() {
+    _flujoCabeza?.removeListener(_alCargarCabeza);
+    _cabezas?.dispose();
+    _cabeza?.dispose();
+    _robot?.dispose();
     _paisaje?.dispose();
     _reloj.dispose();
     _tiempo.dispose();
@@ -637,6 +671,11 @@ class _BonoPescaState extends State<BonoPesca>
                     escena: escena,
                     tiempo: t,
                     paisaje: _paisajePara(tamano),
+                    cara: _cabezas?.de(
+                      _caraEn(enLago, enCaptura),
+                      parpadeoEn(t),
+                    ),
+                    robotGrabado: _robotPara(escena),
                   ),
                 ),
               ),
@@ -696,6 +735,24 @@ class _BonoPescaState extends State<BonoPesca>
         },
       ),
     );
+  }
+
+  /// El cuerpo del robot grabado una vez, del tamaño que tiene (es fijo en
+  /// todo el bono): en cada cuadro solo se pinta la imagen.
+  ui.Image? _robot;
+  double? _altoRobot;
+
+  ui.Image? _robotPara(_Escena escena) {
+    final robot = escena.robot;
+    if (robot == null) return null;
+    final grabado = _robot;
+    if (grabado != null && _altoRobot == robot.alto) return grabado;
+    grabado?.dispose();
+    _altoRobot = robot.alto;
+    // Con un poco mas de detalle que la pantalla: el robot sale con la
+    // camara alejada, asi que nunca se ve mas grande que esto.
+    final escala = MediaQuery.devicePixelRatioOf(context) * .75;
+    return _robot = grabarRobot(robot.alto, escala);
   }
 
   ui.Picture _paisajePara(Size tamano) {
@@ -1722,12 +1779,11 @@ class _Escena {
   _Escena(this.size, this.t, this.guion, this.pez, {this.camara = 1})
     : hoyo = Offset(size.width * .6, size.height * .8),
       pivote = Offset(size.width * .6, size.height * .86) {
-    final h = size.height;
     final chico = guion.engano;
-    largoChico = chico == null ? 0 : GuionPesca.largo(chico) * h;
-    grosorChico = chico == null ? 0 : GuionPesca.grosor(chico);
-    largoGrande = GuionPesca.largo(guion.pesca) * h;
-    grosorGrande = GuionPesca.grosor(guion.pesca);
+    largoChico = chico == null ? 0 : _largoChicoEn(t);
+    grosorChico = chico == null ? 0 : GuionPesca.grosor(_valorChicoEn(t));
+    largoGrande = _largoGrandeEn(t);
+    grosorGrande = GuionPesca.grosor(_valorGrandeEn(t));
     sostiene = guion.sostiene(t);
     bocaSostenida = _bocaSostenidaEn(t);
   }
@@ -1743,10 +1799,30 @@ class _Escena {
 
   /// Desde donde se aleja la camara: el hielo, debajo del hoyo.
   final Offset pivote;
+
+  // El pez crece a la par del medidor, como el que se ve tirar: no se sabe
+  // cuanto va a valer hasta que termina de salir.
   late final double largoChico;
   late final double grosorChico;
   late final double largoGrande;
   late final double grosorGrande;
+
+  /// Lo que vale el chico del engaño en [tt]: crece hasta lo que vale.
+  double _valorChicoEn(double tt) =>
+      math.min(guion.valor(tt), guion.engano ?? 0);
+  double _largoChicoEn(double tt) => GuionPesca.largo(_valorChicoEn(tt)) * _h;
+
+  /// Lo que vale (lo grande que es) el pez de verdad en [tt]. Si hubo
+  /// engaño, el gigante que se lo traga ya sale grande.
+  double _valorGrandeEn(double tt) {
+    final engano = guion.engano;
+    final piso = engano == null
+        ? 0.0
+        : math.min(guion.pesca, math.max(engano * 3, guion.pesca * .35));
+    return math.max(guion.valor(tt), piso).clamp(0.0, guion.pesca);
+  }
+
+  double _largoGrandeEn(double tt) => GuionPesca.largo(_valorGrandeEn(tt)) * _h;
 
   /// Quien tiene el hilo.
   late final Equipo sostiene;
@@ -1782,12 +1858,12 @@ class _Escena {
   Offset _bocaChicoEn(double tt) {
     final afuera = guion.chicoAfuera!;
     if (tt < afuera) {
-      return Offset(hoyo.dx, hoyo.dy - guion.salida(0, tt) * largoChico);
+      return Offset(hoyo.dx, hoyo.dy - guion.salida(0, tt) * _largoChicoEn(tt));
     }
     final colgado = Curves.easeOutCubic.transform(
       ((tt - afuera) / (.5 * _r)).clamp(0.0, 1.0),
     );
-    return Offset(hoyo.dx, hoyo.dy - largoChico - _h * .035 * colgado);
+    return Offset(hoyo.dx, hoyo.dy - _largoChicoEn(tt) - _h * .035 * colgado);
   }
 
   Offset get bocaChico => _bocaChicoEn(t);
@@ -1806,12 +1882,15 @@ class _Escena {
   Offset _bocaGrandeEn(double tt) {
     final despues = tt - guion.afuera;
     if (despues < 0) {
-      return Offset(hoyo.dx, hoyo.dy - _salidaGrandeEn(tt) * largoGrande);
+      return Offset(
+        hoyo.dx,
+        hoyo.dy - _salidaGrandeEn(tt) * _largoGrandeEn(tt),
+      );
     }
     final sube = Curves.easeOutCubic.transform(
       (despues / (.7 * _r)).clamp(0.0, 1.0),
     );
-    return Offset(hoyo.dx, hoyo.dy - largoGrande - _h * .05 * sube);
+    return Offset(hoyo.dx, hoyo.dy - _largoGrandeEn(tt) - _h * .05 * sube);
   }
 
   Offset get bocaGrande => _bocaGrandeEn(t);
@@ -1820,7 +1899,7 @@ class _Escena {
   double _altoBocazaEn(double tt) {
     final d = _trago(tt);
     if (d == null || d < .1 || d >= .8) return 0;
-    final pico = largoChico + _h * .13;
+    final pico = _largoChicoEn(tt) + _h * .13;
     if (d < .32) return pico * Curves.easeOutBack.transform((d - .1) / .22);
     if (d < .53) return pico;
     return pico * (1 - Curves.easeInCubic.transform((d - .53) / .27));
@@ -1900,18 +1979,102 @@ class _Escena {
     return sacudon;
   }
 
-  // ------------------------------------------------------------- la caña
-  /// La caña esta parada en un tubo clavado en la nieve: el mango va de
-  /// [mango] (abajo) a [baseCana], donde empieza la caña. Va empinada para
-  /// que, al doblarse hacia el hoyo, la punta quede arriba del pez.
-  Offset get baseCana => Offset(_w * .235, _h * .768);
-  Offset get mango => baseCana + Offset(-_w * .038, _h * .082);
+  // ---------------------------------------------------------------- MacIAs
+  /// MacIAs pesca parado en el muelle, a la izquierda del hoyo, con la caña
+  /// en las manos.
+  Offset get piesPescador => Offset(_w * .115, _h * .848);
 
-  /// Cuanto se dobla la caña: mientras tiene el pez y el medidor sube.
+  /// Una subida y bajada suave (de 0 a 1 y a 0) de [dura] segundos desde
+  /// [desde].
+  double _bulto(double desde, double dura) {
+    final x = (t - desde) / dura;
+    if (x <= 0 || x >= 1) return 0;
+    return math.sin(x * math.pi);
+  }
+
+  /// Lo que hace MacIAs: espera, se tira hacia el pez cuando pica, tira y
+  /// recoge (mas echado para atras cuanto mas pesa), salta y mira cuando
+  /// llega cada equipo, se asusta cuando sale el gigante y al final suelta
+  /// la manivela y festeja con el puño arriba.
+  PosePescador get pose {
+    final g = guion;
+    final r = _r;
+    final tension = tensionCana;
+    final conCana = sostiene == Equipo.cana && t >= .8 * r;
+    var tira = conCana ? .15 + .75 * tension : -.04 + .03 * math.sin(t * 1.3);
+    if (conCana && g.tironFinal(t)) tira += .12 * math.sin(t * 23);
+    // Cuando pica, se va hacia el pez y enseguida tira.
+    tira -= .8 * _bulto(.8 * r, .4 * r);
+    // Cuando la grua le saca el peso, se va para atras.
+    final suelta = g.soltado(Equipo.cana);
+    if (suelta != null) tira += .55 * _bulto(suelta, .5 * r);
+    var salto = 0.0;
+    var cabezazo = 0.0;
+    for (final llegada in g.llegadas) {
+      salto += .045 * _bulto(llegada.cuando, .35 * r);
+      cabezazo += .12 * _bulto(llegada.cuando, llegada.dura);
+    }
+    var susto = 0.0;
+    final trago = g.trago;
+    if (trago != null) {
+      susto = _bulto(trago + g.duraTrago * .1, .55 * r);
+      salto += .09 * susto;
+      tira += .7 * susto;
+      cabezazo -= .1 * susto;
+    }
+    final festejo = Curves.easeOutBack.transform(
+      ((t - g.afuera) / (.45 * r)).clamp(0.0, 1.0),
+    );
+    salto += .07 * _bulto(g.afuera, .45 * r);
+    if (t > g.afuera + .45 * r) {
+      salto += .03 * math.max(0, math.sin((t - g.afuera - .45 * r) * 8));
+    }
+    return (
+      tira: tira,
+      agacha: .1 + .45 * tension + .4 * susto,
+      salto: salto,
+      cabezazo: cabezazo,
+      festejo: festejo,
+      respira: t * 2.4,
+    );
+  }
+
+  /// MacIAs armado en su pose, con la caña en las manos.
+  late final CuerpoPescador pescador = armarPescador(
+    piesPescador,
+    _h * .22,
+    pose,
+    perilla: (mango, base) => perillaCarrete(mango, base, vueltaCarrete, _h),
+  );
+
+  // ------------------------------------------------------------- la caña
+  /// El mango de la caña va de [mango] (la culata, en la cintura de MacIAs)
+  /// a [baseCana], donde empieza la caña. La tiene parada para que, al
+  /// doblarse hacia el hoyo, la punta quede arriba del pez.
+  Offset get mango => pescador.mango;
+  Offset get baseCana => pescador.baseCana;
+
+  /// Cuanto se dobla la caña: casi nada mientras espera; mientras tiene el
+  /// pez, mas cuanto mas sube el medidor, y al tope mientras llega la grua
+  /// (no da mas). Cuando la grua lo agarra, la caña vuelve como un resorte:
+  /// se pasa para atras y tiembla hasta quedar derecha.
   double get tensionCana {
-    if (sostiene != Equipo.cana) return 0;
-    if (!guion.subiendo(t)) return .25;
-    return .4 + .6 * math.min(1, guion.valor(t) / 10);
+    final suelta = guion.soltado(Equipo.cana);
+    if (suelta != null && t >= suelta) {
+      final dt = (t - suelta) / _r;
+      return _tensionTirando(suelta - 1e-6) *
+          math.exp(-dt * 3.4) *
+          math.cos(dt * 13);
+    }
+    return _tensionTirando(t);
+  }
+
+  double _tensionTirando(double tt) {
+    if (tt < .8 * _r) return .05;
+    final grua = guion.llegadaDe(Equipo.grua);
+    if (grua != null && tt >= grua.cuando) return .9 + .06 * math.sin(tt * 26);
+    if (!guion.subiendo(tt)) return .25;
+    return .4 + .6 * math.min(1, guion.valor(tt) / 10);
   }
 
   Offset get puntaCana {
@@ -1919,21 +2082,36 @@ class _Escena {
     final sacudon = tension > 0 && guion.tironFinal(t)
         ? math.sin(t * 38) * _h * .006
         : 0.0;
+    // Cuando pica, la punta se va para abajo de golpe.
+    final pica = _bulto(.8 * _r, .4 * _r);
     return Offset(
       _w * .53 + _w * .025 * tension,
-      _h * .36 + _h * .07 * tension + sacudon,
+      _h * .36 + _h * .07 * tension + sacudon + _h * .05 * pica,
     );
   }
 
-  /// La manivela del carrete gira mientras recoge.
+  /// Lo que giro la manivela del carrete: gira mientras la caña recoge (el
+  /// doble de rapido en el ultimo tiron) y se queda donde quedo.
   double get vueltaCarrete {
-    if (sostiene != Equipo.cana || !guion.subiendo(t)) return 0;
-    return t * (guion.tironFinal(t) ? 14 : 7);
+    var vuelta = 0.0;
+    for (final tramo in guion.tramos) {
+      if (guion.sostiene(tramo.inicio + 1e-6) != Equipo.cana) continue;
+      vuelta += 7 * (t - tramo.inicio).clamp(0.0, tramo.fin - tramo.inicio);
+    }
+    final ultimo = guion.tramos.last;
+    final tiron = ultimo.fin - (ultimo.fin - ultimo.inicio) * .45;
+    if (guion.sostiene(tiron) == Equipo.cana) {
+      vuelta += 7 * (t - tiron).clamp(0.0, ultimo.fin - tiron);
+    }
+    return vuelta;
   }
 
   // ------------------------------------------------------------- la grua
   /// La grua: llega por la izquierda, para detras de la caña, baja los
-  /// gatos ([apoyo]) y levanta el brazo hasta arriba del pez.
+  /// gatos ([apoyo]) y levanta el brazo hasta arriba del pez. Cuando lo
+  /// agarra el helicoptero, sube el gancho ([recoge] de 0, en la boca del
+  /// pez, a 1, arriba), baja el brazo, levanta los gatos y se va por donde
+  /// vino.
   ({
     Offset camion,
     Offset base,
@@ -1941,13 +2119,33 @@ class _Escena {
     double ruedas,
     double llega,
     double apoyo,
+    double recoge,
   })?
   get grua {
     final llegada = guion.llegadaDe(Equipo.grua);
     if (llegada == null || t < llegada.cuando) return null;
     final a = ((t - llegada.cuando) / llegada.dura).clamp(0.0, 1.0);
     final llega = Curves.easeOutCubic.transform((a / .55).clamp(0.0, 1.0));
-    final x = ui.lerpDouble(-_w * .9, _w * .32, llega)!;
+    var x = ui.lerpDouble(-_w * .9, _w * .32, llega)!;
+    var levanta = Curves.easeInOutCubic.transform(
+      ((a - .45) / .4).clamp(0.0, 1.0),
+    );
+    var apoyo = Curves.easeOut.transform(((a - .4) / .14).clamp(0.0, 1.0));
+    var recoge = 0.0;
+    final suelta = guion.soltado(Equipo.grua);
+    if (suelta != null && t > suelta) {
+      final dt = (t - suelta) / _r;
+      recoge = Curves.easeOutCubic.transform((dt / .55).clamp(0.0, 1.0));
+      levanta *=
+          1 -
+          Curves.easeInOutCubic.transform(((dt - .4) / .75).clamp(0.0, 1.0));
+      apoyo *= 1 - ((dt - 1.05) / .25).clamp(0.0, 1.0);
+      final vete = Curves.easeInCubic.transform(
+        ((dt - 1.25) / 1.3).clamp(0.0, 1.0),
+      );
+      if (vete >= 1) return null;
+      x = ui.lerpDouble(x, -_w * 1.3, vete)!;
+    }
     final camion = Offset(x, _h * .785);
     // El pie del brazo, arriba de la torreta.
     final base = camion + Offset(-_w * .1, -_h * .105);
@@ -1957,9 +2155,6 @@ class _Escena {
       hoyo.dx + _w * .02,
       math.min(boca.dy - _h * .17, _h * .42),
     );
-    final levanta = Curves.easeInOutCubic.transform(
-      ((a - .45) / .4).clamp(0.0, 1.0),
-    );
     final acostado = base + Offset(_w * .42, -_h * .04);
     return (
       camion: camion,
@@ -1967,7 +2162,8 @@ class _Escena {
       punta: Offset.lerp(acostado, arriba, levanta)!,
       ruedas: x / (_h * .018),
       llega: a,
-      apoyo: Curves.easeOut.transform(((a - .4) / .14).clamp(0.0, 1.0)),
+      apoyo: apoyo,
+      recoge: recoge,
     );
   }
 
@@ -2003,7 +2199,11 @@ class _Escena {
       math.sin(t * 2.3) * _h * .006,
     );
     var centro = Offset.lerp(desde, _arribaDe(equipo), entra)! + vaiven * entra;
-    var inclinacion = (1 - entra) * (carga ? .2 : -.25);
+    // Llega inclinado hacia donde va y, quieto arriba del pez, se mece un
+    // poco con el viento.
+    var inclinacion =
+        (1 - entra) * (carga ? .2 : -.25) +
+        entra * .035 * math.sin(t * 1.7 + (carga ? 1.3 : 0));
     // Llega de frente: el de carga viene de la izquierda y el chico de la
     // derecha.
     var mira = carga ? -1.0 : 1.0;
@@ -2045,8 +2245,9 @@ class _Escena {
     final llegada = guion.llegadaDe(Equipo.robot);
     if (llegada == null || t < llegada.cuando) return null;
     final a = ((t - llegada.cuando) / llegada.dura).clamp(0.0, 1.0);
-    final alto = math.max(_h * .6, largoGrande * 1.02);
-    final pies = Offset(hoyo.dx + alto * .16, hoyo.dy - _h * .005);
+    // Tan alto como el pez cuando termine de salir: no crece mientras se ve.
+    final alto = math.max(_h * .6, GuionPesca.largo(guion.pesca) * _h * .98);
+    final pies = Offset(hoyo.dx + alto * .22, hoyo.dy - _h * .005);
     final sube = Curves.easeOutCubic.transform((a / .5).clamp(0.0, 1.0));
     final agarra = Curves.easeInOutCubic.transform(
       ((a - .5) / .35).clamp(0.0, 1.0),
@@ -2090,7 +2291,7 @@ class _Escena {
     final robot = this.robot;
     if (robot != null) {
       arriba = math.min(arriba, robot.pies.dy - robot.alto * 1.02);
-      derecha = math.max(derecha, robot.pies.dx + robot.alto * .3);
+      derecha = math.max(derecha, robot.pies.dx + robot.alto * .36);
     }
     final alto = (pivote.dy - _h * .15) / (pivote.dy - arriba);
     final ancho = (_w * .97 - pivote.dx) / math.max(1, derecha - pivote.dx);
@@ -2106,12 +2307,20 @@ class _PintorLago extends CustomPainter {
     required this.escena,
     required this.tiempo,
     required this.paisaje,
+    this.cara,
+    this.robotGrabado,
   });
 
   final _Escena escena;
 
   /// El paisaje que no se mueve, ya dibujado.
   final ui.Picture paisaje;
+
+  /// La cabeza de MacIAs con el gesto de ahora (null mientras carga).
+  final ui.Image? cara;
+
+  /// El cuerpo del robot ya grabado (si hay robot).
+  final ui.Image? robotGrabado;
 
   /// Los segundos del bono (la bandera, la nieve).
   final double tiempo;
@@ -2186,7 +2395,15 @@ class _PintorLago extends CustomPainter {
       canvas
         ..save()
         ..clipRect(Rect.fromLTRB(-w * 4, -h * 6, w * 6, robot.pies.dy + 2));
-      pintarRobot(canvas, robot.pies + hundido, robot.alto, tiempo);
+      // Las luces se prenden mientras sale, titilando.
+      pintarRobot(
+        canvas,
+        robot.pies + hundido,
+        robot.alto,
+        tiempo,
+        encendido: ((robot.sube - .45) / .4).clamp(0.0, 1.0),
+        grabado: robotGrabado,
+      );
       canvas.restore();
     }
 
@@ -2204,6 +2421,10 @@ class _PintorLago extends CustomPainter {
         tiempo: tiempo,
       );
     }
+    // MacIAs con la caña en las manos: el cuerpo, la caña y las manos que
+    // la agarran.
+    final pescador = e.pescador;
+    pintarPescador(canvas, pescador, cara);
     pintarCana(
       canvas,
       e.mango,
@@ -2215,6 +2436,7 @@ class _PintorLago extends CustomPainter {
       h,
       hilo: 1.4 / e.camara,
     );
+    pintarManosPescador(canvas, pescador);
 
     final anchoHoyo = e.anchoHoyo;
     // La sombra de lo que sale del agua, sobre el hielo (el sol esta a la
@@ -2279,7 +2501,12 @@ class _PintorLago extends CustomPainter {
         e.grosorChico,
         e.pez,
         giro: e.meneoChico,
-        cola: math.sin(tiempo * 15) * .3,
+        // Patalea mientras lo sacan y cuando ve al gigante; colgado, apenas.
+        pataleo:
+            e.guion.subiendo(t) || e.guion.trago != null && t >= e.guion.trago!
+            ? .9
+            : .4,
+        ritmo: e.guion.subiendo(t) ? 2.4 : 1.3,
         tiempo: tiempo,
         anzuelo: conCana,
       );
@@ -2306,9 +2533,12 @@ class _PintorLago extends CustomPainter {
         e.grosorGrande,
         e.pez,
         giro: e.balanceo + e.meneo,
-        cola: pelea
-            ? math.sin(tiempo * 16) * .32
-            : math.sin(tiempo * 4) * (e.sostiene == Equipo.robot ? .08 : .16),
+        pataleo: pelea
+            ? 1
+            : e.sostiene == Equipo.robot
+            ? .15
+            : .4,
+        ritmo: pelea ? 2.6 : .9,
         tiempo: tiempo,
         anzuelo: conCana,
       );
@@ -2432,27 +2662,72 @@ class _PintorLago extends CustomPainter {
     );
   }
 
-  /// Una nube de invierno: bolas blancas con la panza celeste.
+  /// Una nube de invierno, esponjosa: bolas que se juntan en una sola, con
+  /// la panza casi plana; blanca arriba y celeste abajo (la sombra), con la
+  /// luz del sol en las bolas de arriba.
   void _nube(Canvas canvas, Offset centro, double ancho) {
-    final sombra = Paint()
-      ..color = const Color(0xFFC9DFEE).withValues(alpha: .9);
-    final blanca = Paint()..color = Colors.white.withValues(alpha: .92);
-    for (final (x, y, r) in const [
-      (-.3, .05, .2),
-      (-.1, -.08, .27),
-      (.14, -.04, .23),
-      (.33, .06, .17),
-    ]) {
-      canvas.drawCircle(centro + Offset(x, y + .05) * ancho, ancho * r, sombra);
+    const bolas = [
+      (-.32, .02, .16),
+      (-.17, -.08, .21),
+      (.03, -.13, .25),
+      (.23, -.06, .2),
+      (.37, .02, .14),
+    ];
+    final silueta = Path();
+    for (final (x, y, r) in bolas) {
+      silueta.addOval(
+        Rect.fromCircle(
+          center: centro + Offset(x, y) * ancho,
+          radius: ancho * r,
+        ),
+      );
     }
-    for (final (x, y, r) in const [
-      (-.3, .02, .19),
-      (-.1, -.11, .26),
-      (.14, -.07, .22),
-      (.33, .03, .16),
-    ]) {
-      canvas.drawCircle(centro + Offset(x, y) * ancho, ancho * r, blanca);
+    silueta.addRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTRB(
+          centro.dx - ancho * .4,
+          centro.dy - ancho * .05,
+          centro.dx + ancho * .46,
+          centro.dy + ancho * .12,
+        ),
+        Radius.circular(ancho * .08),
+      ),
+    );
+    final arriba = centro.dy - ancho * .38;
+    final panza = centro.dy + ancho * .12;
+    canvas
+      ..save()
+      ..clipRect(
+        Rect.fromLTRB(
+          centro.dx - ancho,
+          arriba - ancho,
+          centro.dx + ancho,
+          panza,
+        ),
+      )
+      ..drawPath(
+        silueta,
+        Paint()
+          ..shader = ui.Gradient.linear(
+            Offset(0, arriba),
+            Offset(0, panza),
+            const [Colors.white, Color(0xFFF3F8FC), Color(0xFFC4D9E8)],
+            const [0, .55, 1],
+          ),
+      );
+    for (final (x, y, r) in bolas.take(4)) {
+      final luz = centro + Offset(x - r * .3, y - r * .35) * ancho;
+      canvas.drawCircle(
+        luz,
+        ancho * r * .6,
+        Paint()
+          ..shader = ui.Gradient.radial(luz, ancho * r * .6, [
+            Colors.white.withValues(alpha: .75),
+            Colors.white.withValues(alpha: 0),
+          ]),
+      );
     }
+    canvas.restore();
   }
 
   /// Lo que se mueve del paisaje: los brillos de la nieve, el humo de las
@@ -2562,14 +2837,50 @@ class _PintorLago extends CustomPainter {
     // El equipo que esta llegando baja el cable.
     double baja(double llega) => ((llega - .35) / .35).clamp(0.0, 1.0);
     if (grua != null && e.sostiene != Equipo.grua) {
-      final antes = grua.llega < .7;
-      final fin = antes
-          ? Offset.lerp(grua.punta, boca, baja(grua.llega))!
-          : grua.punta + Offset(0, h * .06);
+      final suelta = e.guion.soltado(Equipo.grua);
+      final Offset fin;
+      if (suelta != null && e.t > suelta) {
+        // Suelta el pez: el gancho sube hasta la punta, hamacandose.
+        final desde = e._bocaSostenidaEn(suelta);
+        final arriba = grua.punta + Offset(0, h * .05);
+        fin =
+            Offset.lerp(desde, arriba, grua.recoge)! +
+            Offset(math.sin(e.t * 7) * h * .025 * (1 - grua.recoge * .6), 0) *
+                grua.recoge;
+      } else {
+        fin = grua.llega < .7
+            ? Offset.lerp(grua.punta, boca, baja(grua.llega))!
+            : grua.punta + Offset(0, h * .06);
+      }
       if (grua.llega > .35) {
         canvas.drawLine(grua.punta, fin, cable);
         pintarGancho(canvas, fin, h * .015);
       }
+    }
+    // Cuando la grua agarra el pez, el hilo de la caña se corta y vuelve
+    // enrulandose hacia la punta.
+    final cortado = e.guion.soltado(Equipo.cana);
+    final r = e.guion.ritmo;
+    if (cortado != null && e.t >= cortado && e.t < cortado + .7 * r) {
+      final f = Curves.easeOutCubic.transform((e.t - cortado) / (.7 * r));
+      final punta = e.puntaCana;
+      final suelto = Offset.lerp(
+        e._bocaSostenidaEn(cortado),
+        punta + Offset(w * .02, h * .07),
+        f,
+      )!;
+      final medio =
+          Offset.lerp(punta, suelto, .5)! +
+          Offset(math.sin(f * 16) * h * .025 * (1 - f), h * .06 * (1 - f * .6));
+      canvas.drawPath(
+        Path()
+          ..moveTo(punta.dx, punta.dy)
+          ..quadraticBezierTo(medio.dx, medio.dy, suelto.dx, suelto.dy),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4 / e.camara
+          ..color = Colors.white.withValues(alpha: .92 * (1 - f)),
+      );
     }
     for (final equipo in [Equipo.helicoptero, Equipo.carga]) {
       final heli = e.helicoptero(equipo);
@@ -2844,19 +3155,25 @@ void _pintarEsquirlas(
 /// anchas que son y cuanto bajan del horizonte (en altos).
 const _cabanas = [(.02, .2, .015), (-.62, .15, .01), (1.15, .13, .008)];
 
-/// El paisaje del lago que no se mueve (las montañas, los pinos, el hielo,
-/// las cabañas y el muelle), dibujado una sola vez: en cada cuadro se
-/// repite la grabacion, que es mucho mas barato.
+/// El paisaje del lago que no se mueve, dibujado una sola vez (en cada
+/// cuadro se repite la grabacion, que es mucho mas barato): las montañas con
+/// su cara al sol y su cara en sombra, nieve en las puntas y niebla al pie;
+/// los pinos nevados de la orilla, el campo de nieve con sus lomas y las
+/// marcas del viento, las cabañas de troncos y el muelle.
 ui.Picture _grabarPaisaje(double w, double h) {
   final grabadora = ui.PictureRecorder();
   final canvas = Canvas(grabadora);
+  // Sin tamaño (el primer cuadro), las montañas no avanzarian nunca.
+  if (w <= 0 || h <= 0) return grabadora.endRecording();
   final horizonte = h * .46;
-  // Las montañas, en tres capas (las de atras mas claras), con nieve en
-  // las puntas y el lado de la sombra (el sol esta a la izquierda).
-  for (final (alto, color, paso, semilla) in [
-    (.17, const Color(0xFFC3D9E8), .16, 2),
-    (.12, const Color(0xFFA7C6DA), .12, 4),
-    (.07, const Color(0xFF8DB2C9), .09, 6),
+
+  // Las montañas, en tres capas: las de atras mas claras (hay aire en el
+  // medio). Cada pico tiene la cara del sol (a la izquierda) y la de la
+  // sombra, nieve arriba con el borde dentado y alguna canaleta de nieve.
+  for (final (alto, luz, sombra, paso, semilla) in const [
+    (.19, Color(0xFFD3E3EE), Color(0xFFB8CEDE), .17, 2),
+    (.14, Color(0xFFB4CCDD), Color(0xFF93B2C8), .13, 4),
+    (.085, Color(0xFF9DBBD0), Color(0xFF7798B1), .095, 6),
   ]) {
     final r = math.Random(semilla);
     final picos = <Offset>[];
@@ -2871,12 +3188,25 @@ ui.Picture _grabarPaisaje(double w, double h) {
                   alto *
                   (arriba
                       ? .6 + r.nextDouble() * .4
-                      : .12 + r.nextDouble() * .25),
+                      : .1 + r.nextDouble() * .25),
         ),
       );
       x += w * paso * (.7 + r.nextDouble() * .6);
       arriba = !arriba;
     }
+    final caraLuz = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, horizonte - h * alto),
+        Offset(0, horizonte),
+        [Color.lerp(luz, Colors.white, .25)!, luz],
+      );
+    final caraSombra = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, horizonte - h * alto),
+        Offset(0, horizonte),
+        [Color.lerp(sombra, luz, .2)!, sombra],
+      );
+    // Primero la silueta entera (para que no queden huecos) en la sombra.
     final cordillera = Path()..moveTo(-w * 3, horizonte + 1);
     for (final p in picos) {
       cordillera.lineTo(p.dx, p.dy);
@@ -2884,209 +3214,529 @@ ui.Picture _grabarPaisaje(double w, double h) {
     cordillera
       ..lineTo(w * 4, horizonte + 1)
       ..close();
-    canvas.drawPath(
-      cordillera,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color.lerp(color, Colors.white, .3)!, color],
-        ).createShader(Rect.fromLTRB(0, horizonte - h * alto, w, horizonte)),
-    );
-    final sombra = Paint()
-      ..color = const Color(0xFF52789A).withValues(alpha: .16);
-    final nieve = Paint()..color = Colors.white.withValues(alpha: .9);
+    canvas.drawPath(cordillera, caraSombra);
+    final nieveLuz = Paint()..color = Colors.white.withValues(alpha: .95);
+    final nieveSombra = Paint()
+      ..color = const Color(0xFFDCEAF4).withValues(alpha: .95);
     for (var i = 1; i < picos.length - 1; i++) {
       final pico = picos[i];
       final antes = picos[i - 1];
       final despues = picos[i + 1];
       if (pico.dy > antes.dy || pico.dy > despues.dy) continue;
+      // La cara del sol: del valle de la izquierda al pico, y baja por la
+      // arista hasta el pie.
+      final pie = Offset(
+        pico.dx + (despues.dx - pico.dx) * (.15 + r.nextDouble() * .2),
+        horizonte + 1,
+      );
+      canvas.drawPath(
+        Path()
+          ..moveTo(antes.dx, antes.dy)
+          ..lineTo(pico.dx, pico.dy)
+          ..lineTo(pie.dx, pie.dy)
+          ..lineTo(antes.dx, horizonte + 1)
+          ..close(),
+        caraLuz,
+      );
+      // La nieve de arriba, con el borde de abajo dentado; mas celeste del
+      // lado de la sombra.
+      final baja = (horizonte - pico.dy) * (.28 + r.nextDouble() * .12);
+      double hasta(Offset otro) =>
+          (baja / math.max(1.0, otro.dy - pico.dy)).clamp(0.0, .9);
+      final izquierda = Offset.lerp(pico, antes, hasta(antes))!;
+      final derecha = Offset.lerp(pico, despues, hasta(despues))!;
+      final arista = Offset.lerp(pico, pie, hasta(pie))!;
+      final dientes = <Offset>[];
+      for (var k = 0; k <= 6; k++) {
+        final f = k / 6;
+        final punto = Offset.lerp(izquierda, arista, f)!;
+        dientes.add(punto + Offset(0, k.isOdd ? baja * .18 : -baja * .05));
+      }
+      final dientesSombra = <Offset>[];
+      for (var k = 0; k <= 5; k++) {
+        final f = k / 5;
+        final punto = Offset.lerp(arista, derecha, f)!;
+        dientesSombra.add(punto + Offset(0, k.isOdd ? baja * .2 : -baja * .04));
+      }
       canvas
+        ..drawPath(Path()..addPolygon([pico, ...dientes], true), nieveLuz)
         ..drawPath(
-          Path()
-            ..moveTo(pico.dx, pico.dy)
-            ..lineTo(despues.dx, despues.dy)
-            ..lineTo(pico.dx + (despues.dx - pico.dx) * .35, horizonte)
-            ..close(),
-          sombra,
-        )
-        ..drawPath(
-          Path()
-            ..moveTo(pico.dx, pico.dy)
-            ..lineTo(
-              Offset.lerp(pico, despues, .3)!.dx,
-              Offset.lerp(pico, despues, .3)!.dy,
-            )
-            ..lineTo(
-              pico.dx + (despues.dx - pico.dx) * .1,
-              Offset.lerp(pico, despues, .22)!.dy,
-            )
-            ..lineTo(
-              pico.dx - (pico.dx - antes.dx) * .08,
-              Offset.lerp(pico, antes, .26)!.dy,
-            )
-            ..lineTo(
-              Offset.lerp(pico, antes, .3)!.dx,
-              Offset.lerp(pico, antes, .3)!.dy,
-            )
-            ..close(),
-          nieve,
+          Path()..addPolygon([pico, ...dientesSombra], true),
+          nieveSombra,
         );
+      // Una canaleta de nieve que baja por la cara del sol.
+      final canaleta = Path()
+        ..moveTo(
+          Offset.lerp(izquierda, arista, .5)!.dx,
+          Offset.lerp(izquierda, arista, .5)!.dy,
+        )
+        ..quadraticBezierTo(
+          Offset.lerp(antes, pie, .5)!.dx,
+          Offset.lerp(antes, pie, .5)!.dy - baja * .2,
+          Offset.lerp(antes, pie, .62)!.dx,
+          horizonte - (horizonte - pico.dy) * .18,
+        );
+      canvas.drawPath(
+        canaleta,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = math.max(1.0, w * .004)
+          ..strokeCap = StrokeCap.round
+          ..color = Colors.white.withValues(alpha: .55),
+      );
     }
+    // La niebla al pie de cada capa.
+    canvas.drawRect(
+      Rect.fromLTRB(-w * 3, horizonte - h * alto * .35, w * 4, horizonte + 2),
+      Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(0, horizonte - h * alto * .35),
+          Offset(0, horizonte + 2),
+          [
+            Colors.white.withValues(alpha: 0),
+            Colors.white.withValues(alpha: .42),
+          ],
+        ),
+    );
   }
-  // Los pinos nevados en la orilla de enfrente.
+
+  // El lago: nieve, clara al fondo y mas celeste adelante.
+  canvas.drawRect(
+    Rect.fromLTRB(-w * 4, horizonte, w * 5, h * 6),
+    Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, horizonte),
+        Offset(0, h * 1.2),
+        const [Color(0xFFF8FBFE), Color(0xFFE6F0F6), Color(0xFFD0E2EC)],
+        const [0, .4, 1],
+      ),
+  );
+  // La niebla sobre el horizonte, donde se junta con el cielo.
+  canvas.drawRect(
+    Rect.fromLTRB(-w * 4, horizonte - h * .03, w * 5, horizonte + h * .04),
+    Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, horizonte - h * .03),
+        Offset(0, horizonte + h * .04),
+        [
+          Colors.white.withValues(alpha: 0),
+          Colors.white.withValues(alpha: .7),
+          Colors.white.withValues(alpha: 0),
+        ],
+        const [0, .5, 1],
+      ),
+  );
+
+  // Los pinos nevados de la orilla de enfrente, los de atras mas chicos y
+  // mas claros.
   final azar = math.Random(13);
   for (var i = 0; i < 46; i++) {
     final x = -w * 2.4 + i * w * .11 + azar.nextDouble() * w * .05;
     final alto = h * (.028 + azar.nextDouble() * .026);
-    _pintarPino(canvas, Offset(x, horizonte + 3), alto);
+    _pintarPino(canvas, Offset(x, horizonte + 3), alto, lejos: .55, semilla: i);
   }
-  // El lago: nieve blanca con sombras celestes, hasta donde se vea.
-  canvas.drawRect(
-    Rect.fromLTRB(-w * 4, horizonte, w * 5, h * 6),
-    Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFFF7FBFE), Color(0xFFE3EEF5), Color(0xFFD2E3ED)],
-        stops: [0, .4, 1],
-      ).createShader(Rect.fromLTRB(0, horizonte, w, h * 1.2)),
-  );
-  final banda = Paint()..color = const Color(0xFFBCD4E3).withValues(alpha: .45);
-  for (final (x, y, ancho) in const [
-    (.15, .56, .7),
-    (.75, .63, .9),
-    (.4, .72, 1.1),
-    (-.6, .6, .8),
-    (1.5, .68, 1.0),
-  ]) {
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * x, h * y),
-        width: w * ancho,
-        height: h * .025,
-      ),
-      banda,
+
+  // Las lomas de nieve, con su sombra del lado de abajo, y las marcas que
+  // deja el viento.
+  final lomas = math.Random(17);
+  for (var i = 0; i < 14; i++) {
+    final centro = Offset(
+      -w * 1.5 + lomas.nextDouble() * w * 4,
+      horizonte + h * (.03 + lomas.nextDouble() * .42),
+    );
+    final ancho = w * (.3 + lomas.nextDouble() * .5);
+    final alto = h * (.012 + lomas.nextDouble() * .012);
+    final loma = Rect.fromCenter(center: centro, width: ancho, height: alto);
+    canvas
+      ..drawOval(
+        loma.shift(Offset(0, alto * .4)),
+        Paint()
+          ..shader = ui.Gradient.radial(
+            loma.center + Offset(0, alto * .4),
+            ancho / 2,
+            [
+              const Color(0xFF9FC0D6).withValues(alpha: .35),
+              const Color(0xFF9FC0D6).withValues(alpha: 0),
+            ],
+          ),
+      )
+      ..drawOval(
+        loma,
+        Paint()
+          ..shader = ui.Gradient.radial(loma.center, ancho / 2, [
+            Colors.white.withValues(alpha: .9),
+            Colors.white.withValues(alpha: 0),
+          ]),
+      );
+  }
+  final viento = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..strokeWidth = math.max(1.0, h * .0018)
+    ..color = const Color(0xFFB7D0E0).withValues(alpha: .5);
+  for (var i = 0; i < 22; i++) {
+    final x = -w * 1.5 + lomas.nextDouble() * w * 4;
+    final y = horizonte + h * (.05 + lomas.nextDouble() * .4);
+    final largo = w * (.08 + lomas.nextDouble() * .18);
+    canvas.drawPath(
+      Path()
+        ..moveTo(x, y)
+        ..quadraticBezierTo(x + largo * .5, y - h * .006, x + largo, y),
+      viento,
     );
   }
+  // Algunos pinos sueltos mas cerca, a los costados (se ven cuando la
+  // camara se aleja).
+  for (final (x, y, alto) in const [
+    (-.75, .54, .09),
+    (-.55, .57, .07),
+    (1.35, .55, .085),
+    (1.6, .6, .1),
+    (-1.2, .62, .11),
+    (1.9, .52, .07),
+  ]) {
+    _pintarPino(
+      canvas,
+      Offset(w * x, h * y),
+      h * alto,
+      semilla: (x * 100).round(),
+    );
+  }
+
   // El campamento: la de adelante y las de al lado, que se ven cuando la
   // camara se aleja.
   for (final (x, ancho, baja) in _cabanas) {
     _pintarCabana(canvas, Offset(w * x, horizonte + h * baja), w * ancho);
   }
-  // El muelle de madera donde esta la caña.
-  final tabla = Paint();
+
+  // El muelle de madera donde pesca MacIAs: tablas con veta, los postes de
+  // adelante, la nieve encima y carambanos colgando.
+  final arribaMuelle = h * .832;
+  final abajoMuelle = h * .862;
   for (var i = 0; i < 6; i++) {
     final izquierda = -w * .06 + i * w * .065;
-    tabla.color = i.isEven ? const Color(0xFF8A6239) : const Color(0xFF7A5430);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(izquierda, h * .832, w * .062, h * .03),
-        const Radius.circular(2),
-      ),
-      tabla,
+    final tabla = Rect.fromLTWH(
+      izquierda,
+      arribaMuelle,
+      w * .062,
+      abajoMuelle - arribaMuelle,
     );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(tabla, const Radius.circular(2)),
+      Paint()
+        ..shader = ui.Gradient.linear(tabla.topLeft, tabla.bottomRight, [
+          i.isEven ? const Color(0xFF9A6E42) : const Color(0xFF8A6239),
+          i.isEven ? const Color(0xFF6E4A2A) : const Color(0xFF5E3E22),
+        ]),
+    );
+    final veta = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .8
+      ..color = const Color(0xFF4A2F18).withValues(alpha: .45);
+    for (var k = 0; k < 2; k++) {
+      final y = tabla.top + tabla.height * (.35 + k * .3);
+      canvas.drawPath(
+        Path()
+          ..moveTo(tabla.left + 3, y)
+          ..quadraticBezierTo(
+            tabla.center.dx,
+            y + (k.isEven ? 1.5 : -1.5),
+            tabla.right - 3,
+            y,
+          ),
+        veta,
+      );
+    }
     canvas.drawCircle(
-      Offset(izquierda + w * .012, h * .837),
+      Offset(izquierda + w * .012, arribaMuelle + h * .006),
       1.2,
       Paint()..color = const Color(0xFF3E2716),
     );
   }
-  canvas
-    ..drawRect(
-      Rect.fromLTWH(-w * .06, h * .858, w * .39, h * .006),
-      Paint()..color = const Color(0xFF4E321B),
-    )
-    // La nieve sobre el borde del muelle.
-    ..drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(-w * .06, h * .828, w * .39, h * .007),
-        const Radius.circular(3),
-      ),
-      Paint()..color = Colors.white.withValues(alpha: .9),
+  for (final f in const [.02, .16, .3]) {
+    final poste = Rect.fromLTWH(
+      w * (f - .01),
+      abajoMuelle - h * .004,
+      w * .022,
+      h * .03,
     );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(poste, const Radius.circular(2)),
+      Paint()
+        ..shader = ui.Gradient.linear(
+          poste.centerLeft,
+          poste.centerRight,
+          const [Color(0xFF6B4628), Color(0xFF3B2412)],
+        ),
+    );
+  }
+  canvas.drawRect(
+    Rect.fromLTWH(-w * .06, abajoMuelle - h * .003, w * .39, h * .006),
+    Paint()..color = const Color(0xFF4E321B),
+  );
+  // La nieve de arriba, blanda, y los carambanos del borde.
+  final nieveMuelle = Path()..moveTo(-w * .06, arribaMuelle + h * .004);
+  for (var i = 0; i <= 12; i++) {
+    final x = -w * .06 + w * .39 * i / 12;
+    nieveMuelle.lineTo(x, arribaMuelle - h * (i.isEven ? .004 : .001));
+  }
+  nieveMuelle
+    ..lineTo(w * .33, arribaMuelle + h * .006)
+    ..close();
+  canvas.drawPath(
+    nieveMuelle,
+    Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, arribaMuelle - h * .005),
+        Offset(0, arribaMuelle + h * .006),
+        const [Colors.white, Color(0xFFD5E6F1)],
+      ),
+  );
+  final carambanos = Path();
+  for (var i = 0; i < 9; i++) {
+    final x = -w * .04 + i * w * .042;
+    final largo = h * (.006 + (i * 5 % 4) * .003);
+    carambanos
+      ..moveTo(x - 1.5, abajoMuelle + h * .002)
+      ..lineTo(x + 1.5, abajoMuelle + h * .002)
+      ..lineTo(x, abajoMuelle + h * .002 + largo)
+      ..close();
+  }
+  canvas.drawPath(
+    carambanos,
+    Paint()..color = const Color(0xFFE7F4FC).withValues(alpha: .9),
+  );
   return grabadora.endRecording();
 }
 
-void _pintarPino(Canvas canvas, Offset base, double alto) {
-  const verde = Color(0xFF2F5A4E);
-  final ancho = alto * .62;
-  for (var piso = 0; piso < 3; piso++) {
-    final abajo = base.dy - alto * (.08 + piso * .27);
-    final mitad = ancho / 2 * (1 - piso * .24);
-    final punta = abajo - alto * .42;
+/// Un pino nevado: el tronco y pisos de ramas con el borde dentado, la mitad
+/// del sol mas clara que la de la sombra, y nieve sobre cada piso. Con
+/// [lejos] (0 a 1) se aclara, como los que estan detras del aire.
+void _pintarPino(
+  Canvas canvas,
+  Offset base,
+  double alto, {
+  double lejos = 0,
+  int semilla = 0,
+}) {
+  final r = math.Random(semilla);
+  Color aire(Color c) => Color.lerp(c, const Color(0xFFC9DCE8), lejos)!;
+  final luz = Paint()..color = aire(const Color(0xFF3C6E60));
+  final sombra = Paint()..color = aire(const Color(0xFF1F4239));
+  final nieve = Paint()..color = Colors.white.withValues(alpha: .92);
+  final ancho = alto * .58;
+  canvas.drawRect(
+    Rect.fromLTWH(
+      base.dx - alto * .03,
+      base.dy - alto * .12,
+      alto * .06,
+      alto * .12,
+    ),
+    Paint()..color = aire(const Color(0xFF4A3322)),
+  );
+  const pisos = 4;
+  for (var piso = 0; piso < pisos; piso++) {
+    final abajo = base.dy - alto * (.08 + piso * .21);
+    final mitad = ancho / 2 * (1 - piso * .2);
+    final punta = abajo - alto * (.34 + (piso == pisos - 1 ? .08 : 0));
+    // El borde de abajo, dentado (las puntas de las ramas).
+    final dientes = <Offset>[];
+    const cuantos = 6;
+    for (var k = 0; k <= cuantos; k++) {
+      final f = k / cuantos;
+      dientes.add(
+        Offset(
+          base.dx - mitad + mitad * 2 * f,
+          abajo + (k.isEven ? 0 : -alto * .04) + r.nextDouble() * alto * .015,
+        ),
+      );
+    }
+    final cima = Offset(base.dx, punta);
     canvas
       ..drawPath(
         Path()
-          ..moveTo(base.dx - mitad, abajo)
-          ..lineTo(base.dx, punta)
-          ..lineTo(base.dx + mitad, abajo)
-          ..close(),
-        Paint()..color = verde,
+          ..addPolygon([cima, ...dientes.sublist(0, cuantos ~/ 2 + 1)], true),
+        luz,
       )
       ..drawPath(
-        Path()
-          ..moveTo(base.dx - mitad * .6, abajo - alto * .08)
-          ..lineTo(base.dx, punta)
-          ..lineTo(base.dx + mitad * .5, abajo - alto * .1)
-          ..quadraticBezierTo(
-            base.dx,
-            abajo - alto * .18,
-            base.dx - mitad * .6,
-            abajo - alto * .08,
-          )
-          ..close(),
-        Paint()..color = Colors.white.withValues(alpha: .85),
+        Path()..addPolygon([cima, ...dientes.sublist(cuantos ~/ 2)], true),
+        sombra,
       );
+    // La nieve sobre el piso: mas del lado del sol.
+    canvas.drawPath(
+      Path()
+        ..moveTo(base.dx - mitad * .72, abajo - alto * .07)
+        ..lineTo(cima.dx, cima.dy)
+        ..lineTo(base.dx + mitad * .42, abajo - alto * .11)
+        ..quadraticBezierTo(
+          base.dx,
+          abajo - alto * .15,
+          base.dx - mitad * .72,
+          abajo - alto * .07,
+        )
+        ..close(),
+      nieve,
+    );
   }
 }
 
+/// Una cabaña de troncos: las paredes de troncos con sus puntas en la
+/// esquina, la puerta, la ventana con luz, el techo nevado con carambanos y
+/// la chimenea de piedra (el humo y la bandera, que se mueven, van aparte).
 void _pintarCabana(Canvas canvas, Offset piso, double ancho) {
   final alto = ancho * .55;
   final pared = Rect.fromLTWH(piso.dx, piso.dy - alto, ancho, alto);
   final chimenea = Offset(pared.right - ancho * .2, pared.top - alto * .5);
+  // La chimenea, de piedra.
+  final cajaChimenea = Rect.fromLTWH(
+    chimenea.dx - ancho * .045,
+    chimenea.dy,
+    ancho * .09,
+    alto * .55,
+  );
   canvas
     ..drawRect(
-      Rect.fromLTWH(
-        chimenea.dx - ancho * .04,
-        chimenea.dy,
-        ancho * .08,
-        alto * .5,
-      ),
-      Paint()..color = const Color(0xFF4B3424),
-    )
-    ..drawRect(
-      pared,
+      cajaChimenea,
       Paint()
-        ..shader = const LinearGradient(
-          colors: [Color(0xFF7A5232), Color(0xFF5C3B22)],
-        ).createShader(pared),
+        ..shader = ui.Gradient.linear(
+          cajaChimenea.centerLeft,
+          cajaChimenea.centerRight,
+          const [Color(0xFF8C8580), Color(0xFF5D5753)],
+        ),
     )
     ..drawRect(
       Rect.fromLTWH(
-        pared.left + ancho * .14,
-        pared.top + alto * .3,
-        ancho * .22,
-        alto * .28,
+        chimenea.dx - ancho * .055,
+        chimenea.dy - alto * .04,
+        ancho * .11,
+        alto * .06,
       ),
-      Paint()..color = const Color(0xFFFFD27A),
-    )
-    ..drawRect(
-      Rect.fromLTWH(
-        pared.left + ancho * .6,
-        pared.top + alto * .32,
-        ancho * .2,
-        alto * .68,
-      ),
-      Paint()..color = const Color(0xFF3E2716),
+      Paint()..color = Colors.white.withValues(alpha: .95),
     );
+  // Los troncos de las paredes.
+  const troncos = 6;
+  for (var i = 0; i < troncos; i++) {
+    final fila = Rect.fromLTWH(
+      pared.left,
+      pared.top + alto * i / troncos,
+      ancho,
+      alto / troncos,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(fila, Radius.circular(fila.height / 2)),
+      Paint()
+        ..shader = ui.Gradient.linear(
+          fila.topCenter,
+          fila.bottomCenter,
+          const [Color(0xFF9A6A40), Color(0xFF7A5030), Color(0xFF4E321C)],
+          const [0, .5, 1],
+        ),
+    );
+    // La punta del tronco en la esquina.
+    for (final x in [pared.left - ancho * .015, pared.right + ancho * .015]) {
+      canvas.drawCircle(
+        Offset(x, fila.center.dy),
+        fila.height * .48,
+        Paint()..color = const Color(0xFFC49A6C),
+      );
+    }
+  }
+  // La ventana con luz adentro, y la puerta.
+  final ventana = Rect.fromLTWH(
+    pared.left + ancho * .14,
+    pared.top + alto * .3,
+    ancho * .24,
+    alto * .3,
+  );
+  canvas
+    ..drawRect(
+      ventana.inflate(ancho * .02),
+      Paint()..color = const Color(0xFF3E2716),
+    )
+    ..drawRect(
+      ventana,
+      Paint()
+        ..shader = ui.Gradient.radial(
+          ventana.center,
+          ventana.width * .7,
+          const [Color(0xFFFFF1C2), Color(0xFFFFC65E)],
+        ),
+    )
+    ..drawLine(
+      ventana.topCenter,
+      ventana.bottomCenter,
+      Paint()
+        ..strokeWidth = math.max(1, ancho * .015)
+        ..color = const Color(0xFF3E2716),
+    )
+    ..drawLine(
+      ventana.centerLeft,
+      ventana.centerRight,
+      Paint()
+        ..strokeWidth = math.max(1, ancho * .015)
+        ..color = const Color(0xFF3E2716),
+    )
+    ..drawRRect(
+      RRect.fromRectAndCorners(
+        Rect.fromLTWH(
+          pared.left + ancho * .6,
+          pared.top + alto * .3,
+          ancho * .2,
+          alto * .7,
+        ),
+        topLeft: Radius.circular(ancho * .05),
+        topRight: Radius.circular(ancho * .05),
+      ),
+      Paint()..color = const Color(0xFF3B2414),
+    );
+  // El techo nevado: grueso, con la sombra de abajo y los carambanos.
   final techo = Path()
-    ..moveTo(pared.left - ancho * .08, pared.top + alto * .05)
-    ..lineTo(pared.left + ancho * .1, pared.top - alto * .32)
-    ..lineTo(pared.right - ancho * .1, pared.top - alto * .32)
-    ..lineTo(pared.right + ancho * .08, pared.top + alto * .05)
+    ..moveTo(pared.left - ancho * .1, pared.top + alto * .06)
+    ..lineTo(pared.left + ancho * .1, pared.top - alto * .34)
+    ..quadraticBezierTo(
+      pared.center.dx,
+      pared.top - alto * .4,
+      pared.right - ancho * .1,
+      pared.top - alto * .34,
+    )
+    ..lineTo(pared.right + ancho * .1, pared.top + alto * .06)
+    ..quadraticBezierTo(
+      pared.center.dx,
+      pared.top + alto * .12,
+      pared.left - ancho * .1,
+      pared.top + alto * .06,
+    )
     ..close();
-  canvas.drawPath(techo, Paint()..color = Colors.white);
+  final cajaTecho = techo.getBounds();
+  canvas
+    ..drawPath(
+      techo.shift(Offset(0, alto * .05)),
+      Paint()..color = const Color(0xFF9FC0D6).withValues(alpha: .6),
+    )
+    ..drawPath(
+      techo,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          cajaTecho.topCenter,
+          cajaTecho.bottomCenter,
+          const [Colors.white, Color(0xFFE4EEF5)],
+        ),
+    );
+  final hielo = Path();
+  for (var k = 0; k < 7; k++) {
+    final x = pared.left - ancho * .05 + ancho * 1.1 * k / 6;
+    final largo = alto * (.08 + (k * 3 % 4) * .03);
+    final y = pared.top + alto * .08;
+    hielo
+      ..moveTo(x - ancho * .015, y)
+      ..lineTo(x + ancho * .015, y)
+      ..lineTo(x, y + largo)
+      ..close();
+  }
+  canvas.drawPath(
+    hielo,
+    Paint()..color = const Color(0xFFE7F4FC).withValues(alpha: .9),
+  );
   // El mastil de la bandera (la bandera flamea: va aparte).
   final mastil = Offset(pared.right + ancho * .3, piso.dy);
   canvas.drawLine(
