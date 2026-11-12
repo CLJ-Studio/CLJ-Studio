@@ -83,6 +83,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # El agua del cardumen de la pesca (causticas y rayos de luz).
+  shaders:
+    - shaders/agua_pesca.frag
+
   assets:
     - assets/animations/
     # Los sonidos del casino de MacIAs (blackjack y ruleta): grabaciones CC0

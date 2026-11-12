@@ -347,6 +347,24 @@ class _BonoPescaState extends State<BonoPesca>
     }
     _fin = t;
     _reloj.start();
+    _cargarAgua();
+  }
+
+  /// El agua del cardumen la pinta un shader (la luz que baila y los rayos).
+  /// Se carga mientras la pantalla se congela; si no llega, queda el dibujo
+  /// de siempre.
+  ui.FragmentShader? _agua;
+
+  Future<void> _cargarAgua() async {
+    try {
+      final programa = await ui.FragmentProgram.fromAsset(
+        'shaders/agua_pesca.frag',
+      );
+      if (!mounted) return;
+      setState(() => _agua = programa.fragmentShader());
+    } on Object {
+      // Sin shader (un navegador viejo): el agua dibujada a mano.
+    }
   }
 
   @override
@@ -367,6 +385,7 @@ class _BonoPescaState extends State<BonoPesca>
     _cabezas?.dispose();
     _cabeza?.dispose();
     _robot?.dispose();
+    _agua?.dispose();
     _paisaje?.dispose();
     _reloj.dispose();
     _tiempo.dispose();
@@ -537,6 +556,7 @@ class _BonoPescaState extends State<BonoPesca>
               pez: widget.pez,
               tiempo: t - cardumen,
               entrada: enCardumen,
+              agua: _agua,
             ),
           if (etapa.index >= EtapaBono.pesca.index) _escenaPesca(t, etapa),
           if (etapa == EtapaBono.tarjeta) _tarjeta(t),
@@ -1542,12 +1562,16 @@ class _Cardumen extends StatefulWidget {
     required this.pez,
     required this.tiempo,
     required this.entrada,
+    this.agua,
     super.key,
   });
 
   final Pez pez;
   final double tiempo;
   final double entrada;
+
+  /// El shader del agua, si ya cargo.
+  final ui.FragmentShader? agua;
 
   @override
   State<_Cardumen> createState() => _CardumenState();
@@ -1590,6 +1614,7 @@ class _CardumenState extends State<_Cardumen> {
         pez: widget.pez,
         peces: _peces,
         tiempo: widget.tiempo,
+        agua: widget.agua,
       ),
       child: const SizedBox.expand(),
     ),
@@ -1601,48 +1626,59 @@ class _PintorCardumen extends CustomPainter {
     required this.pez,
     required this.peces,
     required this.tiempo,
+    this.agua,
   });
 
   final Pez pez;
   final List<_Nadador> peces;
   final double tiempo;
+  final ui.FragmentShader? agua;
 
   @override
   void paint(Canvas canvas, Size size) {
     final todo = Offset.zero & size;
     final w = size.width;
     final h = size.height;
-    canvas.drawRect(
-      todo,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF7EC3E6), Color(0xFF2675A8), Color(0xFF0A2C49)],
-          stops: [0, .45, 1],
-        ).createShader(todo),
-    );
-    // La luz que entra por el hielo, en rayos que se mecen.
-    for (var i = 0; i < 6; i++) {
-      final x = w * (.05 + i * .18) + math.sin(tiempo * .6 + i) * 18;
-      final rayo = Path()
-        ..moveTo(x, 0)
-        ..lineTo(x + w * .07, 0)
-        ..lineTo(x + w * .24, h)
-        ..lineTo(x + w * .1, h)
-        ..close();
-      canvas.drawPath(
-        rayo,
+    final agua = this.agua;
+    if (agua != null) {
+      agua
+        ..setFloat(0, w)
+        ..setFloat(1, h)
+        ..setFloat(2, tiempo);
+      canvas.drawRect(todo, Paint()..shader = agua);
+    } else {
+      canvas.drawRect(
+        todo,
         Paint()
-          ..shader = LinearGradient(
+          ..shader = const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white.withValues(alpha: .2),
-              Colors.white.withValues(alpha: 0),
-            ],
-          ).createShader(Rect.fromLTWH(x, 0, w * .24, h)),
+            colors: [Color(0xFF7EC3E6), Color(0xFF2675A8), Color(0xFF0A2C49)],
+            stops: [0, .45, 1],
+          ).createShader(todo),
       );
+      // La luz que entra por el hielo, en rayos que se mecen.
+      for (var i = 0; i < 6; i++) {
+        final x = w * (.05 + i * .18) + math.sin(tiempo * .6 + i) * 18;
+        final rayo = Path()
+          ..moveTo(x, 0)
+          ..lineTo(x + w * .07, 0)
+          ..lineTo(x + w * .24, h)
+          ..lineTo(x + w * .1, h)
+          ..close();
+        canvas.drawPath(
+          rayo,
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white.withValues(alpha: .2),
+                Colors.white.withValues(alpha: 0),
+              ],
+            ).createShader(Rect.fromLTWH(x, 0, w * .24, h)),
+        );
+      }
     }
     // El techo de hielo, visto desde abajo.
     final techo = Path()..moveTo(0, 0);
@@ -1658,24 +1694,76 @@ class _PintorCardumen extends CustomPainter {
     );
 
     // La luz que baila en el agua: una red de ondas claras que se mueve.
-    final onda = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..color = Colors.white.withValues(alpha: .07);
-    for (var j = 0; j < 7; j++) {
-      final red = Path();
-      for (var x = -10.0; x <= w + 10; x += 12) {
-        final y =
-            h * (.1 + j * .075) +
-            math.sin(x * .035 + tiempo * 1.4 + j * 1.7) * 9 +
-            math.sin(x * .09 - tiempo * 2.1 + j) * 4;
-        if (x < 0) {
-          red.moveTo(x, y);
-        } else {
-          red.lineTo(x, y);
+    if (agua == null) {
+      final onda = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = Colors.white.withValues(alpha: .07);
+      for (var j = 0; j < 7; j++) {
+        final red = Path();
+        for (var x = -10.0; x <= w + 10; x += 12) {
+          final y =
+              h * (.1 + j * .075) +
+              math.sin(x * .035 + tiempo * 1.4 + j * 1.7) * 9 +
+              math.sin(x * .09 - tiempo * 2.1 + j) * 4;
+          if (x < 0) {
+            red.moveTo(x, y);
+          } else {
+            red.lineTo(x, y);
+          }
         }
+        canvas.drawPath(red, onda);
       }
-      canvas.drawPath(red, onda);
+    }
+    // El fondo, lejos: rocas con poca luz (el agua las apaga) y el filo
+    // celeste que les da la luz de arriba.
+    for (var i = 0; i < 6; i++) {
+      final cx = w * (.02 + i * .2) + (i * 29 % 23);
+      final ancho = w * (.2 + (i * 13 % 7) / 7 * .14);
+      final alto = h * (.05 + (i * 31 % 5) / 5 * .05);
+      final roca = Path()
+        ..moveTo(cx - ancho / 2, h)
+        ..cubicTo(
+          cx - ancho * .45,
+          h - alto * 1.2,
+          cx - ancho * .1,
+          h - alto * 1.25,
+          cx + ancho * .05,
+          h - alto,
+        )
+        ..cubicTo(
+          cx + ancho * .2,
+          h - alto * .8,
+          cx + ancho * .45,
+          h - alto * .7,
+          cx + ancho / 2,
+          h,
+        )
+        ..close();
+      canvas
+        ..drawPath(
+          roca,
+          Paint()
+            ..shader = ui.Gradient.linear(
+              Offset(0, h - alto * 1.25),
+              Offset(0, h),
+              const [Color(0xFF1B4A6B), Color(0xFF071C30)],
+            ),
+        )
+        ..drawPath(
+          roca,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..shader = ui.Gradient.linear(
+              Offset(0, h - alto * 1.25),
+              Offset(0, h - alto * .5),
+              [
+                const Color(0xFF9FE3FF).withValues(alpha: .5),
+                const Color(0x009FE3FF),
+              ],
+            ),
+        );
     }
     // Las algas del fondo, que se mecen.
     for (var i = 0; i < 9; i++) {
@@ -1695,11 +1783,14 @@ class _PintorCardumen extends CustomPainter {
       canvas.drawPath(
         alga,
         Paint()
-          ..color = Color.lerp(
-            const Color(0xFF0E4D47),
-            const Color(0xFF1C6E5E),
-            (i % 3) / 2,
-          )!.withValues(alpha: .85),
+          ..shader = ui.Gradient.linear(Offset(x, h - alto), Offset(x, h), [
+            Color.lerp(
+              const Color(0xFF2E9C7E),
+              const Color(0xFF3FB58A),
+              (i % 3) / 2,
+            )!.withValues(alpha: .9),
+            const Color(0xFF0A3A3A).withValues(alpha: .9),
+          ]),
       );
     }
     // Lo que flota en el agua.
@@ -1745,6 +1836,12 @@ class _PintorCardumen extends CustomPainter {
           ..scale(-1, 1)
           ..translate(-caja.center.dx, 0);
       }
+      // Sube y baja nadando: la nariz apunta hacia donde va.
+      final sube = math.cos(tiempo * 2.2 + pescado.fase) * 13.2;
+      canvas
+        ..translate(caja.center.dx, caja.center.dy)
+        ..rotate(math.atan2(sube, velocidad) * .6)
+        ..translate(-caja.center.dx, -caja.center.dy);
       pintarPez(
         canvas,
         caja,
@@ -1760,6 +1857,26 @@ class _PintorCardumen extends CustomPainter {
         canvas,
         caja.center - Offset(letra.width / 2 - ancho * .06, letra.height / 2),
       );
+    }
+
+    // Adelante de todo: plancton que brilla y pasa rapido (esta cerca). Su
+    // luz se suma a lo que tiene debajo.
+    final brillo = Paint()..blendMode = BlendMode.plus;
+    for (var i = 0; i < 14; i++) {
+      final c = Offset(
+        (i * 97 % w + tiempo * (22 + i % 4 * 9)) % (w + 40) - 20,
+        (i * 151 % h -
+                tiempo * (9 + i % 3 * 5) +
+                math.sin(tiempo * 1.1 + i) * 10) %
+            h,
+      );
+      final radio = 5.0 + (i % 3) * 3;
+      final titila = .5 + .5 * math.sin(tiempo * 3 + i * 1.9);
+      brillo.shader = ui.Gradient.radial(c, radio, [
+        const Color(0xFFBFF4FF).withValues(alpha: .5 * titila),
+        const Color(0x00BFF4FF),
+      ]);
+      canvas.drawCircle(c, radio, brillo);
     }
   }
 
@@ -2601,6 +2718,8 @@ class _PintorLago extends CustomPainter {
     // grande. El hielo que vuela: cuando sale el gigante y el robot.
     final g = e.guion;
     _pintarGotas(canvas, e.hoyo, (t - .8 * r) / r, h * .35, 1);
+    _pintarGolpe(canvas, e.hoyo, (t - .8 * r) / r, e.anchoHoyo * .6);
+    _pintarGolpe(canvas, e.hoyo, (t - g.afuera) / r, e.anchoHoyo);
     if (g.chicoAfuera case final chico?) {
       _pintarGotas(canvas, e.hoyo, (t - chico) / r, h * .5, 2);
     }
@@ -3746,4 +3865,31 @@ void _pintarCabana(Canvas canvas, Offset piso, double ancho) {
       ..strokeWidth = 2
       ..color = const Color(0xFF7E8B93),
   );
+}
+
+/// El destello de un golpe (cuando pica, cuando el pez termina de salir): un
+/// fogonazo que se suma a lo que hay debajo y un anillo que se abre sobre el
+/// hielo. [edad] en segundos.
+void _pintarGolpe(Canvas canvas, Offset centro, double edad, double ancho) {
+  if (edad < 0 || edad > .35) return;
+  final f = edad / .35;
+  final radio = ancho * (.25 + .9 * Curves.easeOutCubic.transform(f));
+  canvas
+    ..drawCircle(
+      centro,
+      radio,
+      Paint()
+        ..blendMode = BlendMode.plus
+        ..shader = ui.Gradient.radial(centro, radio, [
+          Colors.white.withValues(alpha: .7 * (1 - f)),
+          const Color(0x00FFF3C4),
+        ]),
+    )
+    ..drawOval(
+      Rect.fromCenter(center: centro, width: radio * 2.2, height: radio * .55),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3 * (1 - f) + .5
+        ..color = Colors.white.withValues(alpha: .8 * (1 - f)),
+    );
 }
