@@ -51,8 +51,9 @@ metros suyo.
 Una aplicación **exclusiva de la comunidad UPSA** donde ese mercado tiene
 catálogo, buscador, stock, pedidos y un registro de lo que pasó.
 
-Se entra con el correo institucional. Nadie de afuera puede entrar, ni
-registrarse, ni ver lo que hay adentro.
+Se entra con el correo institucional: `@estudiantes.upsa.edu.bo` para
+estudiantes y `@upsa.edu.bo` para personal de la universidad. Los egresados
+pueden solicitar una insignia que revisa un administrador.
 
 Y hay tres cosas que **deliberadamente no hace**:
 
@@ -113,9 +114,10 @@ dijo qué. Es lo que hará que una calificación futura signifique algo, en vez 
 ser una estrella que se pone sola.
 
 **4 · El teléfono no es público.**
-No aparece en ningún perfil. Se libera únicamente a la contraparte de un pedido
-ya aceptado. Vender sin repartir tu número es algo que el estado de WhatsApp no
-puede ofrecer.
+No aparece en los perfiles públicos. En una compra se libera a la contraparte
+cuando el pedido ya está aceptado. Si un vendedor decide participar en el
+directorio de proveedores, también permite que las cuentas autorizadas de la
+UPSA lo contacten por WhatsApp.
 
 **5 · El stock lo lleva el servidor, no la buena fe.**
 El descuento es atómico: si dos personas aceptan a la vez la última porción,
@@ -147,23 +149,45 @@ usadas y el código sobrevive a que salgas de la app a leer el correo.
 
 **Pedidos completos.** Carrito, punto de entrega, aceptar o rechazar, stock
 atómico, vencimiento automático si nadie responde, y confirmación de entrega
-por las dos partes.
+por las dos partes. Tanto el comprador como el vendedor pueden cancelar los
+pedidos que todavía lo permiten; si estaban aceptados, se restituye el stock.
+
+**Volver a pedir.** Reconstruye el carrito con los precios y el stock actuales,
+conservando el sabor elegido. Si una variante ya no existe, avisa para que la
+persona elija desde el local. Dos sabores del mismo producto comparten stock.
+
+**Chat de pedidos.** Comprador y vendedor coordinan dentro de la aplicación,
+con una bandeja de conversaciones y avisos de mensajes nuevos.
 
 **Notificaciones que llevan a algún lado.** Web Push real y campana dentro de
 la app. Cada aviso sabe a dónde va: tocarlo abre el pedido, el local o la
 publicación de la que habla.
 
 **Catálogo con buscador.** Búsqueda por producto, local, persona y categoría,
-tolerante a acentos. Favoritos. Vistas únicas por usuario, no por recarga.
-Catorce categorías. Paginación.
+tolerante a acentos. Las publicaciones se buscan en el servidor sobre todo el
+catálogo; el inicio descarga nuevas tandas al cargar más. Favoritos y vistas
+únicas por usuario, no por recarga.
 
 **Fotos.** Galería por publicación, visor con zoom, y foto de perfil con
-recorte circular antes de subir.
+recorte circular antes de subir. Las portadas se ajustan a 1200 × 900 y se
+codifican en JPEG para reducir el peso.
+
+**Reportes y moderación.** Se puede reportar una publicación desde su detalle.
+El backend conserva los reportes y ofrece funciones restringidas a
+administradores para revisarlos y resolverlos; reportar no oculta por sí solo
+la publicación.
 
 **Perfiles públicos** con biografía, publicaciones y dos interruptores de
 privacidad: mostrar vistas y mostrar favoritos.
 
-**Instalable en Android y iOS**, y modo oscuro en toda la aplicación.
+**Directorio para la UPSA.** Los vendedores eligen si ofrecen sus productos o
+servicios a la universidad. Las cuentas autorizadas consultan el directorio;
+las solicitudes de insignia de egresado pasan por revisión.
+
+**MacIAs.** Asistente dentro de la app.
+
+**Instalable como PWA en Android y iOS.** La aplicación usa actualmente el
+tema claro.
 
 ---
 
@@ -208,7 +232,8 @@ conectamos al mismo proyecto: la base de datos, los usuarios y los pedidos son
 compartidos y están siempre disponibles, sin importar quién tenga la PC
 encendida.
 
-Solo se trabaja en `Backend/` para **cambiar el esquema**:
+En `Backend/` viven el esquema, las funciones del servidor y las plantillas
+del correo de acceso:
 
 ```bash
 cd Backend
@@ -227,8 +252,43 @@ se ejecuta, la app sigue hablando con el esquema viejo.
 ### Desplegar
 
 Netlify compila solo con cada push a `main` (ver [`netlify.toml`](netlify.toml)).
-El commit se inyecta en el build como `VERSION_APP`, y el service worker hace
-`skipWaiting` para que nadie se quede con una copia vieja en caché.
+El build usa Flutter **3.44.8** y se detiene ante el primer error. El commit se
+inyecta como `VERSION_APP`, y el service worker hace `skipWaiting` para
+activar las actualizaciones.
+
+Las Edge Functions y las plantillas de correo se publican por separado en
+Supabase. Los correos de alta y reingreso usan el asunto **Tu código de
+U market** y la variable `{{ .Token }}`; los pasos están en
+[`Backend/supabase/plantillas_correo/README.md`](Backend/supabase/plantillas_correo/README.md).
+
+### Comprobar cambios
+
+El frontend tiene pruebas en `Frontend/test/`:
+
+```bash
+cd Frontend
+flutter analyze
+flutter test
+```
+
+Las pruebas de pedidos recrean el esquema en un PostgreSQL local temporal y
+comprueban, entre otros casos, permisos, precios, variantes, restitución de
+stock y aceptaciones concurrentes. Desde la raíz del repositorio:
+
+```bash
+python -m pip install "psycopg[binary]"
+python Backend/tests/correr_pruebas.py
+```
+
+Requieren Python 3.11 o superior. El ejecutor prepara PostgreSQL y usa
+sustitutos mínimos de los servicios de Supabase; comprueba la lógica de
+pedidos sin conectarse a la base compartida. GitHub las corre solas en cada
+cambio de `Backend/` (ver
+[`.github/workflows/pruebas-backend.yml`](.github/workflows/pruebas-backend.yml)).
+
+Los errores que nadie atrapa en la app publicada quedan anotados en la tabla
+`errores_app` de Supabase, con la versión y la plataforma. Solo los
+administradores pueden leerla.
 
 ---
 
@@ -316,49 +376,34 @@ olvida aparece abierto a las 3 de la mañana. Un horario declarado ("lunes a
 viernes, 10 a 14") lo abriría y cerraría solo. Es una columna y una condición en
 la vista del catálogo.
 
-**Volver a pedir.** Los pedidos cerrados ya tienen todo lo necesario para
-repetirse con un toque. En un campus la gente pide casi siempre lo mismo.
-
 ### Cuando haya más gente adentro
 
-**Paginación del catálogo.** Hoy trae 120 publicaciones de una y filtra en el
-teléfono. Con doscientas publicaciones sigue andando; con mil, la primera carga
-se nota en el WiFi de la U. La solución es paginar por `bumped_at` (keyset, no
-`offset`, que se degrada solo).
+**Afinar la paginación.** El catálogo ya carga nuevas tandas desde el servidor,
+ordenadas por `bumped_at` e `id`. Si aumenta el volumen, se puede pasar del
+desplazamiento por filas a un cursor con esos dos campos.
 
-**Búsqueda en el servidor.** El buscador compara texto en el dispositivo, así
-que solo encuentra dentro de lo que ya se bajó. Un `tsvector` con índice GIN en
-Postgres busca sobre todo el catálogo, aguanta acentos y tolera que escribas
-"empanda".
+**Mejorar los resultados de búsqueda.** La búsqueda en el servidor ya existe.
+El siguiente paso es ordenar por relevancia, tolerar errores de escritura y
+permitir recorrer más resultados cuando una consulta devuelve muchos.
 
-**Imágenes más livianas.** Es lo que más datos consume hoy: se sube la foto tal
-como sale de la cámara. Generar una miniatura al subir y servir WebP haría que
-el catálogo cargue notablemente más rápido en datos móviles.
+**Miniaturas para el catálogo.** Las portadas ya se redimensionan y comprimen.
+Generar versiones más pequeñas para las tarjetas permitiría reservar la
+imagen grande para el detalle y el visor.
 
 ### Confianza
 
-**Reportar una publicación.** Hay un filtro de palabras, que atrapa lo obvio y
-nada más. Un botón de reportar le da salida a lo que el filtro no ve, y de paso
-avisa qué hay que revisar sin tener que mirar todo.
-
-**Un panel mínimo de moderación.** Una vista con lo reportado y dos botones. No
-hace falta más mientras seamos un campus.
-
-**Dominio propio.** Los correos de acceso salen desde un SMTP genérico y a veces
-caen en spam, que es la peor primera impresión posible. Un dominio propio con
-SPF y DKIM cuesta unos 12 USD al año y lo resuelve.
+**Entrega del correo.** Revisar la autenticación y la reputación del remitente,
+y usar un dominio propio con SPF y DKIM. La marca U market en la plantilla ya
+está contemplada; la llegada a la bandeja de entrada necesita seguimiento.
 
 ### Para saber si va bien
 
 **Guardar qué se busca y no aparece.** Es la señal más barata y más honesta que
 existe: dice qué falta en el catálogo sin preguntarle nada a nadie.
 
-**Registro de errores.** Cuando algo falla en el teléfono de otra persona, hoy
-nos enteramos por WhatsApp y con suerte una captura.
-
-**Un par de pruebas donde duele.** No hace falta cubrir todo: alcanza con las
-funciones de pedidos, que son las que manejan stock y dinero, y son justamente
-las que más cambiaron.
+**Mantener las pruebas de pedidos.** Ya existe un ejecutor que incluye
+concurrencia real y corre en GitHub. Cada cambio en esas funciones debe
+conservar sus casos y agregar una regresión cuando se corrige un fallo.
 
 ### Para trabajar de a dos
 

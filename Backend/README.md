@@ -31,7 +31,8 @@ En el dashboard → **Project Settings → Authentication → SMTP Settings**:
 
 - **Enable Custom SMTP**: activado.
 - Host, puerto, usuario y contraseña del proveedor que uses.
-- **Sender email** y **Sender name**: es lo que ve quien recibe el correo.
+- **Sender email**: la dirección configurada con el proveedor SMTP.
+- **Sender name**: `U market`, el nombre que ve quien recibe el correo.
 
 La contraseña va en `Backend/.env` (ignorado por git), nunca en el repo.
 
@@ -60,7 +61,9 @@ El código va en la plantilla como `{{ .Token }}`. Si esa variable no está, no
 hay código que valga: el correo sale con un enlace y la app sigue pidiendo seis
 dígitos que nunca llegan.
 
-El asunto de las dos: **`Tu codigo de UPSA Eat`**.
+El asunto de las dos: **`Tu código de U market`**. El cuerpo también usa
+U market y conserva `{{ .Token }}`. Estas plantillas se guardan en Supabase;
+publicar el frontend en Netlify no las actualiza.
 
 ### 1.2.2 Frenar el abuso del envio
 

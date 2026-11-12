@@ -1,6 +1,8 @@
-# Plantillas del correo de acceso
+# Plantillas del correo de acceso de U market
 
-`codigo_de_acceso.html` va pegado **en dos sitios** del panel de Supabase:
+La plantilla activa es
+[`../templates/codigo_acceso.html`](../templates/codigo_acceso.html).
+Se aplica **en dos sitios** del panel de Supabase:
 
     Authentication -> Emails -> Confirm sign up
     Authentication -> Emails -> Magic Link
@@ -26,17 +28,28 @@ difícil de notar: probando con la cuenta de uno mismo nunca aparece.
 
 ## Cómo aplicarla
 
-1. **Subject** (los dos): `Tu codigo de UPSA Eat`
-2. **Body**: borrar todo lo que haya y pegar `codigo_de_acceso.html` entero
+1. **Subject** (los dos): `Tu código de U market`
+2. **Body**: pegar `../templates/codigo_acceso.html` entero al configurar un proyecto nuevo; para cambiar solo la marca, conservar el cuerpo activo y editar únicamente ese texto
 3. Guardar
 4. Repetir en la otra plantilla
-5. Probar **con una cuenta nueva**, no con la propia
+5. Comprobar el nombre visible del remitente en SMTP: `U market`
+6. Probar el acceso con una cuenta existente y el alta con una cuenta nueva
 
 Lo único imprescindible es que el cuerpo contenga `{{ .Token }}`. Sin esa
 variable no hay código, salga como salga el diseño.
 
-## Por qué el asunto no dice "verifica" ni "confirma"
+El cambio de marca conserva el HTML, los estilos y las variables de cada
+plantilla. Las versiones anteriores, `codigo_de_acceso.html` y
+`../../plantillas_correo/codigo_acceso.html`, también usan U market; tienen
+diseños distintos, así que no se deben intercambiar para cambiar solo el nombre.
 
-Son de las palabras con más peso en el filtro de spam de Gmail, y el correo ya
-sale con una desventaja: un remitente `@gmail.com` enviado por SMTP externo.
-Mientras no haya dominio propio con SPF y DKIM, conviene no sumar motivos.
+Guardar un HTML o subirlo a GitHub no actualiza los correos del proyecto en
+la nube. El asunto y el cuerpo deben quedar guardados en ambas plantillas de
+Supabase. Netlify publica el frontend, no las plantillas de autenticación.
+
+## Por qué el asunto dice "Tu código"
+
+Describe la acción que espera la aplicación: copiar los seis dígitos. La
+entrega del correo también depende de la configuración y la reputación del
+remitente; cambiar el asunto por sí solo no garantiza que llegue a la bandeja
+de entrada.
