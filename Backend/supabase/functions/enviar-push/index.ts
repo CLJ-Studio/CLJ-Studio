@@ -177,7 +177,47 @@ async function enviarApns(
   );
 }
 
+// Solo la base puede pedir un envio: el disparador de `notifications` llama
+// con la clave de servicio guardada en `configuracion_push`. Sin esta
+// comprobacion bastaba cualquier JWT valido (la clave anonima de la app lo
+// es) para mandarle a cualquier usuario una notificacion con el texto que
+// uno quisiera. Se acepta la clave de servicio de la funcion y, si la base
+// guarda otra (una clave secreta nueva, `sb_secret_...`), la que se ponga en
+// el secreto PUSH_CLAVE.
+const clavesAceptadas = [
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+  Deno.env.get('PUSH_CLAVE'),
+].filter((clave): clave is string => !!clave);
+
+const codificador = new TextEncoder();
+
+// Compara sin cortar en el primer caracter distinto: el tiempo de respuesta
+// no deja adivinar la clave de a poco.
+function igualesSinFiltrar(a: string, b: string): boolean {
+  const x = codificador.encode(a);
+  const y = codificador.encode(b);
+  let distinto = x.length ^ y.length;
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    distinto |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  }
+  return distinto === 0;
+}
+
+function autorizada(peticion: Request): boolean {
+  const cabecera = peticion.headers.get('Authorization') ?? '';
+  const clave = cabecera.startsWith('Bearer ') ? cabecera.slice(7) : '';
+  if (!clave) return false;
+  let valida = false;
+  for (const aceptada of clavesAceptadas) {
+    if (igualesSinFiltrar(clave, aceptada)) valida = true;
+  }
+  return valida;
+}
+
 Deno.serve(async (peticion) => {
+  if (!autorizada(peticion)) {
+    return new Response('no autorizado', { status: 401 });
+  }
   try {
     const { user_id, title, body, order_id, store_id, product_id } =
       await peticion.json();
