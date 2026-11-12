@@ -1,0 +1,41 @@
+# Las pruebas de la logica de pedidos, en un Postgres armado con todas las
+# migraciones (Backend/tests/correr_pruebas.py). Corren cuando cambia algo de
+# Backend/: si una migracion rompe algo, GitHub lo marca en rojo ANTES de que
+# se aplique a mano en el SQL Editor de Supabase.
+#
+# No toca Supabase ni necesita secretos.
+
+name: Pruebas de la base
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Backend/**'
+      - '.github/workflows/pruebas-backend.yml'
+  pull_request:
+    paths:
+      - 'Backend/**'
+      - '.github/workflows/pruebas-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  pedidos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Postgres portatil (unos 22 MB): se baja una vez y queda guardado.
+      - uses: actions/cache@v4
+        with:
+          path: Backend/tests/.postgres
+          key: postgres-17.6.0-${{ runner.os }}-${{ runner.arch }}
+
+      - run: pip install "psycopg[binary]"
+
+      - run: python Backend/tests/correr_pruebas.py

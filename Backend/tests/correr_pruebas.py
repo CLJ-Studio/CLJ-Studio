@@ -449,14 +449,23 @@ def base_local():
          '--auth=trust'],
         check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
+    opciones = f'-p {puerto} -c listen_addresses=localhost'
+    if sys.platform != 'win32':
+        # El socket va en la carpeta temporal: el lugar de fabrica
+        # (/var/run/postgresql) puede no existir o no ser escribible.
+        opciones += f' -k {datos}'
     # Sin tuberias: el servidor hereda la salida, y con una tuberia abierta
     # quien lo lanzo se quedaria esperando a que termine.
-    subprocess.run(
+    arranque = subprocess.run(
         [str(bin_ / f'pg_ctl{exe}'), '-D', str(datos / 'base'), '-l',
-         str(datos / 'servidor.log'), '-o', f'-p {puerto} -c listen_addresses=localhost',
-         '-w', 'start'],
-        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+         str(datos / 'servidor.log'), '-o', opciones, '-w', 'start'],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
+    if arranque.returncode != 0:
+        registro = datos / 'servidor.log'
+        print(registro.read_text(errors='replace') if registro.exists() else '')
+        shutil.rmtree(datos, ignore_errors=True)
+        raise Fallo('Postgres no arranco (arriba, su registro)')
     try:
         with psycopg.connect(dsn, autocommit=True) as admin:
             admin.add_notice_handler(
