@@ -329,7 +329,11 @@ void main() {
       ),
     );
     controlador.buscar('ana');
-    await tester.pump(const Duration(milliseconds: 300));
+    // Pasada la espera de la busqueda en la base (aqui no encuentra nada).
+    await tester.pump(
+      ControladorInicioMarketplace.esperaBusqueda +
+          const Duration(milliseconds: 50),
+    );
 
     Finder resultado(String subtitulo) => find.ancestor(
       of: find.text(subtitulo),
@@ -402,7 +406,19 @@ class _RepositorioFalso extends RepositorioInicioMarketplace {
   Future<List<CategoriaMarketplace>> obtenerCategorias() async => const [];
 
   @override
-  Future<List<ProductoMarketplace>> obtenerPublicaciones() async => [
+  Future<List<ProductoMarketplace>> buscarPublicaciones(
+    String texto, {
+    int cantidad = 60,
+  }) async => const [];
+
+  @override
+  Future<({List<ProductoMarketplace> publicaciones, int filas})>
+  obtenerPublicaciones({
+    int desde = 0,
+    int cantidad = RepositorioInicioMarketplace.tandaPublicaciones,
+  }) async => (publicaciones: _publicaciones, filas: _publicaciones.length);
+
+  List<ProductoMarketplace> get _publicaciones => [
     ProductoMarketplace(
       id: 'p1',
       localId: 'l1',

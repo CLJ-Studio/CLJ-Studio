@@ -98,7 +98,11 @@ class RepositorioInicioMarketplace {
     }
   }
 
-  /// Todo lo publicado en el campus, de todos los vendedores.
+  /// Cuantas publicaciones baja el inicio por tanda.
+  static const tandaPublicaciones = 120;
+
+  /// Una tanda de lo publicado en el campus, de todos los vendedores, desde
+  /// la fila [desde].
   ///
   /// El inicio muestra publicaciones y no locales: con locales, quien
   /// publicaba tres cosas seguia viendo una sola tarjeta y parecia que las
@@ -107,7 +111,16 @@ class RepositorioInicioMarketplace {
   /// Unir `profiles` desde la tabla devuelve vacio para todos menos uno: su
   /// RLS solo deja leer el perfil propio. Por eso el detalle mostraba el
   /// nombre del negocio con un "Por" sin nadie detras.
-  Future<List<ProductoMarketplace>> obtenerPublicaciones() async {
+  ///
+  /// `filas` son las que mando el servidor, antes de descartar las de un
+  /// vendedor inactivo: dicen desde donde pedir la tanda siguiente y si
+  /// quedan mas (si la tanda vino completa). Contar solo las publicaciones
+  /// devueltas repetiria o saltaria algunas entre una tanda y otra.
+  Future<({List<ProductoMarketplace> publicaciones, int filas})>
+  obtenerPublicaciones({
+    int desde = 0,
+    int cantidad = tandaPublicaciones,
+  }) async {
     final (locales, filas) = await (
       obtenerLocales(),
       _cliente
@@ -120,9 +133,40 @@ class RepositorioInicioMarketplace {
           // las vistas que lo habrian subido. Lo popular ya tiene su sitio
           // en el carrusel de destacados.
           .order('bumped_at', ascending: false)
-          .limit(120),
+          // Desempate fijo: con dos en la misma fecha, una tanda y la
+          // siguiente podian repetir una y saltarse otra.
+          .order('id')
+          .range(desde, desde + cantidad - 1),
     ).wait;
 
+    return (publicaciones: _conLocal(filas, locales), filas: filas.length);
+  }
+
+  /// Busca en el catalogo entero, no solo en las tandas que el inicio bajo.
+  ///
+  /// La base encuentra lo mismo que el buscador de la app (ver la migracion
+  /// de `buscar_publicaciones`). Lo mas reciente primero, hasta [cantidad].
+  Future<List<ProductoMarketplace>> buscarPublicaciones(
+    String texto, {
+    int cantidad = 60,
+  }) async {
+    final (locales, filas) = await (
+      obtenerLocales(),
+      _cliente
+          .rpc<dynamic>('buscar_publicaciones', params: {'p_texto': texto})
+          .select(camposProducto)
+          .order('bumped_at', ascending: false)
+          .order('id')
+          .limit(cantidad),
+    ).wait;
+
+    return _conLocal(filas, locales);
+  }
+
+  List<ProductoMarketplace> _conLocal(
+    List<Map<String, dynamic>> filas,
+    List<LocalUniversitario> locales,
+  ) {
     final porId = {for (final local in locales) local.id: local};
 
     return filas

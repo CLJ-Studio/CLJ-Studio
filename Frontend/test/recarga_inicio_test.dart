@@ -189,14 +189,24 @@ class _RepositorioFalso extends RepositorioInicioMarketplace {
   Future<List<CategoriaMarketplace>> obtenerCategorias() async => const [];
 
   @override
-  Future<List<ProductoMarketplace>> obtenerPublicaciones() async {
+  Future<({List<ProductoMarketplace> publicaciones, int filas})>
+  obtenerPublicaciones({
+    int desde = 0,
+    int cantidad = RepositorioInicioMarketplace.tandaPublicaciones,
+  }) async {
     consultas++;
     // Lo que habia al salir la consulta, aunque cambie mientras viaja.
     final respuesta = List.of(productos);
     final espera = retener;
     if (espera != null) await espera.future;
-    return respuesta;
+    return (publicaciones: respuesta, filas: respuesta.length);
   }
+
+  @override
+  Future<List<ProductoMarketplace>> buscarPublicaciones(
+    String texto, {
+    int cantidad = 60,
+  }) async => const [];
 
   @override
   Future<List<ProductoMarketplace>> obtenerPublicacionesPopulares() async =>

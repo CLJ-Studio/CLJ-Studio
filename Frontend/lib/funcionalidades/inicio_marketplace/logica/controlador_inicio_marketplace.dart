@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
@@ -11,9 +12,14 @@ import 'estado_inicio_marketplace.dart';
 
 /// Feed de publicaciones del campus, con busqueda y filtro por categoria.
 ///
-/// El filtrado es en cliente a proposito: a escala de campus son decenas de
-/// publicaciones, y filtrar sobre lo ya cargado hace que escribir en el
-/// buscador responda al instante, sin un viaje al servidor por cada tecla.
+/// El filtrado es en cliente a proposito: filtrar sobre lo ya cargado hace
+/// que escribir en el buscador responda al instante, sin un viaje al servidor
+/// por cada tecla.
+///
+/// Pero lo cargado son solo las tandas mas recientes. Cuando lo filtrado se
+/// acaba, "cargar mas" trae la tanda siguiente; y lo que se escribe en el
+/// buscador tambien se le pregunta a la base, sobre el catalogo entero, cuando
+/// se deja de escribir.
 class ControladorInicioMarketplace extends ChangeNotifier {
   ControladorInicioMarketplace(this.repositorio);
 
@@ -21,13 +27,31 @@ class ControladorInicioMarketplace extends ChangeNotifier {
 
   EstadoInicioMarketplace estado = const EstadoInicioMarketplace();
 
-  /// Catalogo completo sin filtrar; la base de cada filtrado.
+  /// Lo bajado del catalogo, sin filtrar; la base de cada filtrado.
   List<ProductoMarketplace> _todas = const [];
   List<ProductoMarketplace> _populares = const [];
   List<LocalUniversitario> _localesMasVistos = const [];
   List<Publicidad> _publicidad = const [];
   static const _tamanoPagina = 10;
   int _limiteVisible = _tamanoPagina;
+
+  static const _tandaServidor = RepositorioInicioMarketplace.tandaPublicaciones;
+
+  /// Filas del servidor ya bajadas: desde donde pedir la tanda siguiente, y
+  /// cuantas volver a pedir al recargar para no perder lo ya desplegado.
+  int _filasBajadas = 0;
+
+  /// Si la ultima tanda vino completa: puede haber mas en el servidor.
+  bool _hayMasEnServidor = false;
+  bool _bajandoTanda = false;
+
+  /// Lo que la base encontro para lo que se busca, en el catalogo entero.
+  List<ProductoMarketplace> _halladas = const [];
+  Timer? _esperaBusqueda;
+  int _busquedaVigente = 0;
+
+  /// Cuanto se espera a que se deje de escribir para preguntarle a la base.
+  static const esperaBusqueda = Duration(milliseconds: 350);
 
   /// Catálogo sin filtros para construir resultados separados.
   List<ProductoMarketplace> get catalogoCompleto =>
@@ -42,9 +66,22 @@ class ControladorInicioMarketplace extends ChangeNotifier {
       .where((anuncio) => anuncio.ubicacion == ubicacion)
       .toList(growable: false);
 
-  /// Indica si el filtro actual todavía tiene otra tanda de publicaciones.
+  /// Donde busca el panel del buscador: lo ya bajado y, sin repetir, lo que
+  /// la base encontro en el catalogo entero.
+  List<ProductoMarketplace> get resultadosBusqueda {
+    if (_halladas.isEmpty) return catalogoCompleto;
+    final vistas = {for (final publicacion in _todas) publicacion.id};
+    return List.unmodifiable([
+      ..._todas,
+      for (final publicacion in _halladas)
+        if (vistas.add(publicacion.id)) publicacion,
+    ]);
+  }
+
+  /// Indica si el filtro actual todavía tiene otra tanda de publicaciones,
+  /// ya bajada o en el servidor.
   bool get hayMasPublicaciones =>
-      _filtrarTodas().length > estado.publicaciones.length;
+      _filtrarTodas().length > estado.publicaciones.length || _hayMasEnServidor;
 
   /// Una publicacion nueva de cualquier vendedor debe aparecer sola.
   late final _escuchaProductos = EscuchaTabla(
@@ -92,6 +129,7 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   void dispose() {
     _desechado = true;
     _recargaPendiente?.cancel();
+    _esperaBusqueda?.cancel();
     _escuchaProductos.detener();
     _escuchaLocales.detener();
     _escuchaPublicidad.detener();
@@ -108,7 +146,7 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     try {
       final (
         categorias,
-        publicaciones,
+        tanda,
         populares,
         localesMasVistos,
         publicidad,
@@ -119,7 +157,9 @@ class ControladorInicioMarketplace extends ChangeNotifier {
         repositorio.obtenerLocalesMasVistos(),
         repositorio.obtenerPublicidad(),
       ).wait;
-      _todas = publicaciones;
+      _todas = tanda.publicaciones;
+      _filasBajadas = tanda.filas;
+      _hayMasEnServidor = tanda.filas == _tandaServidor;
       _populares = populares;
       _localesMasVistos = localesMasVistos;
       _publicidad = publicidad;
@@ -185,14 +225,19 @@ class ControladorInicioMarketplace extends ChangeNotifier {
   /// inicio no muestra.
   Future<void> _recargarEnSilencio() async {
     try {
-      final (publicaciones, populares, localesMasVistos, publicidad) = await (
-        repositorio.obtenerPublicaciones(),
+      // Tantas filas como las ya bajadas: quien bajo varias tandas no las
+      // pierde por un aviso de la base.
+      final cantidad = math.max(_tandaServidor, _filasBajadas);
+      final (tanda, populares, localesMasVistos, publicidad) = await (
+        repositorio.obtenerPublicaciones(cantidad: cantidad),
         repositorio.obtenerPublicacionesPopulares(),
         repositorio.obtenerLocalesMasVistos(),
         repositorio.obtenerPublicidad(),
       ).wait;
       if (_desechado) return;
-      _todas = publicaciones;
+      _todas = tanda.publicaciones;
+      _filasBajadas = tanda.filas;
+      _hayMasEnServidor = tanda.filas == cantidad;
       _populares = populares;
       _localesMasVistos = localesMasVistos;
       _publicidad = publicidad;
@@ -285,18 +330,79 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     _limiteVisible = _tamanoPagina;
     estado = estado.copiarCon(categoriaId: categoriaId);
     _refiltrar();
+    unawaited(_completarDesdeServidor());
   }
 
-  /// Revela la siguiente tanda sin construir todo el feed en pantalla.
+  /// Revela la siguiente tanda sin construir todo el feed en pantalla. Si lo
+  /// bajado ya no alcanza, la pide al servidor.
   void cargarMasPublicaciones() {
-    if (!hayMasPublicaciones) return;
+    if (_bajandoTanda || !hayMasPublicaciones) return;
     _limiteVisible += _tamanoPagina;
     _refiltrar();
+    unawaited(_completarDesdeServidor());
+  }
+
+  /// Trae tandas del servidor hasta tener lo que hay que mostrar, o hasta que
+  /// no queden. Con una categoria elegida, una tanda puede no traer ninguna
+  /// de ella: por eso es un ciclo y no una sola tanda.
+  Future<void> _completarDesdeServidor() async {
+    if (_bajandoTanda) return;
+    _bajandoTanda = true;
+    try {
+      while (!_desechado &&
+          _hayMasEnServidor &&
+          _filtrarTodas().length < _limiteVisible) {
+        final tanda = await repositorio.obtenerPublicaciones(
+          desde: _filasBajadas,
+        );
+        if (_desechado) return;
+        // Sin repetir: si algo se relanzo mientras tanto, cambio de lugar.
+        final vistas = {for (final publicacion in _todas) publicacion.id};
+        _todas = [
+          ..._todas,
+          for (final publicacion in tanda.publicaciones)
+            if (vistas.add(publicacion.id)) publicacion,
+        ];
+        _filasBajadas += tanda.filas;
+        _hayMasEnServidor = tanda.filas == _tandaServidor;
+        _firmaMostrada = _firmaVisible();
+        _refiltrar();
+      }
+    } catch (_) {
+      // Se vuelve a intentar al llegar otra vez al final.
+    } finally {
+      _bajandoTanda = false;
+    }
   }
 
   void buscar(String texto) {
     estado = estado.copiarCon(busqueda: texto.trim().toLowerCase());
+    _buscarEnServidor(estado.busqueda);
     _refiltrar();
+  }
+
+  /// Le pregunta a la base por [consulta] cuando se deja de escribir. Mientras
+  /// tanto, y si la base no responde, el panel muestra lo encontrado en lo ya
+  /// bajado. Una respuesta que llega tarde, de algo que ya no se busca, se
+  /// descarta.
+  void _buscarEnServidor(String consulta) {
+    _esperaBusqueda?.cancel();
+    final vigente = ++_busquedaVigente;
+    if (consulta.length < 2) {
+      _halladas = const [];
+      return;
+    }
+    _esperaBusqueda = Timer(esperaBusqueda, () async {
+      try {
+        final halladas = await repositorio.buscarPublicaciones(consulta);
+        if (_desechado || vigente != _busquedaVigente) return;
+        _halladas = halladas;
+        notifyListeners();
+      } catch (_) {
+        // Sin respuesta, o sin la funcion en la base todavia: queda lo
+        // encontrado en lo ya bajado.
+      }
+    });
   }
 
   void _refiltrar() {

@@ -326,7 +326,7 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                         padding: const EdgeInsets.fromLTRB(12, 14, 12, 4),
                         child: _ResultadosBusqueda(
                           consulta: estado.busqueda,
-                          publicaciones: controlador.catalogoCompleto,
+                          publicaciones: controlador.resultadosBusqueda,
                           alCerrar: () => controlador.buscar(''),
                         ),
                       ),
