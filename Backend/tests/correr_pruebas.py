@@ -4,7 +4,8 @@ Supabase.
 Arma una base nueva con TODAS las migraciones en orden (y seed.sql, como
 `supabase db reset`), y sobre ella corre:
 
-  1. pruebas_logica_pedidos.sql, dentro de una transaccion que se revierte.
+  1. Cada pruebas_*.sql de esta carpeta (pedidos, errores de la app), cada
+     uno dentro de una transaccion que se revierte.
   2. Las pruebas de concurrencia, que un .sql no puede hacer: dos conexiones
      aceptando A LA VEZ. Una sola conexion es secuencial por definicion, asi
      que ahi la sobreventa nunca se ve aunque exista.
@@ -50,7 +51,6 @@ import psycopg
 AQUI = Path(__file__).resolve().parent
 MIGRACIONES = AQUI.parent / 'supabase' / 'migrations'
 SEED = AQUI.parent / 'supabase' / 'seed.sql'
-PRUEBAS_SQL = AQUI / 'pruebas_logica_pedidos.sql'
 CACHE = AQUI / '.postgres'
 VERSION = '17.6.0'
 
@@ -279,15 +279,17 @@ def armar_base(con: psycopg.Connection) -> None:
 
 
 def correr_pruebas_sql(con: psycopg.Connection) -> None:
-    # Las lineas de psql (\set ...) no son SQL.
-    sql = '\n'.join(
-        linea for linea in PRUEBAS_SQL.read_text(encoding='utf-8').splitlines()
-        if not linea.lstrip().startswith('\\')
-    )
-    try:
-        con.execute(sql)
-    except psycopg.Error as error:
-        raise Fallo(f'pruebas_logica_pedidos.sql: {error}') from error
+    """Cada pruebas_*.sql de esta carpeta, en orden."""
+    for archivo in sorted(AQUI.glob('pruebas_*.sql')):
+        # Las lineas de psql (\set ...) no son SQL.
+        sql = '\n'.join(
+            linea for linea in archivo.read_text(encoding='utf-8').splitlines()
+            if not linea.lstrip().startswith('\\')
+        )
+        try:
+            con.execute(sql)
+        except psycopg.Error as error:
+            raise Fallo(f'{archivo.name}: {error}') from error
 
 
 # ----------------------------------------------------------------------------

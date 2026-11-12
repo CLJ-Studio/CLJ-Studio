@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'arbol_aplicacion/arbol_aplicacion.dart';
+import 'elementos_compartidos/sesion/registro_errores.dart';
 
 /// Punto de entrada de U market.
 ///
@@ -18,6 +19,9 @@ import 'arbol_aplicacion/arbol_aplicacion.dart';
 /// mirando algo.
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Lo que falle sin que nadie lo atrape queda anotado en la base.
+  RegistroErrores.iniciar();
 
   // La app dibuja detras de la barra de estado y la de navegacion, como
   // cualquier app nativa. Sin esto quedaba una franja del color del sistema
