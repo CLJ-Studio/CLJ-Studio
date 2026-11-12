@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../elementos_compartidos/tiempo_real/consulta_compartida.dart';
 import '../modelos/categoria_marketplace.dart';
 import '../modelos/local_universitario.dart';
 import '../modelos/producto_marketplace.dart';
@@ -41,8 +42,17 @@ class RepositorioInicioMarketplace {
   /// Se lee de la vista y no de `stores` porque incluye el avatar del
   /// vendedor y una portada tomada de sus productos: la RLS de `profiles`
   /// impide obtener lo primero con un join normal.
-  Future<List<LocalUniversitario>> obtenerLocales() async {
-    final filas = await _cliente
+  ///
+  /// Las llamadas que llegan juntas comparten una sola consulta: el inicio
+  /// la pide para publicaciones, populares y mas vistos a la vez.
+  Future<List<LocalUniversitario>> obtenerLocales() => _locales.pedir();
+
+  static final _locales = ConsultaCompartida<List<LocalUniversitario>>(
+    _consultarLocales,
+  );
+
+  static Future<List<LocalUniversitario>> _consultarLocales() async {
+    final filas = await Supabase.instance.client
         .from('locales_publicos')
         .select()
         // Los abiertos primero; dentro de cada grupo, los mejor calificados.
@@ -151,7 +161,9 @@ class RepositorioInicioMarketplace {
     int cantidad = 60,
   }) async {
     final (locales, filas) = await (
-      obtenerLocales(),
+      // Los locales del ultimo minuto bastan para nombrar al vendedor de
+      // cada resultado: sin esto cada busqueda los bajaba de nuevo.
+      _locales.reciente(const Duration(minutes: 1)),
       _cliente
           .rpc<dynamic>('buscar_publicaciones', params: {'p_texto': texto})
           .select(camposProducto)
