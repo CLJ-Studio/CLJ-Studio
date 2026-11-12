@@ -2,18 +2,31 @@
 -- PRUEBAS · logica critica de pedidos
 -- ============================================================================
 -- Verifica los riesgos reales del sistema, no el "camino feliz":
---   1. Sobreventa bajo concurrencia (dos compradores, un solo item en stock)
---   2. Solo el vendedor acepta/rechaza
---   3. Solo el comprador cancela
---   4. El WhatsApp NO se filtra antes de aceptar
---   5. El precio lo pone el servidor, no el cliente
---   6. Restitucion de stock al cancelar
---   7. Vencimiento automatico
+--   1. Solo correos institucionales
+--   2. El precio lo pone el servidor, no el cliente
+--   3. El WhatsApp NO se filtra antes de aceptar
+--   4. Solo el vendedor acepta
+--   5. Sobreventa: dos compradores, un solo item en stock
+--   6. El WhatsApp se libera tras aceptar, y solo a quien participa
+--   7. Cancelan las dos partes (nadie mas), y se devuelve el stock
+--   8. Vencimiento automatico
+--   9. Auditoria
+--  10. El comprador cancela antes de que acepten (sin tocar el stock)
+--  11. La entrega la cierran las dos partes: una marca, la OTRA confirma
+--  12. Sabores: precio por sabor, sabor obligatorio y de ese producto, y el
+--      stock compartido entre sabores al aceptar y al devolver
 --
--- COMO EJECUTAR (contra el proyecto de Supabase ya migrado):
+-- La sobreventa con dos aceptaciones A LA VEZ no se puede probar aqui (una
+-- sola conexion es secuencial): la prueba correr_pruebas.py, con dos.
+--
+-- COMO EJECUTAR:
+--   python Backend/tests/correr_pruebas.py
+-- Arma una base local con todas las migraciones y corre esto y las pruebas
+-- de concurrencia. No toca Supabase.
+--
+-- Tambien corre contra un proyecto ya migrado:
 --   psql "$DATABASE_URL" -f tests/pruebas_logica_pedidos.sql
--- Todo corre dentro de una transaccion que se revierte al final:
--- no deja basura en la base.
+-- Todo va dentro de una transaccion que se revierte al final: no deja basura.
 -- ============================================================================
 
 begin;
@@ -83,8 +96,18 @@ declare
   v_comp_b    uuid := gen_random_uuid();
   v_local     uuid;
   v_producto  uuid;
+  v_empanada  uuid;
+  v_jugo      uuid;
+  v_queso     uuid;
+  v_carne     uuid;
+  v_pollo     uuid;
+  v_naranja   uuid;
   v_pedido_a  uuid;
   v_pedido_b  uuid;
+  v_pedido_c  uuid;
+  v_pedido_d  uuid;
+  v_pedido_e  uuid;
+  v_pedido_f  uuid;
   v_stock     integer;
   v_estado    public.estado_pedido;
   v_total     numeric;
@@ -116,8 +139,9 @@ begin
 
   -- Onboarding de los tres.
   update public.profiles
-     set full_name = 'Usuario Demo', career = 'Ingenieria de Sistemas',
-         whatsapp = '59170000000', onboarding_completed = true
+     set full_name = 'Usuario Demo', whatsapp = '59170000000',
+         career_id = (select id from public.careers order by id limit 1),
+         onboarding_completed = true
    where id in (v_vendedor, v_comp_a, v_comp_b);
 
   insert into public.stores (owner_id, name, description, category_id,
@@ -238,21 +262,28 @@ begin
     'Un tercero no puede leer el contacto de un pedido ajeno');
 
   raise notice '';
-  raise notice '=== 7 · CANCELAR Y RESTITUIR STOCK ===';
+  raise notice '=== 7 · CANCELAN LAS DOS PARTES, Y SE DEVUELVE EL STOCK ===';
 
-  -- El vendedor no puede cancelar (solo el comprador).
-  perform pg_temp.actuar_como(v_vendedor);
+  -- Desde agosto cancela cualquiera de las dos partes; un tercero no.
   perform pg_temp.afirmar_error(
     format('select public.cancelar_pedido(%L)', v_pedido_a),
-    'SOLO_EL_COMPRADOR_PUEDE_CANCELAR',
-    'El vendedor no puede cancelar el pedido del comprador');
+    'NO_PARTICIPAS_EN_ESTE_PEDIDO',
+    'Un tercero no puede cancelar un pedido ajeno');
 
-  perform pg_temp.actuar_como(v_comp_a);
-  perform public.cancelar_pedido(v_pedido_a, 'Ya no lo necesito');
+  perform pg_temp.actuar_como(v_vendedor);
+  perform public.cancelar_pedido(v_pedido_a, 'Se me acabo el pan');
 
   select stock into v_stock from public.products where id = v_producto;
   perform pg_temp.afirmar(v_stock = 1,
-    'Cancelar un pedido ACEPTADO devuelve el stock');
+    'El vendedor cancela un pedido ACEPTADO y el stock vuelve');
+
+  -- Las notificaciones ajenas no se ven por RLS: se cuentan como admin.
+  perform pg_temp.actuar_como_admin();
+  perform pg_temp.afirmar(
+    (select count(*) from public.notifications
+      where order_id = v_pedido_a and type = 'pedido_cancelado'
+        and user_id = v_comp_a) = 1,
+    'Al comprador le llega el aviso de que el vendedor cancelo');
 
   raise notice '';
   raise notice '=== 8 · VENCIMIENTO AUTOMATICO ===';
@@ -281,6 +312,166 @@ begin
   perform pg_temp.afirmar(
     (select count(*) from public.order_events where order_id = v_pedido_a) >= 3,
     'order_events registro solicitado -> aceptado -> cancelado');
+
+  raise notice '';
+  raise notice '=== 10 · EL COMPRADOR CANCELA ANTES DE QUE ACEPTEN ===';
+
+  perform pg_temp.actuar_como(v_comp_a);
+  v_pedido_c := public.crear_pedido(
+    jsonb_build_array(jsonb_build_object('product_id', v_producto, 'quantity', 1))
+  );
+  perform public.cancelar_pedido(v_pedido_c);
+
+  perform pg_temp.afirmar(
+    (select status from public.orders where id = v_pedido_c) = 'cancelado',
+    'El comprador cancela su pedido solicitado');
+
+  select stock into v_stock from public.products where id = v_producto;
+  perform pg_temp.afirmar(v_stock = 1,
+    'Cancelar un pedido que nadie acepto no toca el stock (nunca se desconto)');
+
+  raise notice '';
+  raise notice '=== 11 · LA ENTREGA LA CIERRAN LAS DOS PARTES ===';
+
+  perform pg_temp.actuar_como(v_comp_a);
+  v_pedido_d := public.crear_pedido(
+    jsonb_build_array(jsonb_build_object('product_id', v_producto, 'quantity', 1))
+  );
+  perform pg_temp.actuar_como(v_vendedor);
+  perform public.aceptar_pedido(v_pedido_d);
+
+  perform pg_temp.actuar_como(v_comp_b);
+  perform pg_temp.afirmar_error(
+    format('select public.marcar_entregado(%L)', v_pedido_d),
+    'NO_PARTICIPAS_EN_ESTE_PEDIDO',
+    'Un tercero no puede marcar entregado un pedido ajeno');
+
+  perform pg_temp.actuar_como(v_vendedor);
+  perform public.marcar_entregado(v_pedido_d);
+  perform pg_temp.afirmar(
+    (select status from public.orders where id = v_pedido_d) = 'por_confirmar',
+    'Marcar entregado NO cierra: queda esperando a la otra parte');
+
+  perform pg_temp.afirmar_error(
+    format('select public.confirmar_entrega(%L)', v_pedido_d),
+    'YA_LO_MARCASTE',
+    'Quien marco no puede confirmarse a si mismo');
+
+  perform pg_temp.actuar_como(v_comp_b);
+  perform pg_temp.afirmar_error(
+    format('select public.confirmar_entrega(%L)', v_pedido_d),
+    'NO_PARTICIPAS_EN_ESTE_PEDIDO',
+    'Un tercero no puede confirmar la entrega');
+
+  perform pg_temp.actuar_como(v_comp_a);
+  perform pg_temp.afirmar(
+    (select contraparte_whatsapp from public.get_contacto_pedido(v_pedido_d)) = '59170000000',
+    'Mientras se confirma, el WhatsApp sigue disponible');
+
+  perform public.confirmar_entrega(v_pedido_d);
+  perform pg_temp.afirmar(
+    (select status = 'entregado' and confirmed_by = v_comp_a
+       and delivered_marked_by = v_vendedor
+       from public.orders where id = v_pedido_d),
+    'La otra parte confirma: entregado, y consta quien marco y quien confirmo');
+
+  perform pg_temp.afirmar_error(
+    format('select public.cancelar_pedido(%L)', v_pedido_d),
+    'ESTADO_INVALIDO',
+    'Un pedido entregado ya no se puede cancelar');
+
+  raise notice '';
+  raise notice '=== 12 · SABORES ===';
+
+  perform pg_temp.actuar_como_admin();
+  -- Empanada a 8: queso sin precio propio (vale 8), carne a 10, pollo agotado.
+  insert into public.products (store_id, name, description, price, emoji, stock, kind)
+  values (v_local, 'Empanada', 'De horno', 8.00, '🥟', 6, 'producto')
+  returning id into v_empanada;
+  insert into public.product_variants (product_id, name, price, position, is_available)
+  values (v_empanada, 'queso', null, 0, true) returning id into v_queso;
+  insert into public.product_variants (product_id, name, price, position, is_available)
+  values (v_empanada, 'carne', 10.00, 1, true) returning id into v_carne;
+  insert into public.product_variants (product_id, name, price, position, is_available)
+  values (v_empanada, 'pollo', null, 2, false) returning id into v_pollo;
+  -- Otra publicacion con su propio sabor, para intentar colarlo.
+  insert into public.products (store_id, name, description, price, emoji, stock, kind)
+  values (v_local, 'Jugo', 'Natural', 5.00, '🧃', 10, 'producto')
+  returning id into v_jugo;
+  insert into public.product_variants (product_id, name, price, position, is_available)
+  values (v_jugo, 'naranja', 50.00, 0, true) returning id into v_naranja;
+
+  perform pg_temp.actuar_como(v_comp_a);
+  perform pg_temp.afirmar_error(
+    format('select public.crear_pedido(%L::jsonb)',
+      jsonb_build_array(jsonb_build_object('product_id', v_empanada, 'quantity', 1))),
+    'VARIANTE_REQUERIDA',
+    'Un producto con sabores no se pide sin elegir uno');
+
+  perform pg_temp.afirmar_error(
+    format('select public.crear_pedido(%L::jsonb)',
+      jsonb_build_array(jsonb_build_object(
+        'product_id', v_empanada, 'variant_id', v_naranja, 'quantity', 1))),
+    'VARIANTE_NO_DISPONIBLE',
+    'No se puede colar el sabor (y el precio) de otra publicacion');
+
+  perform pg_temp.afirmar_error(
+    format('select public.crear_pedido(%L::jsonb)',
+      jsonb_build_array(jsonb_build_object(
+        'product_id', v_empanada, 'variant_id', v_pollo, 'quantity', 1))),
+    'VARIANTE_NO_DISPONIBLE',
+    'Un sabor agotado no se puede pedir');
+
+  -- 2 de queso (con un precio falso) y 3 de carne.
+  v_pedido_e := public.crear_pedido(
+    jsonb_build_array(
+      jsonb_build_object('product_id', v_empanada, 'variant_id', v_queso,
+                         'quantity', 2, 'unit_price', 1),
+      jsonb_build_object('product_id', v_empanada, 'variant_id', v_carne,
+                         'quantity', 3)
+    )
+  );
+  select total into v_total from public.orders where id = v_pedido_e;
+  perform pg_temp.afirmar(v_total = 49.00,
+    'Total = 2 x 8 (queso, precio del producto) + 3 x 10 (carne) + 3 de envio = 49');
+
+  perform pg_temp.afirmar(
+    (select count(*) from public.order_items
+      where order_id = v_pedido_e
+        and ((variant_name = 'queso' and unit_price = 8.00)
+          or (variant_name = 'carne' and unit_price = 10.00))) = 2,
+    'Cada linea guarda su sabor y su precio');
+
+  perform pg_temp.actuar_como(v_vendedor);
+  perform public.aceptar_pedido(v_pedido_e);
+  select stock into v_stock from public.products where id = v_empanada;
+  perform pg_temp.afirmar(v_stock = 1,
+    'Aceptar descuenta los dos sabores del mismo stock (6 - 5 = 1)');
+
+  -- Las dos lineas son del MISMO producto: hay que devolver las dos.
+  perform pg_temp.actuar_como(v_comp_a);
+  perform public.cancelar_pedido(v_pedido_e);
+  select stock into v_stock from public.products where id = v_empanada;
+  perform pg_temp.afirmar(v_stock = 6,
+    'Cancelar devuelve los dos sabores al stock (vuelve a 6)');
+
+  -- 4 + 4 de un stock de 6: cada linea cabe sola, juntas no.
+  perform pg_temp.actuar_como(v_comp_b);
+  v_pedido_f := public.crear_pedido(
+    jsonb_build_array(
+      jsonb_build_object('product_id', v_empanada, 'variant_id', v_queso, 'quantity', 4),
+      jsonb_build_object('product_id', v_empanada, 'variant_id', v_carne, 'quantity', 4)
+    )
+  );
+  perform pg_temp.actuar_como(v_vendedor);
+  perform pg_temp.afirmar_error(
+    format('select public.aceptar_pedido(%L)', v_pedido_f),
+    'STOCK_INSUFICIENTE_AL_ACEPTAR',
+    'Dos sabores que juntos pasan el stock no se aceptan');
+
+  select stock into v_stock from public.products where id = v_empanada;
+  perform pg_temp.afirmar(v_stock = 6,
+    'Y no queda descontado a medias: el stock sigue en 6');
 
   raise notice '';
   raise notice '########################################';
