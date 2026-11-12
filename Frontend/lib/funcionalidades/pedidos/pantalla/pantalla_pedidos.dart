@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
@@ -8,9 +6,9 @@ import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart'
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../inicio_marketplace/datos/repositorio_inicio_marketplace.dart';
-import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../diseno/tarjeta_pedido.dart';
 import '../logica/controlador_pedidos.dart';
+import '../logica/repetir_pedido.dart';
 import '../modelos/pedido.dart';
 import 'pantalla_chats.dart';
 import 'pantalla_detalle_pedido.dart';
@@ -46,22 +44,6 @@ class _PantallaPedidosState extends State<PantallaPedidos>
     await widget.controlador.cargar();
   }
 
-  ProductoMarketplace? _encontrarProducto(
-    ItemPedido item,
-    List<ProductoMarketplace> productos,
-  ) {
-    for (final producto in productos) {
-      if (item.productoId != null && producto.id == item.productoId) {
-        return producto;
-      }
-    }
-    final nombre = item.nombre.trim().toLowerCase();
-    for (final producto in productos) {
-      if (producto.nombre.trim().toLowerCase() == nombre) return producto;
-    }
-    return null;
-  }
-
   Future<void> _repetir(Pedido pedido) async {
     if (_repitiendoId != null) return;
     setState(() => _repitiendoId = pedido.id);
@@ -77,22 +59,13 @@ class _PantallaPedidosState extends State<PantallaPedidos>
         return;
       }
 
-      final disponibles = <(ProductoMarketplace, int)>[];
-      var omitidos = 0;
-      for (final item in pedido.items) {
-        final producto = _encontrarProducto(item, productos);
-        if (producto == null || !producto.disponible) {
-          omitidos++;
-          continue;
-        }
-        final cantidad = producto.esServicio
-            ? item.cantidad
-            : math.min(item.cantidad, producto.stock);
-        if (cantidad <= 0) {
-          omitidos++;
-          continue;
-        }
-        disponibles.add((producto, cantidad));
+      final (lineas: disponibles, :omitidos, :sinSabor) = repetirPedido(
+        pedido.items,
+        productos,
+      );
+      if (disponibles.isEmpty && sinSabor > 0) {
+        _avisar('Ese sabor ya no está disponible. Elige otro desde el local.');
+        return;
       }
       if (disponibles.isEmpty) {
         _avisar('Los productos de este pedido ya no están disponibles.');
@@ -125,13 +98,21 @@ class _PantallaPedidosState extends State<PantallaPedidos>
       }
 
       carrito.vaciar();
-      for (final (producto, cantidad) in disponibles) {
+      for (final (producto, variante, cantidad) in disponibles) {
         for (var i = 0; i < cantidad; i++) {
-          carrito.agregar(producto, local);
+          carrito.agregar(producto, local, variante: variante);
         }
       }
       await Navigator.of(context).pushNamed(ConfiguracionRutas.carrito);
-      if (omitidos > 0 && mounted) {
+      if (!mounted) return;
+      if (sinSabor > 0) {
+        _avisar(
+          sinSabor == 1
+              ? 'Un sabor ya no está disponible: elige otro desde el local.'
+              : '$sinSabor sabores ya no están disponibles: elige otros '
+                    'desde el local.',
+        );
+      } else if (omitidos > 0) {
         _avisar(
           omitidos == 1
               ? 'Un producto ya no estaba disponible y no se agregó.'
