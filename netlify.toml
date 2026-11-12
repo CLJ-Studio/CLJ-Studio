@@ -3,6 +3,18 @@
 # Netlify no trae Flutter instalado, asi que el build lo clona antes de
 # compilar. La primera vez tarda unos minutos; despues queda en cache.
 #
+# Flutter va con VERSION FIJA, la misma con que se prueba en local. Antes se
+# clonaba `stable` y se actualizaba con `git pull` en cada build. El 11 de
+# noviembre de 2026 ese pull fallo ("divergent branches": la copia guardada
+# es superficial y stable avanzo), el `cd ..` que seguia no corrio y el resto
+# busco Flutter dentro de flutter/. Netlify no publico nada durante horas sin
+# que fallara ningun cambio nuestro. Para subir de version: probarla en local
+# y cambiar FLUTTER_VERSION. Si la copia guardada es otra version, se borra y
+# se clona de nuevo.
+#
+# `set -eu`: el primer comando que falla detiene el build con su propio error,
+# en vez de seguir y fallar mas adelante con uno que confunde.
+#
 # `base` hace que todo corra dentro de Frontend/, y `publish` es relativo
 # a esa carpeta.
 
@@ -10,13 +22,14 @@
   base = "Frontend"
   publish = "build/web"
   command = """
-    if [ -d flutter ]; then
-      cd flutter && git pull && cd ..;
-    else
-      git clone https://github.com/flutter/flutter.git -b stable --depth 1;
+    set -eu
+    FLUTTER_VERSION=3.44.8
+    if ! git -C flutter tag --points-at HEAD 2>/dev/null | grep -qxF "$FLUTTER_VERSION"; then
+      rm -rf flutter
+      git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git flutter
     fi
     flutter/bin/flutter config --enable-web
-    flutter/bin/flutter build web --release --wasm       --dart-define=VERSION_APP="${COMMIT_REF:-local}"       --dart-define=FECHA_VERSION="$(TZ=BOT4 date +%-d.%-m.%H%M)"
+    flutter/bin/flutter build web --release --wasm --dart-define=VERSION_APP="${COMMIT_REF:-local}" --dart-define=FECHA_VERSION="$(TZ=BOT4 date +%-d.%-m.%H%M)"
   """
 
 [build.environment]
@@ -71,7 +84,7 @@
 # NADA se guarda a largo plazo, y es a proposito. Flutter web NO pone un hash
 # en el nombre de sus archivos: la fuente de iconos se recorta en cada build
 # con solo los iconos que se usan, pero sigue llamandose igual; el motor de
-# canvaskit/ cambia cada vez que Netlify baja una version nueva de Flutter, y
+# canvaskit/ cambia cada vez que se sube la version de Flutter, y
 # tambien se llama igual. Guardarlos un anio (como estuvo del 22 de septiembre
 # al 3 de octubre) hacia que un telefono mezclara una version vieja con una
 # nueva: iconos que se veian como cuadrados vacios, o un motor que no
