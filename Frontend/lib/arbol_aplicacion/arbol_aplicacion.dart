@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -188,6 +189,11 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
     debugShowCheckedModeBanner: false,
     theme: ConfiguracionTema.temaClaro,
     themeMode: ThemeMode.light,
+    // Los textos que pone Flutter (el calendario, "Cancelar", "Pegar"), en
+    // español: sin esto salían en inglés aunque el teléfono esté en español.
+    locale: const Locale('es'),
+    supportedLocales: const [Locale('es')],
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
     onGenerateRoute: ArbolRutas.generarRuta,
     // Flutter conserva el teclado al tocar fuera en iOS y Android. Se
     // reemplaza esa acción una sola vez para todos los campos de la app;

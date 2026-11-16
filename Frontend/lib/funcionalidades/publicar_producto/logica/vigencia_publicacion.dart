@@ -235,24 +235,3 @@ String? estadoParaDueno(ProductoMarketplace producto, DateTime ahora) {
   if (venceEn == null) return null;
   return 'HASTA ${textoHastaCorto(venceEn, ahora).toUpperCase()}';
 }
-
-/// Los días que se ofrecen para "Hasta una fecha": de hoy a [cuantos] días.
-List<DateTime> diasParaElegir(DateTime ahora, {int cuantos = 30}) => [
-  for (var i = 0; i <= cuantos; i++)
-    DateTime(ahora.year, ahora.month, ahora.day + i),
-];
-
-/// Cómo se lee un día en esa lista: "Hoy", "Mañana", "Sábado 22 de noviembre".
-String nombreDia(DateTime dia, DateTime ahora) {
-  final hoy = DateTime(ahora.year, ahora.month, ahora.day);
-  final diferencia = DateTime(
-    dia.year,
-    dia.month,
-    dia.day,
-  ).difference(hoy).inDays;
-  if (diferencia == 0) return 'Hoy';
-  if (diferencia == 1) return 'Mañana';
-  final nombre = _diasSemana[dia.weekday - 1];
-  return '${nombre[0].toUpperCase()}${nombre.substring(1)} ${dia.day} de '
-      '${_meses[dia.month - 1]}';
-}

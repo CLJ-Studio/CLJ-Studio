@@ -80,6 +80,11 @@ class SelectorVigenciaPublicacion extends StatelessWidget {
                       final dia = await elegirDiaVigencia(
                         context,
                         ahora: reloj(),
+                        elegido: switch (vigencia) {
+                          HastaDia(:final dia) => dia,
+                          HastaInstante(:final instante) => instante,
+                          _ => null,
+                        },
                       );
                       if (dia != null) alCambiar(HastaDia(dia));
                     },
@@ -103,36 +108,66 @@ class SelectorVigenciaPublicacion extends StatelessWidget {
   }
 }
 
-/// Los próximos días, en palabras: el calendario de Flutter saldría en inglés,
-/// porque la app no carga traducciones de Material. Para una entrada del
-/// sábado o un evento del mes, un mes de días alcanza.
+/// Hasta cuántos días adelante se puede elegir: alcanza para un evento del
+/// semestre sin dejar que algo quede publicado un año por un descuido.
+const diasMaximosVigencia = 180;
+
+/// Un calendario: tocar un día lo elige. Sale en español porque la app carga
+/// las traducciones de Material (ver `ArbolAplicacion`).
+///
+/// Es un [Dialog] propio y no un [AlertDialog]: este mide el ancho de su
+/// contenido, y el calendario no se deja medir así.
 Future<DateTime?> elegirDiaVigencia(
   BuildContext context, {
   required DateTime ahora,
-}) => showDialog<DateTime>(
-  context: context,
-  builder: (contexto) => AlertDialog(
-    title: const Text('¿Hasta qué día se ve?'),
-    contentPadding: const EdgeInsets.only(top: 12),
-    content: SizedBox(
-      width: 360,
-      height: 400,
-      child: ListView(
-        children: [
-          for (final dia in diasParaElegir(ahora))
-            ListTile(
-              leading: const Icon(Icons.event_outlined),
-              title: Text(nombreDia(dia, ahora)),
-              onTap: () => Navigator.of(contexto).pop(dia),
-            ),
-        ],
+  DateTime? elegido,
+}) {
+  final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+  final ultimo = hoy.add(const Duration(days: diasMaximosVigencia));
+  var inicial = elegido == null
+      ? hoy
+      : DateTime(elegido.year, elegido.month, elegido.day);
+  if (inicial.isBefore(hoy) || inicial.isAfter(ultimo)) inicial = hoy;
+
+  return showDialog<DateTime>(
+    context: context,
+    builder: (contexto) => Dialog(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  '¿Hasta qué día se ve?',
+                  style:
+                      DialogTheme.of(contexto).titleTextStyle ??
+                      Theme.of(contexto).textTheme.headlineSmall,
+                ),
+              ),
+              const SizedBox(height: 8),
+              CalendarDatePicker(
+                initialDate: inicial,
+                currentDate: hoy,
+                firstDate: hoy,
+                lastDate: ultimo,
+                onDateChanged: (dia) => Navigator.of(contexto).pop(dia),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(contexto).pop(),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     ),
-    actions: [
-      OutlinedButton(
-        onPressed: () => Navigator.of(contexto).pop(),
-        child: const Text('Cancelar'),
-      ),
-    ],
-  ),
-);
+  );
+}

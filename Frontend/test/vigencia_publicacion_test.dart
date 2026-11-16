@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:upsa_eat/funcionalidades/inicio_marketplace/modelos/producto_marketplace.dart';
 import 'package:upsa_eat/funcionalidades/publicar_producto/diseno/selector_vigencia_publicacion.dart';
@@ -118,16 +119,6 @@ void main() {
         'sáb 21 nov',
       );
     });
-
-    test('los días para elegir: de hoy a un mes, cruzando el fin de mes', () {
-      final dias = diasParaElegir(ahora);
-      expect(dias, hasLength(31));
-      expect(dias.first, DateTime(2026, 11, 16));
-      expect(dias[15], DateTime(2026, 12, 1));
-      expect(nombreDia(dias[0], ahora), 'Hoy');
-      expect(nombreDia(dias[1], ahora), 'Mañana');
-      expect(nombreDia(dias[5], ahora), 'Sábado 21 de noviembre');
-    });
   });
 
   group('el estado que ve quien la publicó', () {
@@ -199,6 +190,10 @@ void main() {
       final elegidas = <VigenciaPublicacion>[];
       await tester.pumpWidget(
         MaterialApp(
+          // Como la app: los textos de Flutter, en español.
+          locale: const Locale('es'),
+          supportedLocales: const [Locale('es')],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
           home: Scaffold(
             body: SingleChildScrollView(
               child: SelectorVigenciaPublicacion(
@@ -230,7 +225,7 @@ void main() {
       expect(elegidas, [const UnDia()]);
     });
 
-    testWidgets('elige un día de la lista, en español', (tester) async {
+    testWidgets('elige un día en el calendario, en español', (tester) async {
       final elegidas = await montar(tester);
 
       await tester.tap(find.text('Hasta que se venda'));
@@ -239,11 +234,27 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('¿Hasta qué día se ve?'), findsOneWidget);
-      expect(find.text('Hoy'), findsOneWidget);
-      await tester.tap(find.text('Sábado 21 de noviembre'));
+      expect(find.text('noviembre de 2026'), findsOneWidget);
+      expect(find.text('Cancelar'), findsOneWidget);
+      await tester.tap(find.text('21'));
       await tester.pumpAndSettle();
 
       expect(elegidas, [HastaDia(DateTime(2026, 11, 21))]);
+    });
+
+    testWidgets('los días que ya pasaron no se pueden elegir', (tester) async {
+      final elegidas = await montar(tester);
+
+      await tester.tap(find.text('Hasta que se venda'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Hasta una fecha…'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('10'));
+      await tester.pumpAndSettle();
+
+      // El dialogo sigue abierto y no se eligio nada.
+      expect(find.text('¿Hasta qué día se ve?'), findsOneWidget);
+      expect(elegidas, isEmpty);
     });
   });
 }
