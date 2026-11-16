@@ -68,6 +68,67 @@ lo que se acordó quede escrito.**
 
 ---
 
+## Propuesta de valor
+
+U market tiene tres lados. Dos lo usan gratis, quien vende y quien compra; el
+tercero, las marcas, paga por llegar a ellos. Lo que pagan las marcas es lo que
+permite que vender y comprar no cueste nada.
+
+### Para quien vende
+
+**Tu vitrina en todo el campus, con pedidos ordenados y sin dar tu número.**
+
+- **Alcance.** Llegas a toda la UPSA, no solo a tus contactos, y lo que
+  publicas no se borra a las 24 horas.
+- **Orden.** Los pedidos llegan con punto de entrega y chat. Los aceptas o
+  rechazas, y el stock se descuenta solo: nadie te pide lo que ya se acabó.
+- **Privacidad.** Tu número solo lo ve quien te compró, y recién cuando aceptas
+  el pedido.
+- **Cero comisión.** El dinero va directo a ti, como hoy.
+- **Números.** Con un local ves tus ventas del día y de la semana, lo más
+  vendido, lo más visto y tus mejores horas.
+- **Una puerta a la universidad.** Un negocio formal puede aparecer en el
+  directorio de proveedores, donde la propia UPSA lo encuentra.
+
+### Para quien compra
+
+**Todo lo que se vende en el campus, a treinta metros, entre compañeros.**
+
+- **Un solo lugar.** Se busca por producto, local, persona o categoría. Ya no
+  hay que revisar historias una por una.
+- **Sin sorpresas.** Ves si hay stock antes de pedir, y la respuesta llega en
+  tiempo real.
+- **Cerca.** Lo recibes en el punto del campus que elijas: Bloque A, Mozza,
+  Jatata.
+- **Confianza.** Todos entran con correo de la UPSA, la entrega la confirman
+  los dos y cualquier publicación se puede reportar.
+- **El mismo precio.** Sin comisiones ni recargos; pagas como siempre.
+- **Rápido.** Favoritos, volver a pedir con un toque, y se instala sin pasar
+  por ninguna tienda.
+
+### Para las marcas
+
+**La comunidad UPSA verificada, justo cuando está por comprar.**
+
+- **Personas reales.** Cada cuenta es un correo de la UPSA: sin bots ni gente
+  de afuera.
+- **En el momento de comprar.** U market se abre para comprar, no para pasar el
+  rato. Un anuncio de comida a media mañana aparece justo cuando alguien está
+  decidiendo qué comer.
+- **Público de la zona.** Ideal para lo que vive de los universitarios: comida,
+  fotocopias, gimnasios, bancos y telefonía con planes para estudiantes,
+  idiomas, eventos.
+- **Un entorno cuidado.** El contenido está moderado, y la marca no recibe datos
+  personales de nadie.
+
+Los anuncios ya se cargan desde la app: dos espacios en el inicio, con imagen,
+enlace y fechas de inicio y fin, sin publicar una versión nueva. Lo siguiente es
+medir cuántas personas ven cada uno y mostrarlos por carrera; los datos para eso
+ya existen, porque las vistas se cuentan por persona y cada estudiante tiene su
+carrera registrada.
+
+---
+
 ## Cómo funciona
 
 **Quien vende** elige entre dos formas, y no son la misma:
@@ -152,6 +213,13 @@ atómico, vencimiento automático si nadie responde, y confirmación de entrega
 por las dos partes. Tanto el comprador como el vendedor pueden cancelar los
 pedidos que todavía lo permiten; si estaban aceptados, se restituye el stock.
 
+**Publicaciones que vencen.** Al publicar se elige hasta cuándo se ve: hasta
+que se venda (sin fecha, en un local), 24 horas o hasta un día. La entrada para
+la fiesta del sábado ya no queda en el catálogo el domingo. Al vencer sale del
+catálogo y a quien la publicó le llega un aviso para volver a publicarla. Una
+venta personal sale sola cuando se confirma la entrega, y "Ya lo vendí" cubre lo
+que se vendió por fuera de la app. Siete días después se borra, con sus fotos.
+
 **Volver a pedir.** Reconstruye el carrito con los precios y el stock actuales,
 conservando el sabor elegido. Si una variante ya no existe, avisa para que la
 persona elija desde el local. Dos sabores del mismo producto comparten stock.
@@ -167,6 +235,16 @@ publicación de la que habla.
 tolerante a acentos. Las publicaciones se buscan en el servidor sobre todo el
 catálogo; el inicio descarga nuevas tandas al cargar más. Favoritos y vistas
 únicas por usuario, no por recarga.
+
+**Sabores.** Una publicación puede tener sabores o variantes, cada uno con su
+precio si hace falta, y todos comparten el mismo stock.
+
+**Destacados del día.** Lo más visto hoy y los locales más visitados hoy, en el
+inicio. Se cuentan personas, no recargas.
+
+**Finanzas del local.** Ventas del día y de los últimos siete días, lo más
+vendido y lo más visto, el mejor día y la mejor hora. Suma también las ventas
+rápidas que el local anota por fuera de los pedidos.
 
 **Fotos.** Galería por publicación, visor con zoom, y foto de perfil con
 recorte circular antes de subir. Las portadas se ajustan a 1200 × 900 y se
@@ -184,7 +262,13 @@ privacidad: mostrar vistas y mostrar favoritos.
 servicios a la universidad. Las cuentas autorizadas consultan el directorio;
 las solicitudes de insignia de egresado pasan por revisión.
 
-**MacIAs.** Asistente dentro de la app.
+**Publicidad administrable.** Los administradores agregan, programan y retiran
+anuncios desde la app, con fecha de inicio y de fin. Si no hay anuncios activos
+o no hay internet, el inicio muestra los de siempre.
+
+**MacIAs.** Un asistente dentro de la app que responde dudas de la
+universidad, cuentas, ortografía, recetas y trivia. Funciona en el propio
+teléfono, sin mandar lo que escribes a un servicio de IA.
 
 **Instalable como PWA en Android y iOS.** La aplicación usa actualmente el
 tema claro.
@@ -308,7 +392,7 @@ Las públicas están en
 [`Frontend/lib/configuracion_aplicacion/configuracion_supabase.dart`](Frontend/lib/configuracion_aplicacion/configuracion_supabase.dart),
 así que **al clonar el repo la app funciona sin configurar nada**.
 
-Para las privadas: copiá `Backend/.env.example` como `Backend/.env` y rellená
+Para las privadas: copia `Backend/.env.example` como `Backend/.env` y rellena
 los valores. Solo hacen falta para tocar el esquema o desplegar funciones, no
 para correr la app.
 
@@ -369,7 +453,7 @@ guardado quién dijo qué, una calificación por fin significa algo: solo puede
 calificar quien participó de un pedido que se cerró. Las columnas
 `rating_average` y `rating_count` ya existen en `profiles` y `stores` esperando
 el flujo. Es lo que más cambia la app de "un tablón de anuncios" a "un lugar
-donde sabés a quién comprarle".
+donde sabes a quién comprarle".
 
 **Horarios del local.** Hoy el local se abre y se cierra a mano, y quien se
 olvida aparece abierto a las 3 de la mañana. Un horario declarado ("lunes a
@@ -377,6 +461,10 @@ viernes, 10 a 14") lo abriría y cerraría solo. Es una columna y una condición
 la vista del catálogo.
 
 ### Cuando haya más gente adentro
+
+**Anuncios medidos y por carrera.** Contar cuántas personas ven cada anuncio y
+dejar que una marca elija a qué carreras mostrárselo. Es lo que convierte los
+espacios del inicio en algo que se puede vender con números.
 
 **Afinar la paginación.** El catálogo ya carga nuevas tandas desde el servidor,
 ordenadas por `bumped_at` e `id`. Si aumenta el volumen, se puede pasar del
