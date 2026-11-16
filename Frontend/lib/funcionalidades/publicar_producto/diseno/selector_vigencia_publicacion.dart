@@ -48,6 +48,7 @@ class SelectorVigenciaPublicacion extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: MenuDesplegableAplicacion(
                 ancho: ancho,
+                titulo: 'Vigencia',
                 etiquetaActual: vigencia.etiqueta(
                   esPersonal: esPersonal,
                   ahora: ahora,

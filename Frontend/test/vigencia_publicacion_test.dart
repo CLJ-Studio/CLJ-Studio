@@ -264,6 +264,9 @@ void main() {
     testWidgets('elige 24 horas', (tester) async {
       final elegidas = await montar(tester);
       expect(find.text('Hasta que se venda'), findsOneWidget);
+      // El menu nacio para categorias: este tiene que decir lo suyo.
+      expect(find.text('VIGENCIA'), findsOneWidget);
+      expect(find.text('CATEGORÍA'), findsNothing);
       expect(
         find.text('Sale sola cuando se entrega la última unidad.'),
         findsOneWidget,

@@ -15,6 +15,7 @@ class MenuDesplegableAplicacion extends StatefulWidget {
     required this.etiquetaActual,
     required this.iconoActual,
     this.ancho = 360,
+    this.titulo = 'Categoría',
     super.key,
   });
 
@@ -22,6 +23,10 @@ class MenuDesplegableAplicacion extends StatefulWidget {
   final String etiquetaActual;
   final IconData iconoActual;
   final double ancho;
+
+  /// Lo que dice encima de la opción elegida. Nació para las categorías, y
+  /// el selector de vigencia mostraba "CATEGORÍA" sobre "Hasta que se venda".
+  final String titulo;
 
   @override
   State<MenuDesplegableAplicacion> createState() =>
@@ -82,7 +87,7 @@ class _MenuDesplegableAplicacionState extends State<MenuDesplegableAplicacion> {
           Semantics(
             button: true,
             expanded: _abierto,
-            label: 'Categoría: ${widget.etiquetaActual}',
+            label: '${widget.titulo}: ${widget.etiquetaActual}',
             child: Material(
               color: fondo,
               borderRadius: BorderRadius.circular(18),
@@ -118,7 +123,7 @@ class _MenuDesplegableAplicacionState extends State<MenuDesplegableAplicacion> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'CATEGORÍA',
+                                widget.titulo.toUpperCase(),
                                 style: tema.textTheme.labelSmall?.copyWith(
                                   color: tema.colorScheme.onSurfaceVariant,
                                   fontSize: 9,
