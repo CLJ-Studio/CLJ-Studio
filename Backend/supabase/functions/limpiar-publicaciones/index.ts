@@ -1,11 +1,21 @@
-// Las RPC seleccionan las publicaciones vencidas hace mas de siete dias.
-// Storage debe terminar antes de borrar las filas para poder reintentar.
+// Borra las publicaciones vencidas o vendidas hace mas de siete dias y
+// despues sus fotos.
+//
+// En ese orden y no al reves: la base borra las filas y devuelve que fotos
+// eran suyas, en una sola sentencia que respeta a quien justo vuelve a
+// publicar. Si despues Storage falla, quedan fotos huerfanas, que no le
+// rompen nada a nadie; borrar las fotos primero podia dejar publicada sin
+// fotos una publicacion que alguien recupero en ese momento.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-type PublicacionParaLimpiar = {
+type PublicacionLimpiada = {
   id: string;
-  rutas: string[];
+  rutas: string[] | null;
 };
+
+// Storage acepta hasta 1000 archivos por llamada; 100 publicaciones con 12
+// fotos cada una ya pasan ese tope.
+const FOTOS_POR_TANDA = 500;
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -48,43 +58,38 @@ Deno.serve(async (peticion) => {
   }
 
   try {
-    const { data, error } = await supabase.rpc('publicaciones_para_limpiar', {
-      p_limite: 100,
-    });
-    if (error) {
-      return Response.json({ error: 'No se pudieron consultar las publicaciones' }, {
-        status: 500,
-      });
-    }
-
-    const pendientes = (data ?? []) as PublicacionParaLimpiar[];
-    if (!pendientes.length) {
-      return Response.json({ publicaciones: 0, fotos: 0 });
-    }
-
-    const rutas = [...new Set(pendientes.flatMap((publicacion) => publicacion.rutas))];
-    if (rutas.length) {
-      const { error: errorFotos } = await supabase.storage
-        .from('imagenes')
-        .remove(rutas);
-      if (errorFotos) {
-        return Response.json({ error: 'No se pudieron borrar las fotos' }, {
-          status: 500,
-        });
-      }
-    }
-
-    const { data: publicaciones, error: errorBorrado } = await supabase.rpc(
-      'borrar_publicaciones',
-      { p_ids: pendientes.map((publicacion) => publicacion.id) },
+    const { data, error } = await supabase.rpc(
+      'limpiar_publicaciones_vencidas',
+      { p_limite: 100 },
     );
-    if (errorBorrado) {
+    if (error) {
       return Response.json({ error: 'No se pudieron borrar las publicaciones' }, {
         status: 500,
       });
     }
 
-    return Response.json({ publicaciones, fotos: rutas.length });
+    const borradas = (data ?? []) as PublicacionLimpiada[];
+    const rutas = [
+      ...new Set(borradas.flatMap((publicacion) => publicacion.rutas ?? [])),
+    ];
+
+    let fotos = 0;
+    let fotosSinBorrar = 0;
+    for (let inicio = 0; inicio < rutas.length; inicio += FOTOS_POR_TANDA) {
+      const tanda = rutas.slice(inicio, inicio + FOTOS_POR_TANDA);
+      const { error: errorFotos } = await supabase.storage
+        .from('imagenes')
+        .remove(tanda);
+      // Las filas ya no estan: una tanda que falla deja fotos huerfanas, no
+      // publicaciones rotas. Se sigue con las demas y se informa cuantas.
+      if (errorFotos) fotosSinBorrar += tanda.length;
+      else fotos += tanda.length;
+    }
+
+    return Response.json(
+      { publicaciones: borradas.length, fotos, fotos_sin_borrar: fotosSinBorrar },
+      { status: fotosSinBorrar ? 502 : 200 },
+    );
   } catch {
     // No incluir errores del proveedor: pueden contener nombres o rutas.
     return Response.json({ error: 'No se pudo completar la limpieza' }, {

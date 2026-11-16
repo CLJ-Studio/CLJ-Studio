@@ -96,8 +96,12 @@ declare
   v_reciente    uuid;
   v_con_pedido  uuid;
   v_pedido      uuid;
+  v_mochila     uuid;
+  v_truco       uuid;
   v_n           integer;
   v_ids         uuid[];
+  -- Las fotos de la vendedora van en su carpeta, como en Storage.
+  v_mia         text := v_vendedora::text;
 begin
   raise notice '';
   raise notice '=== PUBLICACIONES QUE VENCEN ===';
@@ -143,7 +147,7 @@ begin
   values (v_personal, 'Entrada fiesta', 50, 1, now() + interval '2 days')
   returning id into v_entrada;
   insert into public.products (store_id, name, price, stock, image_path)
-  values (v_personal, 'Calculadora', 120, 1, 'u/compartida.jpg')
+  values (v_personal, 'Calculadora', 120, 1, v_mia || '/compartida.jpg')
   returning id into v_calculadora;
   perform pg_temp.afirmar(
     (select expires_at from public.products where id = v_calculadora) is null,
@@ -236,6 +240,14 @@ begin
     (select stock from public.products where id = v_empanada) = 3,
     'Aceptarlo antes de que pase la limpieza del minuto no falla');
 
+  -- Pedirla de nuevo ya vencida, aunque la limpieza todavia no la oculto.
+  perform pg_temp.actuar_como(v_comprador);
+  perform pg_temp.afirmar_error(
+    format('select public.crear_pedido(%L::jsonb)',
+           jsonb_build_array(jsonb_build_object('product_id', v_empanada, 'quantity', 1))),
+    'PRODUCTO_NO_DISPONIBLE',
+    'Pedir algo vencido no se puede aunque todavia se vea');
+
   -- --------------------------------------------------------------------------
   raise notice '--- Vendida';
   perform pg_temp.actuar_como(v_vendedora);
@@ -273,6 +285,35 @@ begin
     (select is_available and sold_at is null from public.products where id = v_jugo),
     'La de un local agotada sigue: el local repone');
 
+  -- La oculto mientras coordinaban la entrega: igual queda vendida.
+  perform pg_temp.actuar_como(v_vendedora);
+  insert into public.products (store_id, name, price, stock)
+  values (v_personal, 'Mochila', 60, 1)
+  returning id into v_mochila;
+  perform pg_temp.actuar_como(v_comprador);
+  v_pedido := public.crear_pedido(
+    jsonb_build_array(jsonb_build_object('product_id', v_mochila, 'quantity', 1)));
+  perform pg_temp.actuar_como(v_vendedora);
+  perform public.aceptar_pedido(v_pedido);
+  update public.products set is_available = false where id = v_mochila;
+  perform public.marcar_entregado(v_pedido);
+  perform pg_temp.actuar_como(v_comprador);
+  perform public.confirmar_entrega(v_pedido);
+  perform pg_temp.afirmar(
+    (select not is_available and sold_at = now() from public.products where id = v_mochila),
+    'Oculta antes de la entrega: igual queda vendida');
+
+  -- La app no puede inventar una venta vieja para adelantar la limpieza.
+  perform pg_temp.actuar_como(v_vendedora);
+  update public.products set sold_at = now() - interval '30 days' where id = v_entrada;
+  insert into public.products (store_id, name, price, stock, sold_at)
+  values (v_personal, 'Truco', 1, 1, now() - interval '30 days')
+  returning id into v_truco;
+  perform pg_temp.afirmar(
+    (select sold_at is null from public.products where id = v_entrada)
+    and (select sold_at is null from public.products where id = v_truco),
+    'La app no escribe sold_at: ni al editar ni al publicar');
+
   -- Vendida por fuera de la app: el stock nunca llego a cero.
   perform pg_temp.actuar_como(v_otro);
   perform pg_temp.afirmar_error(
@@ -294,12 +335,15 @@ begin
   raise notice '--- La limpieza';
   perform pg_temp.actuar_como(v_vendedora);
   insert into public.products (store_id, name, price, stock, image_path)
-  values (v_personal, 'Vieja', 10, 1, 'u/vieja.jpg')
+  values (v_personal, 'Vieja', 10, 1, v_mia || '/vieja.jpg')
   returning id into v_vieja;
   insert into public.product_images (product_id, storage_path, position)
-  values (v_vieja, 'u/vieja-2.jpg', 1),
-         (v_vieja, 'u/compartida.jpg', 2),
-         (v_vieja, 'https://afuera.com/foto.jpg', 3);
+  values (v_vieja, v_mia || '/vieja-2.jpg', 1),
+         (v_vieja, v_mia || '/compartida.jpg', 2),
+         -- Una foto de otra persona: la limpieza corre con service role y no
+         -- puede borrarla aunque una publicacion propia la nombre.
+         (v_vieja, v_otro::text || '/ajena.jpg', 3),
+         (v_vieja, 'https://afuera.com/foto.jpg', 4);
   insert into public.products (store_id, name, price, stock)
   values (v_personal, 'Reciente', 10, 1)
   returning id into v_reciente;
@@ -315,23 +359,10 @@ begin
   perform pg_temp.vencio_hace(v_reciente, interval '3 days');
   perform pg_temp.vencio_hace(v_con_pedido, interval '8 days');
   perform public.vencer_publicaciones();
-  update public.products set sold_at = now() - interval '8 days' where id = v_libro;
+  update public.products set sold_at = now() - interval '8 days'
+   where id in (v_libro, v_mochila);
 
-  select array_agg(id order by id) into v_ids
-    from public.publicaciones_para_limpiar(100);
-  perform pg_temp.afirmar(
-    v_ids = (select array_agg(x order by x) from unnest(array[v_vieja, v_libro]) x),
-    'Lista solo lo vencido o vendido hace mas de 7 dias y sin pedido en curso');
-  perform pg_temp.afirmar(
-    (select array(select unnest(rutas) order by 1)
-       from public.publicaciones_para_limpiar(100) where id = v_vieja)
-      = array['u/vieja-2.jpg', 'u/vieja.jpg'],
-    'Se lleva sus fotos, pero no la que usa otra publicacion ni un enlace de afuera');
-  perform pg_temp.afirmar(
-    (select rutas from public.publicaciones_para_limpiar(100) where id = v_libro) = '{}',
-    'Sin fotos, la lista de rutas viene vacia y no nula');
-
-  -- Mientras la funcion borraba las fotos, la vendedora volvio a publicar el libro.
+  -- La vendedora repuso el libro antes de que pasara la limpieza.
   perform pg_temp.actuar_como(v_vendedora);
   perform public.volver_a_publicar(v_libro, null, 2);
   perform pg_temp.afirmar(
@@ -340,29 +371,45 @@ begin
     'Reponer y volver a publicar una vendida: vuelve con el stock nuevo y sin la marca');
 
   perform pg_temp.actuar_como_admin();
-  v_n := public.borrar_publicaciones(array[v_vieja, v_libro, v_reciente, v_con_pedido]);
+  create temp table limpiadas on commit drop as
+    select * from public.limpiar_publicaciones_vencidas(100);
+
+  select array_agg(id order by id) into v_ids from limpiadas;
   perform pg_temp.afirmar(
-    v_n = 1
-    and not exists (select 1 from public.products where id = v_vieja)
+    v_ids = (select array_agg(x order by x) from unnest(array[v_vieja, v_mochila]) x),
+    'Borra solo lo vencido o vendido hace mas de 7 dias, sin pedido en curso y que no volvio');
+  perform pg_temp.afirmar(
+    (select array(select unnest(rutas) order by 1) from limpiadas where id = v_vieja)
+      = array[v_mia || '/vieja-2.jpg', v_mia || '/vieja.jpg'],
+    'Se lleva sus fotos; ni la que usa otra publicacion, ni la ajena, ni un enlace');
+  perform pg_temp.afirmar(
+    (select rutas from limpiadas where id = v_mochila) = '{}',
+    'Sin fotos, la lista de rutas viene vacia y no nula');
+  perform pg_temp.afirmar(
+    not exists (select 1 from public.products where id = v_vieja)
     and not exists (select 1 from public.product_images where product_id = v_vieja)
     and exists (select 1 from public.products where id = v_libro)
     and exists (select 1 from public.products where id = v_reciente)
     and exists (select 1 from public.products where id = v_con_pedido),
-    'Borra solo las que siguen cumpliendo, con sus fotos en la tabla');
+    'Las filas se borran antes que las fotos, y las demas quedan');
+  perform pg_temp.afirmar(
+    not exists (select 1 from public.limpiar_publicaciones_vencidas(100)),
+    'Una segunda pasada no encuentra nada');
 
   -- --------------------------------------------------------------------------
   raise notice '--- Quien puede';
+  perform pg_temp.afirmar(
+    to_regprocedure('public.publicaciones_para_limpiar(integer)') is null
+    and to_regprocedure('public.borrar_publicaciones(uuid[])') is null,
+    'Las dos funciones de antes ya no existen');
   perform pg_temp.actuar_como(v_comprador);
-  perform pg_temp.afirmar_sin_permiso('select public.publicaciones_para_limpiar(10)',
-    'Una cuenta comun no lista lo que se borra');
-  perform pg_temp.afirmar_sin_permiso(
-    format('select public.borrar_publicaciones(array[%L]::uuid[])', v_calculadora),
-    'Ni lo borra');
+  perform pg_temp.afirmar_sin_permiso('select public.limpiar_publicaciones_vencidas(10)',
+    'Una cuenta comun no corre la limpieza');
   perform pg_temp.afirmar_sin_permiso('select public.vencer_publicaciones()',
-    'Ni corre la limpieza del minuto');
+    'Ni la del minuto');
 
   perform set_config('role', 'service_role', true);
-  perform public.publicaciones_para_limpiar(1);
+  perform public.limpiar_publicaciones_vencidas(1);
   perform pg_temp.afirmar(true, 'La Edge Function (service_role) si puede');
 
   perform pg_temp.actuar_como_admin();
