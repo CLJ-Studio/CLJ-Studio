@@ -70,6 +70,30 @@ void main() {
       );
     });
 
+    test(
+      'hasta un día a una hora: la entrada vence cuando empieza la fiesta',
+      () {
+        final fiesta = HastaDia(DateTime(2026, 11, 21), hora: 20, minuto: 0);
+        expect(fiesta.venceEn(ahora), DateTime(2026, 11, 21, 20));
+        expect(
+          fiesta.etiqueta(esPersonal: true, ahora: ahora),
+          'Hasta el sábado 21 de noviembre a las 20:00',
+        );
+        expect(
+          fiesta.explicacion(esPersonal: true, ahora: ahora),
+          'Se ve hasta las 20:00 del sábado 21 de noviembre.',
+        );
+        expect(
+          HastaDia(
+            ahora,
+            hora: 10,
+            minuto: 0,
+          ).explicacion(esPersonal: true, ahora: ahora),
+          'Esa hora ya pasó: elige otra.',
+        );
+      },
+    );
+
     test('al editar, la fecha que ya tenía se conserva tal cual', () {
       final tenia = DateTime(2026, 11, 17, 14, 37, 12, 345);
       expect(VigenciaPublicacion.desde(null), const SinFecha());
@@ -187,6 +211,10 @@ void main() {
 
   group('el selector', () {
     Future<List<VigenciaPublicacion>> montar(WidgetTester tester) async {
+      // Un telefono como el A15: el calendario se usa ahi, no en 800 x 600.
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final elegidas = <VigenciaPublicacion>[];
       await tester.pumpWidget(
         MaterialApp(
@@ -225,18 +253,59 @@ void main() {
       expect(elegidas, [const UnDia()]);
     });
 
-    testWidgets('elige un día en el calendario, en español', (tester) async {
-      final elegidas = await montar(tester);
-
+    Future<void> abrirCalendario(WidgetTester tester) async {
       await tester.tap(find.text('Hasta que se venda'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Hasta una fecha…'));
       await tester.pumpAndSettle();
+    }
 
-      expect(find.text('¿Hasta qué día se ve?'), findsOneWidget);
+    testWidgets('tocar un día no cierra: se cambia y se confirma con Listo', (
+      tester,
+    ) async {
+      final elegidas = await montar(tester);
+      await abrirCalendario(tester);
+
+      expect(find.text('¿Hasta cuándo se ve?'), findsOneWidget);
       expect(find.text('noviembre de 2026'), findsOneWidget);
-      expect(find.text('Cancelar'), findsOneWidget);
+      expect(find.text('23:59'), findsOneWidget);
+
+      await tester.tap(find.text('20'));
+      await tester.pumpAndSettle();
+      // Sigue abierto: se puede cambiar de idea.
+      expect(find.text('¿Hasta cuándo se ve?'), findsOneWidget);
+      expect(elegidas, isEmpty);
+
       await tester.tap(find.text('21'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Se ve hasta las 23:59 del sábado 21 de noviembre.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Listo'));
+      await tester.pumpAndSettle();
+
+      expect(elegidas, [HastaDia(DateTime(2026, 11, 21))]);
+    });
+
+    testWidgets('la hora abre el reloj en español y vuelve al calendario', (
+      tester,
+    ) async {
+      final elegidas = await montar(tester);
+      await abrirCalendario(tester);
+      await tester.tap(find.text('21'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('23:59'));
+      await tester.pumpAndSettle();
+      expect(find.text('Hora en que deja de verse'), findsOneWidget);
+      // "Aceptar" y no el "ACEPTAR" de la traduccion de Flutter.
+      await tester.tap(find.text('Aceptar'));
+      await tester.pumpAndSettle();
+
+      // De vuelta en el calendario, con el dia elegido intacto.
+      expect(find.text('¿Hasta cuándo se ve?'), findsOneWidget);
+      await tester.tap(find.text('Listo'));
       await tester.pumpAndSettle();
 
       expect(elegidas, [HastaDia(DateTime(2026, 11, 21))]);
@@ -244,16 +313,25 @@ void main() {
 
     testWidgets('los días que ya pasaron no se pueden elegir', (tester) async {
       final elegidas = await montar(tester);
+      await abrirCalendario(tester);
 
-      await tester.tap(find.text('Hasta que se venda'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Hasta una fecha…'));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('10'));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Listo'));
+      await tester.pumpAndSettle();
 
-      // El dialogo sigue abierto y no se eligio nada.
-      expect(find.text('¿Hasta qué día se ve?'), findsOneWidget);
+      // El 10 no quedo elegido: sigue el dia de hoy, hasta la noche.
+      expect(elegidas, [HastaDia(DateTime(2026, 11, 16))]);
+    });
+
+    testWidgets('Cancelar no cambia nada', (tester) async {
+      final elegidas = await montar(tester);
+      await abrirCalendario(tester);
+      await tester.tap(find.text('21'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+
       expect(elegidas, isEmpty);
     });
   });

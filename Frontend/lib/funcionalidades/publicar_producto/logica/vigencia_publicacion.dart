@@ -73,40 +73,46 @@ final class UnDia extends VigenciaPublicacion {
   int get hashCode => 1;
 }
 
-/// Hasta el final de un día: la entrada para la fiesta del sábado se ve
-/// hasta el sábado a la noche.
+/// Hasta un día y una hora: la entrada para la fiesta del sábado se ve hasta
+/// que empieza la fiesta. Sin hora, hasta el final del día (23:59).
 final class HastaDia extends VigenciaPublicacion {
-  HastaDia(DateTime dia) : dia = DateTime(dia.year, dia.month, dia.day);
+  HastaDia(DateTime dia, {int hora = 23, int minuto = 59})
+    : fin = DateTime(dia.year, dia.month, dia.day, hora, minuto);
 
-  final DateTime dia;
+  /// El instante en que deja de verse.
+  final DateTime fin;
 
   @override
-  DateTime venceEn(DateTime ahora) =>
-      DateTime(dia.year, dia.month, dia.day, 23, 59);
+  DateTime venceEn(DateTime ahora) => fin;
 
   @override
   String etiqueta({required bool esPersonal, required DateTime ahora}) =>
-      'Hasta ${textoHasta(venceEn(ahora), ahora)}';
+      'Hasta ${textoHasta(fin, ahora)}';
 
   @override
   String explicacion({required bool esPersonal, required DateTime ahora}) {
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
-    final dias = dia.difference(hoy).inDays;
-    // El formulario quedo abierto de un dia para el otro.
-    if (dias < 0) return 'Esa fecha ya pasó: elige otra.';
+    final dias = DateTime(fin.year, fin.month, fin.day).difference(hoy).inDays;
+    // Hoy a una hora que ya paso, o el formulario quedo abierto de un dia
+    // para el otro.
+    if (!fin.isAfter(ahora)) {
+      return dias == 0
+          ? 'Esa hora ya pasó: elige otra.'
+          : 'Esa fecha ya pasó: elige otra.';
+    }
     final del = switch (dias) {
       0 => 'de hoy',
       1 => 'de mañana',
-      _ => 'del ${textoHasta(venceEn(ahora), ahora).substring(3)}',
+      _ => 'del ${_fecha(fin)}',
     };
-    return 'Se ve hasta las 23:59 $del.';
+    return 'Se ve hasta las ${_hora(fin)} $del.';
   }
 
   @override
-  bool operator ==(Object other) => other is HastaDia && other.dia == dia;
+  bool operator ==(Object other) => other is HastaDia && other.fin == fin;
 
   @override
-  int get hashCode => dia.hashCode;
+  int get hashCode => fin.hashCode;
 }
 
 /// La fecha exacta que ya tenía una publicación: editarla no se la cambia.
@@ -167,6 +173,11 @@ String _hora(DateTime momento) =>
     '${momento.hour.toString().padLeft(2, '0')}:'
     '${momento.minute.toString().padLeft(2, '0')}';
 
+/// "sábado 21 de noviembre", sin artículo ni hora.
+String _fecha(DateTime momento) =>
+    '${_diasSemana[momento.weekday - 1]} ${momento.day} de '
+    '${_meses[momento.month - 1]}';
+
 /// "hoy a las 18:30", "mañana a las 14:37", "el sábado 22 de noviembre" o
 /// "el martes 25 de noviembre a las 10:00". La hora solo se dice si no es el
 /// final del día: "hasta el sábado" ya se entiende que es hasta la noche.
@@ -183,9 +194,7 @@ String textoHasta(DateTime momento, DateTime ahora) {
   }
   if (diferencia == -1) return 'ayer';
 
-  final fecha =
-      'el ${_diasSemana[local.weekday - 1]} ${local.day} de '
-      '${_meses[local.month - 1]}';
+  final fecha = 'el ${_fecha(local)}';
   return finDelDia ? fecha : '$fecha a las ${_hora(local)}';
 }
 

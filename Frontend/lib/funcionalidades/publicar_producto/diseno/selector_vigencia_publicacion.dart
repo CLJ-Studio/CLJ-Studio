@@ -77,16 +77,20 @@ class SelectorVigenciaPublicacion extends StatelessWidget {
                     etiqueta: 'Hasta una fecha…',
                     seleccionado: conFecha,
                     alPresionar: () async {
-                      final dia = await elegirDiaVigencia(
+                      final fin = await elegirFinVigencia(
                         context,
                         ahora: reloj(),
                         elegido: switch (vigencia) {
-                          HastaDia(:final dia) => dia,
+                          HastaDia(:final fin) => fin,
                           HastaInstante(:final instante) => instante,
                           _ => null,
                         },
                       );
-                      if (dia != null) alCambiar(HastaDia(dia));
+                      if (fin != null) {
+                        alCambiar(
+                          HastaDia(fin, hora: fin.hour, minuto: fin.minute),
+                        );
+                      }
                     },
                   ),
                 ],
@@ -108,16 +112,18 @@ class SelectorVigenciaPublicacion extends StatelessWidget {
   }
 }
 
-/// Hasta cuántos días adelante se puede elegir: alcanza para un evento del
-/// semestre sin dejar que algo quede publicado un año por un descuido.
-const diasMaximosVigencia = 180;
+/// Hasta cuántos días adelante se puede elegir: un año alcanza para cualquier
+/// evento sin dejar algo publicado para siempre por un descuido.
+const diasMaximosVigencia = 365;
 
-/// Un calendario: tocar un día lo elige. Sale en español porque la app carga
-/// las traducciones de Material (ver `ArbolAplicacion`).
+/// Día y hora en que deja de verse. Tocar un día no cierra nada: se puede
+/// cambiar de día, pasar de mes deslizando, elegir la hora y recién confirmar
+/// con "Listo". Sin tocar la hora, vence a las 23:59.
 ///
-/// Es un [Dialog] propio y no un [AlertDialog]: este mide el ancho de su
-/// contenido, y el calendario no se deja medir así.
-Future<DateTime?> elegirDiaVigencia(
+/// Sale en español porque la app carga las traducciones de Material (ver
+/// `ArbolAplicacion`). Es un [Dialog] propio y no un [AlertDialog]: este mide
+/// el ancho de su contenido, y el calendario no se deja medir así.
+Future<DateTime?> elegirFinVigencia(
   BuildContext context, {
   required DateTime ahora,
   DateTime? elegido,
@@ -128,46 +134,120 @@ Future<DateTime?> elegirDiaVigencia(
       ? hoy
       : DateTime(elegido.year, elegido.month, elegido.day);
   if (inicial.isBefore(hoy) || inicial.isAfter(ultimo)) inicial = hoy;
+  var dia = inicial;
+  var hora = elegido == null || !elegido.isAfter(ahora)
+      ? const TimeOfDay(hour: 23, minute: 59)
+      : TimeOfDay.fromDateTime(elegido);
 
   return showDialog<DateTime>(
     context: context,
-    builder: (contexto) => Dialog(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  '¿Hasta qué día se ve?',
-                  style:
-                      DialogTheme.of(contexto).titleTextStyle ??
-                      Theme.of(contexto).textTheme.headlineSmall,
-                ),
+    builder: (contexto) => StatefulBuilder(
+      builder: (contexto, actualizar) {
+        final vigencia = HastaDia(dia, hora: hora.hour, minuto: hora.minute);
+        final fin = vigencia.fin;
+        final valida = fin.isAfter(ahora);
+        return Dialog(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      '¿Hasta cuándo se ve?',
+                      style:
+                          DialogTheme.of(contexto).titleTextStyle ??
+                          Theme.of(contexto).textTheme.headlineSmall,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // initialDate fijo: el calendario lleva su propia seleccion,
+                  // y cambiarle la inicial en cada toque lo reacomodaria.
+                  CalendarDatePicker(
+                    initialDate: inicial,
+                    currentDate: hoy,
+                    firstDate: hoy,
+                    lastDate: ultimo,
+                    onDateChanged: (nuevo) => actualizar(() => dia = nuevo),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.schedule_rounded, size: 20),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Hora',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final nueva = await showTimePicker(
+                              context: contexto,
+                              initialTime: hora,
+                              helpText: 'Hora en que deja de verse',
+                              // La traduccion de Flutter dice "ACEPTAR", en
+                              // mayusculas: el resto de la app no grita.
+                              confirmText: 'Aceptar',
+                              cancelText: 'Cancelar',
+                            );
+                            if (nueva != null) actualizar(() => hora = nueva);
+                          },
+                          icon: const Icon(Icons.expand_more_rounded),
+                          iconAlignment: IconAlignment.end,
+                          label: Text(
+                            '${hora.hour.toString().padLeft(2, '0')}:'
+                            '${hora.minute.toString().padLeft(2, '0')}',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
+                    child: Text(
+                      vigencia.explicacion(esPersonal: true, ahora: ahora),
+                      style: TextStyle(
+                        color: valida
+                            ? const Color(0xFF848381)
+                            : const Color(0xFFAE7960),
+                        fontSize: 13,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () => Navigator.of(contexto).pop(),
+                        child: const Text('Cancelar'),
+                      ),
+                      const SizedBox(width: 10),
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF474646),
+                        ),
+                        onPressed: valida
+                            ? () => Navigator.of(contexto).pop(fin)
+                            : null,
+                        child: const Text('Listo'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              CalendarDatePicker(
-                initialDate: inicial,
-                currentDate: hoy,
-                firstDate: hoy,
-                lastDate: ultimo,
-                onDateChanged: (dia) => Navigator.of(contexto).pop(dia),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(contexto).pop(),
-                  child: const Text('Cancelar'),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     ),
   );
 }
