@@ -234,6 +234,26 @@ String textoHastaCorto(DateTime momento, DateTime ahora) {
   };
 }
 
+/// Para guardarla en el borrador: null (sin fecha), `un_dia` o
+/// `hasta:2026-11-21T20:00:00.000`.
+String? vigenciaATexto(VigenciaPublicacion vigencia) => switch (vigencia) {
+  SinFecha() => null,
+  UnDia() => 'un_dia',
+  HastaDia(:final fin) => 'hasta:${fin.toIso8601String()}',
+  HastaInstante(:final instante) => 'hasta:${instante.toIso8601String()}',
+};
+
+/// La que se guardó en el borrador, tal cual. Si la fecha ya pasó no se
+/// cambia por otra a escondidas: el formulario lo dice y no deja publicar.
+VigenciaPublicacion vigenciaDesdeTexto(String? texto) {
+  if (texto == 'un_dia') return const UnDia();
+  if (texto != null && texto.startsWith('hasta:')) {
+    final fin = DateTime.tryParse(texto.substring('hasta:'.length));
+    if (fin != null) return HastaDia(fin, hora: fin.hour, minuto: fin.minute);
+  }
+  return const SinFecha();
+}
+
 /// Lo que ve quien la publicó junto a cada publicación suya: si se vendió,
 /// si venció, si la ocultó, o hasta cuándo se ve. Null: se ve, sin fecha.
 String? estadoParaDueno(ProductoMarketplace producto, DateTime ahora) {

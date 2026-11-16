@@ -16,6 +16,7 @@ class BorradorPublicacion {
     this.galeria = const [],
     this.variantes = const [],
     this.categoriaId,
+    this.vigencia,
   });
 
   factory BorradorPublicacion.desdeJson(Map<String, dynamic> json) =>
@@ -41,6 +42,7 @@ class BorradorPublicacion {
             },
         ]..removeWhere((variante) => variante.nombre.isEmpty),
         categoriaId: json['categoria_id'] as String?,
+        vigencia: json['vigencia'] as String?,
       );
 
   final String tipo;
@@ -53,6 +55,11 @@ class BorradorPublicacion {
   final List<VarianteEditable> variantes;
   final String? categoriaId;
 
+  /// Hasta cuándo se ve, como lo guarda `vigenciaATexto`. Null: sin fecha.
+  /// Sin esto, al recuperar el borrador volvía "Hasta que se venda" y se
+  /// publicaba sin la fecha que se había elegido.
+  final String? vigencia;
+
   Map<String, dynamic> aJson() => {
     'tipo': tipo,
     'nombre': nombre,
@@ -63,6 +70,7 @@ class BorradorPublicacion {
     'galeria': galeria,
     'variantes': [for (final variante in variantes) variante.aJson()],
     'categoria_id': categoriaId,
+    'vigencia': vigencia,
   };
 
   /// Un borrador sin nada escrito no merece recuperarse.

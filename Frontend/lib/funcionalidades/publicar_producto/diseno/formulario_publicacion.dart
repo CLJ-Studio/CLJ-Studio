@@ -159,6 +159,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         _galeria = borrador.galeria;
         _variantes = borrador.variantes;
         _categoriaId = borrador.categoriaId;
+        _vigencia = vigenciaDesdeTexto(borrador.vigencia);
       });
     } else {
       await AlmacenBorrador.borrar();
@@ -179,6 +180,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         galeria: _galeria,
         variantes: _variantes,
         categoriaId: _categoriaId,
+        vigencia: vigenciaATexto(_vigencia),
       ),
     );
   }
@@ -219,6 +221,17 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
     if (_categoriaId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Selecciona una categoría.')),
+      );
+      return;
+    }
+    // Un borrador de ayer con "hasta hoy a las 20:00": se avisa aqui en vez
+    // de dejar que el servidor lo rechace.
+    final venceEn = _vigencia.venceEn(DateTime.now());
+    if (venceEn != null && !venceEn.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Esa fecha ya pasó: elige hasta cuándo se ve.'),
+        ),
       );
       return;
     }
@@ -448,8 +461,10 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                           SelectorVigenciaPublicacion(
                             vigencia: _vigencia,
                             esPersonal: true,
-                            alCambiar: (nueva) =>
-                                setState(() => _vigencia = nueva),
+                            alCambiar: (nueva) {
+                              setState(() => _vigencia = nueva);
+                              _guardarBorrador();
+                            },
                           ),
                         ],
                       );

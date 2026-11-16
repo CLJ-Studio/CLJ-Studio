@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:upsa_eat/funcionalidades/inicio_marketplace/modelos/producto_marketplace.dart';
+import 'package:upsa_eat/funcionalidades/publicar_producto/datos/borrador_publicacion.dart';
 import 'package:upsa_eat/funcionalidades/publicar_producto/diseno/selector_vigencia_publicacion.dart';
 import 'package:upsa_eat/funcionalidades/publicar_producto/logica/vigencia_publicacion.dart';
 
@@ -142,6 +145,27 @@ void main() {
         textoHastaCorto(DateTime(2026, 11, 21, 23, 59), ahora),
         'sáb 21 nov',
       );
+    });
+  });
+
+  group('el borrador', () {
+    test('guarda la fecha elegida y la devuelve igual', () {
+      final fiesta = HastaDia(DateTime(2026, 11, 21), hora: 20, minuto: 0);
+      for (final vigencia in [const SinFecha(), const UnDia(), fiesta]) {
+        final guardado = BorradorPublicacion(
+          nombre: 'Entrada',
+          vigencia: vigenciaATexto(vigencia),
+        ).aJson();
+        final leido = BorradorPublicacion.desdeJson(
+          jsonDecode(jsonEncode(guardado)) as Map<String, dynamic>,
+        );
+        expect(vigenciaDesdeTexto(leido.vigencia), vigencia);
+      }
+    });
+
+    test('un borrador viejo, sin la clave, queda sin fecha', () {
+      final leido = BorradorPublicacion.desdeJson({'nombre': 'Calculadora'});
+      expect(vigenciaDesdeTexto(leido.vigencia), const SinFecha());
     });
   });
 
