@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- El morado del fondo del logo, medido sobre el PNG. -->
+    <color name="ic_launcher_background">#881EFB</color>
+    <!-- El crema de la app: el mismo #E6E1D5 del tema y de la PWA. -->
+    <color name="fondo_arranque">#E6E1D5</color>
+</resources>
