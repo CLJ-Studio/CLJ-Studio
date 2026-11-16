@@ -13,9 +13,13 @@ class RepositorioInicioMarketplace {
   SupabaseClient get _cliente => Supabase.instance.client;
 
   /// Campos de producto compartidos por el catalogo y el detalle.
+  ///
+  /// `expires_at` y `sold_at` exigen la migracion de publicaciones que
+  /// vencen: sin esas columnas el servidor rechaza la consulta entera, asi
+  /// que esa migracion va antes que esta version de la app.
   static const camposProducto =
       'id, store_id, category_id, name, description, price, emoji, stock, kind, '
-      'image_path, is_available, view_count, '
+      'image_path, is_available, view_count, expires_at, sold_at, '
       'product_images(storage_path, position), '
       'product_variants(id, name, price, position, is_available)';
 

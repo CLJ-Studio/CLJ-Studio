@@ -20,6 +20,8 @@ class ProductoMarketplace {
     this.vistas = 0,
     this.categoriaId,
     this.variantes = const [],
+    this.venceEn,
+    this.vendidaEn,
   });
 
   /// Mapea una fila de `products`. Si la consulta unio `stores`, el local
@@ -56,8 +58,13 @@ class ProductoMarketplace {
               .toList()
             ..sort(),
       variantes: _variantesDesde(fila),
+      venceEn: _fecha(fila['expires_at']),
+      vendidaEn: _fecha(fila['sold_at']),
     );
   }
+
+  static DateTime? _fecha(Object? valor) =>
+      valor is String ? DateTime.tryParse(valor)?.toLocal() : null;
 
   /// Las de `product_variants`, en el orden en que el vendedor las puso.
   ///
@@ -100,6 +107,8 @@ class ProductoMarketplace {
         vistas: vistas ?? this.vistas,
         categoriaId: categoriaId,
         variantes: variantes,
+        venceEn: venceEn,
+        vendidaEn: vendidaEn,
       );
 
   final String id;
@@ -132,6 +141,26 @@ class ProductoMarketplace {
   /// normal: la mayoria de lo que se publica no tiene variantes.
   final List<VarianteProducto> variantes;
 
+  /// Hasta cuándo se ve en el catálogo. Null: sin fecha (en una personal,
+  /// hasta que se venda).
+  final DateTime? venceEn;
+
+  /// Cuándo salió sola por venderse. Solo tiene sentido mientras no se ve.
+  final DateTime? vendidaEn;
+
+  /// Ya pasó su fecha. El servidor la saca del catálogo en menos de un
+  /// minuto, y no vuelve a verse sin elegir otra.
+  bool vencidaA(DateTime ahora) => venceEn != null && !venceEn!.isAfter(ahora);
+
+  bool get vencida => vencidaA(DateTime.now());
+
+  /// Se vendió (por un pedido o con "Ya lo vendí") y sigue retirada.
+  bool get vendida => vendidaEn != null && !disponible;
+
+  /// Lo que hay que elegir de nuevo para que vuelva al catálogo: una fecha
+  /// nueva si venció, y unidades si se vendió o se agotó.
+  bool get necesitaVolverAPublicar => !disponible && (vencida || vendida);
+
   /// Si hay que elegir algo antes de poder pedirlo.
   bool get exigeVariante => variantes.isNotEmpty;
 
@@ -144,8 +173,7 @@ class ProductoMarketplace {
   /// El mas barato. Es lo que anuncia la tarjeta cuando los sabores no valen
   /// todos lo mismo: poner el mas caro espanta y poner el del producto seria
   /// mentir si ninguna variante lo cobra.
-  double get precioMinimo =>
-      _preciosPosibles.reduce((a, b) => a < b ? a : b);
+  double get precioMinimo => _preciosPosibles.reduce((a, b) => a < b ? a : b);
 
   /// Si hay mas de un precio, la tarjeta tiene que decir "desde".
   bool get preciosVarian => _preciosPosibles.toSet().length > 1;

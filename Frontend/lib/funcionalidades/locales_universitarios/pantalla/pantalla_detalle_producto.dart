@@ -18,6 +18,8 @@ import '../../carrito_compras/logica/controlador_carrito_compras.dart';
 import '../../carrito_compras/pantalla/pantalla_carrito_compras.dart';
 import '../../favoritos/logica/controlador_favoritos.dart';
 import '../../mi_local/diseno/dialogo_ajustar_stock.dart';
+import '../../mi_local/diseno/dialogo_volver_a_publicar.dart';
+import '../../publicar_producto/logica/vigencia_publicacion.dart';
 import '../diseno/hoja_reportar_publicacion.dart';
 import '../../inicio_marketplace/modelos/local_universitario.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
@@ -205,7 +207,11 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
   );
 
   Future<void> _editar() async {
-    final datos = await mostrarDialogoProducto(context, producto: _producto);
+    final datos = await mostrarDialogoProducto(
+      context,
+      producto: _producto,
+      esPersonal: widget.local.esPersonal,
+    );
     if (datos == null) return;
 
     try {
@@ -219,6 +225,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
         descripcion: datos.descripcion,
         galeria: datos.galeria,
         variantes: datos.variantes,
+        vencimiento: datos.vencimiento,
       );
       final actualizado = await const RepositorioInicioMarketplace()
           .obtenerPublicacion(_producto.id);
@@ -247,7 +254,28 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
     _avisar('Unidades actualizadas.');
   }
 
+  /// Una vencida o vendida vuelve eligiendo fecha (y unidades). Es lo que
+  /// abre el aviso de "Tu publicacion vencio".
+  Future<void> _volverAPublicar() async {
+    if (!await volverAPublicar(context, _producto)) return;
+    final actualizado = await const RepositorioInicioMarketplace()
+        .obtenerPublicacion(_producto.id);
+    if (mounted && actualizado != null) {
+      setState(() => _producto = actualizado);
+    }
+  }
+
+  Future<void> _marcarVendida() async {
+    if (!await marcarComoVendida(context, _producto)) return;
+    final actualizado = await const RepositorioInicioMarketplace()
+        .obtenerPublicacion(_producto.id);
+    if (!mounted) return;
+    if (actualizado != null) setState(() => _producto = actualizado);
+    _avisar('Ya no se ve en el catálogo.');
+  }
+
   Future<void> _alternarVisibilidad() async {
+    if (_producto.necesitaVolverAPublicar) return _volverAPublicar();
     final visible = !_producto.disponible;
     try {
       await _repositorio.cambiarVisibilidad(_producto.id, visible: visible);
@@ -260,6 +288,7 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
   }
 
   Future<void> _relanzar() async {
+    if (_producto.necesitaVolverAPublicar) return _volverAPublicar();
     try {
       await _repositorio.relanzarProducto(_producto.id);
       if (mounted) _avisar('Vuelve al inicio del catálogo.');
@@ -300,6 +329,43 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
     } catch (_) {
       if (mounted) _avisar('No se pudo eliminar.');
     }
+  }
+
+  /// Se puede encargar: se ve, no vencio y hay unidades. Una oculta o
+  /// vencida se podia agregar al carrito y el servidor la rechazaba recien
+  /// al pedir.
+  bool get _sePuedePedir =>
+      _producto.disponible && !_producto.vencida && _producto.hayExistencias;
+
+  /// La linea bajo el precio: hasta cuando se ve, o por que ya no.
+  ({IconData icono, String texto, Color color})? _lineaVigencia() {
+    final ahora = DateTime.now();
+    const apagado = Color(0xFFAE7960);
+    if (_esMio && _producto.vendida) {
+      return (
+        icono: Icons.sell_outlined,
+        texto: 'Vendida: ya no se ve en el catálogo.',
+        color: apagado,
+      );
+    }
+    if (_producto.vencidaA(ahora)) {
+      return (
+        icono: Icons.schedule_rounded,
+        texto: _esMio
+            ? 'Venció: ya no se ve en el catálogo.'
+            : 'Esta publicación venció.',
+        color: apagado,
+      );
+    }
+    final vence = _producto.venceEn;
+    if (_producto.disponible && vence != null) {
+      return (
+        icono: Icons.schedule_rounded,
+        texto: 'Disponible hasta ${textoHasta(vence, ahora)}',
+        color: const Color(0xFF848381),
+      );
+    }
+    return null;
   }
 
   void _avisar(String mensaje) {
@@ -535,11 +601,17 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                                 if (_esMio) ...[
                                   _MenuGestionProducto(
                                     disponible: _producto.disponible,
+                                    retirada: _producto.necesitaVolverAPublicar,
+                                    puedeMarcarVendida:
+                                        widget.local.esPersonal &&
+                                        _producto.disponible &&
+                                        !_producto.esServicio,
                                     alSeleccionar: (opcion) => switch (opcion) {
                                       'editar' => _editar(),
                                       'stock' => _ajustarStock(),
                                       'ocultar' => _alternarVisibilidad(),
                                       'relanzar' => _relanzar(),
+                                      'vendida' => _marcarVendida(),
                                       _ => _eliminar(),
                                     },
                                   ),
@@ -633,6 +705,29 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                                   ),
                                 ],
                               ),
+                              if (_lineaVigencia() case final linea?) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      linea.icono,
+                                      size: 16,
+                                      color: linea.color,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        linea.texto,
+                                        style: TextStyle(
+                                          color: linea.color,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                               if (_producto.exigeVariante) ...[
                                 const SizedBox(height: 20),
                                 _SelectorVariante(
@@ -647,7 +742,11 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                                 width: double.infinity,
                                 height: 54,
                                 child: FilledButton(
-                                  onPressed: !_esMio && _producto.hayExistencias
+                                  onPressed: _esMio
+                                      ? (_producto.necesitaVolverAPublicar
+                                            ? _volverAPublicar
+                                            : null)
+                                      : _sePuedePedir
                                       ? _agregar
                                       : null,
                                   style: FilledButton.styleFrom(
@@ -660,7 +759,12 @@ class _PantallaDetalleProductoState extends State<PantallaDetalleProducto>
                                   ),
                                   child: Text(
                                     _esMio
-                                        ? 'Este producto es tuyo'
+                                        ? (_producto.necesitaVolverAPublicar
+                                              ? 'Volver a publicar'
+                                              : 'Este producto es tuyo')
+                                        : !_producto.disponible ||
+                                              _producto.vencida
+                                        ? 'Ya no está disponible'
                                         : _producto.hayExistencias
                                         ? 'Agregar al carrito'
                                         : 'Agotado',
@@ -882,10 +986,16 @@ class _BotonCircular extends StatelessWidget {
 class _MenuGestionProducto extends StatelessWidget {
   const _MenuGestionProducto({
     required this.disponible,
+    required this.retirada,
+    required this.puedeMarcarVendida,
     required this.alSeleccionar,
   });
 
   final bool disponible;
+
+  /// Vencida o vendida: no se "muestra", se vuelve a publicar.
+  final bool retirada;
+  final bool puedeMarcarVendida;
   final ValueChanged<String> alSeleccionar;
 
   @override
@@ -914,23 +1024,33 @@ class _MenuGestionProducto extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
           ),
         ),
-        PopupMenuItem(
-          value: 'ocultar',
-          child: ListTile(
-            leading: Icon(
-              disponible
-                  ? Icons.visibility_off_outlined
-                  : Icons.visibility_outlined,
+        if (puedeMarcarVendida)
+          const PopupMenuItem(
+            value: 'vendida',
+            child: ListTile(
+              leading: Icon(Icons.sell_outlined),
+              title: Text('Ya lo vendí'),
+              contentPadding: EdgeInsets.zero,
             ),
-            title: Text(disponible ? 'Ocultar' : 'Mostrar'),
-            contentPadding: EdgeInsets.zero,
           ),
-        ),
-        const PopupMenuItem(
+        if (!retirada)
+          PopupMenuItem(
+            value: 'ocultar',
+            child: ListTile(
+              leading: Icon(
+                disponible
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+              ),
+              title: Text(disponible ? 'Ocultar' : 'Mostrar'),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        PopupMenuItem(
           value: 'relanzar',
           child: ListTile(
-            leading: Icon(Icons.arrow_upward_rounded),
-            title: Text('Relanzar'),
+            leading: const Icon(Icons.arrow_upward_rounded),
+            title: Text(retirada ? 'Volver a publicar' : 'Relanzar'),
             contentPadding: EdgeInsets.zero,
           ),
         ),

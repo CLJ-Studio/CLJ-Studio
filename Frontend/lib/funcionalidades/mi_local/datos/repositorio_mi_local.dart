@@ -25,7 +25,7 @@ class RepositorioMiLocal {
   /// saber de quien es lo que estas mirando para poder encargarlo.
   static const _camposProducto =
       'id, store_id, category_id, name, description, price, emoji, stock, kind, '
-      'image_path, is_available, view_count, '
+      'image_path, is_available, view_count, expires_at, sold_at, '
       'product_images(storage_path, position), '
       'product_variants(id, name, position, is_available), '
       'stores!inner('
@@ -191,6 +191,7 @@ class RepositorioMiLocal {
     List<String> galeria = const [],
     List<VarianteEditable> variantes = const [],
     required String categoriaId,
+    DateTime? venceEn,
   }) async {
     final creado = await _cliente
         .from('products')
@@ -204,6 +205,7 @@ class RepositorioMiLocal {
           'kind': esServicio ? 'servicio' : 'producto',
           'category_id': categoriaId,
           'image_path': ?galeria.firstOrNull,
+          'expires_at': venceEn?.toUtc().toIso8601String(),
         })
         .select('id')
         .single();
@@ -309,6 +311,7 @@ class RepositorioMiLocal {
     String? descripcion,
     List<String> galeria = const [],
     List<VarianteEditable> variantes = const [],
+    ({DateTime? hasta})? vencimiento,
   }) async {
     await _cliente
         .from('products')
@@ -320,6 +323,11 @@ class RepositorioMiLocal {
           'emoji': emoji,
           'category_id': categoriaId,
           'image_path': galeria.firstOrNull,
+          // Solo si la cambiaron. Reenviar la misma no sirve: en la web la
+          // fecha leida pierde los microsegundos, llegaria "otra", y en una
+          // vencida el servidor la rechazaria por pasada.
+          if (vencimiento != null)
+            'expires_at': vencimiento.hasta?.toUtc().toIso8601String(),
         })
         .eq('id', productoId);
 
@@ -337,6 +345,28 @@ class RepositorioMiLocal {
   /// Sube la publicacion al tope del catalogo y la vuelve visible.
   Future<void> relanzarProducto(String productoId) =>
       _cliente.rpc('relanzar_producto', params: {'p_producto_id': productoId});
+
+  /// Para una vencida o vendida: vuelve al catalogo, arriba, hasta
+  /// [venceEn] (null: sin fecha). Con [stock], repone en el mismo paso.
+  Future<void> volverAPublicar(
+    String productoId, {
+    required DateTime? venceEn,
+    int? stock,
+  }) => _cliente.rpc<void>(
+    'volver_a_publicar',
+    params: {
+      'p_producto_id': productoId,
+      'p_vence_en': venceEn?.toUtc().toIso8601String(),
+      'p_stock': stock,
+    },
+  );
+
+  /// "Ya lo vendi": la vendio por fuera de la app. Sale del catalogo y le
+  /// queda oculta a quien la publico, por si repone.
+  Future<void> marcarVendida(String productoId) => _cliente.rpc<void>(
+    'marcar_vendida',
+    params: {'p_producto_id': productoId},
+  );
 
   /// El stock nunca baja de cero: la restriccion de la tabla lo rechazaria.
   Future<void> cambiarStock(String productoId, int nuevoStock) => _cliente

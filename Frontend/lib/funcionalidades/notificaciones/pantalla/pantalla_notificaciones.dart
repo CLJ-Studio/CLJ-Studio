@@ -277,7 +277,7 @@ class _TarjetaNotificacion extends StatelessWidget {
     'pedido_recibido' => const Color(0xFFE95026),
     'pedido_aceptado' || 'pedido_entregado' => const Color(0xFF098B67),
     'pedido_rechazado' || 'pedido_cancelado' => const Color(0xFFB2194B),
-    'pedido_vencido' => const Color(0xFFE09A18),
+    'pedido_vencido' || 'publicacion_vencida' => const Color(0xFFE09A18),
     'mensaje_pedido' || 'nuevo_local' => const Color(0xFF8B5CD6),
     'entrega_por_confirmar' => const Color(0xFF3449A5),
     'ubicacion_pendiente' => const Color(0xFFE57B35),

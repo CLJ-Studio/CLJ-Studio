@@ -56,7 +56,7 @@ class Notificacion {
     'pedido_aceptado' => Icons.check_circle_outline_rounded,
     'pedido_rechazado' => Icons.cancel_outlined,
     'pedido_cancelado' => Icons.remove_shopping_cart_outlined,
-    'pedido_vencido' => Icons.schedule_rounded,
+    'pedido_vencido' || 'publicacion_vencida' => Icons.schedule_rounded,
     'pedido_entregado' => Icons.done_all_rounded,
     'mensaje_pedido' => Icons.forum_rounded,
     'entrega_por_confirmar' => Icons.pending_actions_rounded,

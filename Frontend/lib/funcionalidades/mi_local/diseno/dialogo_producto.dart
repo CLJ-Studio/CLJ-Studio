@@ -7,6 +7,8 @@ import '../../inicio_marketplace/modelos/categoria_marketplace.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
 import '../../inicio_marketplace/modelos/variante_producto.dart';
 import '../../publicar_producto/diseno/selector_categoria_publicacion.dart';
+import '../../publicar_producto/diseno/selector_vigencia_publicacion.dart';
+import '../../publicar_producto/logica/vigencia_publicacion.dart';
 
 /// Datos con los que se crea o edita un producto del inventario.
 class DatosProducto {
@@ -19,6 +21,7 @@ class DatosProducto {
     required this.galeria,
     required this.variantes,
     required this.categoriaId,
+    required this.vencimiento,
   });
 
   final String nombre;
@@ -31,13 +34,21 @@ class DatosProducto {
   /// Los sabores con su precio. El repositorio se encarga de los ids.
   final List<VarianteEditable> variantes;
   final String categoriaId;
+
+  /// Hasta cuándo se ve. Null al editar si no se tocó: así no se reescribe
+  /// una fecha que ya estaba (ver `RepositorioMiLocal.editarProducto`).
+  final ({DateTime? hasta})? vencimiento;
 }
 
 /// Formulario de producto reutilizado para agregar y para editar: son el
 /// mismo conjunto de campos y mantenerlos separados los desincronizaria.
+///
+/// [esPersonal] cambia como se dice "sin fecha": en una publicacion personal
+/// es "hasta que se venda". Al editar se toma del local del producto.
 Future<DatosProducto?> mostrarDialogoProducto(
   BuildContext context, {
   ProductoMarketplace? producto,
+  bool? esPersonal,
 }) async {
   late final List<CategoriaMarketplace> categorias;
   try {
@@ -76,6 +87,11 @@ Future<DatosProducto?> mostrarDialogoProducto(
     for (final variante in producto?.variantes ?? const <VarianteProducto>[])
       VarianteEditable(nombre: variante.nombre, precio: variante.precio),
   ];
+  final personal = esPersonal ?? producto?.local?.esPersonal ?? false;
+  final vigenciaInicial = producto == null
+      ? VigenciaPublicacion.inicial
+      : VigenciaPublicacion.desde(producto.venceEn);
+  var vigencia = vigenciaInicial;
 
   return showDialog<DatosProducto>(
     context: context,
@@ -120,6 +136,17 @@ Future<DatosProducto?> mostrarDialogoProducto(
                 ),
                 const SizedBox(height: 16),
                 const Text(
+                  '¿Hasta cuándo se ve?',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                SelectorVigenciaPublicacion(
+                  vigencia: vigencia,
+                  esPersonal: personal,
+                  alCambiar: (nueva) => actualizar(() => vigencia = nueva),
+                ),
+                const SizedBox(height: 16),
+                const Text(
                   'Categoría obligatoria',
                   style: TextStyle(fontWeight: FontWeight.w800),
                 ),
@@ -142,8 +169,7 @@ Future<DatosProducto?> mostrarDialogoProducto(
                     precio.text.replaceAll(',', '.'),
                   ),
                   variantes: variantes,
-                  alCambiar: (nombres) =>
-                      actualizar(() => variantes = nombres),
+                  alCambiar: (nombres) => actualizar(() => variantes = nombres),
                 ),
               ],
             ),
@@ -183,6 +209,10 @@ Future<DatosProducto?> mostrarDialogoProducto(
                   galeria: galeria,
                   variantes: variantes,
                   categoriaId: categoriaId!,
+                  // Al editar, solo si la cambiaron.
+                  vencimiento: esEdicion && vigencia == vigenciaInicial
+                      ? null
+                      : (hasta: vigencia.venceEn(DateTime.now())),
                 ),
               );
             },

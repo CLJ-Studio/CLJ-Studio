@@ -12,7 +12,9 @@ import '../../inicio_marketplace/modelos/variante_producto.dart';
 import '../../mi_local/logica/controlador_mi_local.dart';
 import '../datos/borrador_publicacion.dart';
 import '../logica/controlador_publicacion.dart';
+import '../logica/vigencia_publicacion.dart';
 import 'boton_confirmar_publicacion.dart';
+import 'selector_vigencia_publicacion.dart';
 import 'campo_descripcion_publicacion.dart';
 import 'campo_nombre_publicacion.dart';
 import 'campo_precio_publicacion.dart';
@@ -49,6 +51,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
   List<VarianteEditable> _variantes = const [];
   List<CategoriaMarketplace> _categorias = const [];
   String? _categoriaId;
+  VigenciaPublicacion _vigencia = VigenciaPublicacion.inicial;
   bool _publicando = false;
   bool _revisandoBorrador = true;
   bool _limpiandoFormulario = false;
@@ -235,6 +238,9 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
         galeria: _galeria,
         variantes: _variantes,
         categoriaId: _categoriaId!,
+        // Se calcula al publicar, no al elegir: "24 horas" cuenta desde
+        // que sale, aunque el formulario haya quedado abierto un rato.
+        venceEn: _vigencia.venceEn(DateTime.now()),
       );
 
       if (!mounted) return;
@@ -253,6 +259,7 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
           _galeria = const [];
           _variantes = const [];
           _categoriaId = null;
+          _vigencia = VigenciaPublicacion.inicial;
         });
         await AlmacenBorrador.borrar();
       } finally {
@@ -423,21 +430,51 @@ class _FormularioPublicacionState extends State<FormularioPublicacion> {
                               : null;
                         },
                       );
+                      // Hasta cuando se ve: es disponibilidad, como la
+                      // cantidad, asi que va en este mismo paso.
+                      final vigenciaWidget = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 16),
+                          Text(
+                            '¿Hasta cuándo se ve?',
+                            style: TextStyle(
+                              color: colorTextoSecundario,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SelectorVigenciaPublicacion(
+                            vigencia: _vigencia,
+                            esPersonal: true,
+                            alCambiar: (nueva) =>
+                                setState(() => _vigencia = nueva),
+                          ),
+                        ],
+                      );
                       if (restricciones.maxWidth < 520) {
                         return Column(
                           children: [
                             precioWidget,
                             const SizedBox(height: 13),
                             stockWidget,
+                            vigenciaWidget,
                           ],
                         );
                       }
-                      return Row(
+                      return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: precioWidget),
-                          const SizedBox(width: 13),
-                          Expanded(child: stockWidget),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: precioWidget),
+                              const SizedBox(width: 13),
+                              Expanded(child: stockWidget),
+                            ],
+                          ),
+                          vigenciaWidget,
                         ],
                       );
                     },

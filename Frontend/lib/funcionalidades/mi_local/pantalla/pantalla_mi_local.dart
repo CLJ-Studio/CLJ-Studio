@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../finanzas_local/pantalla/pantalla_finanzas_local.dart';
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../publicar_producto/logica/vigencia_publicacion.dart';
 import '../../visualizaciones/indicador_vistas.dart';
 import '../diseno/dialogo_producto.dart';
+import '../diseno/dialogo_volver_a_publicar.dart';
 import '../logica/controlador_mi_local.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_fallo.dart';
 
@@ -15,7 +17,7 @@ class PantallaMiLocal extends StatelessWidget {
   final ControladorMiLocal controlador;
 
   Future<void> _agregar(BuildContext context) async {
-    final datos = await mostrarDialogoProducto(context);
+    final datos = await mostrarDialogoProducto(context, esPersonal: false);
     if (datos == null || !context.mounted) return;
 
     // Desde aqui el destino es el local, no el espacio personal: es la
@@ -33,6 +35,7 @@ class PantallaMiLocal extends StatelessWidget {
         variantes: datos.variantes,
         categoriaId: datos.categoriaId,
         alLocal: true,
+        venceEn: datos.vencimiento?.hasta,
       ),
     );
   }
@@ -57,8 +60,30 @@ class PantallaMiLocal extends StatelessWidget {
         descripcion: datos.descripcion,
         galeria: datos.galeria,
         variantes: datos.variantes,
+        vencimiento: datos.vencimiento,
       ),
     );
+  }
+
+  /// Mostrar o relanzar una vencida o vendida no alcanza: hay que elegir
+  /// otra fecha (y unidades, si se vendio). Lo demas sigue como antes.
+  Future<void> _mostrarORelanzar(
+    BuildContext context,
+    int indice, {
+    required bool relanzar,
+  }) async {
+    final producto = controlador.productos[indice];
+    if (producto.necesitaVolverAPublicar) {
+      if (await volverAPublicar(context, producto)) {
+        await controlador.alCambiarPublicacion();
+      }
+      return;
+    }
+    if (relanzar) {
+      await controlador.relanzarProducto(indice);
+    } else {
+      await controlador.cambiarVisibilidad(indice);
+    }
   }
 
   /// Agregar y editar no tenian manejo de error: si el servidor rechazaba
@@ -235,8 +260,9 @@ class PantallaMiLocal extends StatelessWidget {
                   alEditar: () =>
                       _editar(context, controlador.productos[indice]),
                   alAlternarVisibilidad: () =>
-                      controlador.cambiarVisibilidad(indice),
-                  alRelanzar: () => controlador.relanzarProducto(indice),
+                      _mostrarORelanzar(context, indice, relanzar: false),
+                  alRelanzar: () =>
+                      _mostrarORelanzar(context, indice, relanzar: true),
                   alEliminar: () => _confirmarBorrado(context, indice),
                 ),
               ),
@@ -636,13 +662,18 @@ class _FilaProducto extends StatelessWidget {
                               fontSize: 13,
                             ),
                           ),
-                        if (!producto.disponible)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 4),
+                        if (estadoParaDueno(producto, DateTime.now())
+                            case final estado?)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
                             child: Text(
-                              'OCULTA',
+                              estado,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: Color(0xFF474646),
+                                color: oscuro
+                                    ? const Color(0xFFE6E1D5)
+                                    : const Color(0xFF474646),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: .8,

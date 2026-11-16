@@ -969,9 +969,13 @@ class _PublicacionPerfil extends StatelessWidget {
                     ),
                   ),
                   if (!producto.disponible)
-                    const Icon(
-                      Icons.visibility_off_rounded,
-                      color: Color(0xFFE6E1D5),
+                    Icon(
+                      producto.vendida
+                          ? Icons.sell_rounded
+                          : producto.vencida
+                          ? Icons.schedule_rounded
+                          : Icons.visibility_off_rounded,
+                      color: const Color(0xFFE6E1D5),
                       size: 15,
                     ),
                 ],

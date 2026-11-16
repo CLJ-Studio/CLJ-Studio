@@ -213,6 +213,7 @@ class ControladorMiLocal extends ChangeNotifier {
     List<VarianteEditable> variantes = const [],
     bool alLocal = false,
     required String categoriaId,
+    DateTime? venceEn,
   }) async {
     // Solo se crea el espacio personal si de verdad hace falta: si va al
     // local, crearlo dejaria una tienda vacia colgando.
@@ -233,6 +234,7 @@ class ControladorMiLocal extends ChangeNotifier {
       galeria: galeria,
       variantes: variantes,
       categoriaId: categoriaId,
+      venceEn: venceEn,
     );
     // Solo el negocio tiene inventario visible en "Tu local".
     if (negocio != null) {
@@ -260,6 +262,7 @@ class ControladorMiLocal extends ChangeNotifier {
       // Las que devolvio el servidor, no las que se mandaron: sus ids los
       // genera el, y el desplegable del detalle los necesita para poder pedir.
       variantes: creado.variantes,
+      venceEn: venceEn,
     );
   }
 
@@ -273,6 +276,7 @@ class ControladorMiLocal extends ChangeNotifier {
     String? descripcion,
     List<String> galeria = const [],
     List<VarianteEditable> variantes = const [],
+    ({DateTime? hasta})? vencimiento,
   }) async {
     if (ModoLocal.activo) {
       final indice = productos.indexWhere((p) => p.id == productoId);
@@ -305,7 +309,15 @@ class ControladorMiLocal extends ChangeNotifier {
       descripcion: descripcion,
       galeria: galeria,
       variantes: variantes,
+      vencimiento: vencimiento,
     );
+    revisionPublicaciones++;
+    await _refrescarInventario();
+  }
+
+  /// Despues de volver a publicar o marcar como vendida desde un dialogo:
+  /// el inventario y el perfil tienen que enterarse.
+  Future<void> alCambiarPublicacion() async {
     revisionPublicaciones++;
     await _refrescarInventario();
   }

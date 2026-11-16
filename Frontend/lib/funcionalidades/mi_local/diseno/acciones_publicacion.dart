@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../inicio_marketplace/modelos/producto_marketplace.dart';
+import '../../publicar_producto/logica/vigencia_publicacion.dart';
 import '../datos/repositorio_mi_local.dart';
 import 'dialogo_ajustar_stock.dart';
 import 'dialogo_producto.dart';
+import 'dialogo_volver_a_publicar.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_fallo.dart';
 
 /// Qué se hizo con la publicación, para que quien llamó sepa si refrescar.
@@ -14,6 +16,7 @@ enum ResultadoAccion {
   relanzada,
   eliminada,
   stockAjustado,
+  vendida,
 }
 
 /// Menú de gestión de una publicación propia.
@@ -30,6 +33,14 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
   VoidCallback? alVer,
 }) async {
   const repositorio = RepositorioMiLocal();
+  final estado = estadoParaDueno(producto, DateTime.now());
+  final retirada = producto.necesitaVolverAPublicar;
+  // "Ya lo vendi" es para lo personal que se vende de a uno: un local repone
+  // y lo oculta si hace falta.
+  final puedeMarcarVendida =
+      producto.disponible &&
+      !producto.esServicio &&
+      (producto.local?.esPersonal ?? false);
 
   final opcion = await showModalBottomSheet<String>(
     context: context,
@@ -49,6 +60,21 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
             ),
           ),
+          if (estado != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  estado,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: .8,
+                  ),
+                ),
+              ),
+            ),
           if (alVer != null)
             ListTile(
               leading: const Icon(Icons.visibility_outlined),
@@ -66,24 +92,37 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
             subtitle: Text('Quedan ${producto.stock}'),
             onTap: () => Navigator.of(hoja).pop('stock'),
           ),
-          ListTile(
-            leading: Icon(
-              producto.disponible
-                  ? Icons.visibility_off_outlined
-                  : Icons.visibility_outlined,
+          if (puedeMarcarVendida)
+            ListTile(
+              leading: const Icon(Icons.sell_outlined),
+              title: const Text('Ya lo vendí'),
+              subtitle: const Text('Lo vendiste por fuera de la app'),
+              onTap: () => Navigator.of(hoja).pop('vendida'),
             ),
-            title: Text(producto.disponible ? 'Ocultar' : 'Mostrar'),
-            subtitle: Text(
-              producto.disponible
-                  ? 'Se retira del catálogo pero no se borra'
-                  : 'Vuelve a aparecer en el catálogo',
+          // Una vencida o vendida no se "muestra": vuelve a publicarse.
+          if (!retirada)
+            ListTile(
+              leading: Icon(
+                producto.disponible
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+              ),
+              title: Text(producto.disponible ? 'Ocultar' : 'Mostrar'),
+              subtitle: Text(
+                producto.disponible
+                    ? 'Se retira del catálogo pero no se borra'
+                    : 'Vuelve a aparecer en el catálogo',
+              ),
+              onTap: () => Navigator.of(hoja).pop('ocultar'),
             ),
-            onTap: () => Navigator.of(hoja).pop('ocultar'),
-          ),
           ListTile(
             leading: const Icon(Icons.arrow_upward_rounded),
             title: const Text('Volver a publicar'),
-            subtitle: const Text('Vuelve al inicio del catálogo'),
+            subtitle: Text(
+              retirada
+                  ? 'Elige hasta cuándo se ve'
+                  : 'Vuelve al inicio del catálogo',
+            ),
             onTap: () => Navigator.of(hoja).pop('relanzar'),
           ),
           ListTile(
@@ -124,8 +163,14 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
           descripcion: datos.descripcion,
           galeria: datos.galeria,
           variantes: datos.variantes,
+          vencimiento: datos.vencimiento,
         );
         return ResultadoAccion.editada;
+
+      case 'vendida':
+        return await marcarComoVendida(context, producto)
+            ? ResultadoAccion.vendida
+            : ResultadoAccion.sinCambios;
 
       case 'stock':
         final cambiado = await mostrarDialogoAjustarStock(context, producto);
@@ -141,6 +186,11 @@ Future<ResultadoAccion> mostrarAccionesPublicacion(
         return ResultadoAccion.ocultada;
 
       case 'relanzar':
+        if (retirada) {
+          return await volverAPublicar(context, producto)
+              ? ResultadoAccion.relanzada
+              : ResultadoAccion.sinCambios;
+        }
         await repositorio.relanzarProducto(producto.id);
         return ResultadoAccion.relanzada;
 
