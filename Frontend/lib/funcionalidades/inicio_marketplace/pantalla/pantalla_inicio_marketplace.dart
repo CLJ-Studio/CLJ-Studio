@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import '../../../elementos_compartidos/insignias/insignia_egresado.dart';
 import '../../../configuracion_aplicacion/configuracion_tema.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/hueco_barra_navegacion.dart';
-import '../../../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../../../configuracion_aplicacion/configuracion_rutas.dart';
 import '../../../elementos_compartidos/estados_aplicacion/mensaje_catalogo.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/contenido_centrado.dart';
 import '../../../elementos_compartidos/estructuras_aplicacion/titulo_seccion.dart';
 import '../../../elementos_compartidos/animaciones/escala_al_presionar.dart';
+import '../../../elementos_compartidos/estados_aplicacion/esqueleto_carga.dart';
 import '../../../elementos_compartidos/imagenes/foto_producto.dart';
 import '../../../elementos_compartidos/tarjetas_aplicacion/estilo_tarjeta_producto.dart';
 import '../../../elementos_compartidos/marca/marca_u_market.dart';
@@ -25,6 +25,7 @@ import '../../pedidos/pantalla/pantalla_pedidos_completa.dart';
 import '../../perfil_vendedor/pantalla/pantalla_perfil_publico_vendedor.dart';
 import '../diseno/campus_collapsing_header.dart';
 import '../diseno/carrusel_publicidad_empresas.dart';
+import '../diseno/esqueleto_inicio_marketplace.dart';
 import '../diseno/imagen_publicidad.dart';
 import '../logica/controlador_inicio_marketplace.dart';
 import '../logica/estado_inicio_marketplace.dart';
@@ -188,12 +189,7 @@ class _PantallaInicioMarketplaceState extends State<PantallaInicioMarketplace> {
                         ),
                         child: switch (estado) {
                           EstadoInicioMarketplace(cargando: true) =>
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 60),
-                              child: Center(
-                                child: IndicadorCarga(tamanio: 140),
-                              ),
-                            ),
+                            const EsqueletoInicioMarketplace(),
                           EstadoInicioMarketplace(
                             error: final String mensaje,
                           ) =>
@@ -797,9 +793,8 @@ class _AnuncioPrincipalState extends State<_AnuncioPrincipal> {
                     : _DiapositivaPublicidad(
                         aviso: avisos[indice],
                         anchoVisible: anchoBanner,
-                        marcador: BannerSlide(
-                          data: banners[indice % banners.length],
-                          oscuro: oscuro,
+                        marcador: const EsqueletoCarga(
+                          borderRadius: BorderRadius.zero,
                         ),
                         alFallar: () => _descartar(avisos[indice]),
                       ),

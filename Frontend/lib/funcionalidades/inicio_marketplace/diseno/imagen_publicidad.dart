@@ -91,9 +91,8 @@ class ImagenPublicidad extends StatelessWidget {
   /// baja, el toque es de lo que haya en [marcador].
   final VoidCallback? alTocar;
 
-  /// Lo que se ve mientras baja. Por defecto, un gris suave: el aviso ya
-  /// reservó su altura, y un hueco que aparece de golpe empuja el feed justo
-  /// cuando alguien está leyendo.
+  /// Lo que se ve mientras baja. Por defecto, un fondo neutro sin animación;
+  /// el aviso conserva su espacio y no empuja el feed al aparecer.
   final Widget? marcador;
 
   static const _fundido = Duration(milliseconds: 280);
@@ -171,11 +170,8 @@ class _Marcador extends StatelessWidget {
   const _Marcador();
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: Theme.of(context).brightness == Brightness.dark
-        ? Colors.white.withValues(alpha: .05)
-        : Colors.black.withValues(alpha: .04),
-  );
+  Widget build(BuildContext context) =>
+      ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest);
 }
 
 /// Abre el enlace de un aviso en el navegador del sistema.

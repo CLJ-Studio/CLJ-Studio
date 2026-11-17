@@ -44,7 +44,7 @@ class FotoRed extends StatelessWidget {
   /// que es el caso que conviene evitar.
   final double? anchoVisible;
 
-  /// Que mostrar mientras baja. Por defecto, un gris del color del tema.
+  /// Que mostrar mientras baja. Por defecto, un fondo neutro sin animación.
   final Widget? marcador;
 
   /// Que mostrar si la foto no existe o falla la descarga.
@@ -66,7 +66,30 @@ class FotoRed extends StatelessWidget {
         url,
         fit: ajuste,
         alignment: alineacion,
+        gaplessPlayback: true,
         errorBuilder: (_, _, _) => vacio,
+        frameBuilder: (_, hijo, cuadro, sincronica) {
+          if (sincronica) return hijo;
+          final llego = cuadro != null;
+          return Stack(
+            fit: StackFit.passthrough,
+            children: [
+              Positioned.fill(
+                child: AnimatedOpacity(
+                  opacity: llego ? 0 : 1,
+                  duration: _fundido,
+                  child: marcador ?? const _Marcador(),
+                ),
+              ),
+              AnimatedOpacity(
+                opacity: llego ? 1 : 0,
+                duration: _fundido,
+                curve: Curves.easeOut,
+                child: hijo,
+              ),
+            ],
+          );
+        },
       );
     }
 
@@ -149,15 +172,11 @@ class FotoRed extends StatelessWidget {
   }
 }
 
-/// Relleno neutro mientras la foto baja. Del color del tema y sin girador:
-/// veinte ruedas girando a la vez en una cuadricula marean mas que informan.
+/// Esqueleto para que las fotos mantengan su espacio y estilo mientras cargan.
 class _Marcador extends StatelessWidget {
   const _Marcador();
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: Theme.of(context).brightness == Brightness.dark
-        ? Colors.white.withValues(alpha: .05)
-        : Colors.black.withValues(alpha: .04),
-  );
+  Widget build(BuildContext context) =>
+      ColoredBox(color: Theme.of(context).colorScheme.surfaceContainerHighest);
 }

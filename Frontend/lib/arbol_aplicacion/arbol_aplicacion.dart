@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../configuracion_aplicacion/configuracion_supabase.dart';
@@ -12,6 +11,7 @@ import '../elementos_compartidos/animaciones/precargador_animaciones.dart';
 import '../funcionalidades/inicio_marketplace/logica/ubicacion_comprador.dart';
 import '../funcionalidades/acceso_upsa/arbol/arbol_acceso_upsa.dart';
 import '../funcionalidades/apertura_aplicacion/pantalla/pantalla_apertura.dart';
+import '../funcionalidades/inicio_marketplace/pantalla/pantalla_esqueleto_inicio_marketplace.dart';
 import '../funcionalidades/navegacion_principal/arbol/arbol_navegacion_principal.dart';
 import '../funcionalidades/instalacion_app/logica/controlador_instalacion.dart';
 import '../funcionalidades/notificaciones/datos/servicio_push.dart';
@@ -32,11 +32,9 @@ class ArbolAplicacion extends StatefulWidget {
 }
 
 class _ArbolAplicacionState extends State<ArbolAplicacion> {
-  static const _claveAperturaInicialMostrada = 'apertura_inicial_mostrada';
-
   final _navegador = GlobalKey<NavigatorState>();
   bool _accesoLocalCompletado = false;
-  bool? _mostrandoApertura;
+  bool _mostrandoApertura = true;
   Timer? _temporizadorApertura;
   var _servidor = ModoLocal.activo ? _Servidor.listo : _Servidor.conectando;
 
@@ -44,7 +42,9 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
   void initState() {
     super.initState();
     _conectar();
-    _prepararAperturaInicial();
+    _temporizadorApertura = Timer(const Duration(milliseconds: 3200), () {
+      if (mounted) setState(() => _mostrandoApertura = false);
+    });
   }
 
   /// Conecta con Supabase CON LA APLICACION YA EN PANTALLA.
@@ -92,52 +92,6 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
     }
   }
 
-  /// Muestra la animación únicamente la primera vez que se abre la app.
-  /// La marca se guarda al terminar para que una interrupción no la omita.
-  ///
-  /// Nada de lo que pase aqui puede impedir que la app arranque. En la PWA
-  /// el almacenamiento del navegador lanza excepcion en ventana privada, con
-  /// los datos del sitio bloqueados, o cuando Safari los restringe. Por eso
-  /// hay `catch` y un tope de tiempo: ante la duda se salta la animacion,
-  /// que es decoracion, y se entra a la aplicacion, que es el motivo de
-  /// abrirla.
-  Future<void> _prepararAperturaInicial() async {
-    SharedPreferences? preferencias;
-    var yaFueMostrada = false;
-    try {
-      preferencias = await SharedPreferences.getInstance().timeout(
-        const Duration(seconds: 3),
-      );
-      yaFueMostrada =
-          preferencias.getBool(_claveAperturaInicialMostrada) ?? false;
-    } catch (_) {
-      // Sin memoria donde anotarlo, se prefiere no mostrarla: repetir la
-      // animacion en cada arranque molesta mas que no verla nunca.
-      yaFueMostrada = true;
-    }
-
-    if (!mounted) return;
-    if (yaFueMostrada) {
-      setState(() => _mostrandoApertura = false);
-      return;
-    }
-
-    setState(() => _mostrandoApertura = true);
-    // La escena vive el tiempo suficiente para completar todos sus movimientos.
-    final memoria = preferencias;
-    _temporizadorApertura = Timer(const Duration(milliseconds: 3200), () async {
-      // El paso a la aplicacion va primero y fuera del try: si guardar la
-      // marca fallara, quedarse en la pantalla de apertura seria el mismo
-      // bloqueo por otra puerta.
-      if (mounted) setState(() => _mostrandoApertura = false);
-      try {
-        await memoria?.setBool(_claveAperturaInicialMostrada, true);
-      } catch (_) {
-        // Se volvera a ver en el proximo arranque. Es molesto, no grave.
-      }
-    });
-  }
-
   @override
   void dispose() {
     _temporizadorApertura?.cancel();
@@ -168,13 +122,13 @@ class _ArbolAplicacionState extends State<ArbolAplicacion> {
     if (_servidor == _Servidor.fallo) {
       return PantallaSinConexion(alReintentar: _conectar);
     }
-    // `null` es "todavia no se sabe": se muestra la apertura, que es lo que
-    // corresponde ver mientras la aplicacion se pone en marcha.
-    if (_mostrandoApertura != false) {
+    if (_mostrandoApertura) {
       return const PantallaApertura(key: ValueKey('apertura'));
     }
     if (_servidor == _Servidor.conectando) {
-      return const PantallaApertura(key: ValueKey('apertura-conectando'));
+      return const PantallaEsqueletoInicioMarketplace(
+        key: ValueKey('inicio-esqueleto-servidor'),
+      );
     }
     return KeyedSubtree(
       key: const ValueKey('contenido-principal'),

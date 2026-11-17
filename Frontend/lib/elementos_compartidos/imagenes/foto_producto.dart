@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../estados_aplicacion/esqueleto_carga.dart';
 import 'foto_red.dart';
 import 'normalizar_portada.dart';
 
@@ -51,6 +52,7 @@ class FotoProducto extends StatelessWidget {
         final String ruta when ruta.isNotEmpty => FotoRed(
           url: ruta,
           anchoVisible: anchoVisible,
+          marcador: const EsqueletoCarga(borderRadius: BorderRadius.zero),
           alFallar: vacio,
         ),
         _ => vacio,

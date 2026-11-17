@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../arbol_aplicacion/arbol_dependencias.dart';
 import '../../camara_publicacion/pantalla/pantalla_camara_publicacion.dart';
 import '../../inicio_marketplace/logica/controlador_inicio_marketplace.dart';
+import '../../inicio_marketplace/pantalla/pantalla_esqueleto_inicio_marketplace.dart';
 import '../../inicio_marketplace/pantalla/pantalla_inicio_marketplace.dart';
 import '../../locales_universitarios/logica/controlador_locales.dart';
 import '../../locales_universitarios/pantalla/pantalla_locales_universitarios.dart';
@@ -40,10 +41,12 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
   StreamSubscription<DestinoNotificacionSistema>? _destinosDelSistema;
   List<String> _imagenesDesdeCamara = const [];
   int _loteImagenesCamara = 0;
+  bool _catalogoInicialListo = false;
 
   @override
   void initState() {
     super.initState();
+    inicio.addListener(_alCambiarInicio);
     miLocal.cargar();
     miLocal.iniciarTiempoReal();
     inicio.cargar();
@@ -54,6 +57,11 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
       _abrirDestinoDeNotificacion,
     );
     _consumirDestinoInicial();
+  }
+
+  void _alCambiarInicio() {
+    if (_catalogoInicialListo || inicio.estado.cargando) return;
+    setState(() => _catalogoInicialListo = true);
   }
 
   Future<void> _consumirDestinoInicial() async {
@@ -80,6 +88,7 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
     _destinosDelSistema?.cancel();
     controlador.dispose();
     miLocal.dispose();
+    inicio.removeListener(_alCambiarInicio);
     inicio.dispose();
     locales.dispose();
     super.dispose();
@@ -153,8 +162,11 @@ class _ArbolNavegacionPrincipalState extends State<ArbolNavegacionPrincipal> {
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: Listenable.merge([miLocal, controlador]),
+    animation: Listenable.merge([miLocal, controlador, inicio]),
     builder: (context, _) {
+      if (!_catalogoInicialListo) {
+        return const PantallaEsqueletoInicioMarketplace();
+      }
       final pantallas = <Widget>[
         PantallaInicioMarketplace(
           controlador: inicio,

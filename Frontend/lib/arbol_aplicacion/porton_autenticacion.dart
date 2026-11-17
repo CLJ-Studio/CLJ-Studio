@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../elementos_compartidos/estados_aplicacion/indicador_carga.dart';
 import '../elementos_compartidos/sesion/sesion_usuario.dart';
 import '../funcionalidades/acceso_upsa/arbol/arbol_acceso_upsa.dart';
 import '../funcionalidades/carrito_compras/logica/controlador_carrito_compras.dart';
 import '../funcionalidades/favoritos/logica/controlador_favoritos.dart';
 import '../funcionalidades/inicio_marketplace/logica/ubicacion_comprador.dart';
+import '../funcionalidades/inicio_marketplace/pantalla/pantalla_esqueleto_inicio_marketplace.dart';
 import '../funcionalidades/notificaciones/datos/servicio_push.dart';
 import '../funcionalidades/notificaciones/logica/controlador_notificaciones.dart';
 import '../funcionalidades/navegacion_principal/arbol/arbol_navegacion_principal.dart';
@@ -73,11 +73,11 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
 
   /// Con tope de tiempo A PROPOSITO.
   ///
-  /// Mientras esta consulta no responde, la pantalla es el indicador de
-  /// carga sobre el fondo del tema, o sea crema y nada mas. Si se cuelga (la
-  /// red del campus a medias, el servidor sin contestar) no llega ni dato ni
-  /// error: el `FutureBuilder` se queda cargando para siempre y desde fuera
-  /// parece que la aplicacion no arranca.
+  /// Mientras esta consulta no responde, se mantiene visible la portada
+  /// completa en esqueleto. Si se cuelga (la red del campus a medias, el
+  /// servidor sin contestar) no llega ni dato ni error: el `FutureBuilder` se
+  /// quedaria cargando para siempre y desde fuera pareceria que la app no
+  /// arranca.
   ///
   /// Con el tope, colgarse pasa a ser un error, y un error ya tiene pantalla
   /// propia con su boton de reintentar.
@@ -182,7 +182,7 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           );
         }
         if (!snapshot.hasData) {
-          return const Scaffold(body: Center(child: IndicadorCarga()));
+          return const PantallaEsqueletoInicioMarketplace();
         }
         // Hay sesion pero el perfil no existe: el usuario fue borrado en el
         // servidor mientras el JWT seguia vigente. Sin esto, el onboarding
@@ -191,7 +191,7 @@ class _PortonAutenticacionState extends State<PortonAutenticacion> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Supabase.instance.client.auth.signOut();
           });
-          return const Scaffold(body: Center(child: IndicadorCarga()));
+          return const PantallaEsqueletoInicioMarketplace();
         }
         if (snapshot.data == _EstadoPerfil.completo) {
           _programarSolicitudPushInicial();

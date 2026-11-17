@@ -140,7 +140,7 @@ class ControladorInicioMarketplace extends ChangeNotifier {
     estado = estado.copiarCon(cargando: true);
     notifyListeners();
     final esperaVisual = Future<void>.delayed(
-      const Duration(milliseconds: 900),
+      const Duration(milliseconds: 2200),
     );
 
     try {
