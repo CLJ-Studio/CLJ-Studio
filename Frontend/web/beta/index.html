@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#8A1FFC">
+  <title>U market · Beta</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <!--
+    A esta pagina llega quien escanea el QR del video de la feria. Avisa que
+    la app es una beta y lleva a la app. Es HTML suelto, sin Flutter: carga al
+    instante en cualquier telefono, y Netlify la sirve antes que la app porque
+    el archivo existe (ver web/_redirects).
+    Colores y letras del manual de marca: Morado U, Metropolis y Nunito (las
+    mismas fuentes que ya publica la app).
+
+    La entrada copia la de la apertura de la app (pantalla_apertura.dart): la
+    marca sube desde abajo hasta el centro, crece y pasa de gris a negro, y
+    tres formas translucidas entran desde los bordes, una despues de otra.
+    Despues la marca se acomoda arriba y el resto aparece en cascada. Tocar
+    la pantalla la salta. Sin JavaScript, o con "reducir movimiento", la
+    pagina se ve quieta y completa.
+    En el celular, encuesta/ guarda las fotos que usa la encuesta de Google
+    Forms (las baja el script de Apps Script).
+  -->
+  <script>
+    // Antes de pintar: si se va a animar, se oculta todo hasta medir la marca.
+    (function () {
+      var quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!quieto && window.CSS && CSS.supports('translate', '1px')) {
+        document.documentElement.classList.add('preparando');
+      }
+    })();
+  </script>
+  <style>
+    @font-face { font-family: Metropolis; src: url(/assets/assets/fonts/Metropolis-ExtraBold.ttf); font-weight: 800; font-display: swap; }
+    @font-face { font-family: Nunito; src: url(/assets/assets/fonts/Nunito-Regular.ttf); font-weight: 400; font-display: swap; }
+    @font-face { font-family: Nunito; src: url(/assets/assets/fonts/Nunito-Bold.ttf); font-weight: 700; font-display: swap; }
+    @font-face { font-family: Nunito; src: url(/assets/assets/fonts/Nunito-ExtraBold.ttf); font-weight: 800; font-display: swap; }
+    @font-face { font-family: Nunito; src: url(/assets/assets/fonts/Nunito-Black.ttf); font-weight: 900; font-display: swap; }
+
+    :root {
+      --morado: #8A1FFC; --profundo: #5A0FB0; --naranja: #FB8905; --lila: #F2E9FF;
+      /* Las mismas curvas que la apertura de la app. */
+      --entra-sale: cubic-bezier(.65, 0, .35, 1);   /* Curves.easeInOutCubic */
+      --frena: cubic-bezier(.33, 1, .68, 1);        /* Curves.easeOutCubic */
+      --rebota: cubic-bezier(.34, 1.56, .64, 1);    /* Curves.easeOutBack */
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--morado); overflow-x: hidden; }
+    body {
+      min-height: 100dvh; display: flex; justify-content: center;
+      font-family: Nunito, system-ui, sans-serif; color: #fff;
+      -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+    }
+    main {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 460px; display: flex; flex-direction: column;
+      padding: calc(28px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));
+    }
+    .marca { display: flex; align-items: center; gap: 12px; align-self: flex-start; }
+    .marca img { width: 54px; height: auto; position: relative; top: -2px; }
+    .marca span { font: 800 40px Metropolis, Montserrat, sans-serif; letter-spacing: -.035em; color: #000; }
+    .etiqueta {
+      align-self: flex-start; margin-top: 44px; padding: 7px 16px; border-radius: 999px;
+      background: var(--profundo); font-weight: 900; font-size: 14px; letter-spacing: .16em;
+    }
+    h1 {
+      margin: 14px 0 0; font: 800 44px/1.04 Metropolis, Montserrat, sans-serif; letter-spacing: -.025em;
+    }
+    p { margin: 16px 0 0; font-size: 18px; line-height: 1.45; color: rgba(255, 255, 255, .92); font-weight: 700; }
+    .pronto {
+      margin-top: 28px; padding: 18px 20px; border-radius: 22px; background: #fff; color: #000;
+    }
+    .pronto b {
+      position: relative; display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--naranja);
+      font-size: 13px; font-weight: 900; letter-spacing: .04em;
+    }
+    .pronto div { margin-top: 8px; font: 800 22px/1.2 Metropolis, Montserrat, sans-serif; letter-spacing: -.015em; }
+    .boton {
+      position: relative; overflow: hidden;
+      margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 10px;
+      height: 60px; border-radius: 30px; background: #fff; color: var(--profundo);
+      font-size: 19px; font-weight: 900; text-decoration: none;
+      box-shadow: 0 14px 30px rgba(40, 0, 90, .28);
+      /* Igual que EscalaAlPresionar: se hunde a .965 y vuelve con un rebote. */
+      transition: transform .26s var(--rebota);
+    }
+    .boton:active { transform: scale(.965); transition: transform .11s ease-out; }
+    .boton svg { width: 22px; height: 22px; }
+    .nota { margin: 14px 0 0; text-align: center; font-size: 15px; font-weight: 700; color: rgba(255, 255, 255, .85); }
+    .espacio { flex: 1; min-height: 36px; }
+
+    /* Las tres formas de la apertura, en las mismas posiciones y giros. */
+    .forma {
+      position: fixed; z-index: 0; pointer-events: none;
+      border-radius: 24px; background: rgba(255, 255, 255, .10);
+    }
+    .f1 { top: 150px; right: -28px; width: 105px; height: 92px; rotate: .24rad; }
+    .f2 { top: 290px; left: -36px; width: 112px; height: 94px; rotate: -.22rad; }
+    .f3 { top: 355px; right: -20px; width: 92px; height: 82px; rotate: .3rad; }
+
+    /* Lo que sigue vivo despues de la entrada. */
+    .pronto b::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      border: 2px solid var(--naranja); opacity: 0; pointer-events: none;
+      animation: onda 2.6s 3.2s cubic-bezier(.2, .6, .3, 1) infinite;
+    }
+    .boton::after {
+      content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 34%; pointer-events: none;
+      background: linear-gradient(100deg, transparent, rgba(138, 31, 252, .16), transparent);
+      transform: translateX(-130%) skewX(-20deg);
+      animation: brillo 4s 3.4s ease-in-out infinite;
+    }
+    .boton svg { animation: flecha 4s 3.4s ease-in-out infinite; }
+
+    /* ---------------------------------------------------------- Entrada */
+    .preparando main, .preparando .forma { opacity: 0; }
+    .animar:not(.listo) body { overflow: hidden; }
+    .animar:not(.listo) .boton { pointer-events: none; }
+
+    .animar .marca { animation: marca 1.75s .3s both; }
+    .animar .marca span { animation: tinta 1s .3s var(--entra-sale) both; }
+    .animar .marca img { animation: tinta-simbolo 1s .3s var(--entra-sale) both; }
+
+    .animar .f1 { animation: desde-derecha .45s .5s var(--frena) both; }
+    .animar .f2 { animation: desde-izquierda .45s .8s var(--frena) both; }
+    .animar .f3 { animation: desde-derecha .45s 1.1s var(--frena) both; }
+
+    .animar .etiqueta { animation: aparece .55s 1.75s var(--rebota) both; }
+    .animar h1 .palabra {
+      display: inline-block;
+      animation: sube .55s calc(1.85s + var(--i) * 55ms) var(--frena) both;
+    }
+    .animar p:not(.nota) { animation: sube .6s 2.15s var(--frena) both; }
+    .animar .pronto { animation: sube .6s 2.3s var(--frena) both; }
+    .animar .pronto b { animation: aparece .5s 2.6s var(--rebota) both; }
+    .animar .boton { animation: sube .6s 2.45s var(--frena) both; }
+    .animar .nota { animation: funde .6s 2.7s ease both; }
+
+    .listo .marca, .listo .marca span, .listo .marca img, .listo .forma, .listo .etiqueta,
+    .listo h1 .palabra, .listo p, .listo .pronto, .listo .pronto b, .listo .boton { animation: none; }
+
+    /* La marca: sube desde abajo hasta el centro (mas grande), espera un
+       instante y se acomoda en su lugar. --dx y --dy los mide el script. */
+    @keyframes marca {
+      0%   { transform: translate(var(--dx), calc(var(--dy) + 68vh)) scale(.62); animation-timing-function: var(--entra-sale); }
+      54%  { transform: translate(var(--dx), var(--dy)) scale(1.25); animation-timing-function: linear; }
+      64%  { transform: translate(var(--dx), var(--dy)) scale(1.25); animation-timing-function: var(--entra-sale); }
+      100% { transform: translate(0, 0) scale(1); }
+    }
+    /* Empieza gris claro, no transparente, y recupera sus colores. */
+    @keyframes tinta { from { color: #B7B7B7; } }
+    @keyframes tinta-simbolo { from { filter: brightness(0) invert(.72); } to { filter: brightness(1) invert(0); } }
+    @keyframes desde-derecha { from { translate: 150px 0; } }
+    @keyframes desde-izquierda { from { translate: -155px 0; } }
+    @keyframes sube { from { opacity: 0; transform: translateY(22px); } }
+    @keyframes funde { from { opacity: 0; } }
+    @keyframes aparece {
+      0%   { opacity: 0; transform: scale(.6); }
+      60%  { opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    @keyframes onda {
+      0%   { opacity: .75; transform: scale(1); }
+      70%, 100% { opacity: 0; transform: scale(1.3, 1.75); }
+    }
+    @keyframes brillo {
+      0%   { transform: translateX(-130%) skewX(-20deg); }
+      40%, 100% { transform: translateX(400%) skewX(-20deg); }
+    }
+    @keyframes flecha {
+      0%, 34%, 100% { transform: none; }
+      17% { transform: translateX(5px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pronto b::after, .boton::after, .boton svg { animation: none; }
+      .boton::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="forma f1" aria-hidden="true"></div>
+  <div class="forma f2" aria-hidden="true"></div>
+  <div class="forma f3" aria-hidden="true"></div>
+  <main>
+    <div class="marca"><img src="isotipo.svg" alt=""><span>U market</span></div>
+    <span class="etiqueta">BETA</span>
+    <h1>Recuerda: esto es una beta.</h1>
+    <p>U market ya funciona: puedes comprar y vender en el campus. Todavía la estamos puliendo, así que si algo falla, avísanos. Nos ayuda un montón.</p>
+    <div class="pronto"><b>Muy pronto</b><div>También en App Store y Google Play.</div></div>
+    <div class="espacio"></div>
+    <a class="boton" href="/">Entrar a U market
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <p class="nota">Entras con tu correo de la U.</p>
+  </main>
+  <script>
+    (function () {
+      var raiz = document.documentElement;
+      if (!raiz.classList.contains('preparando')) return;
+      var empezo = false;
+
+      function terminar() {
+        raiz.classList.add('listo');
+        document.removeEventListener('pointerdown', terminar);
+      }
+
+      function empezar() {
+        if (empezo) return;
+        empezo = true;
+        try {
+          // Cada palabra del titulo entra por separado.
+          var titulo = document.querySelector('h1');
+          var palabras = titulo.textContent.trim().split(/\s+/);
+          titulo.textContent = '';
+          palabras.forEach(function (texto, i) {
+            if (i) titulo.appendChild(document.createTextNode(' '));
+            var palabra = document.createElement('span');
+            palabra.className = 'palabra';
+            palabra.style.setProperty('--i', i);
+            palabra.textContent = texto;
+            titulo.appendChild(palabra);
+          });
+          // Cuanto tiene que moverse la marca para quedar en el centro.
+          var marca = document.querySelector('.marca');
+          var caja = marca.getBoundingClientRect();
+          marca.style.setProperty('--dx', (innerWidth / 2 - (caja.left + caja.width / 2)) + 'px');
+          marca.style.setProperty('--dy', (innerHeight / 2 - (caja.top + caja.height / 2)) + 'px');
+          raiz.classList.add('animar');
+          setTimeout(terminar, 3300);
+          document.addEventListener('pointerdown', terminar);
+        } catch (error) {
+          raiz.classList.add('listo');
+        }
+        raiz.classList.remove('preparando');
+      }
+
+      // Se mide con las letras ya cargadas, pero nunca se espera mas de 0,7 s.
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(empezar, empezar);
+      setTimeout(empezar, 700);
+      // Para que el boton se hunda tambien en iPhone.
+      document.addEventListener('touchstart', function () {}, { passive: true });
+    })();
+  </script>
+</body>
+</html>
